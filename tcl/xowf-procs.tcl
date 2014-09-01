@@ -954,7 +954,7 @@ namespace eval ::xowf {
     # we make sure that we only check the redirect on views
     # without content.
 
-    #my msg "view [self args]"
+    #my msg "view [self args] [my is_wf_instance]"
 
     if {[my is_wf_instance] && $content eq ""} {
       set ctx [::xowf::Context require [self]]
@@ -1320,7 +1320,8 @@ namespace eval ::xowf {
       # We have a workflow page. Get the initial state of the workflow
       # instance from the workflow.
       #
-      my instvar instance_attributes
+      #my instvar instance_attributes
+      set instance_attributes ""
       set ctx [::xowf::Context require [self]]
       foreach p [$ctx defined ::xowiki::formfield::FormField] {
         set name [$p name]
@@ -1342,7 +1343,7 @@ namespace eval ::xowf {
       ## save instance attributes
       #set instance_attributes [array get __ia]
       #my msg "[self] [my name] setting default parameter"
-      #my msg ia=$instance_attributes,props=[$ctx defined Property]
+      #my log ia=$instance_attributes,props=[$ctx defined Property]
 
       my state [$ctx get_current_state]
       #my msg "setting initial state to '[my state]'"
