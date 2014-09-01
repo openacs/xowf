@@ -1191,12 +1191,6 @@ namespace eval ::xowf {
     }
   }
 
-  WorkflowPage instproc double_quote {value} {
-    if {[regexp {[ ,\"\\=>\n\']} $value]} {
-      set value \"[string map [list \" \\\\\" \\ \\\\ ' ''] $value]\"
-    }
-    return $value
-  }
   WorkflowPage instproc save_in_hstore {} {
     # experimental code for testing with hstore
     # to use it, do for now something like:
@@ -1205,16 +1199,9 @@ namespace eval ::xowf {
     # alter table xowiki_page_instance add column hkey hstore;
     # CREATE INDEX hidx ON xowiki_page_instance using GIST(hkey);
     #
-    set keys [list]
-    foreach {key value} [my instance_attributes] {
-      set v [my double_quote $value]
-      if {$v eq ""} continue
-      if {$key eq "workflow_definition"} continue
-      lappend keys [my double_quote $key]=>$v
-    }
-    #my msg "hkey='[join $keys ,]'"
+    set hkey [::xowf::dict_as_hkey [dict remove [my instance_attributes] workflow_definition]]
     xo::dc dml update_hstore "update xowiki_page_instance \
-                set hkey = '[join $keys ,]'
+                set hkey = '$hkey'
                 where page_instance_id = [my revision_id]"
   }
   WorkflowPage instproc wf_property {name {default ""}} {
@@ -1778,6 +1765,28 @@ namespace eval ::xowf {
   }
 
 }
+
+  ad_proc ::xowf::double_quote {value} {
+    @return double_quoted value as appropriate for hstore
+  } {
+    if {[regexp {[ ,\"\\=>\n\']} $value]} {
+      set value \"[string map [list \" \\\\\" \\ \\\\ ' ''] $value]\"
+    }
+    return $value
+  }
+
+  ad_proc ::xowf::dict_as_hkey {dict} {
+    @return dict value in form of a hstore key.
+  } {
+    set keys {}
+    foreach {key value} $dict {
+      set v [xowf::double_quote $value]
+      if {$v eq ""} continue
+      lappend keys [::xowf::double_quote $key]=>$v
+    }
+    return [join $keys ,]
+  }
+
 
 ::xo::library source_dependent 
 
