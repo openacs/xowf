@@ -39,8 +39,8 @@ namespace eval ::xowiki::includelet {
 
     set sql {
       select assignee,xowiki_form_page_id,state,i.publish_status,page_template,
-          p.creation_date, p.last_modified, p,description,
-          i2.name as wf_name,p.title,i.name,i.parent_id,o.package_id as pid
+      p.creation_date, p.last_modified, p,description,
+      i2.name as wf_name,p.title,i.name,i.parent_id,o.package_id as pid
       from xowiki_form_pagei p,cr_items i, cr_items i2, acs_objects o 
       where (assignee = :user_id or acs_group__member_p(:user_id,assignee, 'f'))
       and i.live_revision = xowiki_form_page_id 
@@ -59,21 +59,21 @@ namespace eval ::xowiki::includelet {
       #   //package/
       #
       if {[regexp {^/(/.*)/$} $workflow _ package]} {
-	# all workflows from this package
+        # all workflows from this package
         ::xowf::Package initialize -url $package
         #my msg "using package_id=$package_id"
         append sql " and o.package_id = :package_id"
       } else {
-	if {[regexp {^/(/[^/]+)(/.+)$} $workflow _ package path]} {
-	  ::xowf::Package initialize -url $package
-	  #my msg "using package_id=$package_id"
-	} else {
-	  set path $workflow
-	}
-	set parent_id [[my set __including_page] parent_id]
-	set wf_page [$package_id get_page_from_item_ref -parent_id $parent_id $path]
+        if {[regexp {^/(/[^/]+)(/.+)$} $workflow _ package path]} {
+          ::xowf::Package initialize -url $package
+          #my msg "using package_id=$package_id"
+        } else {
+          set path $workflow
+        }
+        set parent_id [[my set __including_page] parent_id]
+        set wf_page [$package_id get_page_from_item_ref -parent_id $parent_id $path]
         if {$wf_page eq ""} {
-	  my msg "cannot resolve page $workflow"
+          my msg "cannot resolve page $workflow"
           set package_id -1; set page_template -1
         } else {
           set page_template [$wf_page item_id]
@@ -136,3 +136,10 @@ namespace eval ::xowiki::includelet {
   }
 
 }
+
+#
+# Local variables:
+#    mode: tcl
+#    tcl-indent-level: 2
+#    indent-tabs-mode: nil
+# End:
