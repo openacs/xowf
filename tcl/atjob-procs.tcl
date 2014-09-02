@@ -80,7 +80,7 @@ namespace eval ::xowf {
   }
   
   atjob proc run_jobs {item_ids} {
-    my log "---run xowf jobs START"
+    #my log "---run xowf jobs START"
 
     set items [::xowiki::FormPage instantiate_objects \
 		   -object_class ::xowiki::FormPage \
@@ -90,38 +90,41 @@ namespace eval ::xowf {
 			where i.item_id in ([join $item_ids ,]) and
 			i.live_revision = t.page_instance_id and o.object_id = i.item_id"]
 
-    my log "--at we got [llength [$items children]] scheduled items"
+    if {[llength [$items children]] > 0} {
+    
+      my log "--at we got [llength [$items children]] scheduled items"
 
-    foreach item [$items children] {
-      #my log "--at *** job=[$item serialize] ***\n"
-      set owner_id [$item parent_id]
-      set party_id [$item creation_user]
-      set __ia [$item instance_attributes]
-      if {![dict exists $__ia cmd]} {
-        #ns_log notice "--at ignore strange entry [$item serialize]"
-        ns_log notice "--at ignore strange entry, no cmd in [$item instance_attributes]"
-        continue
+      foreach item [$items children] {
+	#my log "--at *** job=[$item serialize] ***\n"
+	set owner_id [$item parent_id]
+	set party_id [$item creation_user]
+	set __ia [$item instance_attributes]
+	if {![dict exists $__ia cmd]} {
+	  #ns_log notice "--at ignore strange entry [$item serialize]"
+	  ns_log notice "--at ignore strange entry, no cmd in [$item instance_attributes]"
+	  continue
+	}
+	set cmd [dict get $__ia cmd]
+
+	# We assume, the owner object is a cr-item
+	::xo::db::CrClass get_instance_from_db -item_id $owner_id
+
+	# We assume, the package is from the xowiki family; make sure, the url looks like real
+	::xo::Package initialize \
+	    -package_id [$owner_id package_id] \
+	    -user_id $party_id \
+	    -init_url 0 -actual_query ""
+	$package_id set_url -url [$package_id package_url][$owner_id name]
+
+	my log "--at executing atjob $cmd"
+	if {[catch {eval $owner_id $cmd} errorMsg]} {
+	  ns_log error "\n*** atjob $owner_id $cmd lead to error ***\n$errorMsg"
+	} else {
+	  $item set_live_revision -revision_id [$item revision_id] -publish_status "expired"
+	}
       }
-      set cmd [dict get $__ia cmd]
-
-      # We assume, the owner object is a cr-item
-      ::xo::db::CrClass get_instance_from_db -item_id $owner_id
-
-      # We assume, the package is from the xowiki family; make sure, the url looks like real
-      ::xo::Package initialize \
-          -package_id [$owner_id package_id] \
-          -user_id $party_id \
-          -init_url 0 -actual_query ""
-      $package_id set_url -url [$package_id package_url][$owner_id name]
-
-      my log "--at executing atjob $cmd"
-      if {[catch {eval $owner_id $cmd} errorMsg]} {
-        ns_log error "\n*** atjob $owner_id $cmd lead to error ***\n$errorMsg"
-      } else {
-        $item set_live_revision -revision_id [$item revision_id] -publish_status "expired"
-      }
+      my log "---run xowf jobs END"
     }
-    my log "---run xowf jobs END"
   }
 
   atjob proc check {{-with_older false}} {
