@@ -822,20 +822,27 @@ namespace eval ::xowf {
     Render the defined actions in the current state with submit buttons
   } {
     if {[my is_wf_instance]} {
-      ::html::div -class form-button {
-        set ctx [::xowf::Context require [self]]
-        foreach action [$ctx get_actions] {
-          set success 0
-          foreach role [$action roles] {
-            set success [my check_role $role]
-            if {$success} break
-          }
-          if {$success} {
-            set f [::xowiki::formfield::submit_button new -destroy_on_cleanup \
-                       -name __action_[namespace tail $action] -CSSclass $CSSclass]
-            if {[$action exists title]} {$f title [$action title]}
-            #my msg action=$action
-            $f value [$action label]
+      
+      set ctx [::xowf::Context require [self]]
+      set buttons {}
+      foreach action [$ctx get_actions] {
+        set success 0
+        foreach role [$action roles] {
+          set success [my check_role $role]
+          if {$success} break
+        }
+        if {$success} {
+          set f [::xowiki::formfield::submit_button new -destroy_on_cleanup \
+                     -name __action_[namespace tail $action] -CSSclass $CSSclass]
+          if {[$action exists title]} {$f title [$action title]}
+          $f value [$action label]
+          lappend buttons $f
+        }
+      }
+      if {[llength $buttons] > 0} {
+        # take the form_button_wrapper_CSSclass from the first form field
+        ::html::div -class [[lindex $buttons 0] form_button_wrapper_CSSclass] {
+          foreach f $buttons {
             $f render_input
           }
         }
