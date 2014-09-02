@@ -11,7 +11,7 @@ For more details, consult the [[http://alice.wu.ac.at:8000/xowf-intro/prepare|Xo
 Workflows defined in this Package:
 </p>
 
- {{form-usages -form en:workflow.form -parent_id * -csv false -with_form_link false}}
+ {{form-usages -form en:Workflow.form -parent_id * -csv false -with_form_link false}}
 
 <p>Activity Overview:</p>
 
