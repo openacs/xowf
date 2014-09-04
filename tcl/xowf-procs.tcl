@@ -624,32 +624,34 @@ namespace eval ::xowf {
   WorkflowConstruct instforward false set "" 0
 
   proc ? {cmd expected {msg ""}} {
-                                  ::xo::Timestamp t1
-                                  set r [uplevel $cmd]
-                                  if {$msg eq ""} {set msg $cmd}
-                                  if {$r ne $expected} {
-                                    regsub -all \# $r "" r
-                                    append ::_ "Error: $msg returned \n'$r' ne \n'$expected'\n"
-                                  } else {
-                                    append ::_ "$msg - passed ([t1 diff] ms)\n"
-                                  }
-                                }
+     ::xo::Timestamp t1
+     set r [uplevel $cmd]
+     if {$msg eq ""} {set msg $cmd}
+     if {$r ne $expected} {
+       regsub -all \# $r "" r
+       append ::_ "Error: $msg returned \n'$r' ne \n'$expected'\n"
+     } else {
+       append ::_ "$msg - passed ([t1 diff] ms)\n"
+     }
+   }
 
-  #
-  # some test cases
-  #
-  WorkflowConstruct x
-  set ::_ ""
-  ? {x get_value ""} "" 
-  ? {x get_value a} a 
-  ? {x get_value {a b}} {a b}
-  ? {x get_value "a b"} {a b}
-  ? {x get_value "? true a default b"} {a}
-  ? {x get_value "? false a default b"} {b}
-  ? {x get_value "? true {a b} default {b c}"} {a b}
-  ? {x get_value "? false {a b} default {b c}"} {b c}
-  ? {x get_value_set "? false {a b} default {b c}"} {a b c}
-  ns_log notice "--Test returns $::_"
+  if {0} {
+    #
+    # some test cases
+    #
+    WorkflowConstruct x
+    set ::_ ""
+    ? {x get_value ""} "" 
+    ? {x get_value a} a 
+    ? {x get_value {a b}} {a b}
+    ? {x get_value "a b"} {a b}
+    ? {x get_value "? true a default b"} {a}
+    ? {x get_value "? false a default b"} {b}
+    ? {x get_value "? true {a b} default {b c}"} {a b}
+    ? {x get_value "? false {a b} default {b c}"} {b c}
+    ? {x get_value_set "? false {a b} default {b c}"} {a b c}
+    ns_log notice "--Test returns $::_"
+  }
 }
 
 
