@@ -128,7 +128,7 @@ namespace eval ::xowf {
   }
 
   atjob proc check {{-with_older false}} {
-    my log "--at START"
+    #my log "--at START"
     #
     # check, if there are jobs scheduled for execution
     #
@@ -159,25 +159,27 @@ namespace eval ::xowf {
               and o.package_id is not null
                     " ]
 
-    my log "--at we got [llength $item_ids] scheduled items"
+    if {[llength $item_ids] > 0} {
+      my log "--at we got [llength $item_ids] scheduled items"
     
-    #
-    # Running the jobs here in this proc could lead to a problem with
-    # the exact match for the time, when e.g. the jobs take longer
-    # than one minute. Therefore, we collect the jobs ids here but we
-    # execute these in a separate thread via a job queue without
-    # waiting. If the list of jobs gets large, we might consider
-    # splitting the list and run multiple jobs in parallel.
-    #
-    if {[llength $item_ids]} {
-      set queue xowfatjobs
-      if {$queue ni [ns_job queues]} {
-        ns_job create $queue
+      #
+      # Running the jobs here in this proc could lead to a problem with
+      # the exact match for the time, when e.g. the jobs take longer
+      # than one minute. Therefore, we collect the jobs ids here but we
+      # execute these in a separate thread via a job queue without
+      # waiting. If the list of jobs gets large, we might consider
+      # splitting the list and run multiple jobs in parallel.
+      #
+      if {[llength $item_ids]} {
+        set queue xowfatjobs
+        if {$queue ni [ns_job queues]} {
+          ns_job create $queue
+        }
+        ns_job queue -detached $queue [list ::xowf::atjob run_jobs $item_ids]
       }
-      ns_job queue -detached $queue [list ::xowf::atjob run_jobs $item_ids]
-    }
 
-    my log "--at END"
+      my log "--at END"
+    }
   }
 }
 
