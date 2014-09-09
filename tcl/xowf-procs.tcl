@@ -1675,8 +1675,8 @@ namespace eval ::xowf {
 
 #
 # In order to provide either a REST or a DAV interface, we have to 
-# switch to basic authentication, since non-openacs packages 
-# have problems to handle openacs coockies. The basic authentication
+# switch to basic authentication, since non-OpenACS packages 
+# have problems to handle OpenACS coockies. The basic authentication
 # interface can be establised in three steps:
 #
 #  1) Create a basic authentication handler, Choose a URL and 
