@@ -1749,7 +1749,7 @@ namespace eval ::xowf {
   #   }
 
   proc include {wfName {vars ""}} {
-    uplevel [::xowf::include_get -level 2 $wfName {*}$vars]
+    uplevel [::xowf::include_get -level 2 $wfName $vars]
   }
 
   ad_proc include_get {{-level 1} wfName {vars ""}} {
@@ -1779,7 +1779,7 @@ namespace eval ::xowf {
     @return double_quoted value as appropriate for hstore
   } {
     if {[regexp {[ ,\"\\=>\n\']} $value]} {
-      set value \"[string map [list \" \\\\\" \\ \\\\ ' ''] $value]\"
+      set value \"[string map [list \" \\\" \\ \\\\ ' ''] $value]\"
     }
     return $value
   }
