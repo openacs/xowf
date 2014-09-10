@@ -8,7 +8,7 @@
 
 namespace eval ::xowf {
 
-  ad_proc after-instantiate {-package_id:required } {
+  ad_proc -private after-instantiate {-package_id:required } {
     Callback when this an xowf instance is created
   } {
     ns_log notice "++++ BEGIN ::xowf::after-instantiate -package_id $package_id"

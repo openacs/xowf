@@ -1591,7 +1591,7 @@ namespace eval ::xowf {
     $j persist
   }
 
-  ad_proc migrate_from_wf_current_state {} {
+  ad_proc -private migrate_from_wf_current_state {} {
     # 
     # Transform the former instance_attributes 
     #   "wf_current_state" to the xowiki::FormPage attribute "state", and
