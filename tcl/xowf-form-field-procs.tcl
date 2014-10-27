@@ -49,7 +49,7 @@ namespace eval ::xowiki::formfield {
     set text [string map [list & "&amp;" < "&lt;" > "&gt;" \" "&quot;" ' "&apos;" @ "&#64;"] [my value]]
     return "<div style='width: 65%; overflow:auto;float: left;'>
     <pre class='code'>$text</pre></div>
-    <div float: right;'>[my as_graph]</div><div class='visual-clear'></div>
+    <div>[my as_graph]</div><div class='visual-clear'></div>
         [[my object] include my-refers]
    "
   }

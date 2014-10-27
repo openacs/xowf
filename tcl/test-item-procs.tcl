@@ -79,13 +79,13 @@ namespace eval ::xowiki::formfield {
     #
     switch -- [my question_type] {
       mc { # we should support as well: minChoices, maxChoices, shuffle
-           set interaction_class mc_interaction
-           set options nr_choices=[my nr_choices]
-         }
+        set interaction_class mc_interaction
+        set options nr_choices=[my nr_choices]
+      }
       sc { # we should support as well: minChoices, maxChoices, shuffle
-           set interaction_class mc_interaction
-           set options nr_choices=[my nr_choices],multiple=false
-         }
+        set interaction_class mc_interaction
+        set options nr_choices=[my nr_choices],multiple=false
+      }
       ot { set interaction_class text_interaction }
       default {error "unknown question type: [my question_type]"}
     }
@@ -191,7 +191,7 @@ namespace eval ::xowiki::formfield {
     append form "<tr><td class='text' colspan='2'><div class='question_text'>$intro_text</div></td></tr>\n"
 
     #my msg " input_field_names=[my set input_field_names]"
-   
+    
     if {![my multiple]} {
       set correct_field_name [my get_named_sub_component_value correct]
     }
@@ -271,8 +271,8 @@ namespace eval ::xowiki::formfield {
     }
     if {[my feedback_level] eq "full"} {
       set feedback_fields {
-	{feedback_correct {textarea,cols=60,label=#xowf.feedback_correct#}}
-	{feedback_incorrect {textarea,cols=60,label=#xowf.feedback_incorrect#}}
+        {feedback_correct {textarea,cols=60,label=#xowf.feedback_correct#}}
+        {feedback_incorrect {textarea,cols=60,label=#xowf.feedback_incorrect#}}
       }
     } else {
       set feedback_fields ""
@@ -403,17 +403,17 @@ namespace eval ::xowiki::formfield {
       set alt_inputs [list]
       set alt_values [list]
       foreach html_type {input textarea} {
-	foreach n [$root selectNodes "//$html_type\[@name != ''\]"] {
-	  set alt_input [$n getAttribute name]
-	  $n setAttribute name $prefix-$alt_input
-	  if {$html_type eq "input"} {
-	    set alt_value [$n getAttribute value]
-	  } else {
-	    set alt_value ""
-	  }
-	  lappend alt_inputs $alt_input
-	  lappend alt_values $alt_value
-	}
+        foreach n [$root selectNodes "//$html_type\[@name != ''\]"] {
+          set alt_input [$n getAttribute name]
+          $n setAttribute name $prefix-$alt_input
+          if {$html_type eq "input"} {
+            set alt_value [$n getAttribute value]
+          } else {
+            set alt_value ""
+          }
+          lappend alt_inputs $alt_input
+          lappend alt_values $alt_value
+        }
       }
       # We have to drop the toplevel <FORM> of the included form
       foreach n [$root childNodes] {append form [$n asHTML]}
@@ -423,17 +423,17 @@ namespace eval ::xowiki::formfield {
       #
       foreach f [dict get $__ia form_constraints] {
         if {[regexp {^([^:]+):(.*)$} $f _ field_name definition]} {
-	  if {[string match @* $field_name]} continue
+          if {[string match @* $field_name]} continue
           # keep all form-constraints for which we have altered the name
-	  #my msg "old fc=$f, [list lsearch -exact $alt_inputs $field_name] => [lsearch -exact $alt_inputs $field_name] $alt_values"
-	  set ff [[my object] create_raw_form_field -name $field_name -spec $definition]
-	  #my msg "ff answer => '[$ff answer]'"
+          #my msg "old fc=$f, [list lsearch -exact $alt_inputs $field_name] => [lsearch -exact $alt_inputs $field_name] $alt_values"
+          set ff [[my object] create_raw_form_field -name $field_name -spec $definition]
+          #my msg "ff answer => '[$ff answer]'"
           if {$field_name in $alt_inputs} {
-	    lappend fc $prefix-$f
-	  } elseif {[$ff exists answer] && $field_name eq [$ff answer]} {
-	    # this rules is for single choice
-	    lappend fc $prefix-$f
-	  }
+            lappend fc $prefix-$f
+          } elseif {[$ff exists answer] && $field_name eq [$ff answer]} {
+            # this rules is for single choice
+            lappend fc $prefix-$f
+          }
         }
       }
     }
@@ -449,3 +449,10 @@ namespace eval ::xowiki::formfield {
     #my msg "fc=$fc"
   }
 }
+
+#
+# Local variables:
+#    mode: tcl
+#    tcl-indent-level: 2
+#    indent-tabs-mode: nil
+# End:

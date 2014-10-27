@@ -624,32 +624,34 @@ namespace eval ::xowf {
   WorkflowConstruct instforward false set "" 0
 
   proc ? {cmd expected {msg ""}} {
-                                  ::xo::Timestamp t1
-                                  set r [uplevel $cmd]
-                                  if {$msg eq ""} {set msg $cmd}
-                                  if {$r ne $expected} {
-                                    regsub -all \# $r "" r
-                                    append ::_ "Error: $msg returned \n'$r' ne \n'$expected'\n"
-                                  } else {
-                                    append ::_ "$msg - passed ([t1 diff] ms)\n"
-                                  }
-                                }
+     ::xo::Timestamp t1
+     set r [uplevel $cmd]
+     if {$msg eq ""} {set msg $cmd}
+     if {$r ne $expected} {
+       regsub -all \# $r "" r
+       append ::_ "Error: $msg returned \n'$r' ne \n'$expected'\n"
+     } else {
+       append ::_ "$msg - passed ([t1 diff] ms)\n"
+     }
+   }
 
-  #
-  # some test cases
-  #
-  WorkflowConstruct x
-  set ::_ ""
-  ? {x get_value ""} "" 
-  ? {x get_value a} a 
-  ? {x get_value {a b}} {a b}
-  ? {x get_value "a b"} {a b}
-  ? {x get_value "? true a default b"} {a}
-  ? {x get_value "? false a default b"} {b}
-  ? {x get_value "? true {a b} default {b c}"} {a b}
-  ? {x get_value "? false {a b} default {b c}"} {b c}
-  ? {x get_value_set "? false {a b} default {b c}"} {a b c}
-  ns_log notice "--Test returns $::_"
+  if {0} {
+    #
+    # some test cases
+    #
+    WorkflowConstruct x
+    set ::_ ""
+    ? {x get_value ""} "" 
+    ? {x get_value a} a 
+    ? {x get_value {a b}} {a b}
+    ? {x get_value "a b"} {a b}
+    ? {x get_value "? true a default b"} {a}
+    ? {x get_value "? false a default b"} {b}
+    ? {x get_value "? true {a b} default {b c}"} {a b}
+    ? {x get_value "? false {a b} default {b c}"} {b c}
+    ? {x get_value_set "? false {a b} default {b c}"} {a b c}
+    ns_log notice "--Test returns $::_"
+  }
 }
 
 
@@ -822,20 +824,27 @@ namespace eval ::xowf {
     Render the defined actions in the current state with submit buttons
   } {
     if {[my is_wf_instance]} {
-      ::html::div -class form-button {
-        set ctx [::xowf::Context require [self]]
-        foreach action [$ctx get_actions] {
-          set success 0
-          foreach role [$action roles] {
-            set success [my check_role $role]
-            if {$success} break
-          }
-          if {$success} {
-            set f [::xowiki::formfield::submit_button new -destroy_on_cleanup \
-                       -name __action_[namespace tail $action] -CSSclass $CSSclass]
-            if {[$action exists title]} {$f title [$action title]}
-            #my msg action=$action
-            $f value [$action label]
+      
+      set ctx [::xowf::Context require [self]]
+      set buttons {}
+      foreach action [$ctx get_actions] {
+        set success 0
+        foreach role [$action roles] {
+          set success [my check_role $role]
+          if {$success} break
+        }
+        if {$success} {
+          set f [::xowiki::formfield::submit_button new -destroy_on_cleanup \
+                     -name __action_[namespace tail $action] -CSSclass $CSSclass]
+          if {[$action exists title]} {$f title [$action title]}
+          $f value [$action label]
+          lappend buttons $f
+        }
+      }
+      if {[llength $buttons] > 0} {
+        # take the form_button_wrapper_CSSclass from the first form field
+        ::html::div -class [[lindex $buttons 0] form_button_wrapper_CSSclass] {
+          foreach f $buttons {
             $f render_input
           }
         }
@@ -954,7 +963,7 @@ namespace eval ::xowf {
     # we make sure that we only check the redirect on views
     # without content.
 
-    #my msg "view [self args]"
+    #my msg "view [self args] [my is_wf_instance]"
 
     if {[my is_wf_instance] && $content eq ""} {
       set ctx [::xowf::Context require [self]]
@@ -1191,12 +1200,6 @@ namespace eval ::xowf {
     }
   }
 
-  WorkflowPage instproc double_quote {value} {
-    if {[regexp {[ ,\"\\=>\n\']} $value]} {
-      set value \"[string map [list \" \\\\\" \\ \\\\ ' ''] $value]\"
-    }
-    return $value
-  }
   WorkflowPage instproc save_in_hstore {} {
     # experimental code for testing with hstore
     # to use it, do for now something like:
@@ -1205,16 +1208,9 @@ namespace eval ::xowf {
     # alter table xowiki_page_instance add column hkey hstore;
     # CREATE INDEX hidx ON xowiki_page_instance using GIST(hkey);
     #
-    set keys [list]
-    foreach {key value} [my instance_attributes] {
-      set v [my double_quote $value]
-      if {$v eq ""} continue
-      if {$key eq "workflow_definition"} continue
-      lappend keys [my double_quote $key]=>$v
-    }
-    #my msg "hkey='[join $keys ,]'"
+    set hkey [::xowf::dict_as_hkey [dict remove [my instance_attributes] workflow_definition]]
     xo::dc dml update_hstore "update xowiki_page_instance \
-                set hkey = '[join $keys ,]'
+                set hkey = '$hkey'
                 where page_instance_id = [my revision_id]"
   }
   WorkflowPage instproc wf_property {name {default ""}} {
@@ -1320,7 +1316,8 @@ namespace eval ::xowf {
       # We have a workflow page. Get the initial state of the workflow
       # instance from the workflow.
       #
-      my instvar instance_attributes
+      #my instvar instance_attributes
+      set instance_attributes ""
       set ctx [::xowf::Context require [self]]
       foreach p [$ctx defined ::xowiki::formfield::FormField] {
         set name [$p name]
@@ -1342,7 +1339,7 @@ namespace eval ::xowf {
       ## save instance attributes
       #set instance_attributes [array get __ia]
       #my msg "[self] [my name] setting default parameter"
-      #my msg ia=$instance_attributes,props=[$ctx defined Property]
+      #my log ia=$instance_attributes,props=[$ctx defined Property]
 
       my state [$ctx get_current_state]
       #my msg "setting initial state to '[my state]'"
@@ -1594,7 +1591,7 @@ namespace eval ::xowf {
     $j persist
   }
 
-  ad_proc migrate_from_wf_current_state {} {
+  ad_proc -private migrate_from_wf_current_state {} {
     # 
     # Transform the former instance_attributes 
     #   "wf_current_state" to the xowiki::FormPage attribute "state", and
@@ -1678,8 +1675,8 @@ namespace eval ::xowf {
 
 #
 # In order to provide either a REST or a DAV interface, we have to 
-# switch to basic authentication, since non-openacs packages 
-# have problems to handle openacs coockies. The basic authentication
+# switch to basic authentication, since non-OpenACS packages 
+# have problems to handle OpenACS coockies. The basic authentication
 # interface can be establised in three steps:
 #
 #  1) Create a basic authentication handler, Choose a URL and 
@@ -1752,7 +1749,7 @@ namespace eval ::xowf {
   #   }
 
   proc include {wfName {vars ""}} {
-    uplevel [::xowf::include_get -level 2 $wfName {*}$vars]
+    uplevel [::xowf::include_get -level 2 $wfName $vars]
   }
 
   ad_proc include_get {{-level 1} wfName {vars ""}} {
@@ -1777,6 +1774,28 @@ namespace eval ::xowf {
   }
 
 }
+
+  ad_proc ::xowf::double_quote {value} {
+    @return double_quoted value as appropriate for hstore
+  } {
+    if {[regexp {[ ,\"\\=>\n\']} $value]} {
+      set value \"[string map [list \" \\\" \\ \\\\ ' ''] $value]\"
+    }
+    return $value
+  }
+
+  ad_proc ::xowf::dict_as_hkey {dict} {
+    @return dict value in form of a hstore key.
+  } {
+    set keys {}
+    foreach {key value} $dict {
+      set v [xowf::double_quote $value]
+      if {$v eq ""} continue
+      lappend keys [::xowf::double_quote $key]=>$v
+    }
+    return [join $keys ,]
+  }
+
 
 ::xo::library source_dependent 
 
