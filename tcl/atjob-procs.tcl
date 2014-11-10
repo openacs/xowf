@@ -48,8 +48,7 @@ namespace eval ::xowf {
     set form_id [$class form_id -package_id $package_id -parent_id [[my object] parent_id]]
     if {$form_id != 0} {
       ::xo::db::CrClass get_instance_from_db -item_id $form_id
-      set instance_attributes [$form_id default_instance_attributes]
-      lappend instance_attributes cmd $cmd
+      set instance_attributes [dict merge [$form_id default_instance_attributes] [list cmd $cmd]]
       set name [::xowiki::autoname new -name [$form_id name] -parent_id $owner_id] 
       set f [::xowiki::FormPage new -destroy_on_cleanup \
                  -package_id $package_id \
