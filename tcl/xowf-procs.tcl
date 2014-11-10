@@ -719,7 +719,8 @@ namespace eval ::xowf {
              __form_redirect_method __none \
              __action_$action_name $action_name]
     #ns_log notice "call_action pushed form_param to $cc: [$cc array get form_parameter]"
-    $cc array set form_parameter $attributes
+
+    $cc load_form_parameter_from_values $attributes
 
     $package_id set object "[$package_id folder_path -parent_id [$object parent_id]][$object name]"
     
