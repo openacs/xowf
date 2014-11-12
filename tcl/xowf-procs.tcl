@@ -520,8 +520,7 @@ namespace eval ::xowf {
       }
       #my msg "forms=[my array names forms], parampages=[my array names parampages]"
       set page [my object]
-      $page set unresolved_references 0
-      $page set __unresolved_references [list]
+      $page references clear
       $page set __unresolved_object_type ::xowiki::Form
       foreach {type pages} [list wf_form [my array names forms] wf_parampage [my array names parampages]] {
         foreach p $pages {
@@ -533,16 +532,18 @@ namespace eval ::xowf {
         }
       }
       #my msg "-- link_text=$link_text// refs?[$page exists references]"
-      if {[$page exists references]} {
-        #my msg "updating references refs=[$page set references]"
-        $page references_update [lsort -unique [$page set references]]
-        $page set __extra_references [$page set references]
-        $page unset references
+      
+      set references [$page references get references]
+      if {[llength $references] > 0} {
+        #my msg "updating references refs=$references"
+        $page references_update [lsort -unique $references]
+        $page set __extra_references $references
+        $page references clear
       }
-      if {[llength [$page set __unresolved_references]] > 0} {
+      if {[llength [$page references get unresolved]] > 0} {
         # TODO: we should provide a link to create the missing forms. maybe we 
         # change unresolved_references to a list..., or maybe we write these into the DB.
-        my msg -html t "Missing forms: [join [$page set __unresolved_references] {, }]"
+        my msg -html t "Missing forms: [join [$page references get unresolved] {, }]"
       }
     }
     return [list rc 0]
