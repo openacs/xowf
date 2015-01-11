@@ -531,9 +531,9 @@ namespace eval ::xowf {
           set link_text [$l render]
         }
       }
-      #my msg "-- link_text=$link_text// refs?[$page exists references]"
-      
-      set references [$page references get references]
+      set references [$page references get resolved]
+      #my log "-- link_text=$link_text// $references"
+
       if {[llength $references] > 0} {
         #my msg "updating references refs=$references"
         $page references_update [lsort -unique $references]
