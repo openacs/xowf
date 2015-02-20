@@ -1179,6 +1179,17 @@ namespace eval ::xowf {
     next
   }
 
+  WorkflowPage instproc save_data args {
+    if {[my is_wf_instance]} {
+      #
+      # update the state in the workflow instance
+      #
+      set ctx [::xowf::Context require [self]] 
+      my state [$ctx get_current_state]
+    }
+    next
+  }
+  
   WorkflowPage instproc save args {
     set r [next]
     my save_in_hstore
@@ -1192,12 +1203,18 @@ namespace eval ::xowf {
   }  
 
   WorkflowPage instproc save_in_hstore {} {
-    # experimental code for testing with hstore
-    # to use it, do for now something like:
     #
-    # /usr/local/pg820/bin/psql -U nsadmin -d dotlrn-test5 < /usr/local/pg820/share/postgresql/contrib/hstore.sql
-    # alter table xowiki_page_instance add column hkey hstore;
-    # CREATE INDEX hidx ON xowiki_page_instance using GIST(hkey);
+    # Experimental code for storing instance attributes in hstore. To
+    # use it, make sure to active hstore for the database with a
+    # command like:
+    #
+    # $PGBIN/psql -U nsadmin -d dotlrn-test5 < /usr/local/pg/share/postgresql/contrib/hstore.sql
+    #
+    # .... and add a index for the hstore key to xowiki_page_instance:
+    #
+    #    CREATE INDEX hidx ON xowiki_page_instance using GIST(hkey);
+    #
+    # ... and set the parameter "use_hstore" to 1. Then the following condition will be true.
     #
     if {[::xo::dc has_hstore] && [[my package_id] get_parameter use_hstore 0]} {
       set hkey [::xowf::dict_as_hkey [dict remove [my instance_attributes] workflow_definition]]
