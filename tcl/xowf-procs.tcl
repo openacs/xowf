@@ -1114,7 +1114,7 @@ namespace eval ::xowf {
           if {[regexp {^__action_(.+)$} $name _ action]} {
             set ctx [::xowf::Context require [self]]
             set next_state [my activate $ctx $action]
-            my log "after activate next_state=$next_state, current_state=[$ctx get_current_state], [my set instance_attributes]"
+            #my log "after activate next_state=$next_state, current_state=[$ctx get_current_state], [my set instance_attributes]"
             if {$next_state ne ""} {
               if {[${ctx}::$next_state exists assigned_to]} {
                 my assignee [my get_assignee [${ctx}::$next_state assigned_to]]
@@ -1178,29 +1178,18 @@ namespace eval ::xowf {
     my array unset __wf
     next
   }
-  WorkflowPage instproc save_data args {
-    if {[my is_wf_instance]} {
-      #array set __ia [my instance_attributes]
-      set ctx [::xowf::Context require [self]] 
-      my state [$ctx get_current_state]
-      #my msg "saving ia: [array get __ia]"
-      #my instance_attributes [array get __ia]
-      #
-      # we have to flag currently storing in hstore here, since
-      # saving removes the temporary variables for properties
-      #
-      if {[::xo::dc has_hstore] && [[my package_id] get_parameter use_hstore 0]} {set save_in_hstore 1}
-    } elseif {[my is_wf]} {
-      if {[::xo::dc has_hstore] && [[my package_id] get_parameter use_hstore 0]} {set save_in_hstore 1}
-    }
-    next
-    #my msg "save_in_hstore=[info exists save_in_hstore]"
-    if {[info exists save_in_hstore]} {
-      # "next" sets the revision_id, by not e.g. page_instance_id
-      my set page_instance_id [my revision_id]
-      my save_in_hstore
-    }
+
+  WorkflowPage instproc save args {
+    set r [next]
+    my save_in_hstore
+    return $r
   }
+
+  WorkflowPage instproc save_new args {
+    set r [next]
+    my save_in_hstore
+    return $r
+  }  
 
   WorkflowPage instproc save_in_hstore {} {
     # experimental code for testing with hstore
@@ -1210,10 +1199,13 @@ namespace eval ::xowf {
     # alter table xowiki_page_instance add column hkey hstore;
     # CREATE INDEX hidx ON xowiki_page_instance using GIST(hkey);
     #
-    set hkey [::xowf::dict_as_hkey [dict remove [my instance_attributes] workflow_definition]]
-    xo::dc dml update_hstore "update xowiki_page_instance \
-                set hkey = '$hkey'
-                where page_instance_id = [my revision_id]"
+    if {[::xo::dc has_hstore] && [[my package_id] get_parameter use_hstore 0]} {
+      set hkey [::xowf::dict_as_hkey [dict remove [my instance_attributes] workflow_definition]]
+      set revision_id [my revision_id]
+      xo::dc dml update_hstore "update xowiki_page_instance \
+                set hkey = '$hkey' \
+                where page_instance_id = :revision_id"
+    }
   }
   WorkflowPage instproc wf_property {name {default ""}} {
     if {[my exists __wf]} {set key __wf($name)} else {set key __wfi($name)}
