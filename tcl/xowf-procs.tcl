@@ -822,7 +822,24 @@ namespace eval ::xowf {
     }
   }
 
-  WorkflowPage ad_instproc render_form_action_buttons {{-CSSclass ""}} {
+  WorkflowPage ad_instproc render_form_action_buttons_widgets {{-CSSclass ""} buttons} {
+    With the given set of buttons, produce the HTML for the button
+    container and the included inputs.
+  } {
+    if {[llength $buttons] > 0} {
+      # take the form_button_wrapper_CSSclass from the first form field
+      ::html::div -class [[lindex $buttons 0] form_button_wrapper_CSSclass] {
+        foreach f $buttons {
+          $f render_input
+        }
+      }
+    }
+  }
+  
+  WorkflowPage ad_instproc render_form_action_buttons {
+    {-formfieldButtonClass ::xowiki::formfield::submit_button}
+    {-CSSclass ""}
+  } {
     Render the defined actions in the current state with submit buttons
   } {
     if {[my is_wf_instance]} {
@@ -836,21 +853,17 @@ namespace eval ::xowf {
           if {$success} break
         }
         if {$success} {
-          set f [::xowiki::formfield::submit_button new -destroy_on_cleanup \
+          set f [$formfieldButtonClass new -destroy_on_cleanup \
                      -name __action_[namespace tail $action] -CSSclass $CSSclass]
           if {[$action exists title]} {$f title [$action title]}
           $f value [$action label]
           lappend buttons $f
         }
       }
-      if {[llength $buttons] > 0} {
-        # take the form_button_wrapper_CSSclass from the first form field
-        ::html::div -class [[lindex $buttons 0] form_button_wrapper_CSSclass] {
-          foreach f $buttons {
-            $f render_input
-          }
-        }
-      }
+      #
+      # render the widgets
+      #
+      my render_form_action_buttons_widgets -CSSclass $CSSclass $buttons
     } else {
       next
     }
