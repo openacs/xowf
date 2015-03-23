@@ -1215,6 +1215,14 @@ namespace eval ::xowf {
     return $r
   }  
 
+  WorkflowPage instproc hstore_attributes {} {
+    #
+    # We do not want to save the workflow definition in every workflow
+    # instance.
+    #
+    return [dict remove [my instance_attributes] workflow_definition]
+  }
+  
   WorkflowPage instproc save_in_hstore {} {
     #
     # Experimental code for storing instance attributes in hstore. To
@@ -1230,7 +1238,7 @@ namespace eval ::xowf {
     # ... and set the parameter "use_hstore" to 1. Then the following condition will be true.
     #
     if {[::xo::dc has_hstore] && [[my package_id] get_parameter use_hstore 0]} {
-      set hkey [::xowf::dict_as_hkey [dict remove [my instance_attributes] workflow_definition]]
+      set hkey [::xowiki::hstore::dict_as_hkey [my hstore_attributes]]
       set revision_id [my revision_id]
       xo::dc dml update_hstore "update xowiki_page_instance \
                 set hkey = '$hkey' \
@@ -1798,28 +1806,6 @@ namespace eval ::xowf {
   }
 
 }
-
-  ad_proc ::xowf::double_quote {value} {
-    @return double_quoted value as appropriate for hstore
-  } {
-    if {[regexp {[ ,\"\\=>\n\']} $value]} {
-      set value \"[string map [list \" \\\" \\ \\\\ ' ''] $value]\"
-    }
-    return $value
-  }
-
-  ad_proc ::xowf::dict_as_hkey {dict} {
-    @return dict value in form of a hstore key.
-  } {
-    set keys {}
-    foreach {key value} $dict {
-      set v [xowf::double_quote $value]
-      if {$v eq ""} continue
-      lappend keys [::xowf::double_quote $key]=>$v
-    }
-    return [join $keys ,]
-  }
-
 
 ::xo::library source_dependent 
 
