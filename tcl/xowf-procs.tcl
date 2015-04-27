@@ -520,8 +520,7 @@ namespace eval ::xowf {
       }
       #my msg "forms=[my array names forms], parampages=[my array names parampages]"
       set page [my object]
-      $page set unresolved_references 0
-      $page set __unresolved_references [list]
+      $page references clear
       $page set __unresolved_object_type ::xowiki::Form
       foreach {type pages} [list wf_form [my array names forms] wf_parampage [my array names parampages]] {
         foreach p $pages {
@@ -532,17 +531,19 @@ namespace eval ::xowf {
           set link_text [$l render]
         }
       }
-      #my msg "-- link_text=$link_text// refs?[$page exists references]"
-      if {[$page exists references]} {
-        #my msg "updating references refs=[$page set references]"
-        $page references_update [lsort -unique [$page set references]]
-        $page set __extra_references [$page set references]
-        $page unset references
+      set references [$page references get resolved]
+      #my log "-- link_text=$link_text// $references"
+
+      if {[llength $references] > 0} {
+        #my msg "updating references refs=$references"
+        $page references_update [lsort -unique $references]
+        $page set __extra_references $references
+        $page references clear
       }
-      if {[llength [$page set __unresolved_references]] > 0} {
+      if {[llength [$page references get unresolved]] > 0} {
         # TODO: we should provide a link to create the missing forms. maybe we 
         # change unresolved_references to a list..., or maybe we write these into the DB.
-        my msg -html t "Missing forms: [join [$page set __unresolved_references] {, }]"
+        my msg -html t "Missing forms: [join [$page references get unresolved] {, }]"
       }
     }
     return [list rc 0]
@@ -719,7 +720,8 @@ namespace eval ::xowf {
              __form_redirect_method __none \
              __action_$action_name $action_name]
     #ns_log notice "call_action pushed form_param to $cc: [$cc array get form_parameter]"
-    $cc array set form_parameter $attributes
+
+    $cc load_form_parameter_from_values $attributes
 
     $package_id set object "[$package_id folder_path -parent_id [$object parent_id]][$object name]"
     
@@ -820,7 +822,24 @@ namespace eval ::xowf {
     }
   }
 
-  WorkflowPage ad_instproc render_form_action_buttons {{-CSSclass ""}} {
+  WorkflowPage ad_instproc render_form_action_buttons_widgets {{-CSSclass ""} buttons} {
+    With the given set of buttons, produce the HTML for the button
+    container and the included inputs.
+  } {
+    if {[llength $buttons] > 0} {
+      # take the form_button_wrapper_CSSclass from the first form field
+      ::html::div -class [[lindex $buttons 0] form_button_wrapper_CSSclass] {
+        foreach f $buttons {
+          $f render_input
+        }
+      }
+    }
+  }
+  
+  WorkflowPage ad_instproc render_form_action_buttons {
+    {-formfieldButtonClass ::xowiki::formfield::submit_button}
+    {-CSSclass ""}
+  } {
     Render the defined actions in the current state with submit buttons
   } {
     if {[my is_wf_instance]} {
@@ -834,21 +853,17 @@ namespace eval ::xowf {
           if {$success} break
         }
         if {$success} {
-          set f [::xowiki::formfield::submit_button new -destroy_on_cleanup \
+          set f [$formfieldButtonClass new -destroy_on_cleanup \
                      -name __action_[namespace tail $action] -CSSclass $CSSclass]
           if {[$action exists title]} {$f title [$action title]}
           $f value [$action label]
           lappend buttons $f
         }
       }
-      if {[llength $buttons] > 0} {
-        # take the form_button_wrapper_CSSclass from the first form field
-        ::html::div -class [[lindex $buttons 0] form_button_wrapper_CSSclass] {
-          foreach f $buttons {
-            $f render_input
-          }
-        }
-      }
+      #
+      # render the widgets
+      #
+      my render_form_action_buttons_widgets -CSSclass $CSSclass $buttons
     } else {
       next
     }
@@ -1112,7 +1127,7 @@ namespace eval ::xowf {
           if {[regexp {^__action_(.+)$} $name _ action]} {
             set ctx [::xowf::Context require [self]]
             set next_state [my activate $ctx $action]
-            my log "after activate next_state=$next_state, current_state=[$ctx get_current_state], [my set instance_attributes]"
+            #my log "after activate next_state=$next_state, current_state=[$ctx get_current_state], [my set instance_attributes]"
             if {$next_state ne ""} {
               if {[${ctx}::$next_state exists assigned_to]} {
                 my assignee [my get_assignee [${ctx}::$next_state assigned_to]]
@@ -1176,42 +1191,59 @@ namespace eval ::xowf {
     my array unset __wf
     next
   }
+
   WorkflowPage instproc save_data args {
     if {[my is_wf_instance]} {
-      #array set __ia [my instance_attributes]
+      #
+      # update the state in the workflow instance
+      #
       set ctx [::xowf::Context require [self]] 
       my state [$ctx get_current_state]
-      #my msg "saving ia: [array get __ia]"
-      #my instance_attributes [array get __ia]
-      #
-      # we have to flag currently storing in hstore here, since
-      # saving removes the temporary variables for properties
-      #
-      if {[::xo::dc has_hstore] && [[my package_id] get_parameter use_hstore 0]} {set save_in_hstore 1}
-    } elseif {[my is_wf]} {
-      if {[::xo::dc has_hstore] && [[my package_id] get_parameter use_hstore 0]} {set save_in_hstore 1}
     }
     next
-    #my msg "save_in_hstore=[info exists save_in_hstore]"
-    if {[info exists save_in_hstore]} {
-      # "next" sets the revision_id, by not e.g. page_instance_id
-      my set page_instance_id [my revision_id]
-      my save_in_hstore
-    }
+  }
+  
+  WorkflowPage instproc save args {
+    set r [next]
+    my save_in_hstore
+    return $r
   }
 
+  WorkflowPage instproc save_new args {
+    set r [next]
+    my save_in_hstore
+    return $r
+  }  
+
+  WorkflowPage instproc hstore_attributes {} {
+    #
+    # We do not want to save the workflow definition in every workflow
+    # instance.
+    #
+    return [dict remove [my instance_attributes] workflow_definition]
+  }
+  
   WorkflowPage instproc save_in_hstore {} {
-    # experimental code for testing with hstore
-    # to use it, do for now something like:
     #
-    # /usr/local/pg820/bin/psql -U nsadmin -d dotlrn-test5 < /usr/local/pg820/share/postgresql/contrib/hstore.sql
-    # alter table xowiki_page_instance add column hkey hstore;
-    # CREATE INDEX hidx ON xowiki_page_instance using GIST(hkey);
+    # Experimental code for storing instance attributes in hstore. To
+    # use it, make sure to active hstore for the database with a
+    # command like:
     #
-    set hkey [::xowf::dict_as_hkey [dict remove [my instance_attributes] workflow_definition]]
-    xo::dc dml update_hstore "update xowiki_page_instance \
-                set hkey = '$hkey'
-                where page_instance_id = [my revision_id]"
+    # $PGBIN/psql -U nsadmin -d dotlrn-test5 < /usr/local/pg/share/postgresql/contrib/hstore.sql
+    #
+    # .... and add a index for the hstore key to xowiki_page_instance:
+    #
+    #    CREATE INDEX hidx ON xowiki_page_instance using GIST(hkey);
+    #
+    # ... and set the parameter "use_hstore" to 1. Then the following condition will be true.
+    #
+    if {[::xo::dc has_hstore] && [[my package_id] get_parameter use_hstore 0]} {
+      set hkey [::xowiki::hstore::dict_as_hkey [my hstore_attributes]]
+      set revision_id [my revision_id]
+      xo::dc dml update_hstore "update xowiki_page_instance \
+                set hkey = '$hkey' \
+                where page_instance_id = :revision_id"
+    }
   }
   WorkflowPage instproc wf_property {name {default ""}} {
     if {[my exists __wf]} {set key __wf($name)} else {set key __wfi($name)}
@@ -1774,28 +1806,6 @@ namespace eval ::xowf {
   }
 
 }
-
-  ad_proc ::xowf::double_quote {value} {
-    @return double_quoted value as appropriate for hstore
-  } {
-    if {[regexp {[ ,\"\\=>\n\']} $value]} {
-      set value \"[string map [list \" \\\" \\ \\\\ ' ''] $value]\"
-    }
-    return $value
-  }
-
-  ad_proc ::xowf::dict_as_hkey {dict} {
-    @return dict value in form of a hstore key.
-  } {
-    set keys {}
-    foreach {key value} $dict {
-      set v [xowf::double_quote $value]
-      if {$v eq ""} continue
-      lappend keys [::xowf::double_quote $key]=>$v
-    }
-    return [join $keys ,]
-  }
-
 
 ::xo::library source_dependent 
 
