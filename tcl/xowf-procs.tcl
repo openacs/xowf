@@ -430,8 +430,8 @@ namespace eval ::xowf {
       }
       foreach role [$s set handled_roles] {
         set role_ctx [self]-$role
-        #my msg exists?role=$role->[self]-$role->[info command [self]-$role]
-        if {[info command ${role_ctx}::[$s name]] ne ""} {
+        #my msg exists?role=$role->[self]-$role->[info commands [self]-$role]
+        if {[info commands ${role_ctx}::[$s name]] ne ""} {
           foreach a [${role_ctx}::[$s name] get_actions] {
             append result [my draw_transition $s ${role_ctx}::$a "$role:"]
           }
