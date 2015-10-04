@@ -12,7 +12,7 @@
     <version name="0.44" url="http://openacs.org/repository/download/apm/xowf-0.44.apm">
         <owner url="mailto:neumann@wu-wien.ac.at">Gustaf Neumann</owner>
         <summary>XoWiki Content Flow - an XoWiki based workflow system implementing state-based behavior of wiki pages and forms</summary>
-        <release-date>2015-09-25</release-date>
+        <release-date>2015-10-04</release-date>
         <vendor url="http://wu.ac.at">WU Vienna</vendor>
         <maturity>2</maturity>
 
