@@ -1751,12 +1751,12 @@ namespace eval ::xowf {
     set page [$package_id resolve_request -path $object_name method]
     if {$page eq ""} {
       set errorMsg cannot resolve '$object_name' in package [$package_id package_url]
-      my log "Error: $errorMsg"
+      ad_log error $errorMsg
       ns_return 406 text/plain "Error: $errorMsg"
     } elseif {[catch {set msg [$page call_action \
                                    -action $action \
                                    -attributes $attributes]} errorMsg]} {
-      my log "Error: $uri $action $attributes resulted in\n$errorMsg\n$::errorInfo"
+      ad_log error "$uri $action $attributes resulted in $errorMsg"
       ns_return 406 text/plain "Error: $errorMsg\n"
     } else {
       ns_return 200 text/plain "Success: $msg\n"
