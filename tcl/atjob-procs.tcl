@@ -81,13 +81,20 @@ namespace eval ::xowf {
   atjob proc run_jobs {item_ids} {
     #my log "---run xowf jobs START"
 
+    set sql "select i.item_id, i.name, i.parent_id, i.publish_status, o.creation_user,
+                    i.live_revision as revision_id, page_template, instance_attributes
+             from cr_items i, xowiki_page_instance t, acs_objects o
+             where i.item_id in ([join $item_ids ,]) and
+             i.live_revision = t.page_instance_id and o.object_id = i.item_id"
+
+    set sql "select item_id, name, parent_id, publish_status, creation_user,
+                    revision_id, page_template, instance_attributes
+             from xowiki_form_instance_item_view
+             where i.item_id in ([join $item_ids ,])"
+    
     set items [::xowiki::FormPage instantiate_objects \
                    -object_class ::xowiki::FormPage \
-                   -sql "select i.item_id, i.name, i.parent_id, i.publish_status, o.creation_user,
-                             i.live_revision as revision_id, page_template, instance_attributes
-                          from cr_items i, xowiki_page_instance t, acs_objects o
-            where i.item_id in ([join $item_ids ,]) and
-            i.live_revision = t.page_instance_id and o.object_id = i.item_id"]
+                   -sql $sql]
 
     if {[llength [$items children]] > 0} {
       
@@ -146,18 +153,24 @@ namespace eval ::xowf {
     # To make sure we are not fetching pages from unmounted instances
     # we check for package_id not null.
     #
-    set item_ids [::xo::dc list get_due_atjobs "
-                      select i.item_id
-                      from cr_items i, cr_items i2, cr_revisions r, xowiki_page_instance t, acs_objects o
-                      where i.item_id = r.item_id and i.live_revision = r.revision_id 
+    set sql "select i.item_id
+              from cr_items i, cr_items i2, cr_revisions r, xowiki_page_instance t, acs_objects o
+              where i.item_id = r.item_id and i.live_revision = r.revision_id 
                       and r.revision_id = t.page_instance_id and o.object_id = i.item_id
                       and i2.item_id = t.page_template and i2.content_type = '::xowiki::Form'
                       and i2.name = 'en:atjob-form'
                       and r.publish_date $op to_timestamp(:ansi_time,'YYYY-MM-DD HH24:MI')
                       and i.publish_status = 'production'
-              and o.package_id is not null
-                    " ]
-
+                      and o.package_id is not null"
+    set sql "select xi.item_id
+              from xowiki_form_instance_item_view xi, cr_items i2,
+              where i2.item_id = xi.page_template and i2.content_type = '::xowiki::Form' and i2.name = 'en:atjob-form'
+                and xi.publish_date $op to_timestamp(:ansi_time,'YYYY-MM-DD HH24:MI')
+                and xi.publish_status = 'production'
+                and xi.package_id is not null"
+    
+    set item_ids [::xo::dc list get_due_atjobs $sql]
+    
     if {[llength $item_ids] > 0} {
       my log "--at we got [llength $item_ids] scheduled items"
     
