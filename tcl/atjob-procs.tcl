@@ -81,16 +81,10 @@ namespace eval ::xowf {
   atjob proc run_jobs {item_ids} {
     #my log "---run xowf jobs START"
 
-    set sql "select i.item_id, i.name, i.parent_id, i.publish_status, o.creation_user,
-                    i.live_revision as revision_id, page_template, instance_attributes
-             from cr_items i, xowiki_page_instance t, acs_objects o
-             where i.item_id in ([join $item_ids ,]) and
-             i.live_revision = t.page_instance_id and o.object_id = i.item_id"
-
     set sql "select item_id, name, parent_id, publish_status, creation_user,
                     revision_id, page_template, instance_attributes
              from xowiki_form_instance_item_view
-             where i.item_id in ([join $item_ids ,])"
+             where item_id in ([join $item_ids ,])"
     
     set items [::xowiki::FormPage instantiate_objects \
                    -object_class ::xowiki::FormPage \
