@@ -12,8 +12,8 @@ namespace eval ::xowiki::includelet {
   #
   # Define additional elements for includelets
   #
-  Class form-menu-button-wf-instances -superclass ::xowiki::includelet::form-menu-button-answers
-  Class form-menu-button-wf -superclass form-menu-button -parameter {
+  Class create form-menu-button-wf-instances -superclass ::xowiki::includelet::form-menu-button-answers
+  Class create form-menu-button-wf -superclass form-menu-button -parameter {
     {method view}
   }
 

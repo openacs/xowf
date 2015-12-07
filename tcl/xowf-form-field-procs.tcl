@@ -14,7 +14,7 @@ namespace eval ::xowiki::formfield {
   #
   ###########################################################
 
-  Class workflow_definition -superclass textarea -parameter {
+  Class create workflow_definition -superclass textarea -parameter {
     {rows 20}
     {cols 80}
     {dpi 120}
@@ -60,7 +60,7 @@ namespace eval ::xowiki::formfield {
   # ::xowiki::formfield::current_state
   #
   ###########################################################
-  Class current_state -superclass label -parameter {
+  Class create current_state -superclass label -parameter {
     {as_graph true}
   }
   current_state instproc render_input {} {
@@ -94,7 +94,7 @@ namespace eval ::xowiki::formfield {
 # these definitons are only here for the time being 
 #
 namespace eval ::xo::role {
-  Class Role
+  Class create Role
   Role instproc get_members args {
     error "get_members are not implemented for [self]"
   }
@@ -186,7 +186,7 @@ namespace eval ::xowiki::formfield {
   #
   ###########################################################
 
-  Class role_member -superclass candidate_box_select -parameter {
+  Class create role_member -superclass candidate_box_select -parameter {
     role 
     {online_state off}
   }
@@ -232,7 +232,7 @@ namespace eval ::xowiki::formfield {
   #
   ###########################################################
 
-  Class mc_exercise -superclass CompoundField -parameter {
+  Class create mc_exercise -superclass CompoundField -parameter {
     {feedback full}
     {inplace true}
   }
@@ -306,7 +306,7 @@ namespace eval ::xowiki::formfield {
   #
   ###########################################################
 
-  Class mc_alternative -superclass CompoundField -parameter {
+  Class create mc_alternative -superclass CompoundField -parameter {
     {feedback full}
     {inplace true}
   }
