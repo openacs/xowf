@@ -956,7 +956,7 @@ namespace eval ::xowf {
     catch {ds_comment $msg}
   }
 
-  WorkflowPage ad_instproc edit args {
+  WorkflowPage ad_instproc www-edit args {
     Hook for editing workflow pages
   } {
     if {[my is_wf_instance]} {
@@ -967,7 +967,7 @@ namespace eval ::xowf {
     next
   }
 
-  WorkflowPage ad_instproc view {{content ""}} {
+  WorkflowPage ad_instproc www-view {{content ""}} {
     Provide additional view modes:
     - edit: instead of viewing a page, it is opened in edit mode
     - view_user_input: show user the provided input
@@ -1269,7 +1269,7 @@ namespace eval ::xowf {
     }
   }
 
-  WorkflowPage instproc create-or-use args {
+  WorkflowPage instproc www-create-or-use args {
     #my msg "instance = [my is_wf_instance], wf=[my is_wf]"
     if {[my is_wf]} {
       my instvar package_id
