@@ -128,7 +128,7 @@ namespace eval ::xowf {
     return [list form_id $(item_id) name $(prefix):$(stripped_name)]
   }
 
-  Context instproc default_form_loader {form_name} {
+  Context instproc default_load_form_id {form_name} {
     #my msg "resolving $form_name in state [my current_state] via default form loader"
     set form_id 0
     if {$form_name ne ""} {
@@ -139,8 +139,41 @@ namespace eval ::xowf {
     }
     return $form_id
   }
+  ::nsf::method::property Context default_load_form_id returns integer
 
+  Context instproc create_auto_form {object} {
+    #
+    # Create a form on the fly. The created form can be influenced by
+    # "auto_form_template" and "auto_form_constraints".
+    #
+    set vars [dict keys [$object set instance_attributes]]
+    if {[my exists auto_form_template]} {
+      set template [my set auto_form_template]
+      my log "USE autoform template"
+    } elseif {[llength $vars] == 0} {
+      #set template "AUTO form, no instance variables defined,<br>@_text@"
+      set template "@_text@"
+    } else {
+      set template "@[join $vars @,@]@<br>@_text@"
+    }
+    #my log "USE auto-form template=$template, vars=$vars IA=[$object set instance_attributes], V=[$object info vars] auto [expr {[my exists autoname] ? [my set autoname] : "f"}]"
 
+    if {[my exists auto_form_constraints]} {
+      set fc [my set auto_form_constraints]
+    } else {
+      set fc ""
+    }
+    return [::xowiki::Form new -destroy_on_cleanup \
+                -package_id $package_id \
+                -parent_id [$package_id folder_id] \
+                -name "Auto-Form" \
+                -anon_instances [expr {[my exists autoname] ? [my set autoname] : "f"}] \
+                -form {} \
+                -text [list $template text/html] \
+                -form_constraints $fc]
+  }
+      
+  
   Context instproc form_object {object} {
     set parent_id [$object parent_id]
     # After this method is activated, the form object of the form of
@@ -151,6 +184,8 @@ namespace eval ::xowf {
     # object name of the form in the context.
     #
     if {[my exists form_id]} {return [my set form_id]}
+
+    set package_id [$object package_id]
     # 
     # We have to load the form, maybe via a form loader.  If the
     # form_loader is set and the method exists, then use the form
@@ -161,82 +196,72 @@ namespace eval ::xowf {
 
     # TODO why no procsearch instead of "info methods"?
     if {$loader eq "" || [my info methods $loader] eq ""} {
-      set form_id [my default_form_loader [[my current_state] form]]
+      set form_id [my default_load_form_id [[my current_state] form]]
+      if {$form_id == 0} {
+        #
+        # When no form was found by the form loader ($form_id == 0) we
+        # create automatically a form.
+        #
+        set form_object [my create_auto_form $object$]
+      }
     } else {
       #my msg "using custom form loader $loader for [my form]"
       set form_id [my $loader [my form]]
     }
+
+    #
+    # At this place, the variable "form_id" might contain an id
+    # (integer) or an object, provided by the custom file loader.
+    #
     #my msg form_id=$form_id
-    set package_id [$object package_id]
 
-    # When no form was found by the form loader ($form_id == 0) we
-    # create a form on the fly. The created form can be influenced by
-    # "auto_form_template" and "auto_form_constraints".
-    if {$form_id == 0} {
-      set vars [dict keys [$object set instance_attributes]]
-      if {[my exists auto_form_template]} {
-        set template [my set auto_form_template]
-        my log "USE autoform template"
-      } elseif {[llength $vars] == 0} {
-        #set template "AUTO form, no instance variables defined,<br>@_text@"
-        set template "@_text@"
-      } else {
-        set template "@[join $vars @,@]@<br>@_text@"
-      }
-      #my log "USE auto-form template=$template, vars=$vars IA=[$object set instance_attributes], V=[$object info vars] auto [expr {[my exists autoname] ? [my set autoname] : "f"}]"
-
-      if {[my exists auto_form_constraints]} {
-        set fc [my set auto_form_constraints]
-      } else {
-        set fc ""
-      }
-      set form_id [::xowiki::Form new -destroy_on_cleanup \
-                       -package_id $package_id \
-                       -parent_id [$package_id folder_id] \
-                       -name "Auto-Form" \
-                       -anon_instances [expr {[my exists autoname] ? [my set autoname] : "f"}] \
-                       -form {} \
-                       -text [list $template text/html] \
-                       -form_constraints $fc]
-    } else {
-      # Be sure, to instantiate the form object
-      if {![my isobject ::$form_id]} {
-        ::xo::db::CrClass get_instance_from_db -item_id $form_id
-      }
-      #my msg form_id=$form_id,[$form_id info class]
-
-      set form_id ::$form_id
-      if {[$form_id info class] eq "::xowiki::Form"} {
-        # The item returned from the form loadeder was a form,
-        # everything is fine.
-      } elseif {[$form_id info class] eq "::xowiki::FormPage"} {
-        # We got an FormPage. This formpage might be already a pseudo
-        # form (containing property "form"). In this case, we are done as well.
-
-        if {[$form_id property form] eq ""} {
-          # The FormPage contains no form, so try to provide one.  We
-          # obtain the content by rendering the page_content. In some
-          # cases it might be more efficient to obtain the content
-          # from property "_text", but this might lead to unexpected
-          # cases where the formpage uses _text for partial
-          # information.
-          set text [$form_id render_content]
-          $form_id set_property -new 1 form "<form>$text</form>"
-          #my msg "_text=[$form_id property _text]"
-        }
-      } elseif {[$form_id info class] eq "::xowiki::Page"} {
-        #my msg "creating form"
-        set form_id [::xowiki::Form new -destroy_on_cleanup \
-                         -package_id $package_id \
-                         -parent_id [$package_id folder_id] \
-                         -name "Auto-Form" \
-                         -anon_instances [expr {[my exists autoname] ? [my set autoname] : "f"}] \
-                         -form "<form>[$form_id get_html_from_content [$form_id text]]</form>" \
-                         -text "" \
-                         -form_constraints ""]
-      }
+    if {[string is integer -strict $form_id]
+        && $form_id > 0
+        && ![my isobject ::$form_id]} {
+      ::xo::db::CrClass get_instance_from_db -item_id $form_id
+      set form_object ::$form_id
     }
-    my set form_id $form_id
+    
+    if {[$form_object istype "::xowiki::Form"]} {
+      #
+      # The item returned from the form loader was a form,
+      # everything is fine.
+      #
+    } elseif {[$form_object istype "::xowiki::FormPage"]} {
+      #
+      # We got a FormPage. This FormPage might be a pseudo form (a
+      # FormPage containing the property "form"). If not, add a "form"
+      # property from the rendered content.
+      #
+      if {[$form_object property form] eq ""} {
+        #
+        # The FormPage contains no form, so try to provide one.  We
+        # obtain the content by rendering the page_content. In some
+        # cases it might be more efficient to obtain the content
+        # from property "_text", but this might lead to unexpected
+        # cases where the formpage uses _text for partial
+        # information.
+        #
+        set text [$form_object render_content]
+        $form_object set_property -new 1 form "<form>$text</form>"
+        #my msg "_text=[$form_object property _text]"
+      }
+    } elseif {[$form_object info class] eq "::xowiki::Page"} {
+      #
+      # The $form_object is in reality an xowiki Page, make it look
+      # like a form (with form buttons).
+      #
+      set form_object [::xowiki::Form new -destroy_on_cleanup \
+                           -package_id $package_id \
+                           -parent_id [$package_id folder_id] \
+                           -name "Auto-Form" \
+                           -anon_instances [expr {[my exists autoname] ? [my set autoname] : "f"}] \
+                           -form "<form>[$form_object get_html_from_content [$form_id text]]</form>" \
+                           -text "" \
+                           -form_constraints ""]
+    }
+
+    my set form_id $form_object
   }
 
   Context instproc init {} {
@@ -694,6 +719,7 @@ namespace eval ::xowf {
   #{label "#xowf.form-button-[namespace tail [self]]#"}
   Class create Action -superclass WorkflowConstruct -parameter {
     {next_state ""}
+    {payload ""}
     {roles all}
     {state_safe false}
     {title}
@@ -1269,7 +1295,18 @@ namespace eval ::xowf {
     }
   }
 
-  WorkflowPage instproc www-create-or-use args {
+  WorkflowPage create-or-use_view {-package_id:required -parent_id:required name } {
+    # the link should be able to view return_url and template_file
+    set path [export_vars -base [$package_id pretty_link -parent_id $parent_id $lang:$stripped_name] {}]
+    return [$package_id returnredirect $path]
+  }
+  
+  WorkflowPage instproc www-create-or-use {
+    {-parent_id 0} 
+    {-view_method edit} 
+    {-name ""} 
+    {-nls_language ""}
+  } {
     #my msg "instance = [my is_wf_instance], wf=[my is_wf]"
     if {[my is_wf]} {
       my instvar package_id
@@ -1282,22 +1319,54 @@ namespace eval ::xowf {
       #
       set ctx [::xowf::Context require [self]]
       my activate $ctx allocate
+
+      #
+      # After allocate, the payload might contain "name" and
+      # "parent_id". Using the payload dict has the advantage that it
+      # does not touch the instance variables.
+      #
+      set payload [${ctx}::allocate payload]
+      set m ""
+      foreach p {name parent_id m} {
+        if {[dict exists $payload $p]} {
+          set $p [dict get $payload $p]
+        }
+      }
       
+      #
+      # If these values are not set, try to obtain it the old-fashioned way.
+      #
+      if {$parent_id == 0} {
+        set parent_id [my query_parameter "parent_id" [[my package_id] folder_id]]
+      }
+      if {$name eq ""} {
+        set name [my property name ""]
+      }
+      
+      #
       # Check, if allocate has provided a name:
-      set name [my property name ""]
+      #
       if {$name ne ""} {
         # Ok, a name was provided. Check if an instance with this name
         # exists in the current folder.
         set default_lang [my lang]
-        set parent_id [my query_parameter "parent_id" [$package_id folder_id]]
         $package_id get_lang_and_name -default_lang $default_lang -name $name lang stripped_name
         set id [::xo::db::CrClass lookup -name $lang:$stripped_name -parent_id $parent_id]
         #my msg "lookup of $lang:$stripped_name returned $id, default-lang([my name])=$default_lang [my nls_language]"
         if {$id != 0} {
-          # The instance exists already
-          return [$package_id returnredirect \
-                      [export_vars -base [$package_id pretty_link -parent_id $parent_id $lang:$stripped_name] \
-                           [list return_url template_file]]]
+          #
+          # The instance exists already. Either use method "m" (if
+          # provided) or redirect to the item.
+          #
+          if {$m eq ""} {
+            return [$package_id returnredirect \
+                        [export_vars -base [$package_id pretty_link -parent_id $parent_id $lang:$stripped_name] \
+                             [list return_url template_file]]]
+          } else {
+            set item [::xo::db::CrClass get_instance_from_db -item_id $id]
+            # missing: policy check.
+            return [$item $m]
+          }
         } else {
           if {$lang ne $default_lang} {
             set nls_language [my get_nls_language_from_lang $lang]
@@ -1305,11 +1374,12 @@ namespace eval ::xowf {
             set nls_language [my nls_language]
           }
           #my msg "We want to create $lang:$stripped_name"
-          return [next -name $lang:$stripped_name -nls_language $nls_language]
+          set name $lang:$stripped_name
         }
       }
     }
-    next
+    # method "m" is ignored, always edit
+    next -parent_id $parent_id -view_method $view_method -name $name -nls_language $nls_language
   }
 
   WorkflowPage instproc initialize_loaded_object {} {
