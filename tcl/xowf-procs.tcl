@@ -1122,18 +1122,35 @@ namespace eval ::xowf {
     }
     #set next_state [$action_command get_next_state]
     # Activate action
-    if {[catch {$action_command activate [self]} errorMsg]} {
-      ns_log notice "ACTIVATE [my name] error =>$errorMsg"
-      set error "error in action '$action' of workflow instance [my name]\
-        of workflow [[my page_template] name]:"
-      if {[[my package_id] exists __batch_mode]} {
-        [my package_id] set __evaluation_error "$error\n\n$::errorInfo"
-        incr validation_errors
+    set err [catch {$action_command activate [self]} errorMsg]
+    if {$err} {
+      #
+      # Save error code in variable errorCode, since the
+      # tcl-maintained value is volatile
+      set errorCode $::errorCode
+      
+      ns_log notice "ACTIVATE [my name] error => $errorMsg // $errorCode"
+      #
+      # Check, if we were called from "ad_script_abort" (intentional abortion)
+      #
+      if {[ad_exception $errorCode] eq "ad_script_abort"} {
+        #
+        # This was an intentional abortion, no need to complain to the
+        # error.log or other reporting paths.
+        #
       } else {
-        my msg -html 1 "$error <PRE>$::errorInfo</PRE>"
+        set error "error in action '$action' of workflow instance [my name]\
+           of workflow [[my page_template] name]:"
+        if {[[my package_id] exists __batch_mode]} {
+          [my package_id] set __evaluation_error "$error\n\n$::errorInfo"
+          incr validation_errors
+        } else {
+          my msg -html 1 "$error <PRE>$::errorInfo</PRE>"
+        }
+        ad_log error "--WF: evaluation $error\n$::errorInfo"
       }
-      ns_log error "--WF: evaluation $error\n$::errorInfo"
       return ""
+      
     } else {
       # We moved get_next_state here to allow an action to infuence the
       # conditions in the activation method.
