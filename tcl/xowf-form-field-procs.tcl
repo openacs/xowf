@@ -70,7 +70,7 @@ namespace eval ::xowiki::formfield {
                    -all_roles true -in_role none \
                    -workflow_definition [[my object] wf_property workflow_definition] ]
       #set ctx   [::xowf::Context require [my object]]
-      set graph [$ctx as_graph -current_state [my value] -visited [[my object] visited_states]]
+      set graph [$ctx as_graph -current_state [my value] -visited [[my object] visited_states]  -style "max-height: 250px;"]
       ::html::div -style "width: 35%; float: right;" {
         ::html::t -disableOutputEscaping $graph
       }

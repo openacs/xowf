@@ -17,7 +17,7 @@
         <maturity>2</maturity>
 
         <provides url="xowf" version="5.9.1d3"/>
-        <requires url="xowiki" version="5.9.1d1"/>
+        <requires url="xowiki" version="5.9.1d6"/>
 
         <callbacks>
             <callback type="before-uninstall"  proc="::xowiki::before-uninstall"/>
