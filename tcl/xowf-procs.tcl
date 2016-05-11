@@ -163,6 +163,7 @@ namespace eval ::xowf {
     } else {
       set fc ""
     }
+    set package_id [$object package_id]
     return [::xowiki::Form new -destroy_on_cleanup \
                 -package_id $package_id \
                 -parent_id [$package_id folder_id] \
@@ -202,7 +203,7 @@ namespace eval ::xowf {
         # When no form was found by the form loader ($form_id == 0) we
         # create automatically a form.
         #
-        set form_object [my create_auto_form $object$]
+        set form_object [my create_auto_form $object]
       }
     } else {
       #my msg "using custom form loader $loader for [my form]"
@@ -215,7 +216,8 @@ namespace eval ::xowf {
     #
     #my msg form_id=$form_id
 
-    if {[string is integer -strict $form_id]
+    if {![info exists form_object]
+        && [string is integer -strict $form_id]
         && $form_id > 0
         && ![my isobject ::$form_id]} {
       ::xo::db::CrClass get_instance_from_db -item_id $form_id
