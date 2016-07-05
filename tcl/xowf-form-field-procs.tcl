@@ -133,9 +133,9 @@ namespace eval ::xo::role {
     return [::xo::cc permission -object_id $package_id -privilege admin -party_id $user_id]
   }
   admin proc get_members {-object_id:required} {
-    set members [xo::dc list_of_lists get_admins "select distinct o.title, p.party_id
-      from acs_object_party_privilege_map p, acs_objects o
-      where p.object_id = :object_id and p.privilege = 'admin' and o.object_id = p.party_id"]
+    set members [permission::get_parties_with_permission \
+                     -privilege admin \
+                     -object_id $object_id]
     #my msg members=$members
     return $members
   }
