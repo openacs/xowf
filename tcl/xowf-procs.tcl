@@ -219,8 +219,11 @@ namespace eval ::xowf {
     if {![info exists form_object]
         && [string is integer -strict $form_id]
         && $form_id > 0
-        && ![my isobject ::$form_id]} {
-      ::xo::db::CrClass get_instance_from_db -item_id $form_id
+      } {
+      # just load the object conditionally
+      if {![my isobject ::$form_id]} {
+        ::xo::db::CrClass get_instance_from_db -item_id $form_id
+      }
       set form_object ::$form_id
     }
     

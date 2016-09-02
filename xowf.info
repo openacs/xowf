@@ -8,6 +8,7 @@
     <singleton-p>f</singleton-p>
     <implements-subsite-p>f</implements-subsite-p>
     <inherit-templates-p>t</inherit-templates-p>
+    <auto-mount>xowf</auto-mount>
     
     <version name="5.9.1d3" url="http://openacs.org/repository/download/apm/xowf-5.9.1d3.apm">
         <owner url="mailto:neumann@wu-wien.ac.at">Gustaf Neumann</owner>
