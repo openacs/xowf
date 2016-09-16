@@ -207,7 +207,7 @@ namespace eval ::xowf {
       }
     } else {
       #my msg "using custom form loader $loader for [my form]"
-      set form_id [my $loader [my form]]
+      set form_object [my $loader [my form]]
     }
 
     #
