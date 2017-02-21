@@ -81,7 +81,7 @@ namespace eval ::xowf {
   atjob proc run_jobs {item_ids} {
     #my log "---run xowf jobs START"
 
-    set sql "select item_id, name, parent_id, publish_status, creation_user,
+    set sql "select package_id, item_id, name, parent_id, publish_status, creation_user,
                     revision_id, page_template, instance_attributes
              from xowiki_form_instance_item_view
              where item_id in ([join $item_ids ,])"
