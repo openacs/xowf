@@ -1268,7 +1268,7 @@ namespace eval ::xowf {
     # We do not want to save the workflow definition in every workflow
     # instance.
     #
-    return [dict remove [my instance_attributes] workflow_definition]
+    return [dict remove ${:instance_attributes} workflow_definition]
   }
   
   WorkflowPage instproc save_in_hstore {} {
