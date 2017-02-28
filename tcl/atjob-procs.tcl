@@ -4,7 +4,11 @@ namespace eval ::xowf {
   #
   
   #
-  # define a simple acs-type for at jobs
+  # Define a simple Class for atjobs. In future versions, this is a
+  # good candidate to be turned into a nx class.
+  #
+  # Priority: should be a value between 0 and 9, where 9 is the
+  # hightest priority; default is 5
   #
   Class create ::xowf::atjob -slots {
     ::xo::Attribute create owner_id
@@ -12,6 +16,7 @@ namespace eval ::xowf {
     ::xo::Attribute create cmd
     ::xo::Attribute create time
     ::xo::Attribute create object
+    ::xo::Attribute create priority -default 5
   }
 
   atjob proc sql_timestamp {tcltime} {
@@ -37,27 +42,28 @@ namespace eval ::xowf {
   # drop table xowf_atjob;
 
   atjob instproc persist {} {
-    my instvar party_id cmd
-
     set class [self class]
-    set owner_id [[my object] item_id]
-    set package_id [[my object] package_id]
+    set owner_id [${:object} item_id]
+    set package_id [${:object} package_id]
     set ansi_time [$class ansi_time [clock scan [my time]]]
-    if {![info exists party_id]} {my party_id [::xo::cc set untrusted_user_id]}
+    if {![info exists :party_id]} {
+      set :party_id [::xo::cc set untrusted_user_id]
+    }
 
-    set form_id [$class form_id -package_id $package_id -parent_id [[my object] parent_id]]
+    set form_id [$class form_id -package_id $package_id -parent_id [${:object} parent_id]]
     if {$form_id != 0} {
       ::xo::db::CrClass get_instance_from_db -item_id $form_id
-      set instance_attributes [dict merge [$form_id default_instance_attributes] [list cmd $cmd]]
+      set instance_attributes [dict merge [$form_id default_instance_attributes] [list cmd ${:cmd}]]
       set name [::xowiki::autoname new -name [$form_id name] -parent_id $owner_id] 
       set f [::xowiki::FormPage new -destroy_on_cleanup \
                  -package_id $package_id \
                  -parent_id $owner_id \
                  -name $name \
+                 -title ${:priority} \
                  -nls_language [$form_id nls_language] \
                  -publish_status "production" \
                  -publish_date $ansi_time \
-                 -creation_user $party_id \
+                 -creation_user ${:party_id} \
                  -instance_attributes $instance_attributes \
                  -page_template $form_id]
       $f save_new -use_given_publish_date true
@@ -122,6 +128,7 @@ namespace eval ::xowf {
         } else {
           $item set_live_revision -revision_id [$item revision_id] -publish_status "expired"
         }
+        ns_set cleanup
       }
       my log "---run xowf jobs END"
     }
@@ -147,6 +154,11 @@ namespace eval ::xowf {
     # To make sure we are not fetching pages from unmounted instances
     # we check for package_id not null.
     #
+    # The retrieved items are sorted first by title (priority, should
+    # be a value between 0 and 9, where 9 is the hightest priority;
+    # default is 5) and then by item_id (earlier created items have a
+    # lower item_id).
+    #
     set sql "select xi.item_id
               from xowiki_form_instance_item_index xi, cr_items i2, cr_items i1, cr_revisions cr
               where i2.item_id = xi.page_template and i2.content_type = '::xowiki::Form' and i2.name = 'en:atjob-form'
@@ -154,7 +166,8 @@ namespace eval ::xowf {
                 and i1.item_id = xi.item_id
                 and cr.revision_id = i1.live_revision
                 and xi.publish_status = 'production'
-                and xi.package_id is not null"
+                and xi.package_id is not null
+                order by ci.title desc, xi.item_id asc "
     
     set item_ids [::xo::dc list get_due_atjobs $sql]
     
