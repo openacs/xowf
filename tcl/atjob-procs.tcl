@@ -167,7 +167,7 @@ namespace eval ::xowf {
                 and cr.revision_id = i1.live_revision
                 and xi.publish_status = 'production'
                 and xi.package_id is not null
-                order by i1.title desc, xi.item_id asc "
+                order by cr.title desc, xi.item_id asc "
     
     set item_ids [::xo::dc list get_due_atjobs $sql]
     
