@@ -7,7 +7,7 @@ namespace eval ::xowf {
   # Define a simple Class for atjobs. In future versions, this is a
   # good candidate to be turned into a nx class.
   #
-  # Priority: should be a value between 0 and 9, where 9 is the
+  # Priority: yshould be a value between 0 and 9, where 9 is the
   # hightest priority; default is 5
   #
   Class create ::xowf::atjob -slots {
@@ -167,7 +167,7 @@ namespace eval ::xowf {
                 and cr.revision_id = i1.live_revision
                 and xi.publish_status = 'production'
                 and xi.package_id is not null
-                order by ci.title desc, xi.item_id asc "
+                order by i1.title desc, xi.item_id asc "
     
     set item_ids [::xo::dc list get_due_atjobs $sql]
     
