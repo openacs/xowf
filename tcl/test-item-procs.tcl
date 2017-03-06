@@ -158,7 +158,7 @@ namespace eval ::xowiki::formfield {
   mc_interaction instproc initialize {} {
     if {[my set __state] ne "after_specs"} return
     test_item instvar {xinha(javascript) javascript}
-    my instvar feedback_level inplace input_field_names
+    my instvar feedback_level inplace input_field_names nr_choices
     #
     # build choices
     #
@@ -171,7 +171,7 @@ namespace eval ::xowiki::formfield {
     #
     my create_components  [subst {
       {text  {richtext,required,height=150px,label=#xowf.exercise-text#}}
-      {mc {mc_choice,feedback_level=$feedback_level,label=#xowf.alternative#,inplace=$inplace,multiple=[my multiple],repeat=5..5}}
+      {mc {mc_choice,feedback_level=$feedback_level,label=#xowf.alternative#,inplace=$inplace,multiple=[my multiple],repeat=1..$nr_choices}}
     }]
     my set __initialized 1
   }
