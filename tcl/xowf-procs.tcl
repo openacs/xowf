@@ -954,11 +954,21 @@ namespace eval ::xowf {
 
             set helpText [$f help_text]
             if {$helpText ne ""} {
-              set divNode [$dom_doc createElement div]
-              $divNode setAttribute class [$f form_widget_CSSclass]
-              $divNode appendChild [$dom_doc createTextNode $helpText]
-              [$n parentNode] insertBefore $divNode [$n nextSibling]
-              util_user_message -message "field [$f name], value [$f value]: $helpText"
+              #set divNode [$dom_doc createElement div]
+              #$divNode setAttribute class [$f form_widget_CSSclass]
+              #$divNode appendChild [$dom_doc createTextNode $helpText]
+              #[$n parentNode] insertBefore $divNode [$n nextSibling]
+
+              #set spanNode [$dom_doc createElement span]
+              #$spanNode setAttribute class "glyphicon glyphicon-ok [$f form_widget_CSSclass]"
+              #[$n parentNode] insertBefore $spanNode [$n nextSibling]
+              
+              set parentNode [$n parentNode]
+              set oldClass [$parentNode getAttribute class ""]
+              $parentNode setAttribute class "selection [$f form_widget_CSSclass]"
+              $parentNode setAttribute title $helpText
+              
+              #util_user_message -message "field [$f name], value [$f value]: $helpText"
             }
           }
         }
@@ -1023,13 +1033,13 @@ namespace eval ::xowf {
         switch -- $method {
           view_user_input {
             #my msg "calling edit with disable_input_fields=1"
-            return [my edit -disable_input_fields 1]
+            return [my www-edit -disable_input_fields 1]
             #return [$package_id call [self] edit [list -disable_input_fields 1]]
           }
           view_user_input_with_feedback {
             my set __feedback_mode 1
             #my msg "calling edit with disable_input_fields=1"
-            return [my edit -disable_input_fields 1]
+            return [my www-edit -disable_input_fields 1]
             #return [$package_id call [self] edit [list -disable_input_fields 1]]
           }
           default {
@@ -1343,9 +1353,9 @@ namespace eval ::xowf {
       my activate $ctx allocate
 
       #
-      # After allocate, the payload might contain "name" and
-      # "parent_id". Using the payload dict has the advantage that it
-      # does not touch the instance variables.
+      # After allocate, the payload might contain "name", "parent_id"
+      # or "m". Using the payload dict has the advantage that it does
+      # not touch the instance variables.
       #
       set payload [${ctx}::allocate payload]
       set m ""

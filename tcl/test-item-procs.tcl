@@ -53,7 +53,7 @@ namespace eval ::xowiki::formfield {
       return ""
     }
 
-    set widget "richtext,editor=xinha,slim=true,inplace=$inplace,plugins=OacsFs,height=150px"
+    set widget "richtext,height=150px"
     if {$auto_correct} {
       return [subst {
         {feedback_correct   {$widget,label=#xowf.feedback_correct#}}
@@ -113,7 +113,7 @@ namespace eval ::xowiki::formfield {
     my create_components  [subst {
       {minutes numeric,size=2,label=#xowf.Minutes#}
       {grading {select,options={exact exact} {partial partial},default=exact,label=#xowf.Grading-Schema#}}
-      {interaction {$interaction_class,$options,feedback_level=$feedback_level,inplace=$inplace,form_item_wrapper_CSSclass=hidden-field-set}}
+      {interaction {$interaction_class,$options,feedback_level=$feedback_level,inplace=$inplace}}
       [my feed_back_definition $auto_correct]
     }]
     my set __initialized 1
@@ -162,19 +162,16 @@ namespace eval ::xowiki::formfield {
     #
     # build choices
     #
-    set choice_definition "{mc_choice,feedback_level=$feedback_level,label=#xowf.alternative#,inplace=$inplace,multiple=[my multiple]}"
-    set input_field_names [my generate_fieldnames [my nr_choices]]
-    set choices ""
+
     if {![my multiple]} {
       append choices "{correct radio,omit}\n"
     }
-    foreach n $input_field_names {append choices "{$n $choice_definition}\n"}
     #
     # create component structure
     #
     my create_components  [subst {
-      {text  {richtext,required,editor=xinha,height=150px,label=#xowf.exercise-text#,plugins=OacsFs,javascript=$javascript,inplace=$inplace}}
-      $choices
+      {text  {richtext,required,height=150px,label=#xowf.exercise-text#}}
+      {mc {mc_choice,feedback_level=$feedback_level,label=#xowf.alternative#,inplace=$inplace,multiple=[my multiple],repeat=5..5}}
     }]
     my set __initialized 1
   }
@@ -191,18 +188,33 @@ namespace eval ::xowiki::formfield {
     append form "<tr><td class='text' colspan='2'><div class='question_text'>$intro_text</div></td></tr>\n"
 
     #my msg " input_field_names=[my set input_field_names]"
+    set mc [my get_named_sub_component_value mc]
+    #ns_log notice "MC <$mc>"
     
     if {![my multiple]} {
       set correct_field_name [my get_named_sub_component_value correct]
     }
+
+    set input_field_names [lmap {name .} $mc {set name}]
+    #mc_exercise.mc.0 {mc_exercise.mc.0.text {} mc_exercise.mc.0.correct t}
+    #mc_exercise.mc.1 {mc_exercise.mc.1.text a mc_exercise.mc.1.correct t}
+    #ns_log notice input_field_names=$input_field_names
     
-    foreach input_field_name [my set input_field_names] {
+    # don't iterate over the template field
+    foreach {input_field_name data} [lrange $mc 2 end] {
       foreach f {text correct feedback_correct feedback_incorrect} {
-        set value($f) [my get_named_sub_component_value $input_field_name $f]
+        if {[dict exists $data $input_field_name.$f]} {
+          set value($f) [dict get $data $input_field_name.$f]
+        } else {
+          set value($f) ""
+        }
+        #ns_log notice "$input_field_name: value($f) = <$value($f)>"
       }
       # skip empty entries
       if {$value(text) eq ""} continue
 
+      regsub -all {[.:]} [${:object} name] "" form_name
+      set input_field_name $form_name-[lindex [split $input_field_name .] end]
       #
       # fill values into form
       #
@@ -218,13 +230,14 @@ namespace eval ::xowiki::formfield {
             "<tr><td class='selection'><input type='radio' name='radio' value='$input_field_name' /></td>\n" \
             "<td class='value'>$value(text)</td></tr>\n"
       }
+      #ns_log notice "$input_field_name [array get value] corr=$correct"
       #my msg "[array get value] corr=$correct"
 
       #
       # build form constraints per input field
       #
       set if_fc [list]
-      if {$correct} {lappend if_fc "answer=$input_field_name"} else {lappend if_fc "answer="}
+      if {[string is true -strict $correct]} {lappend if_fc "answer=$input_field_name"} else {lappend if_fc "answer="}
       if {$value(feedback_correct) ne ""} {
         lappend if_fc "feedback_answer_correct=[::xowiki::formfield::FormField fc_encode $value(feedback_correct)]"
       }
@@ -240,6 +253,8 @@ namespace eval ::xowiki::formfield {
       lappend fc "radio:text,answer=$correct_field_value"
     }
     append form "</tbody></table></FORM>\n"
+    #ns_log notice FORM=$form
+    #ns_log notice FC=$fc
     [my object] set_property -new 1 form $form
     [my object] set_property -new 1 form_constraints $fc
     set anon_instances true ;# TODO make me configurable
@@ -265,7 +280,7 @@ namespace eval ::xowiki::formfield {
 
     if {1} {
       test_item instvar {xinha(javascript) javascript}
-      set text_config [subst {editor=xinha,height=100px,label=Text,plugins=OacsFs,inplace=[my inplace],javascript=$javascript}]
+      set text_config [subst {height=100px,label=Text}]
     } else {
       set text_config [subst {editor=wym,height=100px,label=Text}]
     }

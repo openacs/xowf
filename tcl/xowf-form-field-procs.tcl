@@ -240,20 +240,14 @@ namespace eval ::xowiki::formfield {
   mc_exercise instproc initialize {} {
     my log "[self class] deprecated, you should switch to test-item procs"
     if {[my set __state] ne "after_specs"} return
-    set javascript [::xowiki::formfield::FormField fc_encode { 
-      xinha_config.toolbar = [ 
-                              ['popupeditor', 'bold','italic','createlink','insertimage','separator'], 
-                              ['killword','removeformat','htmlmode'] 
-                             ]; 
-    }]
     my instvar feedback inplace
     my create_components  [subst {
-      {text  {richtext,required,editor=xinha,height=150px,label=#xowf.exercise-text#,plugins=OacsFs,javascript=$javascript,inplace=$inplace}}
-      {alt-1 {mc_alternative,feedback=$feedback,label=#xowf.alternative#,inplace=$inplace}}
-      {alt-2 {mc_alternative,feedback=$feedback,label=#xowf.alternative#,inplace=$inplace}}
-      {alt-3 {mc_alternative,feedback=$feedback,label=#xowf.alternative#,inplace=$inplace}}
-      {alt-4 {mc_alternative,feedback=$feedback,label=#xowf.alternative#,inplace=$inplace}}
-      {alt-5 {mc_alternative,feedback=$feedback,label=#xowf.alternative#,inplace=$inplace}}
+      {text  {richtext,required,height=150px,label=#xowf.exercise-text#}}
+      {alt-1 {mc_alternative,feedback=$feedback,label=#xowf.alternative#}}
+      {alt-2 {mc_alternative,feedback=$feedback,label=#xowf.alternative#}}
+      {alt-3 {mc_alternative,feedback=$feedback,label=#xowf.alternative#}}
+      {alt-4 {mc_alternative,feedback=$feedback,label=#xowf.alternative#}}
+      {alt-5 {mc_alternative,feedback=$feedback,label=#xowf.alternative#}}
     }]
     my set __initialized 1
   }
@@ -315,7 +309,7 @@ namespace eval ::xowiki::formfield {
     my log "[self class] deprecated, you should switch to test-item procs"
     if {[my set __state] ne "after_specs"} return
 
-    if {1} {
+    if {0} {
       set javascript [::xowiki::formfield::FormField fc_encode { 
         xinha_config.toolbar = [ 
                                 ['popupeditor', 'bold','italic','createlink','insertimage','separator'], 
