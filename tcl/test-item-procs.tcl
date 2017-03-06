@@ -222,13 +222,13 @@ namespace eval ::xowiki::formfield {
         set correct $value(correct)
         append form \
             "<tr><td class='selection'><input type='checkbox' name='$input_field_name' value='$input_field_name'/></td>\n" \
-            "<td class='value'>$value(text)</td></tr>\n"
+            "<td class='value'>[ns_quotehtml $value(text)]</td></tr>\n"
       } else {
         #my msg $correct_field_name,[my name],$input_field_name
         set correct [expr {"[my name].$input_field_name" eq $correct_field_name}]
         append form \
             "<tr><td class='selection'><input type='radio' name='radio' value='$input_field_name' /></td>\n" \
-            "<td class='value'>$value(text)</td></tr>\n"
+            "<td class='value'>[ns_quotehtml $value(text)]</td></tr>\n"
       }
       #ns_log notice "$input_field_name [array get value] corr=$correct"
       #my msg "[array get value] corr=$correct"
