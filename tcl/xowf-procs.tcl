@@ -1384,7 +1384,7 @@ namespace eval ::xowf {
         set default_lang [my lang]
         $package_id get_lang_and_name -default_lang $default_lang -name $name lang stripped_name
         set id [::xo::db::CrClass lookup -name $lang:$stripped_name -parent_id $parent_id]
-        #my msg "lookup of $lang:$stripped_name returned $id, default-lang([my name])=$default_lang [my nls_language]"
+        #my log "after allocate lookup of $lang:$stripped_name returned $id, default-lang([my name])=$default_lang [my nls_language]"
         if {$id != 0} {
           #
           # The instance exists already. Either use method "m" (if
