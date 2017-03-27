@@ -53,7 +53,7 @@ namespace eval ::xowiki::formfield {
       return ""
     }
 
-    set widget "richtext,height=150px"
+    set widget "richtext,editor=ckeditor4,height=150px"
     if {$auto_correct} {
       return [subst {
         {feedback_correct   {$widget,label=#xowf.feedback_correct#}}
@@ -170,8 +170,8 @@ namespace eval ::xowiki::formfield {
     # create component structure
     #
     my create_components  [subst {
-      {text  {richtext,required,height=150px,label=#xowf.exercise-text#}}
-      {mc {mc_choice,feedback_level=$feedback_level,label=#xowf.alternative#,inplace=$inplace,multiple=[my multiple],repeat=1..$nr_choices}}
+      {text  {richtext,required,height=150px,editor=ckeditor4,label=#xowf.exercise-text#}}
+      {mc {mc_choice,feedback_level=$feedback_level,label=#xowf.alternative#,multiple=[my multiple],repeat=1..$nr_choices}}
     }]
     my set __initialized 1
   }
@@ -189,13 +189,16 @@ namespace eval ::xowiki::formfield {
 
     #my msg " input_field_names=[my set input_field_names]"
     set mc [my get_named_sub_component_value mc]
-    #ns_log notice "MC <$mc>"
+    ns_log notice "MC <$mc>"
     
     if {![my multiple]} {
       set correct_field_name [my get_named_sub_component_value correct]
     }
 
-    set input_field_names [lmap {name .} $mc {set name}]
+    #set input_field_names [lmap {name .} $mc {set name}]
+    set input_field_names {}
+    foreach {name .} $mc {lappend input_field_names $name}
+
     #mc_exercise.mc.0 {mc_exercise.mc.0.text {} mc_exercise.mc.0.correct t}
     #mc_exercise.mc.1 {mc_exercise.mc.1.text a mc_exercise.mc.1.correct t}
     #ns_log notice input_field_names=$input_field_names
@@ -222,13 +225,13 @@ namespace eval ::xowiki::formfield {
         set correct $value(correct)
         append form \
             "<tr><td class='selection'><input type='checkbox' name='$input_field_name' value='$input_field_name'/></td>\n" \
-            "<td class='value'>[ns_quotehtml $value(text)]</td></tr>\n"
+            "<td class='value'>$value(text)</td></tr>\n"
       } else {
         #my msg $correct_field_name,[my name],$input_field_name
         set correct [expr {"[my name].$input_field_name" eq $correct_field_name}]
         append form \
             "<tr><td class='selection'><input type='radio' name='radio' value='$input_field_name' /></td>\n" \
-            "<td class='value'>[ns_quotehtml $value(text)]</td></tr>\n"
+            "<td class='value'>$value</td></tr>\n"
       }
       #ns_log notice "$input_field_name [array get value] corr=$correct"
       #my msg "[array get value] corr=$correct"
@@ -296,7 +299,7 @@ namespace eval ::xowiki::formfield {
       # We are in a multiple choice item; provide for editing a radio
       # group per alternative.
       my create_components [subst {
-        {text  {richtext,$text_config}}
+        {text  {richtext,editor=ckeditor4,$text_config}}
         {correct {boolean,horizontal=true,label=#xowf.correct#}}
         $feedback_fields
       }]
@@ -306,7 +309,7 @@ namespace eval ::xowiki::formfield {
       # the form-field name minus the last segment.
       regsub -all {[.][^.]+$} [my name] "" groupname
       my create_components [subst {
-        {text  {richtext,$text_config}}
+        {text  {richtext,editor=ckeditor4,$text_config}}
         {correct {radio,label=#xowf.correct#,forced_name=$groupname.correct,options={"" [my name]}}}
         $feedback_fields
       }]
@@ -336,7 +339,7 @@ namespace eval ::xowiki::formfield {
     # create component structure
     #
     my create_components  [subst {
-      {text  {richtext,required,editor=xinha,height=150px,label=#xowf.exercise-text#,plugins=OacsFs,javascript=$javascript,inplace=$inplace}}
+      {text  {richtext,required,editor=ckeditor4,height=150px,label=#xowf.exercise-text#,plugins=OacsFs,javascript=$javascript,inplace=$inplace}}
       {lines {numeric,default=10,size=3,label=#xowf.lines#}}
       {columns {numeric,default=60,size=3,label=#xowf.columns#}}
     }]

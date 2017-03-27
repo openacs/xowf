@@ -124,7 +124,7 @@ namespace eval ::xowf {
 
         my log "--at executing atjob $cmd"
         if {[catch {eval $owner_id $cmd} errorMsg]} {
-          ns_log error "\n*** atjob $owner_id $cmd lead to error ***\n$errorMsg"
+          ns_log error "\n*** atjob $owner_id $cmd lead to error ***\n$errorMsg\n$::errorInfo"
         } else {
           $item set_live_revision -revision_id [$item revision_id] -publish_status "expired"
         }

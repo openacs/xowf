@@ -490,7 +490,7 @@ namespace eval ::xowf {
     if {[catch {exec $dot -Tpng $fn -o $path/$ofn} errorMsg]} {
       my msg "Error during execution of $dot: $errorMsg"
     }
-    file delete $fn
+    file delete -- $fn
     return "<img style='$style' src='[$package_id package_url]/$ofn'>\n"
   }
 
