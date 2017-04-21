@@ -387,7 +387,7 @@ namespace eval ::xowiki::formfield {
     # Build a complex form composed of the specified form pages names
     # contained in the value of this field.  The form-fields have to
     # be renamed. This affects the input field names in the form and
-    # the form constaints. We use the item-id contained pages as a the
+    # the form constraints. We use the item-id contained pages as a the
     # prefix for the form-fields. This method must be most likely
     # extended for other question types.
     # 

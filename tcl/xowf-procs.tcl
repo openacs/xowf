@@ -820,7 +820,7 @@ namespace eval ::xowf {
   }
 
   WorkflowPage ad_instproc is_wf_instance {} {
-    Check, if the current page is a workflow instance (page, refering to a workflow)
+    Check, if the current page is a workflow instance (page, referring to a workflow)
   } {
     # we cannot call get_template_object here, because this will lead
     # to a recursive loop.
