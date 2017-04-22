@@ -1716,7 +1716,7 @@ namespace eval ::xowf {
   }
   
   WorkflowPage ad_instproc schedule_job {-time:required -party_id cmd} {
-    Schedule the specified tcl command for the the current package
+    Schedule the specified Tcl command for the the current package
     instance at the given time.
   } {
     my instvar package_id

@@ -91,7 +91,7 @@ namespace eval ::xowiki::formfield {
 
 
 # 
-# these definitons are only here for the time being 
+# these definitions are only here for the time being 
 #
 namespace eval ::xo::role {
   Class create Role
