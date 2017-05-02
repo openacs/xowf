@@ -1329,7 +1329,7 @@ namespace eval ::xowf {
 
   WorkflowPage instproc create-or-use_view {-package_id:required -parent_id:required name } {
     # the link should be able to view return_url and template_file
-    set path [export_vars -base [$package_id pretty_link -parent_id $parent_id $lang:$stripped_name] {}]
+    set path [export_vars -no_base_encode -base [$package_id pretty_link -parent_id $parent_id $lang:$stripped_name] {}]
     return [$package_id returnredirect $path]
   }
   
@@ -1392,7 +1392,7 @@ namespace eval ::xowf {
           #
           if {$m eq ""} {
             return [$package_id returnredirect \
-                        [export_vars -base [$package_id pretty_link -parent_id $parent_id $lang:$stripped_name] \
+                        [export_vars -no_base_encode -base [$package_id pretty_link -parent_id $parent_id $lang:$stripped_name] \
                              [list return_url template_file]]]
           } else {
             set item [::xo::db::CrClass get_instance_from_db -item_id $id]
