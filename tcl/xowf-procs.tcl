@@ -1329,8 +1329,7 @@ namespace eval ::xowf {
 
   WorkflowPage instproc create-or-use_view {-package_id:required -parent_id:required name } {
     # the link should be able to view return_url and template_file
-    set path [export_vars -no_base_encode -base [$package_id pretty_link -parent_id $parent_id $lang:$stripped_name] {}]
-    return [$package_id returnredirect $path]
+    return [$package_id returnredirect [$package_id pretty_link -parent_id $parent_id $lang:$stripped_name]]
   }
   
   WorkflowPage instproc www-create-or-use {
