@@ -224,14 +224,14 @@ namespace eval ::xowiki::formfield {
       if {[my multiple]} {
         set correct $value(correct)
         append form \
-            "<tr><td class='selection'><input type='checkbox' name='$input_field_name' value='$input_field_name'/></td>\n" \
-            "<td class='value'>$value(text)</td></tr>\n"
+            "<tr><td class='selection'><input type='checkbox' id='$input_field_name' name='$input_field_name' value='$input_field_name'/></td>\n" \
+            "<td class='value'><label for='$input_field_name'>$value(text)</label></td></tr>\n"
       } else {
         #my msg $correct_field_name,[my name],$input_field_name
         set correct [expr {"[my name].$input_field_name" eq $correct_field_name}]
         append form \
-            "<tr><td class='selection'><input type='radio' name='radio' value='$input_field_name' /></td>\n" \
-            "<td class='value'>$value</td></tr>\n"
+            "<tr><td class='selection'><input id='$input_field_name' type='radio' name='radio' value='$input_field_name' /></td>\n" \
+            "<td class='value'><label for='$input_field_name'>$value</label></td></tr>\n"
       }
       #ns_log notice "$input_field_name [array get value] corr=$correct"
       #my msg "[array get value] corr=$correct"

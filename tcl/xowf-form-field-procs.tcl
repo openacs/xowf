@@ -276,8 +276,8 @@ namespace eval ::xowiki::formfield {
         set value($f) [my get_named_sub_component_value $input_field_name $f]
       }
       append form \
-          "<tr><td class='selection'><input type='checkbox' name='$input_field_name' /></td>\n" \
-          "<td class='value'>$value(text)</td></tr>\n"
+          "<tr><td class='selection'><input type='checkbox' id='$input_field_name' name='$input_field_name' /></td>\n" \
+          "<td class='value'><label for='$input_field_name'>$value(text)</label></td></tr>\n"
       set alt_fc [list]
       if {$value(correct)} {lappend alt_fc "answer=on"} else {lappend alt_fc "answer="}
       if {$value(feedback_correct) ne ""} {
