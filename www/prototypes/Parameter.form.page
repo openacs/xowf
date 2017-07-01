@@ -26,7 +26,7 @@ with_notifications:boolean,horizontal=true,default=f
 with_tags:boolean,horizontal=true,default=f
 with_user_tracking:boolean,horizontal=true
 _page_order:omit _description:omit
-{ExtraMenuEntries:textarea,cols=80,rows=4,default={form_link -name New.Extra.Workflow -label #xowf.menu-New-Extra-Workflow# -form en:workflow.form}}
+{ExtraMenuEntries:textarea,cols=80,rows=4,default={form_link -name New.Extra.Workflow -label "#xowf.menu-New-Extra-Workflow#" -form en:workflow.form}}
 security_policy:security_policy,default=::xowiki::policy1
 }
 
