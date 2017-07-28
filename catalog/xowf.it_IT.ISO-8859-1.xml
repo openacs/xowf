@@ -16,5 +16,6 @@
   <msg key="feedback_incorrect">Feedback Scorretto</msg>
   <msg key="Grading-Schema">Schema di Valutazione</msg>
   <msg key="lines">Righe</msg>
+  <msg key="menu-New-Extra-Workflow">Nuovo Workflow</msg>
   <msg key="Minutes">Minuti</msg>
 </message_catalog>
