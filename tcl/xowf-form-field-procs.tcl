@@ -14,7 +14,7 @@ namespace eval ::xowiki::formfield {
   #
   ###########################################################
 
-  Class workflow_definition -superclass textarea -parameter {
+  Class create workflow_definition -superclass textarea -parameter {
     {rows 20}
     {cols 80}
     {dpi 120}
@@ -60,7 +60,7 @@ namespace eval ::xowiki::formfield {
   # ::xowiki::formfield::current_state
   #
   ###########################################################
-  Class current_state -superclass label -parameter {
+  Class create current_state -superclass label -parameter {
     {as_graph true}
   }
   current_state instproc render_input {} {
@@ -70,7 +70,7 @@ namespace eval ::xowiki::formfield {
                    -all_roles true -in_role none \
                    -workflow_definition [[my object] wf_property workflow_definition] ]
       #set ctx   [::xowf::Context require [my object]]
-      set graph [$ctx as_graph -current_state [my value] -visited [[my object] visited_states]]
+      set graph [$ctx as_graph -current_state [my value] -visited [[my object] visited_states]  -style "max-height: 250px;"]
       ::html::div -style "width: 35%; float: right;" {
         ::html::t -disableOutputEscaping $graph
       }
@@ -91,10 +91,10 @@ namespace eval ::xowiki::formfield {
 
 
 # 
-# these definitons are only here for the time being 
+# these definitions are only here for the time being 
 #
 namespace eval ::xo::role {
-  Class Role
+  Class create Role
   Role instproc get_members args {
     error "get_members are not implemented for [self]"
   }
@@ -133,9 +133,9 @@ namespace eval ::xo::role {
     return [::xo::cc permission -object_id $package_id -privilege admin -party_id $user_id]
   }
   admin proc get_members {-object_id:required} {
-    set members [xo::dc list_of_lists get_admins "select distinct o.title, p.party_id
-      from acs_object_party_privilege_map p, acs_objects o
-      where p.object_id = :object_id and p.privilege = 'admin' and o.object_id = p.party_id"]
+    set members [permission::get_parties_with_permission \
+                     -privilege admin \
+                     -object_id $object_id]
     #my msg members=$members
     return $members
   }
@@ -186,7 +186,7 @@ namespace eval ::xowiki::formfield {
   #
   ###########################################################
 
-  Class role_member -superclass candidate_box_select -parameter {
+  Class create role_member -superclass candidate_box_select -parameter {
     role 
     {online_state off}
   }
@@ -232,7 +232,7 @@ namespace eval ::xowiki::formfield {
   #
   ###########################################################
 
-  Class mc_exercise -superclass CompoundField -parameter {
+  Class create mc_exercise -superclass CompoundField -parameter {
     {feedback full}
     {inplace true}
   }
@@ -240,20 +240,14 @@ namespace eval ::xowiki::formfield {
   mc_exercise instproc initialize {} {
     my log "[self class] deprecated, you should switch to test-item procs"
     if {[my set __state] ne "after_specs"} return
-    set javascript [::xowiki::formfield::FormField fc_encode { 
-      xinha_config.toolbar = [ 
-                              ['popupeditor', 'bold','italic','createlink','insertimage','separator'], 
-                              ['killword','removeformat','htmlmode'] 
-                             ]; 
-    }]
     my instvar feedback inplace
     my create_components  [subst {
-      {text  {richtext,required,editor=xinha,height=150px,label=#xowf.exercise-text#,plugins=OacsFs,javascript=$javascript,inplace=$inplace}}
-      {alt-1 {mc_alternative,feedback=$feedback,label=#xowf.alternative#,inplace=$inplace}}
-      {alt-2 {mc_alternative,feedback=$feedback,label=#xowf.alternative#,inplace=$inplace}}
-      {alt-3 {mc_alternative,feedback=$feedback,label=#xowf.alternative#,inplace=$inplace}}
-      {alt-4 {mc_alternative,feedback=$feedback,label=#xowf.alternative#,inplace=$inplace}}
-      {alt-5 {mc_alternative,feedback=$feedback,label=#xowf.alternative#,inplace=$inplace}}
+      {text  {richtext,required,height=150px,label=#xowf.exercise-text#}}
+      {alt-1 {mc_alternative,feedback=$feedback,label=#xowf.alternative#}}
+      {alt-2 {mc_alternative,feedback=$feedback,label=#xowf.alternative#}}
+      {alt-3 {mc_alternative,feedback=$feedback,label=#xowf.alternative#}}
+      {alt-4 {mc_alternative,feedback=$feedback,label=#xowf.alternative#}}
+      {alt-5 {mc_alternative,feedback=$feedback,label=#xowf.alternative#}}
     }]
     my set __initialized 1
   }
@@ -282,8 +276,8 @@ namespace eval ::xowiki::formfield {
         set value($f) [my get_named_sub_component_value $input_field_name $f]
       }
       append form \
-          "<tr><td class='selection'><input type='checkbox' name='$input_field_name' /></td>\n" \
-          "<td class='value'>$value(text)</td></tr>\n"
+          "<tr><td class='selection'><input type='checkbox' id='$input_field_name' name='$input_field_name' /></td>\n" \
+          "<td class='value'><label for='$input_field_name'>$value(text)</label></td></tr>\n"
       set alt_fc [list]
       if {$value(correct)} {lappend alt_fc "answer=on"} else {lappend alt_fc "answer="}
       if {$value(feedback_correct) ne ""} {
@@ -306,7 +300,7 @@ namespace eval ::xowiki::formfield {
   #
   ###########################################################
 
-  Class mc_alternative -superclass CompoundField -parameter {
+  Class create mc_alternative -superclass CompoundField -parameter {
     {feedback full}
     {inplace true}
   }
@@ -315,7 +309,7 @@ namespace eval ::xowiki::formfield {
     my log "[self class] deprecated, you should switch to test-item procs"
     if {[my set __state] ne "after_specs"} return
 
-    if {1} {
+    if {0} {
       set javascript [::xowiki::formfield::FormField fc_encode { 
         xinha_config.toolbar = [ 
                                 ['popupeditor', 'bold','italic','createlink','insertimage','separator'], 

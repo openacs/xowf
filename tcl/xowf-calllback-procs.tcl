@@ -29,7 +29,7 @@ namespace eval ::xowf {
     set ia {
       MenuBar t top_includelet none production_mode t with_user_tracking t with_general_comments f
       with_digg f with_tags f
-      ExtraMenuEntries {{entry -name New.Extra.Workflow -label "New Workflow" -form /en:Workflow.form}}
+      ExtraMenuEntries {{entry -name New.Extra.Workflow -label "#xowf.menu-New-Extra-Workflow#" -form /en:Workflow.form}}
       with_delicious f with_notifications f security_policy ::xowiki::policy1
     }
     
