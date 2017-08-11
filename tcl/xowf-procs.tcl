@@ -21,7 +21,7 @@ namespace eval ::xowf {
   #
   # Should we use a shared or a per-context workflow definition.
   #
-  set ::xowf::sharedWorkflowDefinition 1
+  set ::xowf::sharedWorkflowDefinition 0
   
   ::xo::PackageMgr create ::xowf::Package \
       -package_key "xowf" -pretty_name "XoWiki Workflow" \
