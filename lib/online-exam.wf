@@ -43,7 +43,7 @@ State done -actions {republish restart} -form_loader load_form -view_method edit
 # exercises, the answer workflow is created.
 #
 select proc activate {obj} {
-  [my info parent] create_answer_workflow $obj
+  [:wf_context] create_answer_workflow $obj
 }
 
 ########################################################################
@@ -51,15 +51,15 @@ select proc activate {obj} {
 # publish user participation link.
 #
 publish proc activate {obj} {
-  [my info parent] delete_all_answer_data $obj
-  my publish_link $obj
+  [$obj wf_context] delete_all_answer_data $obj
+  :publish_link $obj
 }
 
 ########################################################################
 # Activate action republish: publish user participation link.
 #
 republish proc activate {obj} {
-  my publish_link $obj
+  :publish_link $obj
 }
 
 ########################################################################
@@ -67,7 +67,7 @@ republish proc activate {obj} {
 # link should be removed for the users
 #
 unpublish proc activate {obj} {
-  my unpublish_link $obj
+  :unpublish_link $obj
 }
 
 ########################################################################
@@ -167,17 +167,17 @@ my proc create_answer_workflow {obj} {
   my log "create_answer_workflow $obj"
 
   # first delete workflow and data, when it exists
-  if {[my property wfName] ne ""} {
+  if {[$obj property wfName] ne ""} {
     set wf [my delete_all_answer_data $obj]
     if {$wf ne ""} {$wf delete}
   }
 
   # create a fresh workflow
   set wfName [$obj name].wf
-  my set_property -new 1 wfName $wfName
+  $obj set_property -new 1 wfName $wfName
 
   set wfMaster [my set masterWorkflow]
-  set wfTitle [my property _title]
+  set wfTitle [$obj property _title]
   set questionObjs [my get_questions]
   set wfQuestionNames {}
   set attributeNames {}
