@@ -29,9 +29,11 @@ namespace eval ::xowiki::formfield {
 
   workflow_definition instproc check=workflow {value} {
     # Do we have a syntax error in the workflow definition?
-    if {![catch {set ctx [::xowf::Context new -destroy_on_cleanup -object [my object] \
+    if {![catch {set ctx [::xowf::Context new -destroy_on_cleanup -object ${:object} \
                               -all_roles true \
                               -workflow_definition [my value]]} errorMsg]} {
+      $ctx initialize_context ${:object}
+      ${:object} wf_context $ctx
       unset errorMsg
       array set "" [$ctx check]
       if {$(rc) == 1} {set errorMsg $(errorMsg)}
@@ -91,7 +93,7 @@ namespace eval ::xowiki::formfield {
 
 
 # 
-# these definitions are only here for the time being 
+# These definitions are only here for the time being 
 #
 namespace eval ::xo::role {
   Class create Role
@@ -263,7 +265,7 @@ namespace eval ::xowiki::formfield {
 
   mc_exercise instproc convert_to_internal {} {
     #
-    # Build a from from the componets of the exercise on the fly.
+    # Build a from from the components of the exercise on the fly.
     # Actually, this methods computes the properties "form" and
     # "form_constraints" based on the components of this form field.
     # 
