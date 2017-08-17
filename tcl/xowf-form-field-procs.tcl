@@ -21,7 +21,7 @@ namespace eval ::xowiki::formfield {
   } -extend_slot_default validator workflow
 
   workflow_definition instproc as_graph {} {
-    set ctx [::xowf::Context new -destroy_on_cleanup -object [my object] \
+    set ctx [::xowf::Context new -destroy_on_cleanup -object ${:object} \
                  -all_roles true -in_role none \
                  -workflow_definition [my value] ]
     return [$ctx as_graph -dpi [my dpi] -style "max-width: 35%;"]
@@ -29,7 +29,8 @@ namespace eval ::xowiki::formfield {
 
   workflow_definition instproc check=workflow {value} {
     # Do we have a syntax error in the workflow definition?
-    if {![catch {set ctx [::xowf::Context new -destroy_on_cleanup -object ${:object} \
+    if {![catch {set ctx [::xowf::Context new \
+                              -destroy_on_cleanup -object ${:object} \
                               -all_roles true \
                               -workflow_definition [my value]]} errorMsg]} {
       $ctx initialize_context ${:object}
@@ -38,7 +39,7 @@ namespace eval ::xowiki::formfield {
       array set "" [$ctx check]
       if {$(rc) == 1} {set errorMsg $(errorMsg)}
     }
-    
+
     if {[info exists errorMsg]} {
       #my msg errorMsg=$errorMsg
       my uplevel [list set errorMsg $errorMsg]
@@ -47,12 +48,12 @@ namespace eval ::xowiki::formfield {
     return 1
   }
   workflow_definition instproc pretty_value {v} {
-    [my object] do_substitutions 0
+    ${:object} do_substitutions 0
     set text [string map [list & "&amp;" < "&lt;" > "&gt;" \" "&quot;" ' "&apos;" @ "&#64;"] [my value]]
     return "<div style='width: 65%; overflow:auto;float: left;'>
     <pre class='code'>$text</pre></div>
     <div>[my as_graph]</div><div class='visual-clear'></div>
-        [[my object] include my-refers]
+        [${:object} include my-refers]
    "
   }
 
@@ -67,12 +68,12 @@ namespace eval ::xowiki::formfield {
   }
   current_state instproc render_input {} {
     next
-    if {[my as_graph]} {
-      set ctx [::xowf::Context new -destroy_on_cleanup -object [my object] \
+    if {[:as_graph]} {
+      set ctx [::xowf::Context new -destroy_on_cleanup -object ${:object} \
                    -all_roles true -in_role none \
-                   -workflow_definition [[my object] wf_property workflow_definition] ]
-      #set ctx   [::xowf::Context require [my object]]
-      set graph [$ctx as_graph -current_state [my value] -visited [[my object] visited_states]  -style "max-height: 250px;"]
+                   -workflow_definition [${:object} wf_property workflow_definition] ]
+      #set ctx   [::xowf::Context require ${:object}]
+      set graph [$ctx as_graph -current_state [my value] -visited [${:object} visited_states]  -style "max-height: 250px;"]
       ::html::div -style "width: 35%; float: right;" {
         ::html::t -disableOutputEscaping $graph
       }
@@ -81,9 +82,9 @@ namespace eval ::xowiki::formfield {
 
   current_state instproc pretty_value {v} {
     set g ""
-    if {[my as_graph]} {
-      set ctx   [::xowf::Context require [my object]]
-      set graph [$ctx as_graph -current_state $v -visited [[my object] visited_states]]
+    if {[:as_graph]} {
+      set ctx   [::xowf::Context require ${:object}]
+      set graph [$ctx as_graph -current_state $v -visited [${:object} visited_states]]
       set g "<div style='width: 35%; float: right;'>$graph</div>"
     }
     return "[next]$g"
@@ -92,8 +93,8 @@ namespace eval ::xowiki::formfield {
 }
 
 
-# 
-# These definitions are only here for the time being 
+#
+# These definitions are only here for the time being
 #
 namespace eval ::xo::role {
   Class create Role
@@ -109,12 +110,12 @@ namespace eval ::xo::role {
     return 1
   }
 
-  Role create swa 
+  Role create swa
   swa proc is_member {-user_id:required -package_id} {
     return [::xo::cc cache [list acs_user::site_wide_admin_p -user_id $user_id]]
   }
-  
-  Role create registered_user 
+
+  Role create registered_user
   registered_user proc is_member {-user_id:required -package_id} {
     return [expr {$user_id != 0}]
   }
@@ -129,8 +130,8 @@ namespace eval ::xo::role {
   unregistered_user proc is_member {-user_id:required -package_id} {
     return [expr {$user_id == 0}]
   }
-  
-  Role create admin 
+
+  Role create admin
   admin proc is_member {-user_id:required -package_id:required} {
     return [::xo::cc permission -object_id $package_id -privilege admin -party_id $user_id]
   }
@@ -141,7 +142,7 @@ namespace eval ::xo::role {
     #my msg members=$members
     return $members
   }
-  
+
   Role create creator
   creator proc is_member {-user_id:required -package_id -object:required} {
     $object instvar creation_user
@@ -155,7 +156,7 @@ namespace eval ::xo::role {
     return [list [list [::xo::get_user_name $creator_id] $creator_id]]
   }
 
-  Role create app_group_member 
+  Role create app_group_member
   app_group_member proc is_member {-user_id:required -package_id} {
     return [::xo::cc cache [list application_group::contains_party_p \
                                 -party_id $user_id \
@@ -189,7 +190,7 @@ namespace eval ::xowiki::formfield {
   ###########################################################
 
   Class create role_member -superclass candidate_box_select -parameter {
-    role 
+    role
     {online_state off}
   }
   role_member instproc initialize {} {
@@ -198,9 +199,9 @@ namespace eval ::xowiki::formfield {
   }
   role_member instproc render_input {} {
     my instvar role
-    #my msg role=$role,obj=[my object]
+    #my msg role=$role,obj=${:object}
     if {[info commands ::xo::role::$role] ne ""} {
-      set object_id [::xo::role::$role get_object_id [my object]]
+      set object_id [::xo::role::$role get_object_id ${:object}]
       my set options [::xo::role::$role get_members -object_id $object_id]
     } elseif {[set gid [group::get_id -group_name $role]] ne ""} {
       my set options [list]
@@ -260,7 +261,7 @@ namespace eval ::xowiki::formfield {
   }
 
   mc_exercise instproc pretty_value {v} {
-    return [[my object] property form ""]
+    return [${:object} property form ""]
   }
 
   mc_exercise instproc convert_to_internal {} {
@@ -268,7 +269,7 @@ namespace eval ::xowiki::formfield {
     # Build a from from the components of the exercise on the fly.
     # Actually, this methods computes the properties "form" and
     # "form_constraints" based on the components of this form field.
-    # 
+    #
     set form "<FORM>\n<table class='mchoice'>\n<tbody>"
     set fc "@categories:off @cr_fields:hidden\n"
     set intro_text [my get_named_sub_component_value text]
@@ -292,8 +293,8 @@ namespace eval ::xowiki::formfield {
       #my msg "$input_field_name .correct = $value(correct)"
     }
     append form "</tbody></table></FORM>\n"
-    [my object] set_property -new 1 form $form
-    [my object] set_property -new 1 form_constraints $fc
+    ${:object} set_property -new 1 form $form
+    ${:object} set_property -new 1 form_constraints $fc
   }
 
   ###########################################################
@@ -312,11 +313,11 @@ namespace eval ::xowiki::formfield {
     if {[my set __state] ne "after_specs"} return
 
     if {0} {
-      set javascript [::xowiki::formfield::FormField fc_encode { 
-        xinha_config.toolbar = [ 
-                                ['popupeditor', 'bold','italic','createlink','insertimage','separator'], 
-                                ['killword','removeformat','htmlmode'] 
-                               ]; 
+      set javascript [::xowiki::formfield::FormField fc_encode {
+        xinha_config.toolbar = [
+                                ['popupeditor', 'bold','italic','createlink','insertimage','separator'],
+                                ['killword','removeformat','htmlmode']
+                               ];
       }]
       set text_config [subst {editor=xinha,height=100px,label=Text,plugins=OacsFs,inplace=[my inplace],javascript=$javascript}]
     } else {
@@ -340,7 +341,7 @@ namespace eval ::xowiki::formfield {
 
 }
 
-::xo::library source_dependent 
+::xo::library source_dependent
 
 #
 # Local variables:
