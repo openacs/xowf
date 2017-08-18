@@ -480,9 +480,9 @@ namespace eval ::xowf {
         # We require an xotcl::Object, since the container needs the
         # method "contains"
         #
-        :log "=== create WorkflowContainer ${:wf_container}"
+        #:log "=== create WorkflowContainer ${:wf_container}"
         WorkflowContainer create ${:wf_container}
-        :log "=== call create :create_workflow_definition"
+        #:log "=== call create :create_workflow_definition"
         :create_workflow_definition $workflow_definition
         #:log "==== def\n$workflow_definition"
         #:log "==== wf_container children <[${:wf_container} info children]>"
