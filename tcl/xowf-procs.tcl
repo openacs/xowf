@@ -988,7 +988,7 @@ namespace eval ::xowf {
   }
   Action instproc invoke {{-attributes ""}} {
     set action_name [namespace tail [self]]
-    set obj [[:wf_context] object]
+    set object [[:wf_context] object]
     set package_id [$object package_id]
     my log  "--xowf invoke action [self]"
     # We fake a work request with the given instance attributes
