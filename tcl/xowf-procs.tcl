@@ -95,6 +95,9 @@ namespace eval ::xowf {
           #:log "$obj [nsf::is object $obj] precedence: [$obj info precedence]"
           return $obj
         }
+        if {[$obj hasclass ::xowf::WorkflowPage]} {
+            return [$obj wf_context]
+        }
       }
     }
     #
