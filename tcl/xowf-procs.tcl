@@ -477,7 +477,11 @@ namespace eval ::xowf {
     #
     #:log START-CREATES
     if {$::xowf::sharedWorkflowDefinition} {
-      set :wf_container ::xowf::[[${:object} page_template] revision_id]
+      if {[${:object} is_wf]} {
+        set :wf_container ::xowf::[${:object} revision_id]
+      } else {
+        set :wf_container ::xowf::[[${:object} page_template] revision_id]
+      }
       if {[info commands ${:wf_container}] eq ""} {
         #
         # We require an xotcl::Object, since the container needs the
