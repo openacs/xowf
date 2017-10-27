@@ -540,11 +540,15 @@ namespace eval ::xowf {
   }
 
   # -debug
-  Context proc require {obj} {
+  Context proc require {{-new:switch false} obj} {
     #:log "START-require"
     #
     set ctx $obj-wfctx
     #:log "... ctx <$ctx> exists [:isobject $ctx]"
+    
+    if {$new && [llength [info commands $ctx]] == 1} {
+      $ctx destroy
+    }
 
     if {[llength [info commands $ctx]] == 0} {
       set wfContextClass [$obj wf_property workflow_context_class [self]]
@@ -1098,14 +1102,6 @@ namespace eval ::xowf {
       set :_wf_context $ctx
     }
     return ${:_wf_context}
-  }
-
-  WorkflowPage instproc initialize_loaded_object {} {
-    if {${:state} eq ""} {
-      set :state "initial"
-    }
-    :log "===== WorkflowPage INIT_LOADED_OBJECT <${:state}>"
-    next
   }
 
   WorkflowPage ad_instproc is_wf {} {
@@ -1741,7 +1737,7 @@ namespace eval ::xowf {
       # set the state to a well defined starting point
       if {${:state} eq ""} {set :state initial}
 
-      set ctx [::xowf::Context require [self]]
+      set ctx [::xowf::Context require -new [self]]
       :activate -verbose false $ctx initialize
 
       # Ignore the returned next_state, since the initial state is
