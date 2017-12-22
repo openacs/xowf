@@ -42,7 +42,7 @@ namespace eval ::xowf {
     $p save_new
 
     #
-    # Make the paramter page the default
+    # Make the parameter page the default
     #
     parameter::set_value -package_id $package_id -parameter parameter_page -value $parameter_page_name
     callback subsite::parameter_changed -package_id $package_id -parameter parameter_page -value $parameter_page_name
