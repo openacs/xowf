@@ -17,7 +17,7 @@ namespace eval ::xowf {
     set folder_id [::$package_id folder_id]
     
     #
-    # Create a parameter page for conveniance
+    # Create a parameter page for convenience
     #
     set pform_id [::xowiki::Weblog instantiate_forms -forms en:Parameter.form \
                       -package_id $package_id]
