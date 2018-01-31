@@ -7,8 +7,8 @@ namespace eval ::xowf {
   # Define a simple Class for atjobs. In future versions, this is a
   # good candidate to be turned into a nx class.
   #
-  # Priority: yshould be a value between 0 and 9, where 9 is the
-  # hightest priority; default is 5
+  # Priority: should be a value between 0 and 9, where 9 is the
+  # highest priority; default is 5
   #
   Class create ::xowf::atjob -slots {
     ::xo::Attribute create owner_id
