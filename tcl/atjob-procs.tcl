@@ -155,7 +155,7 @@ namespace eval ::xowf {
     # we check for package_id not null.
     #
     # The retrieved items are sorted first by title (priority, should
-    # be a value between 0 and 9, where 9 is the hightest priority;
+    # be a value between 0 and 9, where 9 is the highest priority;
     # default is 5) and then by item_id (earlier created items have a
     # lower item_id).
     #
