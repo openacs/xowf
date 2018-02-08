@@ -1586,18 +1586,6 @@ namespace eval ::xowf {
 
   WorkflowPage instproc save_in_hstore {} {
     #
-    # Experimental code for storing instance attributes in hstore. To
-    # use it, make sure to active hstore for the database with a
-    # command like:
-    #
-    # $PGBIN/psql -U nsadmin -d dotlrn-test5 < /usr/local/pg/share/postgresql/contrib/hstore.sql
-    #
-    # .... and add a index for the hstore key to xowiki_page_instance:
-    #
-    #    CREATE INDEX hidx ON xowiki_page_instance using GIST(hkey);
-    #
-    # ... and set the parameter "use_hstore" to 1. Then the following condition will be true.
-    #
     if {[::xo::dc has_hstore] && [[:package_id] get_parameter use_hstore 0]} {
       set hkey [::xowiki::hstore::dict_as_hkey [:hstore_attributes]]
       set revision_id ${:revision_id}
