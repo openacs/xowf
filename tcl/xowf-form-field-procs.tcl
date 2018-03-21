@@ -23,8 +23,8 @@ namespace eval ::xowiki::formfield {
   workflow_definition instproc as_graph {} {
     set ctx [::xowf::Context new -destroy_on_cleanup -object ${:object} \
                  -all_roles true -in_role none \
-                 -workflow_definition [my value] ]
-    return [$ctx as_graph -dpi [my dpi] -style "max-width: 35%;"]
+                 -workflow_definition [:value] ]
+    return [$ctx as_graph -dpi [:dpi] -style "max-width: 35%;"]
   }
 
   workflow_definition instproc check=workflow {value} {
@@ -32,7 +32,7 @@ namespace eval ::xowiki::formfield {
     if {![catch {set ctx [::xowf::Context new \
                               -destroy_on_cleanup -object ${:object} \
                               -all_roles true \
-                              -workflow_definition [my value]]} errorMsg]} {
+                              -workflow_definition [:value]]} errorMsg]} {
       $ctx initialize_context ${:object}
       ${:object} wf_context $ctx
       unset errorMsg
@@ -41,18 +41,18 @@ namespace eval ::xowiki::formfield {
     }
 
     if {[info exists errorMsg]} {
-      #my msg errorMsg=$errorMsg
-      my uplevel [list set errorMsg $errorMsg]
+      #:msg errorMsg=$errorMsg
+      :uplevel [list set errorMsg $errorMsg]
       return 0
     }
     return 1
   }
   workflow_definition instproc pretty_value {v} {
     ${:object} do_substitutions 0
-    set text [string map [list & "&amp;" < "&lt;" > "&gt;" \" "&quot;" ' "&apos;" @ "&#64;"] [my value]]
+    set text [string map [list & "&amp;" < "&lt;" > "&gt;" \" "&quot;" ' "&apos;" @ "&#64;"] [:value]]
     return "<div style='width: 65%; overflow:auto;float: left;'>
     <pre class='code'>$text</pre></div>
-    <div>[my as_graph]</div><div class='visual-clear'></div>
+    <div>[:as_graph]</div><div class='visual-clear'></div>
         [${:object} include my-refers]
    "
   }
@@ -73,7 +73,7 @@ namespace eval ::xowiki::formfield {
                    -all_roles true -in_role none \
                    -workflow_definition [${:object} wf_property workflow_definition] ]
       #set ctx   [::xowf::Context require ${:object}]
-      set graph [$ctx as_graph -current_state [my value] -visited [${:object} visited_states]  -style "max-height: 250px;"]
+      set graph [$ctx as_graph -current_state [:value] -visited [${:object} visited_states]  -style "max-height: 250px;"]
       ::html::div -style "width: 35%; float: right;" {
         ::html::t -disableOutputEscaping $graph
       }
@@ -139,7 +139,7 @@ namespace eval ::xo::role {
     set members [permission::get_parties_with_permission \
                      -privilege admin \
                      -object_id $object_id]
-    #my msg members=$members
+    #:msg members=$members
     return $members
   }
 
@@ -166,9 +166,9 @@ namespace eval ::xo::role {
   Role create community_member
   community_member proc is_member {-user_id:required -package_id} {
     if {[info commands ::dotlrn_community::get_community_id] ne ""} {
-      set community_id [my cache [list [dotlrn_community::get_community_id -package_id $package_id]]]
+      set community_id [:cache [list [dotlrn_community::get_community_id -package_id $package_id]]]
       if {$community_id ne ""} {
-        return [my cache [list dotlrn::user_is_community_member_p \
+        return [:cache [list dotlrn::user_is_community_member_p \
                               -user_id $user_id \
                               -community_id $community_id]]
       }
@@ -195,34 +195,33 @@ namespace eval ::xowiki::formfield {
   }
   role_member instproc initialize {} {
     next
-    my set is_party_id 1
+    set :is_party_id 1
   }
   role_member instproc render_input {} {
-    my instvar role
-    #my msg role=$role,obj=${:object}
-    if {[info commands ::xo::role::$role] ne ""} {
-      set object_id [::xo::role::$role get_object_id ${:object}]
-      my set options [::xo::role::$role get_members -object_id $object_id]
-    } elseif {[set gid [group::get_id -group_name $role]] ne ""} {
-      my set options [list]
+    #:msg role=${:role},obj=${:object}
+    if {[info commands ::xo::role::${:role}] ne ""} {
+      set object_id [::xo::role::${:role} get_object_id ${:object}]
+      set :options [::xo::role::${:role} get_members -object_id $object_id]
+    } elseif {[set gid [group::get_id -group_name ${:role}]] ne ""} {
+      set :options [list]
       foreach m [group::get_members -group_id $gid] {
-        my lappend options [list [::xo::get_user_name $m] $m] }
+        :lappend options [list [::xo::get_user_name $m] $m] }
     } else {
-      error "no such role or group '$role'"
+      error "no such role or group '${:role}'"
     }
     next
   }
 
   role_member instproc get_entry_label {v} {
     set prefix ""
-    if {[my online_state]} {
+    if {[:online_state]} {
       set prefix "[::xowiki::utility user_is_active -asHTML true $v] "
     }
     return $prefix[::xo::get_user_name $v]
   }
 
   role_member instproc pretty_value {v} {
-    my set options [my get_labels $v]
+    set :options [:get_labels $v]
     next
   }
 }
@@ -241,18 +240,17 @@ namespace eval ::xowiki::formfield {
   }
 
   mc_exercise instproc initialize {} {
-    my log "[self class] deprecated, you should switch to test-item procs"
-    if {[my set __state] ne "after_specs"} return
-    my instvar feedback inplace
-    my create_components  [subst {
+    :log "[self class] deprecated, you should switch to test-item procs"
+    if {${:__state} ne "after_specs"} return
+    :create_components  [subst {
       {text  {richtext,required,height=150px,label=#xowf.exercise-text#}}
-      {alt-1 {mc_alternative,feedback=$feedback,label=#xowf.alternative#}}
-      {alt-2 {mc_alternative,feedback=$feedback,label=#xowf.alternative#}}
-      {alt-3 {mc_alternative,feedback=$feedback,label=#xowf.alternative#}}
-      {alt-4 {mc_alternative,feedback=$feedback,label=#xowf.alternative#}}
-      {alt-5 {mc_alternative,feedback=$feedback,label=#xowf.alternative#}}
+      {alt-1 {mc_alternative,feedback=${:feedback},label=#xowf.alternative#}}
+      {alt-2 {mc_alternative,feedback=${:feedback},label=#xowf.alternative#}}
+      {alt-3 {mc_alternative,feedback=${:feedback},label=#xowf.alternative#}}
+      {alt-4 {mc_alternative,feedback=${:feedback},label=#xowf.alternative#}}
+      {alt-5 {mc_alternative,feedback=${:feedback},label=#xowf.alternative#}}
     }]
-    my set __initialized 1
+    set :__initialized 1
   }
 
   mc_exercise instproc render_input {} {
@@ -272,11 +270,11 @@ namespace eval ::xowiki::formfield {
     #
     set form "<FORM>\n<table class='mchoice'>\n<tbody>"
     set fc "@categories:off @cr_fields:hidden\n"
-    set intro_text [my get_named_sub_component_value text]
+    set intro_text [:get_named_sub_component_value text]
     append form "<tr><td class='text' colspan='2'>$intro_text</td></tr>\n"
     foreach input_field_name {alt-1 alt-2 alt-3 alt-4 alt-5} {
       foreach f {text correct feedback_correct feedback_incorrect} {
-        set value($f) [my get_named_sub_component_value $input_field_name $f]
+        set value($f) [:get_named_sub_component_value $input_field_name $f]
       }
       append form \
           "<tr><td class='selection'><input type='checkbox' id='$input_field_name' name='$input_field_name' /></td>\n" \
@@ -290,7 +288,7 @@ namespace eval ::xowiki::formfield {
         lappend alt_fc "feedback_answer_incorrect=[::xowiki::formfield:::FormField fc_encode $value(feedback_incorrect)]"
       }
       if {[llength $alt_fc] > 0} {append fc [list $input_field_name:checkbox,[join $alt_fc ,]]\n}
-      #my msg "$input_field_name .correct = $value(correct)"
+      #:msg "$input_field_name .correct = $value(correct)"
     }
     append form "</tbody></table></FORM>\n"
     ${:object} set_property -new 1 form $form
@@ -309,8 +307,8 @@ namespace eval ::xowiki::formfield {
   }
 
   mc_alternative instproc initialize {} {
-    my log "[self class] deprecated, you should switch to test-item procs"
-    if {[my set __state] ne "after_specs"} return
+    :log "[self class] deprecated, you should switch to test-item procs"
+    if {${:__state} ne "after_specs"} return
 
     if {0} {
       set javascript [::xowiki::formfield::FormField fc_encode {
@@ -319,11 +317,11 @@ namespace eval ::xowiki::formfield {
                                 ['killword','removeformat','htmlmode']
                                ];
       }]
-      set text_config [subst {editor=xinha,height=100px,label=Text,plugins=OacsFs,inplace=[my inplace],javascript=$javascript}]
+      set text_config [subst {editor=xinha,height=100px,label=Text,plugins=OacsFs,inplace=$:{inplace},javascript=$javascript}]
     } else {
       set text_config [subst {editor=wym,height=100px,label=Text}]
     }
-    if {[my feedback] eq "full"} {
+    if {[:feedback] eq "full"} {
       set feedback_fields {
         {feedback_correct {textarea,label=Feedback korrekt}}
         {feedback_incorrect {textarea,label=Feedback inkorrekt}}
@@ -331,12 +329,12 @@ namespace eval ::xowiki::formfield {
     } else {
       set feedback_fields ""
     }
-    my create_components [subst {
+    :create_components [subst {
       {text  {richtext,$text_config}}
       {correct {boolean,horizontal=true,label=Korrekt}}
       $feedback_fields
     }]
-    my set __initialized 1
+    set :__initialized 1
   }
 
 }

@@ -34,7 +34,7 @@ namespace eval ::xowiki::includelet {
       }
 
   wf-todo instproc initialize {} {
-    my get_parameters
+    :get_parameters
     if {![info exists user_id]} {set user_id [::xo::cc user_id]}
 
     set sql {
@@ -61,37 +61,36 @@ namespace eval ::xowiki::includelet {
       if {[regexp {^/(/.*)/$} $workflow _ package]} {
         # all workflows from this package
         ::xowf::Package initialize -url $package
-        #my msg "using package_id=$package_id"
+        #:msg "using package_id=$package_id"
         append sql " and o.package_id = :package_id"
       } else {
         if {[regexp {^/(/[^/]+)(/.+)$} $workflow _ package path]} {
           ::xowf::Package initialize -url $package
-          #my msg "using package_id=$package_id"
+          #:msg "using package_id=$package_id"
         } else {
           set path $workflow
         }
-        set parent_id [[my set __including_page] parent_id]
+        set parent_id [${:__including_page} parent_id]
         set wf_page [$package_id get_page_from_item_ref -parent_id $parent_id $path]
         if {$wf_page eq ""} {
-          my msg "cannot resolve page $workflow"
+          :msg "cannot resolve page $workflow"
           set package_id -1; set page_template -1
         } else {
           set page_template [$wf_page item_id]
           set package_id [$wf_page package_id]
         }
-        #my msg "page_template=$page_template pkg=$package_id"
+        #:msg "page_template=$page_template pkg=$package_id"
         append sql " and o.package_id = :package_id and p.page_template = :page_template"
       }
     }
 
     append sql " order by p.last_modified desc"
 
-    my set items [::xowiki::FormPage instantiate_objects -sql $sql]
+    set :items [::xowiki::FormPage instantiate_objects -sql $sql]
   }
 
   wf-todo instproc render_ical {} {
-    my instvar items
-    foreach i [$items children] {
+    foreach i [${:items} children] {
       $i instvar wf_name name title state xowiki_form_page_id pid description parent_id
       ::xowf::Package initialize -package_id $pid
 
@@ -101,19 +100,19 @@ namespace eval ::xowiki::includelet {
           -summary "$title ($state)" \
           -description "Workflow instance of workflow $wf_name $description"
     }
-    $items mixin ::xo::ical::VCALENDAR
-    $items configure -prodid "-//WU Wien//NONSGML XoWiki Content Flow//EN" 
-    set text [$items as_ical]
-    #my log "--ical sending $text"
+    ${:items} mixin ::xo::ical::VCALENDAR
+    ${:items} configure -prodid "-//WU Wien//NONSGML XoWiki Content Flow//EN" 
+    set text [${:items} as_ical]
+    #:log "--ical sending $text"
     #ns_return 200 text/calendar $text
     ns_return 200 text/plain $text
   }
 
   wf-todo instproc render {} {
-    my get_parameters
-    if {$ical} {return [my render_ical]}
-
-    my instvar items
+    :get_parameters
+    if {$ical} {
+      return [:render_ical]
+    }
     set t [TableWidget new -volatile \
                -columns {
                  Field create package -label Package
@@ -121,7 +120,7 @@ namespace eval ::xowiki::includelet {
                  AnchorField create title -label "Todo"
                  Field create state -label [::xowiki::FormPage::slot::state set pretty_name]
                }]
-    foreach i [$items children] {
+    foreach i [${:items} children] {
       $i instvar wf_name name title state xowiki_form_page_id pid parent_id
       ::xowf::Package initialize -package_id $pid
       $t add \
