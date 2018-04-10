@@ -349,7 +349,7 @@ namespace eval ::xowf {
     # Load the actual form only once for this context.  We cache the
     # object name of the form in the context.
     #
-    if {[info exists form_id]} {return [set :form_id]}
+    if {[info exists form_id]} {return ${:form_id}}
 
     set package_id [$object package_id]
     #
@@ -899,7 +899,7 @@ namespace eval ::xowf {
   WorkflowConstruct instproc get_value {values} {
     foreach {cond value} [:get_cond_values $values] {
       if {$cond eq "" || $cond eq "default" || $cond eq "else" ||
-          $cond eq "true"} {
+          $cond == "true"} {
         return $value
       } elseif {[:$cond]} {
         return $value
@@ -1072,7 +1072,7 @@ namespace eval ::xowf {
     $object instvar instance_attributes
     if {[info exists :default] && ![dict exists $instance_attributes ${:name}]} {
       dict set instance_attributes ${:name} ${:default}
-      #:msg "[self] set default of $object to [:default]"
+      #:msg "set :default of $object to [:default]"
     }
   }
 

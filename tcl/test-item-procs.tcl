@@ -10,7 +10,7 @@ namespace eval ::xowiki::formfield {
   }
   FormGeneratorField set abstract 1
   FormGeneratorField instproc pretty_value {v} {
-    return [[my object] property form ""]
+    return [${:object} property form ""]
   }
   FormGeneratorField instproc render_input {} {
     ::xo::Page requireCSS /resources/xowf/myform.css
@@ -48,7 +48,7 @@ namespace eval ::xowiki::formfield {
     # what's wrong, we can't provide different feedback for right or
     # wrong.
     #
-    my instvar inplace feedback_level
+    :instvar inplace feedback_level
     if {$feedback_level eq "none"} {
       return ""
     }
@@ -71,23 +71,23 @@ namespace eval ::xowiki::formfield {
   # questionairs, which might need less input fields.
   #
   test_item instproc initialize {} {
-    if {[my set __state] ne "after_specs"} return
-    my instvar inplace feedback_level
+    if {${:__state} ne "after_specs"} return
+    :instvar inplace feedback_level
     set options ""
     #
     # Provide some settings for name short-cuts
     #
-    switch -- [my question_type] {
+    switch -- [:question_type] {
       mc { # we should support as well: minChoices, maxChoices, shuffle
         set interaction_class mc_interaction
-        set options nr_choices=[my nr_choices]
+        set options nr_choices=[:nr_choices]
       }
       sc { # we should support as well: minChoices, maxChoices, shuffle
         set interaction_class mc_interaction
-        set options nr_choices=[my nr_choices],multiple=false
+        set options nr_choices=[:nr_choices],multiple=false
       }
       ot { set interaction_class text_interaction }
-      default {error "unknown question type: [my question_type]"}
+      default {error "unknown question type: [:question_type]"}
     }
 
     set auto_correct [expr {[$interaction_class exists auto_correct] && 
@@ -102,21 +102,21 @@ namespace eval ::xowiki::formfield {
     #
     # The object might be a form, just use the property, if we are on
     # a FormPage.
-    if {[[my object] istype ::xowiki::FormPage]} {
-      set feedback_level_property [[my object] property feedback_level]
+    if {[${:object} istype ::xowiki::FormPage]} {
+      set feedback_level_property [${:object} property feedback_level]
       if {$feedback_level_property ne ""} {
         set feedback_level $feedback_level_property
       }
     }
 
     #
-    my create_components  [subst {
+    :create_components  [subst {
       {minutes numeric,size=2,label=#xowf.Minutes#}
       {grading {select,options={exact exact} {partial partial},default=exact,label=#xowf.Grading-Schema#}}
       {interaction {$interaction_class,$options,feedback_level=$feedback_level,inplace=$inplace}}
-      [my feed_back_definition $auto_correct]
+      [:feed_back_definition $auto_correct]
     }]
-    my set __initialized 1
+    set :__initialized 1
   }
 
 
@@ -139,13 +139,13 @@ namespace eval ::xowiki::formfield {
 
   mc_interaction instproc set_compound_value {value} {
     set r [next]
-    if {![my multiple]} {
+    if {![:multiple]} {
       # For single choice questions, we have a fake-field for denoting
       # the correct entry. We have to distribute this to the radio
       # element, which is rendered.
-      set correct_field_name [my get_named_sub_component_value correct]
+      set correct_field_name [:get_named_sub_component_value correct]
       if {$correct_field_name ne ""} {
-        foreach c [my components] {
+        foreach c [:components] {
           if {[$c name] eq $correct_field_name} {
             ${c}::correct value $correct_field_name
           }
@@ -156,24 +156,24 @@ namespace eval ::xowiki::formfield {
   }
 
   mc_interaction instproc initialize {} {
-    if {[my set __state] ne "after_specs"} return
+    if {${:__state} ne "after_specs"} return
     test_item instvar {xinha(javascript) javascript}
-    my instvar feedback_level inplace input_field_names nr_choices
+    :instvar feedback_level inplace input_field_names nr_choices
     #
     # build choices
     #
 
-    if {![my multiple]} {
+    if {![:multiple]} {
       append choices "{correct radio,omit}\n"
     }
     #
     # create component structure
     #
-    my create_components  [subst {
+    :create_components  [subst {
       {text  {richtext,required,height=150px,editor=ckeditor4,label=#xowf.exercise-text#}}
-      {mc {mc_choice,feedback_level=$feedback_level,label=#xowf.alternative#,multiple=[my multiple],repeat=1..$nr_choices}}
+      {mc {mc_choice,feedback_level=$feedback_level,label=#xowf.alternative#,multiple=[:multiple],repeat=1..$nr_choices}}
     }]
-    my set __initialized 1
+    set :__initialized 1
   }
   mc_interaction set auto_correct true
   mc_interaction instproc convert_to_internal {} {
@@ -184,15 +184,15 @@ namespace eval ::xowiki::formfield {
     # 
     set form "<FORM>\n<table class='mchoice'>\n<tbody>"
     set fc "@categories:off @cr_fields:hidden\n"
-    set intro_text [my get_named_sub_component_value text]
+    set intro_text [:get_named_sub_component_value text]
     append form "<tr><td class='text' colspan='2'><div class='question_text'>$intro_text</div></td></tr>\n"
 
-    #my msg " input_field_names=[my set input_field_names]"
-    set mc [my get_named_sub_component_value mc]
+    #my msg " input_field_names=${:input_field_names}"
+    set mc [:get_named_sub_component_value mc]
     ns_log notice "MC <$mc>"
     
-    if {![my multiple]} {
-      set correct_field_name [my get_named_sub_component_value correct]
+    if {![:multiple]} {
+      set correct_field_name [:get_named_sub_component_value correct]
     }
 
     #set input_field_names [lmap {name .} $mc {set name}]
@@ -221,14 +221,14 @@ namespace eval ::xowiki::formfield {
       #
       # fill values into form
       #
-      if {[my multiple]} {
+      if {[:multiple]} {
         set correct $value(correct)
         append form \
             "<tr><td class='selection'><input type='checkbox' id='$input_field_name' name='$input_field_name' value='$input_field_name'/></td>\n" \
             "<td class='value'><label for='$input_field_name'>$value(text)</label></td></tr>\n"
       } else {
-        #my msg $correct_field_name,[my name],$input_field_name
-        set correct [expr {"[my name].$input_field_name" eq $correct_field_name}]
+        #my msg $correct_field_name,[:name],$input_field_name
+        set correct [expr {"[:name].$input_field_name" eq $correct_field_name}]
         append form \
             "<tr><td class='selection'><input id='$input_field_name' type='radio' name='radio' value='$input_field_name' /></td>\n" \
             "<td class='value'><label for='$input_field_name'>$value</label></td></tr>\n"
@@ -251,19 +251,19 @@ namespace eval ::xowiki::formfield {
       #my msg "$input_field_name .correct = $value(correct)"
     }
 
-    if {![my multiple]} {
+    if {![:multiple]} {
       regexp {[.]([^.]+)$} $correct_field_name _ correct_field_value
       lappend fc "radio:text,answer=$correct_field_value"
     }
     append form "</tbody></table></FORM>\n"
     #ns_log notice FORM=$form
     #ns_log notice FC=$fc
-    [my object] set_property -new 1 form $form
-    [my object] set_property -new 1 form_constraints $fc
+    ${:object} set_property -new 1 form $form
+    ${:object} set_property -new 1 form_constraints $fc
     set anon_instances true ;# TODO make me configurable
-    [my object] set_property -new 1 anon_instances $anon_instances
-    [my object] set_property -new 1 auto_correct [[self class] set auto_correct]
-    [my object] set_property -new 1 has_solution true
+    ${:object} set_property -new 1 anon_instances $anon_instances
+    ${:object} set_property -new 1 auto_correct [[self class] set auto_correct]
+    ${:object} set_property -new 1 has_solution true
   }
 
   ###########################################################
@@ -279,7 +279,7 @@ namespace eval ::xowiki::formfield {
   }
 
   mc_choice instproc initialize {} {
-    if {[my set __state] ne "after_specs"} return
+    if {${:__state} ne "after_specs"} return
 
     if {1} {
       test_item instvar {xinha(javascript) javascript}
@@ -287,7 +287,7 @@ namespace eval ::xowiki::formfield {
     } else {
       set text_config [subst {editor=wym,height=100px,label=Text}]
     }
-    if {[my feedback_level] eq "full"} {
+    if {[:feedback_level] eq "full"} {
       set feedback_fields {
         {feedback_correct {textarea,cols=60,label=#xowf.feedback_correct#}}
         {feedback_incorrect {textarea,cols=60,label=#xowf.feedback_incorrect#}}
@@ -295,10 +295,10 @@ namespace eval ::xowiki::formfield {
     } else {
       set feedback_fields ""
     }
-    if {[my multiple]} {
+    if {[:multiple]} {
       # We are in a multiple choice item; provide for editing a radio
       # group per alternative.
-      my create_components [subst {
+      :create_components [subst {
         {text  {richtext,editor=ckeditor4,$text_config}}
         {correct {boolean,horizontal=true,label=#xowf.correct#}}
         $feedback_fields
@@ -307,14 +307,14 @@ namespace eval ::xowiki::formfield {
       # We are in a single choice item; provide for editing a single
       # radio group spanning all entries.  Use as name for grouping
       # the form-field name minus the last segment.
-      regsub -all {[.][^.]+$} [my name] "" groupname
-      my create_components [subst {
+      regsub -all {[.][^.]+$} [:name] "" groupname
+      :create_components [subst {
         {text  {richtext,editor=ckeditor4,$text_config}}
-        {correct {radio,label=#xowf.correct#,forced_name=$groupname.correct,options={"" [my name]}}}
+        {correct {radio,label=#xowf.correct#,forced_name=$groupname.correct,options={"" [:name]}}}
         $feedback_fields
       }]
     }
-    my set __initialized 1
+    set :__initialized 1
   }
 }
 
@@ -332,36 +332,36 @@ namespace eval ::xowiki::formfield {
   text_interaction set auto_correct false
 
   text_interaction instproc initialize {} {
-    if {[my set __state] ne "after_specs"} return
+    if {${:__state} ne "after_specs"} return
     test_item instvar {xinha(javascript) javascript}
-    my instvar feedback_level inplace input_field_names
+    :instvar feedback_level inplace input_field_names
     #
     # create component structure
     #
-    my create_components  [subst {
+    :create_components  [subst {
       {text  {richtext,required,editor=ckeditor4,height=150px,label=#xowf.exercise-text#,plugins=OacsFs,javascript=$javascript,inplace=$inplace}}
       {lines {numeric,default=10,size=3,label=#xowf.lines#}}
       {columns {numeric,default=60,size=3,label=#xowf.columns#}}
     }]
-    my set __initialized 1
+    set :__initialized 1
   }
 
   text_interaction instproc convert_to_internal {} {
     set form "<FORM>\n"
     set fc "@categories:off @cr_fields:hidden\n"
-    set intro_text [my get_named_sub_component_value text]
-    set lines      [my get_named_sub_component_value lines]
-    set columns    [my get_named_sub_component_value columns]
+    set intro_text [:get_named_sub_component_value text]
+    set lines      [:get_named_sub_component_value lines]
+    set columns    [:get_named_sub_component_value columns]
     append form "<div class='question_text'>$intro_text</div>\n"
     append form "<textarea name='answer' rows='$lines' cols='$columns'></textarea>\n" 
     append fc "answer:textarea"
     append form "</FORM>\n"
-    [my object] set_property -new 1 form $form
-    [my object] set_property -new 1 form_constraints $fc
+    ${:object} set_property -new 1 form $form
+    ${:object} set_property -new 1 form_constraints $fc
     set anon_instances true ;# TODO make me configurable
-    [my object] set_property -new 1 anon_instances $anon_instances
-    [my object] set_property -new 1 auto_correct [[self class] set auto_correct]
-    [my object] set_property -new 1 has_solution false
+    ${:object} set_property -new 1 anon_instances $anon_instances
+    ${:object} set_property -new 1 auto_correct [[self class] set auto_correct]
+    ${:object} set_property -new 1 has_solution false
   }
 }
 
@@ -379,7 +379,7 @@ namespace eval ::xowiki::formfield {
   }
 
   test_section instproc pretty_value {v} {
-    return [[my object] property form ""]
+    return [${:object} property form ""]
   }
 
   test_section instproc convert_to_internal {} {
@@ -393,13 +393,13 @@ namespace eval ::xowiki::formfield {
     # 
     set form "<form>\n"
     set fc "@categories:off @cr_fields:hidden\n"
-    set intro_text [[my object] property _text]
+    set intro_text [${:object} property _text]
     append form "$intro_text\n<ol>\n"
-    foreach v [my value] {
+    foreach v [:value] {
       # TODO: the next two commands should not be necessary to lookup
       # again, since the right values are already loaded into the
       # options
-      set item_id [[[my object] package_id] lookup -name $v]
+      set item_id [[${:object} package_id] lookup -name $v]
       set page [::xo::db::CrClass get_instance_from_db -item_id $item_id]
       append form "<li><h2>[$item_id title]</h2>\n"
       set prefix c$item_id
@@ -410,7 +410,7 @@ namespace eval ::xowiki::formfield {
       # ::xowiki::forms as well...
       #
       if {![dict exists $__ia form]} {
-        my msg "$v has no form included"
+        :msg "$v has no form included"
         continue
       }
       #
@@ -444,7 +444,7 @@ namespace eval ::xowiki::formfield {
           if {[string match @* $field_name]} continue
           # keep all form-constraints for which we have altered the name
           #my msg "old fc=$f, [list lsearch -exact $alt_inputs $field_name] => [lsearch -exact $alt_inputs $field_name] $alt_values"
-          set ff [[my object] create_raw_form_field -name $field_name -spec $definition]
+          set ff [${:object} create_raw_form_field -name $field_name -spec $definition]
           #my msg "ff answer => '[$ff answer]'"
           if {$field_name in $alt_inputs} {
             lappend fc $prefix-$f
@@ -456,14 +456,14 @@ namespace eval ::xowiki::formfield {
       }
     }
     append form "</ol></form>\n"
-    [my object] set_property -new 1 form $form
-    [my object] set_property -new 1 form_constraints $fc
+    ${:object} set_property -new 1 form $form
+    ${:object} set_property -new 1 form_constraints $fc
     set anon_instances true ;# TODO make me configurable
-    [my object] set_property -new 1 anon_instances $anon_instances
+    ${:object} set_property -new 1 anon_instances $anon_instances
     # for mixed test sections (e.g. text interaction and mc), we have
     # to combine the values of the items
-    [my object] set_property -new 1 auto_correct true ;# should be computed
-    [my object] set_property -new 1 has_solution true ;# should be computed
+    ${:object} set_property -new 1 auto_correct true ;# should be computed
+    ${:object} set_property -new 1 has_solution true ;# should be computed
     #my msg "fc=$fc"
   }
 }

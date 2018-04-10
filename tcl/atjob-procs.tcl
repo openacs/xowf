@@ -29,7 +29,7 @@ namespace eval ::xowf {
   }
 
   atjob instproc init {} {
-    my destroy_on_cleanup
+    :destroy_on_cleanup
   }
 
   #
@@ -45,7 +45,7 @@ namespace eval ::xowf {
     set class [self class]
     set owner_id [${:object} item_id]
     set package_id [${:object} package_id]
-    set ansi_time [$class ansi_time [clock scan [my time]]]
+    set ansi_time [$class ansi_time [clock scan [:time]]]
     if {![info exists :party_id]} {
       set :party_id [::xo::cc set untrusted_user_id]
     }
@@ -67,7 +67,7 @@ namespace eval ::xowf {
                  -instance_attributes $instance_attributes \
                  -page_template $form_id]
       $f save_new -use_given_publish_date true
-      my log "--at formpage saved"
+      :log "--at formpage saved"
     }
   }
 
@@ -98,7 +98,7 @@ namespace eval ::xowf {
 
     if {[llength [$items children]] > 0} {
       
-      my log "--at we got [llength [$items children]] scheduled items"
+      :log "--at we got [llength [$items children]] scheduled items"
 
       foreach item [$items children] {
         #my log "--at *** job=[$item serialize] ***\n"
@@ -122,7 +122,7 @@ namespace eval ::xowf {
             -init_url 0 -actual_query ""
         $package_id set_url -url [$package_id package_url][$owner_id name]
 
-        my log "--at executing atjob $cmd"
+        :log "--at executing atjob $cmd"
         if {[catch {eval $owner_id $cmd} errorMsg]} {
           ns_log error "\n*** atjob $owner_id $cmd lead to error ***\n$errorMsg\n$::errorInfo"
         } else {
@@ -130,7 +130,7 @@ namespace eval ::xowf {
         }
         ns_set cleanup
       }
-      my log "---run xowf jobs END"
+      :log "---run xowf jobs END"
     }
   }
 
@@ -140,7 +140,7 @@ namespace eval ::xowf {
     # check, if there are jobs scheduled for execution
     #
     set op [expr {$with_older ? "<=" : "=" }]
-    set ansi_time [my ansi_time [clock seconds]]
+    set ansi_time [:ansi_time [clock seconds]]
 
     #
     # Get the entries.  The items have to be retrieved bottom up,
@@ -172,7 +172,7 @@ namespace eval ::xowf {
     set item_ids [::xo::dc list get_due_atjobs $sql]
     
     if {[llength $item_ids] > 0} {
-      my log "--at we got [llength $item_ids] scheduled items"
+      :log "--at we got [llength $item_ids] scheduled items"
     
       #
       # Running the jobs here in this proc could lead to a problem with
@@ -190,7 +190,7 @@ namespace eval ::xowf {
         ns_job queue -detached $queue [list ::xowf::atjob run_jobs $item_ids]
       }
 
-      my log "--at END"
+      :log "--at END"
     }
   }
 }
