@@ -264,7 +264,7 @@ namespace eval ::xowiki::formfield {
 
   mc_exercise instproc convert_to_internal {} {
     #
-    # Build a from from the components of the exercise on the fly.
+    # Build a form from the components of the exercise on the fly.
     # Actually, this methods computes the properties "form" and
     # "form_constraints" based on the components of this form field.
     #

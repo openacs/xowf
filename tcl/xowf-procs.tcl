@@ -1918,7 +1918,7 @@ namespace eval ::xowf {
           # In case, the id is a form object, it is a dynamic form,
           # that we can't edit; therefore, we provide no link.
           #
-          # Here, we have have an id that we use for fetching...
+          # Here, we have an id that we use for fetching...
           #
           set form [::xo::db::CrClass get_instance_from_db -item_id $entry_form_item_id]
           set base [$form pretty_link]
@@ -2019,7 +2019,7 @@ namespace eval ::xowf {
   }
 
   WorkflowPage ad_instproc schedule_job {-time:required -party_id cmd} {
-    Schedule the specified Tcl command for the the current package
+    Schedule the specified Tcl command for the current package
     instance at the given time.
   } {
     :log "-at"
