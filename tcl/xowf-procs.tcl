@@ -636,7 +636,7 @@ namespace eval ::xowf {
         View method: $view_method, Form loader: $form_loader,\
         Context class: [:info class]"
 
-    #set conds [list]
+    #set conds {}
     #foreach c [:defined Condition] {
     #  lappend conds "[$c name] [$c]"
     #}
