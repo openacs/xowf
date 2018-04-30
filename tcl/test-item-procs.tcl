@@ -32,7 +32,7 @@ namespace eval ::xowiki::formfield {
   }
   
   #
-  # provide a default setting for xinha javascript for test-items
+  # provide a default setting for xinha JavaScript for test-items
   #
   test_item set xinha(javascript) [::xowiki::formfield::FormField fc_encode { 
     xinha_config.toolbar = [ 
