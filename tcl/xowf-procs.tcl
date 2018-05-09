@@ -271,7 +271,7 @@ namespace eval ::xowf {
   }
 
   Context instproc get_actions {} {
-    set actions {}
+    set actions [list]
     foreach action [${:current_state} get_actions] {
       lappend actions ${:wf_container}::$action
     }
@@ -279,7 +279,7 @@ namespace eval ::xowf {
     return $actions
   }
   Context instproc defined {what} {
-    set result {}
+    set result [list]
     foreach c [${:wf_container} info children] {
       if {[$c istype $what]} {lappend result $c}
     }
@@ -636,7 +636,7 @@ namespace eval ::xowf {
         View method: $view_method, Form loader: $form_loader,\
         Context class: [:info class]"
 
-    #set conds {}
+    #set conds [list]
     #foreach c [:defined Condition] {
     #  lappend conds "[$c name] [$c]"
     #}
@@ -907,7 +907,7 @@ namespace eval ::xowf {
     }
   }
   WorkflowConstruct instproc get_value_set {values} {
-    set result {}
+    set result [list]
     foreach {cond value} [:get_cond_values $values] {
       foreach v $value {lappend result $v}
     }
@@ -1413,7 +1413,7 @@ namespace eval ::xowf {
       set tokens [mime::initialize -canonical "multipart/mixed" -parts $tokens]
     }
 
-    set headers_list {}
+    set headers_list [list]
     lappend headers_list \
         [list From $from_info(email)] \
         [list To $to_info(email)] \
@@ -1521,7 +1521,7 @@ namespace eval ::xowf {
     Compute solution set in form of attribute=value pairs
     based on "answer" attribute of form fields.
   } {
-    set solutions {}
+    set solutions [list]
     foreach f [:instantiated_form_fields] {
       if {![$f exists answer]} continue
       lappend solutions [$f name]=[$f answer]
@@ -1796,7 +1796,7 @@ namespace eval ::xowf {
         if {[info exists $key]} {append $key ",$value"} else {set $key $value}
       }
     }
-    set result {}
+    set result [list]
     foreach {att value} [array get __c1] {lappend result $att:$value}
     return $result
   }
@@ -1872,7 +1872,7 @@ namespace eval ::xowf {
 
         set wf [self]
         set wf_base [$wf pretty_link]
-        set button_objs {}
+        set button_objs [list]
 
         # create new workflow instance button with start form
         #if {[:parent_id] != [$package_id folder_id]} {
@@ -1909,7 +1909,7 @@ namespace eval ::xowf {
         set entry_form_item_id [:wf_property wf_form_id]
         set work_flow_form [::xo::db::CrClass get_instance_from_db -item_id $form_item_id]
         set work_flow_base [$work_flow_form pretty_link]
-        set button_objs {}
+        set button_objs [list]
 
         #:msg entry_form_item_id=$entry_form_item_id-exists?=[:isobject $entry_form_item_id]
 
