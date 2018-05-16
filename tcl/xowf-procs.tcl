@@ -2190,7 +2190,7 @@ namespace eval ::xowf {
     if {![string match "/packages/*/lib/*" $wfName]} {
       error "path leading to workflow name must look like /packages/*/lib/*"
     }
-    set fname [get_server_root]$wfName
+    set fname [acs_root_dir]$wfName
 
     if {![file readable $fname]} {
       error "file '$fname' not found"
