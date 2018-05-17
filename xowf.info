@@ -17,7 +17,7 @@
         <vendor url="http://wu.ac.at">WU Vienna</vendor>
         <maturity>2</maturity>
 
-        <provides url="xowf" version="5.10.0d3"/>
+        <provides url="xowf" version="5.10.0d8"/>
         <requires url="xowiki" version="5.9.1"/>
 
         <callbacks>
