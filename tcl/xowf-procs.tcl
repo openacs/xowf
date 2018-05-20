@@ -5,7 +5,7 @@
   @creation-date 2008-03-05
 }
 
-# Todo:
+# TODO:
 # - after import, references are not updated
 #   (same for plain references); after_import methods?
 #
@@ -30,7 +30,9 @@ namespace eval ::xowf {
   Package ad_instproc initialize {} {
     mixin ::xowf::WorkflowPage to every FormPage
   } {
+    #
     # This method is called, whenever an xowf package is initialized.
+    #
     next
     #:msg "::xowiki::FormPage instmixin add ::xowf::WorkflowPage"
     ::xowiki::FormPage instmixin add ::xowf::WorkflowPage
@@ -528,7 +530,7 @@ namespace eval ::xowf {
   Context instproc init {} {
     array set :handled_roles {}
     #
-    # register the context for the associated object. This has to be
+    # Register the context for the associated object. This has to be
     # before the creation of the workflow definition, since this might
     # refer to the context.
     #
@@ -545,7 +547,7 @@ namespace eval ::xowf {
     #
     set ctx $obj-wfctx
     #:log "... ctx <$ctx> exists [:isobject $ctx]"
-    
+
     if {$new && [llength [info commands $ctx]] == 1} {
       $ctx destroy
     }
@@ -835,8 +837,11 @@ namespace eval ::xowf {
         $page references clear
       }
       if {[llength [$page references get unresolved]] > 0} {
-        # TODO: we should provide a link to create the missing forms. maybe we
-        # change unresolved_references to a list..., or maybe we write these into the DB.
+        #
+        # TODO: We should provide a link to create the missing
+        # forms. Maybe we change unresolved_references to a list...,
+        # or maybe we write these into the DB.
+        #
         :msg -html t "Missing forms: [join [$page references get unresolved] {, }]"
       }
     }
@@ -855,7 +860,7 @@ namespace eval ::xowf {
 
   #
   # One should probably deactivate the following convenance calls,
-  # which are potentially costly and seldom used
+  # which are potentially costly and seldom used.
   #
   WorkflowConstruct instforward property         {%[:wf_context] object} %proc
   WorkflowConstruct instforward set_property     {%[:wf_context] object} %proc
@@ -1245,7 +1250,8 @@ namespace eval ::xowf {
       # In cases, where the HTML exercise was given, we process the HTML
       # to flag the result.
       #
-      # TODO: what should we do with the feedback. util-user-message not optimal...
+      # TODO: What should we do with the feedback. "util_user_message" is
+      # not optimal...
       #
       foreach f $form_fields {
         if {[$f exists __rendered]} continue
@@ -1278,7 +1284,7 @@ namespace eval ::xowf {
         }
       }
       #
-      # Provide feedback for the whole exercise
+      # Provide feedback for the whole exercise.
       #
       if {[:answer_is_correct]} {
         set feedback [:get_from_template feedback_correct]
