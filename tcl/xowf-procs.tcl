@@ -821,9 +821,12 @@ namespace eval ::xowf {
       foreach {type pages} [list wf_form [array names :forms] wf_parampage [array names :parampages]] {
         foreach p $pages {
           array set "" [:resolve_form_name -object $page $p]
-          set l [::xowiki::Link new -volatile -page $page -type $type -name $(name) -item_id $(form_id)]
-          # render does the optional fetch of the names, and maintains the
-          # variable references of the page object (similar to render).
+          set l [::xowiki::Link new -volatile -lang en -page $page -type $type -name $(name) -item_id $(form_id)]
+          #
+          # The "render" method of the link does the optional fetch of
+          # the names, and maintains the variable references of the
+          # page object (similar to render).
+          #
           set link_text [$l render]
         }
       }
