@@ -209,7 +209,7 @@ Action instproc unpublish_link {obj} {
   ########################################################################
   # print-answers: print the answers in a somewhat printer friendly way
   #
-  :proc print-answers {} {
+  :proc www-print-answers {} {
     set HTML ""
     set ctx [::xowf::Context require [self]]
     set wf [[$ctx wf_container] get_answer_wf [self]]
@@ -245,6 +245,10 @@ Action instproc unpublish_link {obj} {
       util_user_message -html -message "No answer data available"
       ad_returnredirect [::xo::cc url]
     }
+  }
+
+  :proc -deprecated print-answers {} {
+    :www-print-answers
   }
 
   ########################################################################
