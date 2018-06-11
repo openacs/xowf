@@ -175,6 +175,7 @@ namespace eval ::xowf::test {
 
             #
             # Create an instance of the TIP workflow and save it.
+            # The workflow name is provided via "-form_name"
             #
             ::xowiki::test::create_form_page \
                 -user_id $user_id \
@@ -190,7 +191,6 @@ namespace eval ::xowf::test {
                 }
 
             aa_log "===== Workflow instance tip1 created"
-            ns_log notice "===== Workflow instance tip1 created"
 
             #
             # Edit the workflow instance and propose the TIP (call the
