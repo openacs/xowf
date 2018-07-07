@@ -2195,7 +2195,11 @@ namespace eval ::xowf {
     uplevel [::xowf::include_get -level 2 $wfName $vars]
   }
 
-  ad_proc include_get {{-level 1} wfName {vars ""}} {
+  ad_proc -private include_get {{-level 1} wfName {vars ""}} {
+
+    Implement inclusion of worflow definitions.
+    
+  } {
     if {![string match "/packages/*/lib/*" $wfName]} {
       error "path leading to workflow name must look like /packages/*/lib/*"
     }
