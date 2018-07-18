@@ -2073,7 +2073,9 @@ namespace eval ::xowf {
   ad_proc update_hstore {package_id} {
     update all instance attributes in hstore
   } {
-    if {![::xo::dc has_hstore] && [$package_id get_parameter use_hstore 0] } {return 0}
+    if {![::xo::dc has_hstore] && [$package_id get_parameter use_hstore 0] } {
+      return 0
+    }
     #
     # This proc can be used from ds/shell as follows
     #

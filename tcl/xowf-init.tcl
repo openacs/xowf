@@ -6,7 +6,7 @@ if {[info commands ::ns_cache_eval] eq ""} {proc ::ns_cache_eval {args} {::ns_ca
 ad_schedule_proc -thread t 60 ::xowf::atjob check
 
 # make sure, we have not missed some at-jobs, while we were down
-::xowf::atjob check -with_older true
+ad_schedule_proc -thread t -once t 1 ::xowf::atjob check -with_older true
 # Local variables:
 #    mode: tcl
 #    tcl-indent-level: 2
