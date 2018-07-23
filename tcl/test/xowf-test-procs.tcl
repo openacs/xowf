@@ -91,7 +91,7 @@ namespace eval ::xowf::test {
             #
             # Make sure we have a test folder
             #
-            #set d [aa_http -user_id $user_id $instance/]
+            #set d [acs::test::http -user_id $user_id $instance/]
             #set set_cookies [ns_set array [dict get $d headers]]
             #aa_log set_cookies=$set_cookies
             
