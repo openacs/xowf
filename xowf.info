@@ -19,6 +19,7 @@
 
         <provides url="xowf" version="5.10.0d4"/>
         <requires url="xowiki" version="5.10.0d16"/>
+	<requires url="acs-automated-testing" version="5.10.0d9">
 
         <callbacks>
             <callback type="before-uninstall"     proc="::xowiki::before-uninstall"/>

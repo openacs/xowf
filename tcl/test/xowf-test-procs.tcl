@@ -19,9 +19,10 @@ namespace eval ::xowf::test {
         set testfolder .testfolder
 
         try {
-            #
-            # Make sure we have a fresh test folder
-            #
+            ###########################################################
+            aa_section "Make sure we have a fresh test folder"
+            ############################################################
+
             set folder_info [::xowiki::test::require_test_folder \
                                  -user_id $user_id \
                                  -instance $instance \
@@ -34,9 +35,10 @@ namespace eval ::xowf::test {
 
             aa_true "folder_id '$folder_id' is not 0" {$folder_id != 0}
 
-            #
-            # Create a simple form page in the folder.
-            #
+            ###########################################################
+            aa_section "Create a simple form page in the folder."
+            ###########################################################
+
             ::xowiki::test::create_form_page \
                 -user_id $user_id \
                 -instance $instance \
@@ -49,9 +51,11 @@ namespace eval ::xowf::test {
                     _text "Hello world!"
                 }
 
-            #
-            # Edit the form page.
-            #
+
+            ###########################################################
+            aa_section "Edit the form page."
+            ###########################################################
+
             ::xowiki::test::edit_form_page \
                 -user_id $user_id \
                 -instance $instance \
@@ -88,12 +92,10 @@ namespace eval ::xowf::test {
         set testfolder .testfolder
 
         try {
-            #
-            # Make sure we have a test folder
-            #
-            #set d [acs::test::http -user_id $user_id $instance/]
-            #set set_cookies [ns_set array [dict get $d headers]]
-            #aa_log set_cookies=$set_cookies
+
+            ###########################################################
+            aa_section "Require test folder"
+            ###########################################################
 
             set folder_info [::xowiki::test::require_test_folder \
                                  -user_id $user_id \
@@ -127,11 +129,12 @@ namespace eval ::xowf::test {
                         _page_order:hidden
                     }
                 }
-            aa_log "===== Form  en:tip.form created"
+            aa_log "Form  en:tip.form created"
 
-            #
-            # Create the TIP workflow
-            #
+            ###########################################################
+            aa_section "Create the TIP workflow"
+            ###########################################################
+
             ::xowiki::test::create_form_page \
                 -user_id $user_id \
                 -instance $instance \
@@ -175,12 +178,13 @@ namespace eval ::xowf::test {
                     form_constraints {@table:_name,wf_current_state,_creator,_last_modified}
                 }
 
-            aa_log "===== Workflow en:tip.wf created"
+            aa_log "Workflow en:tip.wf created"
 
-            #
-            # Create an instance of the TIP workflow and save it.
+            ###########################################################
+            aa_section "Create an instance of the TIP workflow and save it."
             # The workflow name is provided via "-form_name"
-            #
+            ###########################################################
+
             ::xowiki::test::create_form_page \
                 -user_id $user_id \
                 -instance $instance \
@@ -194,12 +198,13 @@ namespace eval ::xowf::test {
                     __action_save ""
                 }
 
-            aa_log "===== Workflow instance tip1 created"
+            aa_log "Workflow instance tip1 created"
 
-            #
-            # Edit the workflow instance and propose the TIP (call the
-            # workflow action "propose")
-            #
+            ###########################################################
+            aa_section "Edit the workflow instance and propose the TIP"
+            # (call the workflow action "propose")
+            ###########################################################
+
             ::xowiki::test::edit_form_page \
                 -user_id $user_id \
                 -instance $instance \
