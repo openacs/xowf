@@ -150,9 +150,9 @@ namespace eval ::xo::role {
   }
   creator proc get_object_id {object} {return [$object item_id]}
   creator proc get_members {-object_id:required} {
-    set creator_id [xo::dc get_value get_owner "select o.creation_user
-      from acs_objects o
-      where object_id = :object_id"]
+    set creator_id [xo::dc get_value get_owner {
+      select o.creation_user from acs_objects o where object_id = :object_id
+    }]
     return [list [list [::xo::get_user_name $creator_id] $creator_id]]
   }
 
@@ -166,11 +166,11 @@ namespace eval ::xo::role {
   Role create community_member
   community_member proc is_member {-user_id:required -package_id} {
     if {[info commands ::dotlrn_community::get_community_id] ne ""} {
-      set community_id [:cache [list [dotlrn_community::get_community_id -package_id $package_id]]]
+      set community_id [dotlrn_community::get_community_id -package_id $package_id]
       if {$community_id ne ""} {
-        return [:cache [list dotlrn::user_is_community_member_p \
-                              -user_id $user_id \
-                              -community_id $community_id]]
+        return [::xo::cc cache [list dotlrn::user_is_community_member_p \
+                                    -user_id $user_id \
+                                    -community_id $community_id]]
       }
     }
     return 0
