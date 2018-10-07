@@ -222,6 +222,35 @@ namespace eval ::xowf::test {
         }
     }
 
+
+
+    aa_register_case -cats {api} -procs {
+        "::xowf::WorkflowConstruct instproc get_value"
+    } workflow_constructs {
+
+        Test behavour of conditional and non-conditional expressions
+        of WorkflowConstructs.
+
+    } {
+
+        ::xowf::WorkflowConstruct instforward true set "" 1
+        ::xowf::WorkflowConstruct instforward false set "" 0
+
+        ::xowf::WorkflowConstruct x
+
+        aa_equals "non-conditional test with empty" [x get_value ""] ""
+        aa_equals "non-conditional test with non-empty scalar" [x get_value "a"] "a"
+
+        aa_equals "non-conditional test with non-empty list" [x get_value {a b}] "a b"
+        aa_equals "non-conditional test with non-empty list" [x get_value "a b"] "a b"
+
+        aa_equals "conditional test, true branch" [x get_value "? true a default b"] "a"
+        aa_equals "conditional test, false branch" [x get_value "? false a default b"] "b"
+
+        aa_equals "conditional test, true branch list" [x get_value "? true {a b} default {b c}"] "a b"
+        aa_equals "conditional test, false branch list" [x get_value "? false {a b} default {b c}"] "b c"
+    }
+
 }
 
 #
