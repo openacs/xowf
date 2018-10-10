@@ -132,6 +132,7 @@ namespace eval ::xowf {
       }
       :log "---run xowf jobs END"
     }
+    ::xo::at_cleanup
   }
 
   atjob proc check {{-with_older false}} {
