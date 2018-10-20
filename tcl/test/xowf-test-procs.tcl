@@ -228,7 +228,7 @@ namespace eval ::xowf::test {
         "::xowf::WorkflowConstruct instproc get_value"
     } workflow_constructs {
 
-        Test behavour of conditional and non-conditional expressions
+        Test behaviour of conditional and non-conditional expressions
         of WorkflowConstructs.
 
     } {
