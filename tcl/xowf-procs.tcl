@@ -956,7 +956,7 @@ namespace eval ::xowf {
   }
   Condition instproc defaultmethod {} {
     set obj [[:wf_context] object]
-    expr [:expr]
+    expr ${:expr}
   }
 
   #{label "#xowf.form-button-[namespace tail [self]]#"}
@@ -1127,6 +1127,14 @@ namespace eval ::xowf {
                   -user_id [::xo::cc user_id] \
                   -package_id [:package_id]]
     }
+  }
+
+  WorkflowPage instproc evaluate_form_field_condition {cond} {
+    set ctx [::xowf::Context require [self]]
+    if {[info commands ${ctx}::$cond] ne ""} {
+      return [${ctx}::$cond]
+    }
+    return 0
   }
 
   WorkflowPage ad_instproc render_form_action_buttons_widgets {{-CSSclass ""} buttons} {
