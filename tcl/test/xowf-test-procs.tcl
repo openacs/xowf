@@ -47,7 +47,7 @@ namespace eval ::xowf::test {
                 -form_name page.form \
                 -update {
                     _title "Sample page"
-                    _name en:hello
+                    _name hello
                     _text "Hello world!"
                 }
 
@@ -108,16 +108,17 @@ namespace eval ::xowf::test {
             set package_id [dict get $folder_info package_id]
 
             aa_true "folder_id '$folder_id' is not 0" {$folder_id != 0}
-
+            set locale [lang::system::locale]
+            set lang [string range $locale 0 1]
             ::xowiki::test::create_form \
                 -user_id $user_id \
                 -instance $instance \
                 -path $testfolder \
                 -parent_id $folder_id \
-                -name en:tip.form \
-                -update {
+                -name $lang:tip.form \
+                -update [subst {
                     title "TIP Form"
-                    nls_language en_US
+                    nls_language $locale
                     text {<p>@_text@</p>
                         <p>State: @wf_current_state@</p>
                     }
@@ -128,8 +129,8 @@ namespace eval ::xowf::test {
                         {wf_current_state:current_state}
                         _page_order:hidden
                     }
-                }
-            aa_log "Form  en:tip.form created"
+                }]
+            aa_log "Form  $lang:tip.form created"
 
             ###########################################################
             aa_section "Create the TIP workflow"
@@ -143,7 +144,7 @@ namespace eval ::xowf::test {
                 -form_name Workflow.form \
                 -update {
                     _title "TIP Workflow"
-                    _name en:tip.wf
+                    _name tip.wf
                     workflow_definition {
                         # Actions are used here with the following parameters:
                         #   next_state: state after activation of action
@@ -164,10 +165,10 @@ namespace eval ::xowf::test {
                         # States
                         #   - form: the form to be used in a state
                         #   - view_method: Typically "view" (default) or "edit"
-                        # State parameter {{form "en:tip-form"} {view_method edit}}
+                        # State parameter {{form "$lang:tip-form"} {view_method edit}}
                         # assigns the specified form to all states
 
-                        State parameter {{form "en:tip.form"} {extra_js 1.js}}
+                        State parameter {{form "$lang:tip.form"} {extra_js 1.js}}
 
                         State initial  -actions {save propose}
                         State proposed -actions {save accept reject}
@@ -178,7 +179,7 @@ namespace eval ::xowf::test {
                     form_constraints {@table:_name,wf_current_state,_creator,_last_modified}
                 }
 
-            aa_log "Workflow en:tip.wf created"
+            aa_log "Workflow $lang:tip.wf created"
 
             ###########################################################
             aa_section "Create an instance of the TIP workflow and save it."
@@ -190,10 +191,10 @@ namespace eval ::xowf::test {
                 -instance $instance \
                 -path $testfolder \
                 -parent_id $folder_id \
-                -form_name tip.wf \
+                -form_name $lang:tip.wf \
                 -update {
                     _title "TIP 1"
-                    _name en:tip1
+                    _name tip1
                     _text {Should we create a tip?}
                     __action_save ""
                 }
