@@ -142,7 +142,7 @@ namespace eval ::xowf::test {
                 -path $testfolder \
                 -parent_id $folder_id \
                 -form_name Workflow.form \
-                -update {
+                -update [subst -nocommands {
                     _title "TIP Workflow"
                     _name tip.wf
                     workflow_definition {
@@ -156,7 +156,7 @@ namespace eval ::xowf::test {
                         #
                         Action save -roles admin
                         Action propose -next_state proposed -proc activate {obj} {
-                            :log "$obj is going to state [:next_state]"
+                            :log "\$obj is going to state [:next_state]"
                         }
                         Action accept -next_state accepted
                         Action reject -next_state rejected
@@ -177,7 +177,7 @@ namespace eval ::xowf::test {
                         State implemented -actions {save}
                     }
                     form_constraints {@table:_name,wf_current_state,_creator,_last_modified}
-                }
+                }]
 
             aa_log "Workflow $lang:tip.wf created"
 
