@@ -688,7 +688,7 @@ namespace eval ::xowf {
   Context instproc as_graph {{-current_state ""} {-visited ""} {-dpi 96} {-style "width:100%"}} {
     set dot ""
     catch {set dot [::util::which dot]}
-    # final ressort for cases, where ::util::which is not available
+    # final resort for cases, where ::util::which is not available
     if {$dot eq "" && [file executable /usr/bin/dot]} {set dot /usr/bin/dot}
     if {$dot eq ""} {return "<font color='red'>Program 'dot' is not available! No graph displayed.</font>"}
     set obj_id [namespace tail ${:object}]

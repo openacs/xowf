@@ -253,7 +253,7 @@ Action instproc unpublish_link {obj} {
 
   ########################################################################
   # answer: answer the exam; this is a convenience routine to shorten
-  # the published URL; make sure, that no-one trys to start the answer
+  # the published URL; make sure that no-one tries to start the answer
   # workflow in a state different to "published"
   #
   :proc www-answer {} {

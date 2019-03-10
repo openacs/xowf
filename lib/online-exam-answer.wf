@@ -85,7 +85,7 @@ Action initialize -proc activate {obj} {
   set parent_state [$parent_id state]
 
   #
-  # Don't allow to enter values when the state of the master workflow
+  # Don't allow one to enter values when the state of the master workflow
   # is not published (e.g. trial mode, or closed) or when try-out-mode
   # is not set
   #
