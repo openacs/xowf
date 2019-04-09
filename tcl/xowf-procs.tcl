@@ -454,7 +454,7 @@ namespace eval ::xowf {
       ns_log error "Error in workflow definition: $errorMsg\n$::errorInfo\n\
          ===== default_definition: [:default_definition] \n\
          ===== workflow_definition: $workflow_definition"
-      :msg "Error in workflow definition: $errorMsg"
+      :msg -html t "Error in workflow definition: [ns_quotehtml $errorMsg]"
     }
     if {${:all_roles}} {
       #:msg want.to.create=[array names :handled_roles]
@@ -1445,7 +1445,7 @@ namespace eval ::xowf {
           [:package_id] set __evaluation_error "$error\n\n$::errorInfo"
           incr validation_errors
         } else {
-          :msg -html 1 "$error <PRE>$::errorInfo</PRE>"
+          :msg -html 1 "$error <PRE>[ns_quotehtml $::errorInfo]</PRE>"
         }
         ad_log error "--WF: evaluation $error\n$::errorInfo"
       }
