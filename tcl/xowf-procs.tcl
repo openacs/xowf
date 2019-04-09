@@ -1733,14 +1733,21 @@ namespace eval ::xowf {
         set name [$p name]
         set value [$p default]
         if {[::xo::cc exists_query_parameter $name]} {
-          # never clobber instance attributes from query parameters blindly
+          #
+          # Never clobber instance attributes from query parameters
+          # blindly.
+          #
           #:msg "ignore $name"
           continue
         }
         if {[::xo::cc exists_query_parameter p.$name]
             && [$p exists allow_query_parameter]} {
-          # we allow the value to be taken from the query parameter
+          #
+          # We allow the value to be taken from the query parameter.
+          #
           set value [::xo::cc query_parameter p.$name]
+          $p value $value
+          $p validate $p
         }
         dict set instance_attributes $name $value
         set f($name) $p
