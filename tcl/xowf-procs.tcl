@@ -104,7 +104,7 @@ namespace eval ::xowf {
     }
     #
     # If everything fails, fall back to the old-style method, which is
-    # incorrect for shared workflow definitions. This fallback ist
+    # incorrect for shared workflow definitions. This fallback is
     # just for transitional code.
     #
     ad_log warning "cannot determine wf_context from call-stack"
