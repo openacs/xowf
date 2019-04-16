@@ -83,8 +83,6 @@ namespace eval ::xowf::test {
         } on error {errorMsg} {
             aa_true "Error msg: $errorMsg" 0
         } finally {
-            #calendar::delete -calendar_id $temp_calendar_id
-
         }
     }
 
@@ -233,8 +231,6 @@ namespace eval ::xowf::test {
         } on error {errorMsg} {
             aa_true "Error msg: $errorMsg" 0
         } finally {
-            #calendar::delete -calendar_id $temp_calendar_id
-
         }
     }
 
