@@ -83,6 +83,9 @@ namespace eval ::xowf::test {
         } on error {errorMsg} {
             aa_true "Error msg: $errorMsg" 0
         } finally {
+            #
+            # In case something has to be cleaned manually, do it here.
+            #
         }
     }
 
@@ -231,6 +234,9 @@ namespace eval ::xowf::test {
         } on error {errorMsg} {
             aa_true "Error msg: $errorMsg" 0
         } finally {
+            #
+            # In case something has to be cleaned manually, do it here.
+            #
         }
     }
 
