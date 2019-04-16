@@ -1,6 +1,21 @@
 namespace eval ::xowf::test {
 
-    aa_register_case -cats {web} -procs {
+    aa_register_init_class \
+        require_test_instance {
+            Make sure the test instance is there and create it if necessary.
+        } {
+            aa_export_vars {_test_instance_name}
+            set _test_instance_name /xowf-test
+            ::acs::test::require_package_instance \
+                -package_key xowf \
+                -instance_name $_test_instance_name
+        } {
+            # Here one might unmount the package afterwards. Right now
+            # we decide to keep it so it is possible to e.g. inspect
+            # the results or test further in the mounted instance.
+        }
+
+    aa_register_case -init_classes {require_test_instance} -cats {web} -procs {
         "::xowf::Package instproc initialize"
         "::xowiki::Package instproc invoke"
         "::xo::Package instproc reply_to_user"
@@ -15,7 +30,7 @@ namespace eval ::xowf::test {
         set user_id [ad_conn user_id]
         ns_log notice USER=$user_id
 
-        set instance /xowf
+        set instance $_test_instance_name
         set testfolder .testfolder
 
         try {
@@ -73,7 +88,7 @@ namespace eval ::xowf::test {
         }
     }
 
-    aa_register_case -cats {web} -procs {
+    aa_register_case -init_classes {require_test_instance} -cats {web} -procs {
         "::xowf::Package instproc initialize"
         "::xowiki::Package instproc invoke"
         "::xo::Package instproc reply_to_user"
@@ -88,7 +103,7 @@ namespace eval ::xowf::test {
         set user_id [ad_conn user_id]
         ns_log notice USER=$user_id
 
-        set instance /xowf
+        set instance $_test_instance_name
         set testfolder .testfolder
 
         try {
