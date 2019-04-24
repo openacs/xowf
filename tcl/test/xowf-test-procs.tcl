@@ -1,7 +1,7 @@
 namespace eval ::xowf::test {
 
     aa_register_init_class \
-        require_test_instance {
+        xowf_require_test_instance {
             Make sure the test instance is there and create it if necessary.
         } {
             aa_export_vars {_test_instance_name}
@@ -15,7 +15,7 @@ namespace eval ::xowf::test {
             # the results or test further in the mounted instance.
         }
 
-    aa_register_case -init_classes {require_test_instance} -cats {web} -procs {
+    aa_register_case -init_classes {xowf_require_test_instance} -cats {web} -procs {
         "::xowf::Package instproc initialize"
         "::xowiki::Package instproc invoke"
         "::xo::Package instproc reply_to_user"
@@ -89,7 +89,7 @@ namespace eval ::xowf::test {
         }
     }
 
-    aa_register_case -init_classes {require_test_instance} -cats {web} -procs {
+    aa_register_case -init_classes {xowf_require_test_instance} -cats {web} -procs {
         "::xowf::Package instproc initialize"
         "::xowiki::Package instproc invoke"
         "::xo::Package instproc reply_to_user"
