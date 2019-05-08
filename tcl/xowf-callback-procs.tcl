@@ -23,7 +23,7 @@ namespace eval ::xowf {
                       -package_id $package_id]
 
     ::xo::db::sql::content_item set_live_revision \
-        -revision_id [$pform_id revision_id] \
+        -revision_id [::$pform_id revision_id] \
         -publish_status production
 
     set ia {
@@ -34,7 +34,7 @@ namespace eval ::xowf {
     }
     
     set parameter_page_name en:xowf-default-parameter
-    set p [$pform_id create_form_page_instance \
+    set p [::$pform_id create_form_page_instance \
                -name $parameter_page_name \
                -nls_language en_US \
                -default_variables [list title "XoWf Default Parameter" parent_id $folder_id \

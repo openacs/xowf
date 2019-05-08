@@ -187,7 +187,7 @@ namespace eval ::xowiki::formfield {
     set intro_text [:get_named_sub_component_value text]
     append form "<tr><td class='text' colspan='2'><div class='question_text'>$intro_text</div></td></tr>\n"
 
-    #my msg " input_field_names=${:input_field_names}"
+    #:msg " input_field_names=${:input_field_names}"
     set mc [:get_named_sub_component_value mc]
     ns_log notice "MC <$mc>"
     
@@ -227,14 +227,14 @@ namespace eval ::xowiki::formfield {
             "<tr><td class='selection'><input type='checkbox' id='$input_field_name' name='$input_field_name' value='$input_field_name'/></td>\n" \
             "<td class='value'><label for='$input_field_name'>$value(text)</label></td></tr>\n"
       } else {
-        #my msg $correct_field_name,[:name],$input_field_name
+        #:msg $correct_field_name,[:name],$input_field_name
         set correct [expr {"[:name].$input_field_name" eq $correct_field_name}]
         append form \
             "<tr><td class='selection'><input id='$input_field_name' type='radio' name='radio' value='$input_field_name' /></td>\n" \
             "<td class='value'><label for='$input_field_name'>$value</label></td></tr>\n"
       }
       #ns_log notice "$input_field_name [array get value] corr=$correct"
-      #my msg "[array get value] corr=$correct"
+      #:msg "[array get value] corr=$correct"
 
       #
       # build form constraints per input field
@@ -248,7 +248,7 @@ namespace eval ::xowiki::formfield {
         lappend if_fc "feedback_answer_incorrect=[::xowiki::formfield:::FormField fc_encode $value(feedback_incorrect)]"
       }
       if {[llength $if_fc] > 0} {append fc [list $input_field_name:checkbox,[join $if_fc ,]]\n}
-      #my msg "$input_field_name .correct = $value(correct)"
+      #:msg "$input_field_name .correct = $value(correct)"
     }
 
     if {![:multiple]} {
@@ -401,7 +401,7 @@ namespace eval ::xowiki::formfield {
       # options
       set item_id [[${:object} package_id] lookup -name $v]
       set page [::xo::db::CrClass get_instance_from_db -item_id $item_id]
-      append form "<li><h2>[$item_id title]</h2>\n"
+      append form "<li><h2>[::$item_id title]</h2>\n"
       set prefix c$item_id
       set __ia [$page set instance_attributes]
       #
@@ -443,9 +443,9 @@ namespace eval ::xowiki::formfield {
         if {[regexp {^([^:]+):(.*)$} $f _ field_name definition]} {
           if {[string match @* $field_name]} continue
           # keep all form-constraints for which we have altered the name
-          #my msg "old fc=$f, [list lsearch -exact $alt_inputs $field_name] => [lsearch -exact $alt_inputs $field_name] $alt_values"
+          #:msg "old fc=$f, [list lsearch -exact $alt_inputs $field_name] => [lsearch -exact $alt_inputs $field_name] $alt_values"
           set ff [${:object} create_raw_form_field -name $field_name -spec $definition]
-          #my msg "ff answer => '[$ff answer]'"
+          #:msg "ff answer => '[$ff answer]'"
           if {$field_name in $alt_inputs} {
             lappend fc $prefix-$f
           } elseif {[$ff exists answer] && $field_name eq [$ff answer]} {
@@ -464,7 +464,7 @@ namespace eval ::xowiki::formfield {
     # to combine the values of the items
     ${:object} set_property -new 1 auto_correct true ;# should be computed
     ${:object} set_property -new 1 has_solution true ;# should be computed
-    #my msg "fc=$fc"
+    #:msg "fc=$fc"
   }
 }
 

@@ -291,7 +291,7 @@ namespace eval ::xowf {
   Context instproc resolve_form_name {-object:required name} {
     set package_id [$object package_id]
     set parent_id [$object parent_id]
-    array set "" [$package_id item_ref -normalize_name false \
+    array set "" [::$package_id item_ref -normalize_name false \
                       -use_package_path 1 \
                       -default_lang [$object lang] \
                       -parent_id $parent_id \
@@ -334,7 +334,7 @@ namespace eval ::xowf {
     set package_id [$object package_id]
     return [::xowiki::Form new -destroy_on_cleanup \
                 -package_id $package_id \
-                -parent_id [$package_id folder_id] \
+                -parent_id [::$package_id folder_id] \
                 -name "Auto-Form" \
                 -anon_instances [:autoname] \
                 -form {} \
@@ -427,10 +427,10 @@ namespace eval ::xowf {
       #
       set form_object [::xowiki::Form new -destroy_on_cleanup \
                            -package_id $package_id \
-                           -parent_id [$package_id folder_id] \
+                           -parent_id [::$package_id folder_id] \
                            -name "Auto-Form" \
                            -anon_instances [:autoname] \
-                           -form "<form>[$form_object get_html_from_content [$form_id text]]</form>" \
+                           -form "<form>[$form_object get_html_from_content [::$form_id text]]</form>" \
                            -text "" \
                            -form_constraints ""]
     }
@@ -748,7 +748,7 @@ namespace eval ::xowf {
 
     append result "\}\n"
     set package_id [${:object} package_id]
-    set path [acs_package_root_dir [$package_id package_key]]/www/
+    set path [acs_package_root_dir [::$package_id package_key]]/www/
     set fn $path/g.dot
     set ofn dot-$obj_id.png
     set f [open $fn w]; fconfigure $f -encoding utf-8; puts $f $result; close $f
@@ -756,7 +756,7 @@ namespace eval ::xowf {
       :msg "Error during execution of $dot: $errorMsg"
     }
     file delete -- $fn
-    return "<img style='$style' src='[$package_id package_url]/$ofn'>\n"
+    return "<img style='$style' src='[::$package_id package_url]/$ofn'>\n"
   }
 
   Context instproc check {} {
@@ -977,8 +977,8 @@ namespace eval ::xowf {
     set package_id [$object package_id]
     :log  "--xowf invoke action [self]"
     # We fake a work request with the given instance attributes
-    set last_context [expr {[$package_id exists context] ? [$package_id context] : "::xo::cc"}]
-    set last_object [$package_id set object]
+    set last_context [expr {[::$package_id exists context] ? [::$package_id context] : "::xo::cc"}]
+    set last_object [::$package_id set object]
     set cc [::xo::ConnectionContext new -user_id [$last_context user_id]]
     $package_id context $cc
     $cc array set form_parameter \
@@ -991,9 +991,9 @@ namespace eval ::xowf {
 
     $cc load_form_parameter_from_values $attributes
 
-    $package_id set object "[$package_id folder_path -parent_id [$object parent_id]][$object name]"
+    $package_id set object "[::$package_id folder_path -parent_id [$object parent_id]][$object name]"
 
-    #:log "call_action calls:   ::$package_id invoke -method edit -batch_mode 1 // obj=[$package_id set object]"
+    #:log "call_action calls:   ::$package_id invoke -method edit -batch_mode 1 // obj=[::$package_id set object]"
     if {[catch {::$package_id invoke -method edit -batch_mode 1} errorMsg]} {
       :msg "---call_action returns error $errorMsg"
       ns_log error "$errorMsg\n$::errorInfo"
@@ -1004,8 +1004,8 @@ namespace eval ::xowf {
     $package_id context $last_context
     $cc destroy
 
-    #:log "CHECK batch mode: [$package_id  exists __batch_mode]"
-    if {[$package_id  exists __batch_mode]} {
+    #:log "CHECK batch mode: [::$package_id  exists __batch_mode]"
+    if {[::$package_id  exists __batch_mode]} {
       :msg "RESETTING BATCH MODE"
       :log "RESETTING BATCH MODE"
       $package_id unset __batch_mode
@@ -1319,17 +1319,17 @@ namespace eval ::xowf {
           view_user_input {
             #:msg "calling edit with disable_input_fields=1"
             return [:www-edit -disable_input_fields 1]
-            #return [$package_id call [self] edit [list -disable_input_fields 1]]
+            #return [::$package_id call [self] edit [list -disable_input_fields 1]]
           }
           view_user_input_with_feedback {
             set :__feedback_mode 1
             #:msg "calling edit with disable_input_fields=1"
             return [:www-edit -disable_input_fields 1]
-            #return [$package_id call [self] edit [list -disable_input_fields 1]]
+            #return [::$package_id call [self] edit [list -disable_input_fields 1]]
           }
           default {
             #:msg "calling $method"
-            return [$package_id invoke -method $method]
+            return [::$package_id invoke -method $method]
           }
         }
       }
@@ -1602,7 +1602,7 @@ namespace eval ::xowf {
 
   WorkflowPage instproc create-or-use_view {-package_id:required -parent_id:required name } {
     # the link should be able to view return_url and template_file
-    return [$package_id returnredirect [$package_id pretty_link -parent_id $parent_id $lang:$stripped_name]]
+    return [::$package_id returnredirect [::$package_id pretty_link -parent_id $parent_id $lang:$stripped_name]]
   }
 
   WorkflowPage instproc www-create-or-use {
@@ -1863,10 +1863,10 @@ namespace eval ::xowf {
         set button_objs [list]
 
         # create new workflow instance button with start form
-        #if {[:parent_id] != [$package_id folder_id]} {
+        #if {[:parent_id] != [::$package_id folder_id]} {
         #  set parent_id [:parent_id]
         #}
-        set link [$package_id make_link -link $wf_base $wf create-new parent_id return_url]
+        set link [::$package_id make_link -link $wf_base $wf create-new parent_id return_url]
         lappend button_objs [::xowiki::includelet::form-menu-button-new new -volatile \
                                  -parent_id $parent_id \
                                  -form $wf -link $link]
@@ -2052,7 +2052,7 @@ namespace eval ::xowf {
   ad_proc update_hstore {package_id} {
     update all instance attributes in hstore
   } {
-    if {![::xo::dc has_hstore] && [$package_id get_parameter use_hstore 0] } {
+    if {![::xo::dc has_hstore] && [::$package_id get_parameter use_hstore 0] } {
       return 0
     }
     #
@@ -2079,7 +2079,7 @@ namespace eval ::xowf {
       $i save_in_hstore
       incr count
     }
-    $items msg "fetched $count objects from parent_id [$package_id folder_id]"
+    $items msg "fetched $count objects from parent_id [::$package_id folder_id]"
     return 1
   }
 
@@ -2140,10 +2140,10 @@ namespace eval ::xowf {
 
   ::xowf::dav instproc call_action {-uri -action -attributes} {
     ${:package} initialize -url $uri
-    set object_name [$package_id set object]
-    set page [$package_id resolve_request -path $object_name method]
+    set object_name [::$package_id set object]
+    set page [::$package_id resolve_request -path $object_name method]
     if {$page eq ""} {
-      set errorMsg cannot resolve '$object_name' in package [$package_id package_url]
+      set errorMsg cannot resolve '$object_name' in package [::$package_id package_url]
       ad_log error $errorMsg
       ns_return 406 text/plain "Error: $errorMsg"
     } elseif {[catch {set msg [$page call_action \

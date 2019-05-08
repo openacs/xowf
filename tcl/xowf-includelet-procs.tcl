@@ -71,7 +71,7 @@ namespace eval ::xowiki::includelet {
           set path $workflow
         }
         set parent_id [${:__including_page} parent_id]
-        set wf_page [$package_id get_page_from_item_ref -parent_id $parent_id $path]
+        set wf_page [::$package_id get_page_from_item_ref -parent_id $parent_id $path]
         if {$wf_page eq ""} {
           :msg "cannot resolve page $workflow"
           set package_id -1; set page_template -1
