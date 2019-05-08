@@ -1636,12 +1636,13 @@ namespace eval ::xowf {
           set $p [dict get $payload $p]
         }
       }
+      set package ::${:package_id}
 
       #
       # If these values are not set, try to obtain it the old-fashioned way.
       #
       if {$parent_id == 0} {
-        set parent_id [:query_parameter "parent_id" [${:package_id} folder_id]]
+        set parent_id [:query_parameter "parent_id" [$package folder_id]]
       }
       if {$name eq ""} {
         set name [:property name ""]
@@ -1654,7 +1655,7 @@ namespace eval ::xowf {
         # Ok, a name was provided. Check if an instance with this name
         # exists in the current folder.
         set default_lang [:lang]
-        ${:package_id} get_lang_and_name -default_lang $default_lang -name $name lang stripped_name
+        $package get_lang_and_name -default_lang $default_lang -name $name lang stripped_name
         set id [::xo::db::CrClass lookup -name $lang:$stripped_name -parent_id $parent_id]
         #:log "after allocate lookup of $lang:$stripped_name returned $id, default-lang(${:name})=$default_lang [:nls_language]"
         if {$id != 0} {
@@ -1663,8 +1664,9 @@ namespace eval ::xowf {
           # provided) or redirect to the item.
           #
           if {$m eq ""} {
-            return [${:package_id} returnredirect \
-                        [export_vars -no_base_encode -base [${:package_id} pretty_link -parent_id $parent_id $lang:$stripped_name] \
+            return [$package returnredirect \
+                        [export_vars -no_base_encode \
+                             -base [$package pretty_link -parent_id $parent_id $lang:$stripped_name] \
                              [list return_url template_file]]]
           } else {
             set item [::xo::db::CrClass get_instance_from_db -item_id $id]
@@ -1913,21 +1915,14 @@ namespace eval ::xowf {
           set obj [::xowiki::includelet::form-menu-button-form new -volatile \
                        -package_id $package_id -parent_id $parent_id \
                        -base $base -form $form]
-          if {[info exists return_url]} {$obj return_url $return_url}
+          if {[info exists return_url]} {
+            $obj return_url $return_url
+          }
           lappend button_objs $obj
         }
-
-        #         if {[:exists_property form]} {
-        #           lappend button_objs \
-            #               [::xowiki::includelet::form-menu-button-new new -volatile \
-            #                    -package_id $package_id -parent_id $parent_id \
-            #                    -base [:pretty_link] -form [self]]
-        #           lappend button_objs \
-            #               [::xowiki::includelet::form-menu-button-answers new -volatile \
-            #                    -package_id $package_id -parent_id $parent_id \
-            #                    -base [:pretty_link] -form [self]]
-        #         }
+        #
         # work flow definition button
+        #
         set obj [::xowiki::includelet::form-menu-button-wf new -volatile \
                      -package_id $package_id -parent_id $parent_id \
                      -base $work_flow_base -form $work_flow_form]
@@ -1936,7 +1931,6 @@ namespace eval ::xowf {
         # make menu
         return [:include [list form-menu -form_item_id ${:page_template} -button_objs $button_objs]]
       } else {
-        #return [:include [list form-menu -form_item_id $form_item_id -buttons form]]
         next
       }
     }
