@@ -120,7 +120,7 @@ namespace eval ::xowf {
             -package_id [::$owner_id package_id] \
             -user_id $party_id \
             -init_url 0 -actual_query ""
-        $package_id set_url -url [::$package_id package_url][::$owner_id name]
+        ::$package_id set_url -url [::$package_id package_url][::$owner_id name]
 
         :log "--at executing atjob $cmd"
         if {[catch {eval $owner_id $cmd} errorMsg]} {

@@ -975,12 +975,13 @@ namespace eval ::xowf {
     set action_name [namespace tail [self]]
     set object [[:wf_context] object]
     set package_id [$object package_id]
+    set package ::$package_id
     :log  "--xowf invoke action [self]"
     # We fake a work request with the given instance attributes
-    set last_context [expr {[::$package_id exists context] ? [::$package_id context] : "::xo::cc"}]
-    set last_object [::$package_id set object]
+    set last_context [expr {[$package exists context] ? [$package context] : "::xo::cc"}]
+    set last_object [$package set object]
     set cc [::xo::ConnectionContext new -user_id [$last_context user_id]]
-    $package_id context $cc
+    $package context $cc
     $cc array set form_parameter \
         [list __object_name [$object name] \
              _name [$object name] \
@@ -991,24 +992,24 @@ namespace eval ::xowf {
 
     $cc load_form_parameter_from_values $attributes
 
-    $package_id set object "[::$package_id folder_path -parent_id [$object parent_id]][$object name]"
+    $package set object "[$package folder_path -parent_id [$object parent_id]][$object name]"
 
-    #:log "call_action calls:   ::$package_id invoke -method edit -batch_mode 1 // obj=[::$package_id set object]"
-    if {[catch {::$package_id invoke -method edit -batch_mode 1} errorMsg]} {
+    #:log "call_action calls:   $package invoke -method edit -batch_mode 1 // obj=[$package set object]"
+    if {[catch {$package invoke -method edit -batch_mode 1} errorMsg]} {
       :msg "---call_action returns error $errorMsg"
       ns_log error "$errorMsg\n$::errorInfo"
       error $errorMsg
     }
     #:log  "RESETTING package_id object"
-    $package_id set object $last_object
-    $package_id context $last_context
+    $package set object $last_object
+    $package context $last_context
     $cc destroy
 
-    #:log "CHECK batch mode: [::$package_id  exists __batch_mode]"
-    if {[::$package_id  exists __batch_mode]} {
+    #:log "CHECK batch mode: [$package  exists __batch_mode]"
+    if {[$package  exists __batch_mode]} {
       :msg "RESETTING BATCH MODE"
       :log "RESETTING BATCH MODE"
-      $package_id unset __batch_mode
+      $package unset __batch_mode
     }
     return "OK"
   }
