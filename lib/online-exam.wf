@@ -349,9 +349,15 @@ Action instproc unpublish_link {obj} {
   # get_question: load and initialize the interaction forms
   #
   $ctx proc get_questions {} {
-    set questionNames [join [my property question] |]
+    set questions [lmap ref [my property question] {
+        if {![string match "*/*" $ref]} {
+            set ref [[${:object} parent_id] name]/$ref
+        }
+        set ref
+    }]
+    set questionNames [join $questions |]
     set questionForms [::xowiki::Weblog instantiate_forms \
-          -parent_id [${:object} parent_id] -package_id [${:object} package_id] \
+          -package_id [${:object} package_id] \
           -default_lang [${:object} lang] \
           -forms $questionNames]
     if {[llength $questionForms] < 1} {error "unknown form $questionNames"}
