@@ -42,7 +42,6 @@ Property position -default 0 -allow_query_parameter true
 Property return_url -default "" -allow_query_parameter true
 Property try_out_mode -default 0 -allow_query_parameter true
 Property current_form -default ""
-Property ip -default [expr {[ns_conn isconnected] ? [ad_conn peeraddr] : "nowhere"}]
 
 Condition more_ahead \
     -expr {[$obj property position] < [llength [$obj property pages]]-1}
@@ -208,6 +207,9 @@ State done \
 
 
 :object-specific {
+  # ensure default value is updated for each instance individually
+  Property ip -default [expr {[ns_conn isconnected] ? [ad_conn peeraddr] : "nowhere"}]
+
   set ctx [:wf_context]
   set working_state_object [$ctx wf_definition_object working]
   $working_state_object set form [:property current_form]
