@@ -1421,44 +1421,42 @@ namespace eval ::xowf {
       if {$verbose} {ns_log notice "Warning: ${:name} No action $action in workflow context"}
       return ""
     }
-    #set next_state [$actionObj get_next_state]
+    #
     # Activate action
-    set err [catch {$actionObj activate [self]} errorMsg]
-    if {$err} {
-      #
-      # Save error code in variable errorCode, since the
-      # tcl-maintained value is volatile
-      set errorCode $::errorCode
+    #
+    ad_try {
+      $actionObj activate [self]
 
-      ns_log notice "ACTIVATE ${:name} error => $errorMsg // $errorCode"
+    } on error {errorMsg errorDict} {
       #
-      # Check, if we were called from "ad_script_abort" (intentional abortion)
+      # Something went wrong in the application specifc
+      # code. Depending on batch_mode, report the error to the user or
+      # to the variable __evaluation_error in the package object.
       #
-      if {[ad_exception $errorCode] eq "ad_script_abort"} {
-        #
-        # This was an intentional abortion, no need to complain to the
-        # error.log or other reporting paths.
-        #
+      #:log "--WF: error in action $action ERRORDICT <$errorDict>"
+
+      set errorInfo [dict get $errorDict -errorinfo]
+      set error "error in action '$action' of workflow instance ${:name}\
+               of workflow [${:page_template} name]:"
+      if {[[:package_id] exists __batch_mode]} {
+        [:package_id] set __evaluation_error "$error\n\n$errorInfo"
+        incr validation_errors
       } else {
-        set error "error in action '$action' of workflow instance ${:name}\
-           of workflow [${:page_template} name]:"
-        if {[[:package_id] exists __batch_mode]} {
-          [:package_id] set __evaluation_error "$error\n\n$::errorInfo"
-          incr validation_errors
-        } else {
-          :msg -html 1 "$error <PRE>[ns_quotehtml $::errorInfo]</PRE>"
-        }
-        ad_log error "--WF: evaluation $error\n$::errorInfo"
+        :msg -html 1 "$error <pre>[ns_quotehtml $errorInfo]</pre>"
       }
-      return ""
+      ad_log error "--WF: evaluation $error\n$errorInfo"
+      set next_state ""
 
-    } else {
-      # We moved get_next_state here to allow an action to influence the
-      # conditions in the activation method.
+    } on ok {result} {
+      #
+      # The action went ok. The call to "get_next_state" is here to
+      # allow the developer to to influence the outcome of
+      # "get_next_state" by the activated method.
+      #
       set next_state [$actionObj get_next_state]
-      ns_log notice "ACTIVATE ${:name} no error next-state <$next_state>"
-      return $next_state
+      :log "ACTIVATE ${:name} no error next-state <$next_state>"
     }
+    return $next_state
   }
 
   WorkflowPage instproc get_form_data args {
@@ -2174,7 +2172,7 @@ namespace eval ::xowf {
   ad_proc -private include_get {{-level 1} wfName {vars ""}} {
 
     Implement inclusion of worflow definitions.
-    
+
   } {
     if {![string match "/packages/*/lib/*" $wfName]} {
       error "path leading to workflow name must look like /packages/*/lib/*"
