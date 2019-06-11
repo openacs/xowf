@@ -548,11 +548,11 @@ namespace eval ::xowf {
     set ctx $obj-wfctx
     #:log "... ctx <$ctx> exists [:isobject $ctx]"
 
-    if {$new && [llength [info commands $ctx]] == 1} {
+    if {$new && [info commands $ctx] ne ""} {
       $ctx destroy
     }
 
-    if {[llength [info commands $ctx]] == 0} {
+    if {[info commands $ctx] eq ""} {
       set wfContextClass [$obj wf_property workflow_context_class [self]]
 
       regsub -all \r\n [$obj wf_property workflow_definition] \n workflow_definition
@@ -710,7 +710,7 @@ namespace eval ::xowf {
       append result "  state_[$s name] \[label=\"[$s label]\"$color\];\n"
     }
     set initializeObj [:wf_definition_object initialize]
-    if {[llength [info commands $initializeObj]] > 0} {
+    if {[info commands $initializeObj] ne ""} {
       append result "start->state_initial \[label=\"[$initializeObj label]\"\];\n"
     } else {
       append result "start->state_initial;\n"
@@ -807,7 +807,7 @@ namespace eval ::xowf {
     if {![info exists :in_role]} {
       foreach role [array names :handled_roles] {
         set role_ctx [self]-$role
-        if {[llength [info commands $role_ctx]] > 0} {
+        if {[info commands $role_ctx] ne ""} {
           array set "" [$role_ctx check]
           if {$(rc) == 1} {return [array get ""]}
           array set :forms [$role_ctx array get forms]
@@ -1415,9 +1415,13 @@ namespace eval ::xowf {
     # Execute action and compute next state of the action.
     #
     set actionObj [$ctx wf_definition_object $action]
-    # Check, if action is defined
-    if {[llength [info commands $actionObj]] == 0} {
-      # no such action the current context
+    #
+    # Check, if action is defined.
+    #
+    if {[info commands $actionObj] eq ""} {
+      #
+      # There is no such action the current context.
+      #
       if {$verbose} {ns_log notice "Warning: ${:name} No action $action in workflow context"}
       return ""
     }
