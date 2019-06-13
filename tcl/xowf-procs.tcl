@@ -862,13 +862,33 @@ namespace eval ::xowf {
   }
 
   #
-  # One should probably deactivate the following convenance calls,
+  # One should probably deactivate the following convenience calls,
   # which are potentially costly and seldom used.
   #
   WorkflowConstruct instforward property         {%[:wf_context] object} %proc
   WorkflowConstruct instforward set_property     {%[:wf_context] object} %proc
   WorkflowConstruct instforward set_new_property {%[:wf_context] object} set_property -new 1
   WorkflowConstruct instforward object           {%:wf_context} object
+
+  WorkflowConstruct instproc init {args} {
+    #
+    # Warn about potentially dangerous names, shadowing global
+    # commands.  Not sure, this is the best place (or whether this
+    # should be always exeuted), since this method might be executed
+    # several hundreds of times for a view instantiating a high number
+    # of workflow instances. Maybe we should define a developer-mode
+    # defining this and more other calls via mxin classes.
+    #
+    if {[info commands ::${:name}] ne ""} {
+      set obj [[:wf_context] object]
+      set wfName [[$obj page_template] name]
+      if {$wfName ne "en:Workflow.form"} {
+        ns_log warning "Workflow $wfName defines [namespace tail [:info class]]\
+               with name '${:name}' potentially shadowing global commands"
+      }
+    }
+    next
+  }
 
   WorkflowConstruct instproc in_role {role configuration} {
     set ctx [:wf_context]
@@ -1433,7 +1453,7 @@ namespace eval ::xowf {
 
     } on error {errorMsg errorDict} {
       #
-      # Something went wrong in the application specifc
+      # Something went wrong in the application specific
       # code. Depending on batch_mode, report the error to the user or
       # to the variable __evaluation_error in the package object.
       #
@@ -1454,7 +1474,7 @@ namespace eval ::xowf {
     } on ok {result} {
       #
       # The action went ok. The call to "get_next_state" is here to
-      # allow the developer to to influence the outcome of
+      # allow the developer to influence the outcome of
       # "get_next_state" by the activated method.
       #
       set next_state [$actionObj get_next_state]
