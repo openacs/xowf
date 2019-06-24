@@ -338,8 +338,9 @@ namespace eval ::xowiki::formfield {
     #
     # create component structure
     #
+    # "inplace" is ignored
     :create_components  [subst {
-      {text  {richtext,required,editor=ckeditor4,height=150px,label=#xowf.exercise-text#,plugins=OacsFs,javascript=$javascript,inplace=$inplace}}
+      {text  {richtext,required,editor=ckeditor4,height=150px,label=#xowf.exercise-text#,plugins=OacsFs}}
       {lines {numeric,default=10,size=3,label=#xowf.lines#}}
       {columns {numeric,default=60,size=3,label=#xowf.columns#}}
     }]
@@ -347,15 +348,57 @@ namespace eval ::xowiki::formfield {
   }
 
   text_interaction instproc convert_to_internal {} {
-    set form "<FORM>\n"
-    set fc "@categories:off @cr_fields:hidden\n"
     set intro_text [:get_named_sub_component_value text]
     set lines      [:get_named_sub_component_value lines]
     set columns    [:get_named_sub_component_value columns]
-    append form "<div class='question_text'>$intro_text</div>\n"
-    append form "<textarea name='answer' rows='$lines' cols='$columns'></textarea>\n" 
-    append fc "answer:textarea"
-    append form "</FORM>\n"
+    append form \
+        "<form>\n" \
+        "<div class='question_text'>$intro_text</div>\n" \
+        "@answer@\n" \
+        "</form>\n"
+#        "<textarea name='answer' rows='$lines' cols='$columns'></textarea>\n" 
+    append fc \
+        "@categories:off @cr_fields:hidden\n" \
+        "answer:textarea,label=Answer"
+    ${:object} set_property -new 1 form $form
+    ${:object} set_property -new 1 form_constraints $fc
+    set anon_instances true ;# TODO make me configurable
+    ${:object} set_property -new 1 anon_instances $anon_instances
+    ${:object} set_property -new 1 auto_correct [[self class] set auto_correct]
+    ${:object} set_property -new 1 has_solution false
+  }
+}
+
+namespace eval ::xowiki::formfield {
+  ###########################################################
+  #
+  # ::xowiki::formfield::upload_interaction
+  #
+  ###########################################################
+
+  Class create upload_interaction -superclass FormGeneratorField -parameter {
+    {feedback_level full}
+  }
+  upload_interaction set auto_correct false
+
+  upload_interaction instproc initialize {} {
+    if {${:__state} ne "after_specs"} return
+    :create_components  [subst {
+      {text  {richtext,required,editor=ckeditor4,height=150px,label=#xowf.exercise-text#,plugins=OacsFs}}
+    }]
+    set :__initialized 1
+  }
+
+  upload_interaction instproc convert_to_internal {} {
+    set intro_text [:get_named_sub_component_value text]
+    append form \
+        "<FORM>\n" \
+        "<div class='question_text'>$intro_text</div>\n" \
+        "@answer@" \
+        "</FORM>\n"
+    append fc \
+        "@categories:off @cr_fields:hidden\n" \
+        "answer:file"
     ${:object} set_property -new 1 form $form
     ${:object} set_property -new 1 form_constraints $fc
     set anon_instances true ;# TODO make me configurable
