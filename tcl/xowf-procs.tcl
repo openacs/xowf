@@ -1185,8 +1185,10 @@ namespace eval ::xowf {
       set title [::$page_template title]
       regsub {[.]wf$} $title "" title
       return [list text $title is_richtext false]
-    } else {
+    } elseif {[:is_wf]} {
       return [list text "Workflow" is_richtext false]      
+    } else {
+      next
     }
   }
     
