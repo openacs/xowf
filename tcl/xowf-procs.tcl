@@ -206,7 +206,6 @@ namespace eval ::xowf {
   Context instforward form                 {%set :current_state} form
   Context instforward form_loader          {%set :current_state} form_loader
 
-
   #
   # The following methods autoname, auto_form_constraints,
   # auto_form_template, and debug contain legacy access methods for
@@ -303,8 +302,11 @@ namespace eval ::xowf {
     #:msg "resolving $form_name in state [:current_state] via default form loader"
     set form_id 0
     if {$form_name ne ""} {
-      array set "" [:resolve_form_name -object ${:object} $form_name]
-      set form_id $(form_id)
+      set resolved [:resolve_form_name -object ${:object} $form_name]
+      set form_id [dict get $resolved form_id]
+      if {$form_id == 0} {
+        ns_log warning "could not resolve '$form_name' for ${:object}: $resolved"
+      }
       #:msg ".... object ${:object} ==> id = $form_id"
     }
     return $form_id
@@ -342,6 +344,21 @@ namespace eval ::xowf {
                 -form_constraints [:auto_form_constraints]]
   }
 
+  Context instproc force_named_form {form_name} {
+    #
+    # By using this method in the "initialize" action, one can bypass
+    # the state specific forms and force a form to the certain name
+    #
+    set form_id [:default_load_form_id $form_name]
+    if {$form_id == 0} {
+      ns_log warning "use_named_form: could not locate form $form_name"
+    } else {
+      if {[info commands ::${form_id}] eq ""} {
+        ::xo::db::CrClass get_instance_from_db -item_id ${form_id}
+      }
+      set :form_id $form_id
+    }
+  }
   Context instproc form_object {object} {
     set parent_id [$object parent_id]
     # After this method is activated, the form object of the form of
@@ -351,7 +368,9 @@ namespace eval ::xowf {
     # Load the actual form only once for this context.  We cache the
     # object name of the form in the context.
     #
-    if {[info exists form_id]} {return ${:form_id}}
+    if {[info exists :form_id]} {
+      return ${:form_id}
+    }
 
     set package_id [$object package_id]
     #
@@ -1158,6 +1177,19 @@ namespace eval ::xowf {
     return 0
   }
 
+  WorkflowPage ad_instproc render_icon {} {
+    Provide an icon or text for describing the kind of application.
+  } {
+    if {[:is_wf_instance]} {
+      set page_template [:page_template]
+      set title [::$page_template title]
+      regsub {[.]wf$} $title "" title
+      return [list text $title is_richtext false]
+    } else {
+      return [list text "Workflow" is_richtext false]      
+    }
+  }
+    
   WorkflowPage ad_instproc render_form_action_buttons_widgets {{-CSSclass ""} buttons} {
     With the given set of buttons, produce the HTML for the button
     container and the included inputs.
