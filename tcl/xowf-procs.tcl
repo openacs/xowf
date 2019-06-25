@@ -893,17 +893,20 @@ namespace eval ::xowf {
     #
     # Warn about potentially dangerous names, shadowing global
     # commands.  Not sure, this is the best place (or whether this
-    # should be always exeuted), since this method might be executed
+    # should be always executed), since this method might be executed
     # several hundreds of times for a view instantiating a high number
     # of workflow instances. Maybe we should define a developer-mode
     # defining this and more other calls via mxin classes.
     #
     if {[info commands ::${:name}] ne ""} {
-      set obj [[:wf_context] object]
-      set wfName [[$obj page_template] name]
-      if {$wfName ne "en:Workflow.form"} {
-        ns_log warning "Workflow $wfName defines [namespace tail [:info class]]\
+      set ctx [:wf_context]
+      if {[info commands $ctx] ne ""} {
+        set obj [$ctx object]
+        set wfName [[$obj page_template] name]
+        if {$wfName ne "en:Workflow.form"} {
+          ns_log warning "Workflow $wfName defines [namespace tail [:info class]]\
                with name '${:name}' potentially shadowing global commands"
+        }
       }
     }
     next
