@@ -32,6 +32,8 @@ namespace eval ::xowf::test {
 
         set instance $_test_instance_name
         set testfolder .testfolder
+        set locale [lang::system::locale]
+        set lang [string range $locale 0 1]
 
         try {
             ###########################################################
@@ -60,11 +62,12 @@ namespace eval ::xowf::test {
                 -path $testfolder \
                 -parent_id $folder_id \
                 -form_name page.form \
-                -update {
+                -update [subst {
                     _title "Sample page"
                     _name hello
                     _text "Hello world!"
-                }
+                    _nls_language $locale
+                }]
 
 
             ###########################################################
@@ -75,10 +78,11 @@ namespace eval ::xowf::test {
                 -user_id $user_id \
                 -instance $instance \
                 -path $testfolder/hello \
-                -update {
+                -update [subst {
                     _title "Sample page 2"
                     _text "Brave new world!"
-                }
+                    _nls_language $locale
+                }]
 
         } on error {errorMsg} {
             aa_true "Error msg: $errorMsg" 0
