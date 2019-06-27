@@ -110,6 +110,8 @@ namespace eval ::xowf::test {
 
         set instance $_test_instance_name
         set testfolder .testfolder
+        set locale [lang::system::locale]
+        set lang [string range $locale 0 1]
 
         try {
 
@@ -165,6 +167,7 @@ namespace eval ::xowf::test {
                 -update [subst -nocommands {
                     _title "TIP Workflow"
                     _name tip.wf
+                    _nls_language $locale
                     workflow_definition {
                         # Actions are used here with the following parameters:
                         #   next_state: state after activation of action
@@ -212,12 +215,13 @@ namespace eval ::xowf::test {
                 -path $testfolder \
                 -parent_id $folder_id \
                 -form_name $lang:tip.wf \
-                -update {
+                -update [subst {
                     _title "TIP 1"
                     _name tip1
                     _text {Should we create a tip?}
                     __action_save ""
-                }
+                    _nls_language $locale
+                }]
 
             aa_log "Workflow instance tip1 created"
 
