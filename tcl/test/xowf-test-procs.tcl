@@ -4,11 +4,11 @@ namespace eval ::xowf::test {
         xowf_require_test_instance {
             Make sure the test instance is there and create it if necessary.
         } {
-            aa_export_vars {_test_instance_name}
-            set _test_instance_name /xowf-test
+            aa_export_vars {_xowf_test_instance_name}
+            set _xowf_test_instance_name /xowf-test
             ::acs::test::require_package_instance \
                 -package_key xowf \
-                -instance_name $_test_instance_name
+                -instance_name $_xowf_test_instance_name
         } {
             # Here one might unmount the package afterwards. Right now
             # we decide to keep it so it is possible to e.g. inspect
@@ -30,7 +30,7 @@ namespace eval ::xowf::test {
         set user_id [ad_conn user_id]
         ns_log notice USER=$user_id
 
-        set instance $_test_instance_name
+        set instance $_xowf_test_instance_name
         set testfolder .testfolder
         set locale [lang::system::locale]
         set lang [string range $locale 0 1]
@@ -108,7 +108,7 @@ namespace eval ::xowf::test {
         set user_id [ad_conn user_id]
         ns_log notice USER=$user_id
 
-        set instance $_test_instance_name
+        set instance $_xowf_test_instance_name
         set testfolder .testfolder
         set locale [lang::system::locale]
         set lang [string range $locale 0 1]
