@@ -7,19 +7,19 @@
 #  @wfTitle@
 #  @wfQuestion@
 
-my set autoname 1
+set :autoname 1
 Property return_url -default "" -allow_query_parameter true
 Action allocate -proc activate {obj} {
-  my set_new_property name ___@wfID@.[::xo::cc set untrusted_user_id]
+  :set_new_property name ___@wfID@.[::xo::cc set untrusted_user_id]
 }
 Action initialize -proc activate {obj} {
-  my set_new_property _title "@wfTitle@"
+  :set_new_property _title "@wfTitle@"
 }
 Action submit -next_state done
 State initial -actions {submit} -form ../@wfQuestion@ -view_method edit
 State done -form ../de:question45 -eval_when_active {
-  [my object] proc view args {
-    set return_url [my property return_url]
+  ${:object} proc view args {
+    set return_url [:property return_url]
     if {$return_url ne ""} {
       ad_returnredirect $return_url
       ad_script_abort

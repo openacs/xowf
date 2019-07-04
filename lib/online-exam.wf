@@ -20,9 +20,9 @@
 #
 # Gustaf Neumann, Feb 2012
 ########################################################################
-my set autoname 1
-my set debug 1
-my set masterWorkflow //xowf/de:workflow.wf
+set :autoname 1
+set :debug 1
+set :masterWorkflow //xowf/de:workflow.wf
 
 Action select -next_state created -label {Erstelle Prüfung}
 Action publish -next_state published -label {Schalte Prüfung frei}
@@ -77,11 +77,11 @@ unpublish proc activate {obj} {
 # instance and recorded in the formfield "wfName".
 #
 my proc create_answer_workflow {obj} {
-  my log "create_answer_workflow $obj"
+  :log "create_answer_workflow $obj"
 
   # first delete workflow and data, when it exists
   if {[$obj property wfName] ne ""} {
-    set wf [my delete_all_answer_data $obj]
+    set wf [:delete_all_answer_data $obj]
     if {$wf ne ""} {$wf delete}
   }
 
@@ -89,7 +89,7 @@ my proc create_answer_workflow {obj} {
   set wfName [$obj name].wf
   $obj set_property -new 1 wfName $wfName
 
-  set wfMaster [my set masterWorkflow]
+  set wfMaster ${:masterWorkflow}
   set wfTitle [$obj property _title]
   set questionObjs [[:wf_context] get_questions]
   set wfQuestionNames {}
@@ -134,7 +134,7 @@ my proc create_answer_workflow {obj} {
          -instance_attributes [list workflow_definition $wfDef \
                   form_constraints "@table:_name,_state,$attributeNames @cr_fields:hidden"]]
   $f save_new
-  my log "create_answer_workflow $obj DONE [$f pretty_link]"
+  :log "create_answer_workflow $obj DONE [$f pretty_link]"
 }
 
 ########################################################################
@@ -161,9 +161,9 @@ my proc get_wf_instances {{-initialize false} wf} {
 # delete_all_answer_data: delete all instances of the answer workflow
 #
 my proc delete_all_answer_data {obj} {
-  set wf [my get_answer_wf $obj]
+  set wf [:get_answer_wf $obj]
   if {$wf ne ""} {
-    set items [my get_wf_instances -initialize false $wf]
+    set items [:get_wf_instances -initialize false $wf]
     foreach i [$items children] { $i delete }
   }
   return $wf
@@ -235,7 +235,7 @@ Action instproc unpublish_link {obj} {
     if {$HTML ne ""} {
       ns_return 200 text/html "<html>
                                   <head>
-                                      <meta http-equiv=\"content-type\" content=\"text/html; charset=utf-8\" />
+                                      <meta http-equiv='content-type' content='text/html; charset=utf-8' />
                                   </head>
                                   <body>
                                       $HTML
@@ -257,12 +257,12 @@ Action instproc unpublish_link {obj} {
   # workflow in a state different to "published"
   #
   :proc www-answer {} {
-    if {[my property _state] ne "published"} {
+    if {[:property _state] ne "published"} {
       util_user_message -html -message "Cannot start answer workflow in this state"
     } else {
       set ctx [::xowf::Context require [self]]
       set wf [[$ctx wf_container] get_answer_wf [self]]
-      $wf www-create-or-use -parent_id [my item_id]
+      $wf www-create-or-use -parent_id [:item_id]
     }
   }
 
@@ -284,9 +284,9 @@ Action instproc unpublish_link {obj} {
   # questions and the survey results (the results can be refreshed)
   #
   $ctx proc load_form {title} {
-    set state [my property _state]
+    set state [:property _state]
 
-    set questions [my get_questions]
+    set questions [:get_questions]
     set counter 0
     set fullQuestionForm ""
     foreach q $questions {
@@ -305,7 +305,7 @@ Action instproc unpublish_link {obj} {
 
     set wf [[:wf_container] get_answer_wf $obj]
     if {$wf eq ""} {
-      my msg "cannot get current workflow for [$obj name]"
+      :msg "cannot get current workflow for [$obj name]"
       set lLink "."
       set tLink "."
       set aLink "."
@@ -324,7 +324,7 @@ Action instproc unpublish_link {obj} {
     }
 
     set extraAction ""
-    switch [my property _state] {
+    switch [:property _state] {
       "created"   {set extraAction "<br>Do you want to <a href='[ns_quotehtml $tLink]'>try out</a> the exam?"}
       "published" {set extraAction "<br>Students can now answer via $aLink"}
     }
@@ -332,7 +332,7 @@ Action instproc unpublish_link {obj} {
 
     set style "background: #cccccc; padding: 10px; margin:10px;"
     set report ""
-    set wfName [my property wfName]
+    set wfName [:property wfName]
     if {$wfName ne ""} {set report "{{form-stats -parent_id [$obj item_id] -form $wfName}}\n"}
     append report "<br> $menu"
 
@@ -349,7 +349,7 @@ Action instproc unpublish_link {obj} {
   # get_question: load and initialize the interaction forms
   #
   $ctx proc get_questions {} {
-    set questions [lmap ref [my property question] {
+    set questions [lmap ref [:property question] {
         if {![string match "*/*" $ref]} {
             set ref [[${:object} parent_id] name]/$ref
         }

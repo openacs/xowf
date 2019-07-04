@@ -1168,7 +1168,7 @@ namespace eval ::xowf {
     } else {
       return [::xo::cc role=$role \
                   -user_id [::xo::cc user_id] \
-                  -package_id [:package_id]]
+                  -package_id ${:package_id}]
     }
   }
 
@@ -1184,7 +1184,7 @@ namespace eval ::xowf {
     Provide an icon or text for describing the kind of application.
   } {
     if {[:is_wf_instance]} {
-      set page_template [:page_template]
+      set page_template ${:page_template}
       set title [::$page_template title]
       regsub {[.]wf$} $title "" title
       return [list text $title is_richtext false]
@@ -1371,23 +1371,20 @@ namespace eval ::xowf {
       :include_header_info -css [$s extra_css] -js [$s extra_js]
 
       if {$method ne "" && $method ne "view"} {
-        set package_id [:package_id]
         #:msg "view redirects to $method in state [$ctx get_current_state]"
         switch -- $method {
           view_user_input {
             #:msg "calling edit with disable_input_fields=1"
             return [:www-edit -disable_input_fields 1]
-            #return [::$package_id call [self] edit [list -disable_input_fields 1]]
           }
           view_user_input_with_feedback {
             set :__feedback_mode 1
             #:msg "calling edit with disable_input_fields=1"
             return [:www-edit -disable_input_fields 1]
-            #return [::$package_id call [self] edit [list -disable_input_fields 1]]
           }
           default {
             #:msg "calling $method"
-            return [::$package_id invoke -method $method]
+            return [::${:package_id} invoke -method $method]
           }
         }
       }
@@ -1429,7 +1426,7 @@ namespace eval ::xowf {
                       -creation_date ${:creation_date} \
                       -last_modified ${:last_modified} \
                       -dtstart "now" \
-                      -uid $package_id-${:revision_id} \
+                      -uid ${:package_id}-${:revision_id} \
                       -url [:pretty_link -absolute true] \
                       -summary $subject \
                       -description "Workflow instance of workflow $wf_name ${:description}"]
@@ -1499,8 +1496,8 @@ namespace eval ::xowf {
       set errorInfo [dict get $errorDict -errorinfo]
       set error "error in action '$action' of workflow instance ${:name}\
                of workflow [${:page_template} name]:"
-      if {[[:package_id] exists __batch_mode]} {
-        [:package_id] set __evaluation_error "$error\n\n$errorInfo"
+      if {[::${:package_id} exists __batch_mode]} {
+        ::${:package_id} set __evaluation_error "$error\n\n$errorInfo"
         incr validation_errors
       } else {
         :msg -html 1 "$error <pre>[ns_quotehtml $errorInfo]</pre>"
@@ -1526,7 +1523,7 @@ namespace eval ::xowf {
       if {$validation_errors == 0} {
         #:msg "validation ok"
         set ctx [::xowf::Context require [self]]
-        set cc [[:package_id] context]
+        set cc [${:package_id} context]
         foreach {name value} [$cc get_all_form_parameter] {
           if {[regexp {^__action_(.+)$} $name _ action]} {
             set next_state [:activate $ctx $action]
@@ -1629,7 +1626,7 @@ namespace eval ::xowf {
 
   WorkflowPage instproc save_in_hstore {} {
     #
-    if {[::xo::dc has_hstore] && [[:package_id] get_parameter use_hstore 0]} {
+    if {[::xo::dc has_hstore] && [${:package_id} get_parameter use_hstore 0]} {
       set hkey [::xowiki::hstore::dict_as_hkey [:hstore_attributes]]
       set revision_id ${:revision_id}
       xo::dc dml update_hstore "update xowiki_page_instance \
@@ -1908,7 +1905,6 @@ namespace eval ::xowf {
     if {[info exists :__no_form_page_footer]} {
       next
     } else {
-      set package_id [:package_id]
       set parent_id [:parent_id]
       set form_item_id ${:page_template}
       #:msg "is wf page [:is_wf], is wf instance page [:is_wf_instance]"
@@ -1925,17 +1921,17 @@ namespace eval ::xowf {
         set button_objs [list]
 
         # create new workflow instance button with start form
-        #if {[:parent_id] != [::$package_id folder_id]} {
+        #if {[:parent_id] != [::${:package_id} folder_id]} {
         #  set parent_id [:parent_id]
         #}
-        set link [::$package_id make_link -link $wf_base $wf create-new parent_id return_url]
+        set link [::${:package_id} make_link -link $wf_base $wf create-new parent_id return_url]
         lappend button_objs [::xowiki::includelet::form-menu-button-new new -volatile \
                                  -parent_id $parent_id \
                                  -form $wf -link $link]
 
         # list workflow instances button
         set obj [::xowiki::includelet::form-menu-button-wf-instances new -volatile \
-                     -package_id $package_id -parent_id $parent_id \
+                     -package_id ${:package_id} -parent_id $parent_id \
                      -base $wf_base -form $wf]
         if {[info exists return_url]} {
           $obj return_url $return_url
@@ -1944,7 +1940,7 @@ namespace eval ::xowf {
 
         # work flow definition button
         set obj [::xowiki::includelet::form-menu-button-form new -volatile \
-                     -package_id $package_id -parent_id $parent_id \
+                     -package_id ${:package_id} -parent_id $parent_id \
                      -base $work_flow_base -form $work_flow_form]
         if {[info exists return_url]} {$obj return_url $return_url}
         lappend button_objs $obj
@@ -1973,7 +1969,7 @@ namespace eval ::xowf {
           set form [::xo::db::CrClass get_instance_from_db -item_id $entry_form_item_id]
           set base [$form pretty_link]
           set obj [::xowiki::includelet::form-menu-button-form new -volatile \
-                       -package_id $package_id -parent_id $parent_id \
+                       -package_id ${:package_id} -parent_id $parent_id \
                        -base $base -form $form]
           if {[info exists return_url]} {
             $obj return_url $return_url
@@ -1984,7 +1980,7 @@ namespace eval ::xowf {
         # work flow definition button
         #
         set obj [::xowiki::includelet::form-menu-button-wf new -volatile \
-                     -package_id $package_id -parent_id $parent_id \
+                     -package_id ${:package_id} -parent_id $parent_id \
                      -base $work_flow_base -form $work_flow_form]
         if {[info exists return_url]} {$obj return_url $return_url}
         lappend button_objs $obj
@@ -2001,7 +1997,7 @@ namespace eval ::xowf {
     by the list of page names
   } {
     foreach page_name $page_names {
-      set page [[:package_id] get_page_from_name -parent_id [:parent_id] -name $page_name]
+      set page [${:package_id} get_page_from_name -parent_id [:parent_id] -name $page_name]
       if {$page ne ""} {
         $page call_action -action $action -attributes $attributes
       } else {

@@ -227,8 +227,8 @@ namespace eval ::xowiki::formfield {
             "<tr><td class='selection'><input type='checkbox' id='$input_field_name' name='$input_field_name' value='$input_field_name'/></td>\n" \
             "<td class='value'><label for='$input_field_name'>$value(text)</label></td></tr>\n"
       } else {
-        #:msg $correct_field_name,[:name],$input_field_name
-        set correct [expr {"[:name].$input_field_name" eq $correct_field_name}]
+        #:msg $correct_field_name,${:name},$input_field_name
+        set correct [expr {"${:name}.$input_field_name" eq $correct_field_name}]
         append form \
             "<tr><td class='selection'><input id='$input_field_name' type='radio' name='radio' value='$input_field_name' /></td>\n" \
             "<td class='value'><label for='$input_field_name'>$value</label></td></tr>\n"
@@ -307,10 +307,10 @@ namespace eval ::xowiki::formfield {
       # We are in a single choice item; provide for editing a single
       # radio group spanning all entries.  Use as name for grouping
       # the form-field name minus the last segment.
-      regsub -all {[.][^.]+$} [:name] "" groupname
+      regsub -all {[.][^.]+$} ${:name} "" groupname
       :create_components [subst {
         {text  {richtext,editor=ckeditor4,$text_config}}
-        {correct {radio,label=#xowf.correct#,forced_name=$groupname.correct,options={"" [:name]}}}
+        {correct {radio,label=#xowf.correct#,forced_name=$groupname.correct,options={"" ${:name}}}}
         $feedback_fields
       }]
     }

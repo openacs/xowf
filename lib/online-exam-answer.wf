@@ -17,8 +17,8 @@
 #  @wfID@
 
 
-my set autoname 1
-my set debug 1
+set :autoname 1
+set :debug 1
 
 set pages [list @wfQuestionNames@]
 set titles [list @wfQuestionTitles@]
@@ -55,7 +55,7 @@ foreach page $pages {
     Action $page_count \
         -next_state working \
         -label "$page_count" \
-        -proc activate {obj} [list my goto_page [expr {$page_count -1}]]
+        -proc activate {obj} [list :goto_page [expr {$page_count -1}]]
     lappend page_actions $page_count
     incr page_count
 }
@@ -107,32 +107,32 @@ Action initialize -proc activate {obj} {
 }
 
 Action instproc goto_page {position} {
-    set pages [my property pages]
-    my set_property position $position
-    my set_property current_form [lindex $pages $position]
+    set pages [:property pages]
+    :set_property position $position
+    :set_property current_form [lindex $pages $position]
 }
 Action instproc set_page {increment} {
-  set pages [my property pages]
-  set position [my property position 0]
+  set pages [:property pages]
+  set position [:property position 0]
   incr position $increment 
   if {$position < 0} {
     set position 0
   } elseif {$position >= [llength $pages]} {
     set position [expr {[llength $pages] - 1}]
   }
-  my set_property position $position
-  my set_property current_form [lindex $pages $position]
+  :set_property position $position
+  :set_property current_form [lindex $pages $position]
 }
 
 Action prev \
     -next_state working \
     -label "Vorherige Frage" \
-    -proc activate {obj} {my set_page -1}
+    -proc activate {obj} {:set_page -1}
 
 Action next \
     -next_state working \
     -label "Nächste Frage" \
-    -proc activate {obj} {my set_page 1}
+    -proc activate {obj} {:set_page 1}
 
 Action abgabe \
     -next_state done \
@@ -190,7 +190,7 @@ working set page_actions $page_actions
 working proc actions {} {
   set actions ""
   if {[more_before]} {lappend actions prev}
-  set actions [concat $actions [my set page_actions]]
+  set actions [concat $actions ${:page_actions}]
   if {[more_ahead]} {lappend actions next}
   lappend actions save abgabe
 }
@@ -236,7 +236,7 @@ State done \
     set form [$form_id get_property -name form]
     set prefix [lindex [split [$form_id name] :] end]-a
     set counter 0
-    set fc [my get_form_constraints]
+    set fc [:get_form_constraints]
     lappend fc @cr_fields:hidden
     dom parse -simple -html $form doc
     $doc documentElement root
@@ -254,7 +254,7 @@ State done \
     # (e.g. as a handcoded textarea). We set it anyhow here for future
     # use
     $form_id set_property -new 1 form_constraints $fc
-    my set_title -question 1
+    :set_title -question 1
     return $form_id
   }
 
@@ -279,13 +279,13 @@ State done \
   $ctx proc summary_form {form_title} {
     #my msg "summary_form_loader $form_title"
 
-    my set_title -question 0
+    :set_title -question 0
     set state [${:object} property _state]
 
     set summary_form ""
     set counter 0
     foreach form_name [${:object} property pages] {
-      set form_id [my default_load_form_id $form_name]
+      set form_id [:default_load_form_id $form_name]
       set title [lindex [${:object} property titles] $counter]
       append summary_form "<h3>Frage [incr counter]: $title </h3>" \n
       append summary_form [$form_id property form] \n<hr>\n
