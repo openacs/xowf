@@ -63,10 +63,9 @@ namespace eval ::xowf {
                  -nls_language [::$form_id nls_language] \
                  -publish_status "production" \
                  -publish_date $ansi_time \
-                 -creation_user ${:party_id} \
                  -instance_attributes $instance_attributes \
                  -page_template $form_id]
-      $f save_new -use_given_publish_date true
+      $f save_new -use_given_publish_date true -creation_user ${:party_id}
       :log "--at formpage saved"
     }
   }
