@@ -2,11 +2,29 @@ if {[info commands ::ns_cache_eval] eq ""} {proc ::ns_cache_eval {args} {::ns_ca
 # register the dav interface for the todos
 ::xowf::dav-todo register
 
-# run the checker for the scheduled at-jobs
-ad_schedule_proc -thread t 60 ::xowf::atjob check
+#
+# Run the checker for the scheduled at-jobs.
+#
+# As we are trying to run as close as possible to the minute change,
+# the "ns_after" is used to delay the registration past the end of the
+# minute. To avoid potential misses of jobs between the execution time
+# of the init script and the end of the minute, we delay both, the
+# cleanup of the old entries and we start the repeating proc 60
+# seconds later.
+#
+set secs_to_the_minute [expr {60 - ([clock seconds] % 60)}]
+ns_after $secs_to_the_minute {
 
-# make sure, we have not missed some at-jobs, while we were down
-ad_schedule_proc -thread t -once t 1 ::xowf::atjob check -with_older true
+  # Make sure, we have not missed some at-jobs, while we were down
+  ad_schedule_proc -thread t -once t 1 ::xowf::atjob check -with_older true
+
+  ns_after 60 {  
+    ad_schedule_proc -thread t 60 ::xowf::atjob check
+  }
+  
+}
+
+
 # Local variables:
 #    mode: tcl
 #    tcl-indent-level: 2
