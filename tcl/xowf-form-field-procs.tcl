@@ -199,7 +199,7 @@ namespace eval ::xowiki::formfield {
   }
   role_member instproc render_input {} {
     #:msg role=${:role},obj=${:object}
-    if {[info commands ::xo::role::${:role}] ne ""} {
+    if {[nsf::is object ::xo::role::${:role}]} {
       set object_id [::xo::role::${:role} get_object_id ${:object}]
       set :options [::xo::role::${:role} get_members -object_id $object_id]
     } elseif {[set gid [group::get_id -group_name ${:role}]] ne ""} {

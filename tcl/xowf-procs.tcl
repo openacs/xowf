@@ -353,7 +353,7 @@ namespace eval ::xowf {
     if {$form_id == 0} {
       ns_log warning "use_named_form: could not locate form $form_name"
     } else {
-      if {[info commands ::${form_id}] eq ""} {
+      if {![nsf::is object ::${form_id}]} {
         ::xo::db::CrClass get_instance_from_db -item_id ${form_id}
       }
       set :form_id $form_id
@@ -409,7 +409,7 @@ namespace eval ::xowf {
         && $form_id > 0
       } {
       # just load the object conditionally
-      if {[info commands ::$form_id] eq ""} {
+      if {![nsf::is object ::$form_id]} {
         ::xo::db::CrClass get_instance_from_db -item_id $form_id
       }
       set form_object ::$form_id
@@ -503,7 +503,7 @@ namespace eval ::xowf {
       } else {
         set :wf_container ::xowf::[[${:object} page_template] revision_id]
       }
-      if {[info commands ${:wf_container}] eq ""} {
+      if {![nsf::is object ${:wf_container}]} {
         #
         # We require an xotcl::Object, since the container needs the
         # method "contains"
@@ -565,9 +565,9 @@ namespace eval ::xowf {
     #:log "START-require"
     #
     set ctx $obj-wfctx
-    #:log "... ctx <$ctx> exists [:isobject $ctx]"
+    #:log "... ctx <$ctx> exists [nsf::is object $ctx]"
 
-    if {$new && [info commands $ctx] ne ""} {
+    if {$new && [nsf::is object $ctx]} {
       $ctx destroy
     }
 
@@ -602,7 +602,7 @@ namespace eval ::xowf {
     }
     :set_current_state $state
 
-    if {[info commands ${:current_state}] eq ""} {
+    if {![nsf::is object ${:current_state}]} {
       # The state was probably deleted from the workflow definition,
       # but the workflow instance does still need it. We complain an
       # reset the state to initial, which should be always present.
@@ -634,7 +634,7 @@ namespace eval ::xowf {
 
       if {[${:wf_container} exists policy]} {
         set policy [${:wf_container} set policy]
-        if {![:isobject $policy]} {
+        if {![nsf::is object $policy]} {
           :msg "ignore non-existent policy '$policy'"
         } else {
           [$obj package_id] set policy $policy
@@ -781,7 +781,7 @@ namespace eval ::xowf {
   Context instproc check {} {
     # Check minimal contents
     set o [:wf_definition_object initial]
-    if {[info commands $o] eq "" || ![$o istype State]} {
+    if {![nsf::is object $o] || ![$o istype State]} {
       return [list rc 1 errorMsg "No State 'initial' defined"]
     }
     # ease access to workflow constructs
@@ -900,7 +900,7 @@ namespace eval ::xowf {
     #
     if {[info commands ::${:name}] ne ""} {
       set ctx [:wf_context]
-      if {[info commands $ctx] ne ""} {
+      if {[nsf::is object $ctx]} {
         set obj [$ctx object]
         set wfName [[$obj page_template] name]
         if {$wfName ne "en:Workflow.form"} {
@@ -1144,7 +1144,7 @@ namespace eval ::xowf {
     # We cannot call get_template_object here, because this will lead
     # to a recursive loop.
     #
-    if {[info commands ::${:page_template}] eq ""} {
+    if {![nsf::is object ::${:page_template}]} {
       ::xo::db::CrClass get_instance_from_db -item_id ${:page_template}
     }
     if {${:state} ne "" && [${:page_template} istype ::xowiki::FormPage]} {
@@ -1174,7 +1174,7 @@ namespace eval ::xowf {
 
   WorkflowPage instproc evaluate_form_field_condition {cond} {
     set ctx [::xowf::Context require [self]]
-    if {[info commands ${ctx}::$cond] ne ""} {
+    if {[nsf::is object ${ctx}::$cond]} {
       return [${ctx}::$cond]
     }
     return 0
@@ -1472,7 +1472,7 @@ namespace eval ::xowf {
     #
     # Check, if action is defined.
     #
-    if {[info commands $actionObj] eq ""} {
+    if {![nsf::is object $actionObj]} {
       #
       # There is no such action the current context.
       #
@@ -1647,7 +1647,7 @@ namespace eval ::xowf {
         set $key [$ctx form_object [self]]
       }
       set form_obj [set $key]
-      if {[info commands $form_obj] eq ""} {
+      if {![nsf::is object $form_obj]} {
         set form_id [string trimleft $form_obj :]
         ::xo::db::CrClass get_instance_from_db -item_id $form_id
       }
@@ -1957,10 +1957,10 @@ namespace eval ::xowf {
         set work_flow_base [$work_flow_form pretty_link]
         set button_objs [list]
 
-        #:msg entry_form_item_id=$entry_form_item_id-exists?=[:isobject $entry_form_item_id]
+        #:msg entry_form_item_id=$entry_form_item_id-exists?=[nsf::is object $entry_form_item_id]
 
         # form definition button
-        if {![:isobject $entry_form_item_id]} {
+        if {![nsf::is object $entry_form_item_id]} {
           # In case, the id is a form object, it is a dynamic form,
           # that we can't edit; therefore, we provide no link.
           #
@@ -2030,7 +2030,7 @@ namespace eval ::xowf {
     # Some actions are state-safe, these can be called in every state
     #
     set actionObj [$ctx wf_definition_object $action]
-    if {[info commands $actionObj] ne "" && [$actionObj state_safe]} {
+    if {[nsf::is object $actionObj] && [$actionObj state_safe]} {
       # The action is defined as state-safe, so if can be called in every state
       :log  "--xowf action $action state_safe -- name='${:name}'"
       return [$actionObj invoke -attributes $attributes]
