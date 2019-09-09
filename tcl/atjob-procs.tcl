@@ -122,10 +122,13 @@ namespace eval ::xowf {
         ::$package_id set_url -url [::$package_id package_url][::$owner_id name]
 
         :log "--at executing atjob $cmd"
-        if {[catch {eval $owner_id $cmd} errorMsg]} {
+        ad_try {
+          $owner_id {*}$cmd
+          if {[::xo::db::Class exists_in_db -id [$item revision_id]]} {
+            $item set_live_revision -revision_id [$item revision_id] -publish_status "expired"
+          }
+        } on error {errorMsg} {
           ns_log error "\n*** atjob $owner_id $cmd lead to error ***\n$errorMsg\n$::errorInfo"
-        } else {
-          $item set_live_revision -revision_id [$item revision_id] -publish_status "expired"
         }
         ns_set cleanup
       }

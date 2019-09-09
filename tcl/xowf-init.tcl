@@ -18,9 +18,8 @@ ns_after $secs_to_the_minute {
   # Make sure, we have not missed some at-jobs, while we were down
   ad_schedule_proc -thread t -once t 1 ::xowf::atjob check -with_older true
 
-  ns_after 60 {  
-    ad_schedule_proc -thread t 60 ::xowf::atjob check
-  }
+  # the following job is executed after 60 seconds
+  ad_schedule_proc -thread t 60 ::xowf::atjob check
   
 }
 
