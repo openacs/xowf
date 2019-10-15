@@ -10,14 +10,14 @@
     <inherit-templates-p>t</inherit-templates-p>
     <auto-mount>xowf</auto-mount>
     
-    <version name="5.10.0d6" url="http://openacs.org/repository/download/apm/xowf-5.10.0d6.apm">
+    <version name="5.10.0d7" url="http://openacs.org/repository/download/apm/xowf-5.10.0d7.apm">
         <owner url="mailto:neumann@wu-wien.ac.at">Gustaf Neumann</owner>
         <summary>XoWiki Content Flow - an XoWiki based workflow system implementing state-based behavior of wiki pages and forms</summary>
         <release-date>2017-08-06</release-date>
         <vendor url="http://wu.ac.at">WU Vienna</vendor>
         <maturity>2</maturity>
 
-        <provides url="xowf" version="5.10.0d6"/>
+        <provides url="xowf" version="5.10.0d7"/>
         <requires url="xowiki" version="5.10.0d39"/>
 	<requires url="acs-automated-testing" version="5.10.0d9"/>
 

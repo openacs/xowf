@@ -18,4 +18,34 @@
   <msg key="feedback_incorrect">Feedback falsch</msg>
   <msg key="lines">Zeilen</msg>
   <msg key="menu-New-Extra-Workflow">Neuer Workflow</msg>
+  <msg key="answer">Antwort</msg>
+  <msg key="answer_lines">Antwortzeiten</msg>
+  <msg key="answer_columns">Antwortspalten</msg>
+  <msg key="correct_when">Richig wenn...</msg>
+  <msg key="online-exam-draft_exam">Prüfungsentwurf (Prüfung nicht freigeschaltet)</msg>
+  <msg key="online-exam-open">Prüfung ist freigeschaltet</msg>
+  <msg key="online-exam-closed">Prüfung ist geschlossen</msg>
+  <msg key="question">Frage</msg>
+  <msg key="first_question">Erste Frage</msg>  
+  <msg key="next_question">Nächste Frage</msg>
+  <msg key="previous_question">Vorherige Frage</msg>  
+  <msg key="restart">Zurück zum Start</msg>
+  <msg key="online-exam-submit">Finale Abgabe</msg>
+  <msg key="online-exam-save">Antwort zwischenspeichern</msg>
+  <msg key="online-exam-start">Prüfung beginnen</msg>
+  <msg key="online-exam-review">Zusammenfassung der Antworten</msg>
+  <msg key="online-exam-end">Prüfung verlassen</msg>  
+  <msg key="online-exam-select">Erstelle Prüfung</msg>  
+  <msg key="online-exam-publish">Schalte Prüfung frei</msg>
+  <msg key="online-exam-unpublish">Schließe Prüfung</msg>
+  <msg key="online-exam-republish">Schalte Prüfung nochmals frei</msg>
+  <msg key="refresh">Aktualisieren</msg>
+  <msg key="print">Drucken</msg>
+  <msg key="online-exam-exam_instances">Liste der Bearbeitungen</msg>
+  <msg key="online-exam-try_out">Wollen Sie einen Probelauf druchführen?</msg>
+  <msg key="online-exam-can_answer">Studierende können die Fragen mit folgendem Link beantworten</msg>    
+  <msg key="testrun">Probelauf</msg>
+  <msg key="online-exam-not-published">Die Prüfung ist von der Aufsicht nicht freigegeben!</msg>
+  <msg key="online-exam-finished">Die Prüfungszeit ist beendet</msg>
+
 </message_catalog>

@@ -18,4 +18,35 @@
   <msg key="feedback_incorrect">Feedback Incorrect</msg>
   <msg key="lines">Lines</msg>
   <msg key="menu-New-Extra-Workflow">New Workflow</msg>
+  <msg key="answer">Answer</msg>
+  <msg key="answer_lines">Answer Lines</msg>
+  <msg key="answer_columns">Answer Columns</msg>
+  <msg key="correct_when">Correct When</msg>
+  <msg key="online-exam-draft_exam">Draft Exam (not published)</msg>
+  <msg key="online-exam-open">Exam open (published)</msg>
+  <msg key="online-exam-closed">Exam closed</msg>
+  <msg key="answer">Antwort</msg>
+  <msg key="question">Question</msg>
+  <msg key="first_question">First Question</msg>  
+  <msg key="next_question">Next Question</msg>
+  <msg key="previous_question">Previous Question</msg>  
+  <msg key="restart">Restart</msg>
+  <msg key="online-exam-select">Create Exam</msg>
+  <msg key="online-exam-review">Review Exam</msg>
+  <msg key="online-exam-submit">Final submission</msg>
+  <msg key="online-exam-save">Save Answer</msg>
+  <msg key="online-exam-start">Start Exam</msg>
+  <msg key="online-exam-end">Leave Exam</msg>  
+  <msg key="online-exam-publish">Publish Exam</msg>
+  <msg key="online-exam-unpublish">Close Exam</msg>
+  <msg key="online-exam-republish">Publish Exam again</msg>
+  <msg key="refresh">Refresh</msg>
+  <msg key="print">Print</msg>
+  <msg key="online-exam-exam_instances">Listing of Filled-out Exams</msg>
+  <msg key="online-exam-try_out">Do you want to try out the exam?</msg>
+  <msg key="online-exam-can_answer">tudents can now answer via</msg>  
+  <msg key="testrun">Testrun</msg>
+  <msg key="online-exam-not-published">The Exam has not been published</msg>
+  <msg key="online-exam-finished">The Exam is finished</msg>
+
 </message_catalog>
