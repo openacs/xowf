@@ -290,12 +290,14 @@ namespace eval ::xowf {
   Context instproc resolve_form_name {-object:required name} {
     set package_id [$object package_id]
     set parent_id [$object parent_id]
-    array set "" [::$package_id item_ref -normalize_name false \
-                      -use_package_path 1 \
-                      -default_lang [$object lang] \
-                      -parent_id $parent_id \
-                      $name]
-    return [list form_id $(item_id) name $(prefix):$(stripped_name)]
+    set item_info [::$package_id item_ref -normalize_name false \
+                       -use_package_path 1 \
+                       -default_lang [$object lang] \
+                       -parent_id $parent_id \
+                       $name]
+    set item_id [dict get $item_info item_id]
+    set form_name [dict get $item_info prefix]:[dict get $item_info stripped_name]
+    return [list form_id $item_id name $form_name]
   }
 
   Context instproc default_load_form_id {form_name} {
@@ -368,8 +370,8 @@ namespace eval ::xowf {
     # Load the actual form only once for this context.  We cache the
     # object name of the form in the context.
     #
-    if {[info exists :form_id]} {
-      return ${:form_id}
+    if {[info exists :form_obj]} {
+      return ${:form_obj}
     }
 
     set package_id [$object package_id]
@@ -380,6 +382,7 @@ namespace eval ::xowf {
     # fails, it is supposed to return 0.
     #
     set loader [:form_loader]
+    #:msg form_loader=$loader
 
     # TODO why no procsearch instead of "info methods"?
     if {$loader eq "" || [:info methods $loader] eq ""} {
@@ -413,6 +416,7 @@ namespace eval ::xowf {
         ::xo::db::CrClass get_instance_from_db -item_id $form_id
       }
       set form_object ::$form_id
+      #:msg form_object=$form_object
     }
 
     if {[$form_object istype "::xowiki::Form"]} {
@@ -420,12 +424,15 @@ namespace eval ::xowf {
       # The item returned from the form loader was a form,
       # everything is fine.
       #
+      #:msg form_object=$form_object-isForm
+
     } elseif {[$form_object istype "::xowiki::FormPage"]} {
       #
       # We got a FormPage. This FormPage might be a pseudo form (a
       # FormPage containing the property "form"). If not, add a "form"
       # property from the rendered content.
       #
+      #:msg form_object=$form_object-pseudoForm-with-form=[$form_object property form]
       if {[$form_object property form] eq ""} {
         #
         # The FormPage contains no form, so try to provide one.  We
@@ -440,6 +447,7 @@ namespace eval ::xowf {
         #:msg "_text=[$form_object property _text]"
       }
     } elseif {[$form_object info class] eq "::xowiki::Page"} {
+
       #
       # The $form_object is in reality an xowiki Page, make it look
       # like a form (with form buttons).
@@ -454,8 +462,11 @@ namespace eval ::xowf {
                            -form_constraints ""]
     }
 
-    set :form_id $form_object
+    set :form_obj $form_object
+    return $form_object
   }
+  ::nsf::method::property Context form_object returns object
+
 
   #Context instproc destroy {} {
   #  :log "DESTROY vars <[:info vars]>"
@@ -586,7 +597,6 @@ namespace eval ::xowf {
     return $ctx
   }
 
-  # -debug
   Context instproc initialize_context {obj} {
     #:log "START-initialize_context <$obj>"
     #
@@ -1189,12 +1199,12 @@ namespace eval ::xowf {
       regsub {[.]wf$} $title "" title
       return [list text $title is_richtext false]
     } elseif {[:is_wf]} {
-      return [list text "Workflow" is_richtext false]      
+      return [list text "Workflow" is_richtext false]
     } else {
       next
     }
   }
-    
+
   WorkflowPage ad_instproc render_form_action_buttons_widgets {{-CSSclass ""} buttons} {
     With the given set of buttons, produce the HTML for the button
     container and the included inputs.
@@ -1244,13 +1254,15 @@ namespace eval ::xowf {
 
   WorkflowPage ad_instproc post_process_form_fields {form_fields} {
   } {
+    :log ------------------post_process_form_fields-feedback_mode=[info exists :__feedback_mode]
     if {[info exists :__feedback_mode]} {
       #
       # Provide feedback for every alternative
       #
       foreach f $form_fields {
-        #:msg "[$f name]: correct? [$f answer_is_correct]"
-        switch -- [$f answer_is_correct] {
+        set correct [$f answer_is_correct]
+        #:log "[$f name] [$f info class]: correct? $correct"
+        switch -- $correct {
           0 { continue }
           -1 { set result "incorrect"}
           1 { set result "correct"  }
@@ -1263,6 +1275,10 @@ namespace eval ::xowf {
           set feedback [$f feedback_answer_$result]
         } else {
           set feedback [_ xowf.answer_$result]
+        }
+        #:log "===${:__feedback_mode}=[$f exists correct_when]============[$f serialize]"
+        if {${:__feedback_mode} > 1 && [$f exists correct_when]} {
+          append feedback " [$f set correct_when]"
         }
         $f help_text $feedback
       }
@@ -1555,6 +1571,7 @@ namespace eval ::xowf {
     :load_values_into_form_fields $form_fields
     return $form_fields
   }
+
   WorkflowPage ad_instproc solution_set {} {
     Compute solution set in form of attribute=value pairs
     based on "answer" attribute of form fields.
@@ -1566,17 +1583,27 @@ namespace eval ::xowf {
     }
     return [join [lsort $solutions] ", "]
   }
+
+
   WorkflowPage ad_instproc answer_is_correct {} {
-    Check, if answer is correct based on "answer" attribute of form fields
-    and provided user input.
+
+    Check, if answer is correct based on "answer" and "correct_when"
+    attributes of form fields and provided user input.
+
   } {
     set correct 0
-    if {[:get_from_template auto_correct] == true} {
+    :log "WorkflowPage(${:name}).answer_is_correct autocorrect '[:get_from_template auto_correct]' -- [string is true -strict [:get_from_template auto_correct]]"
+    if {[string is true -strict [:get_from_template auto_correct]]} {
+      :log "==== answer_is_correct '[:instantiated_form_fields]'"
       foreach f [:instantiated_form_fields] {
-        #:msg "checking correctness [$f name] [$f info class] answer?[$f exists answer] -- [:get_from_template auto_correct]"
-        if {[$f exists answer]} {
-          if {[$f answer_is_correct] != 1} {
-            #:msg "checking correctness [$f name] failed ([$f answer_is_correct])"
+        #:log [$f serialize]
+        #:log "checking correctness [$f name] [$f info class] answer?[$f exists value] correct_when ?[$f exists correct_when]"
+        if {[$f exists value]} {
+          set r [$f answer_is_correct]
+          #:log [$f serialize]
+          if {$r != 1} {
+            #:log [$f serialize]
+            #:log "checking correctness [$f name] failed ([$f answer_is_correct])"
             set correct -1
             break
           }
@@ -1648,8 +1675,9 @@ namespace eval ::xowf {
       }
       set form_obj [set $key]
       if {![nsf::is object $form_obj]} {
+        ad_log error "deprecated usage: method 'form_object' did NOT return an object. Will raise an error in the future"
         set form_id [string trimleft $form_obj :]
-        ::xo::db::CrClass get_instance_from_db -item_id $form_id
+        set form_obj [::xo::db::CrClass get_instance_from_db -item_id $form_id]
       }
       return $form_obj
     } else {
@@ -2151,20 +2179,20 @@ namespace eval ::xowf {
 
 #
 # In order to provide either a REST or a DAV interface, we have to
-# switch to basic authentication, since non-OpenACS packages
-# have problems to handle OpenACS cookies. The basic authentication
+# switch to basic authentication, since non-OpenACS software packages
+# don't know how to handle OpenACS cookies. The basic authentication
 # interface can be established in three steps:
 #
 #  1) Create a basic authentication handler, Choose a URL and
 #     define optionally the package to be initialized:
 #     Example:
-#            ::xowf::dav create ::xowf::ba -url /ba -package ::xowf::Package
+#            ::xowf::dav create ::xowf::baHandler -url /handler -package ::xowf::Package
 #
 #  2) Make sure, the basic authentication handler is initialized during
 #     startup. Write an -init.tcl file containing a call to the
 #     created handler.
 #     Example:
-#            ::xowf::ba register
+#            ::xowf::baHandler register
 #
 #  3) Write procs with names such as GET, PUT, POST to handle
 #     the requests. These procs overload the predefined behavior.
@@ -2176,8 +2204,10 @@ namespace eval ::xowf {
 
   ::xowf::dav instproc get_package_id {} {
     if {${:uri} eq "/"} {
-      # Take the first package instance
       set :wf ""
+      #
+      # Take the first package instance
+      #
       set {:package_id} [lindex [$package instances] 0]
       ${:package} initialize -package_id ${:package_id}
     } else {
