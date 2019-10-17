@@ -106,7 +106,7 @@ unpublish proc activate {obj} {
 
   set wfMaster ${:masterWorkflow}
   set wfTitle [$obj property _title]
-  set questionObjs [[$obj wf_context] get_questions]
+  set questionObjs [[[$obj wf_context] wf_container] get_questions $obj]
   set wfQuestionNames {}
   set wfQuestionTitles {}
   set attributeNames {}
@@ -206,20 +206,39 @@ Action instproc unpublish_link {obj} {
 
 
 
+
 ########################################################################
+# get_questions: load and initialize the interaction forms
 #
-# Helper methods for the workflow context
-#
-########################################################################
+:proc get_questions {obj} {
+  set questions [lmap ref [$obj property question] {
+    if {![string match "*/*" $ref]} {
+      set ref [[$obj parent_id] name]/$ref
+    }
+    set ref
+  }]
+  set questionNames [join $questions |]
+  set questionForms [::xowiki::Weblog instantiate_forms \
+                         -package_id [$obj package_id] \
+                         -default_lang [$obj lang] \
+                         -forms $questionNames]
+  if {[llength $questionForms] < 1} {
+    error "unknown form $questionNames"
+  }
+  #:msg "questionNames '$questionNames', questionForms 'questionForms'"
+  return $questionForms
+}
+
 
 ########################################################################
 # form loader: create dynamically a form containing the disabled
 # questions and the survey results (the results can be refreshed)
 #
-:proc load_form {title} {
-  set state [:property _state]
+:proc load_form {ctx title} {
+  set obj [$ctx object]
+  set state [$obj property _state]
 
-  set questions [:get_questions]
+  set questions [:get_questions $obj]
   set counter 0
   set fullQuestionForm ""
   foreach q $questions {
@@ -236,9 +255,9 @@ Action instproc unpublish_link {obj} {
   #:log  fullQuestionForm=$fullQuestionForm
   set text "<h2>$title</h2>"
 
-  set wf [[:wf_container] get_answer_wf ${:object}]
+  set wf [:get_answer_wf $obj]
   if {$wf eq ""} {
-    :msg "cannot get current workflow for [${:object} name]"
+    :msg "cannot get current workflow for [$obj name]"
     set lLink "."
     set tLink "."
     set aLink "."
@@ -248,8 +267,8 @@ Action instproc unpublish_link {obj} {
     set wf_pretty_link [$wf pretty_link]
     set tLink "$wf_pretty_link?m=create-new&p.return_url=[::xo::cc url]&p.try_out_mode=1"
     set lLink "$wf_pretty_link?m=list"
-    set aLink [${:object} pretty_link -query m=answer]
-    set pLink [${:object} pretty_link -query m=print-answers]
+    set aLink [$obj pretty_link -query m=answer]
+    set pLink [$obj pretty_link -query m=print-answers]
     #util_user_message -html -message "$survey is available as <a target='_blank' href='$pLink'>$pLink</a>"
     set menu "\[<a href='[ns_quotehtml [::xo::cc url]]'>#xowf.refresh#</a>,\
          <a href='[ns_quotehtml $lLink]'>#xowf.online-exam-exam_instances#</a>,\
@@ -257,7 +276,7 @@ Action instproc unpublish_link {obj} {
   }
 
   set extraAction ""
-  switch [:property _state] {
+  switch [$obj property _state] {
     "created"   {
       set extraAction "<br>#xowf.online-exam-try_out# <a class='btn btn-default' href='[ns_quotehtml $tLink]'>#xowf.testrun#</a>"
     }
@@ -267,9 +286,9 @@ Action instproc unpublish_link {obj} {
   }
   append text "$menu $extraAction\n"
 
-  set wfName [:property wfName]
+  set wfName [$obj property wfName]
   set report [expr {$wfName ne ""
-                    ? "{{form-stats -parent_id [${:object} item_id] -form $wfName}}\n"
+                    ? "{{form-stats -parent_id [$obj item_id] -form $wfName}}\n"
                     : ""}]
   append report "<br> $menu"
 
@@ -284,36 +303,23 @@ Action instproc unpublish_link {obj} {
 }
 
 ########################################################################
-# get_question: load and initialize the interaction forms
-#
-:proc get_questions {} {
-  set questions [lmap ref [:property question] {
-    if {![string match "*/*" $ref]} {
-      set ref [[${:object} parent_id] name]/$ref
-    }
-    set ref
-  }]
-  set questionNames [join $questions |]
-  set questionForms [::xowiki::Weblog instantiate_forms \
-                         -package_id [${:object} package_id] \
-                         -default_lang [${:object} lang] \
-                         -forms $questionNames]
-  if {[llength $questionForms] < 1} {
-    error "unknown form $questionNames"
-  }
-  #:msg "questionNames '$questionNames', questionForms 'questionForms'"
-  return $questionForms
-}
-
-
-
-########################################################################
 #
 # Object specific operations
 #
 ########################################################################
 
 :object-specific {
+
+  ########################################################################
+  #
+  # Helper methods for the workflow context
+  #
+  ########################################################################
+
+  set ctx [:wf_context]
+  set container [$ctx wf_container]
+  $ctx forward load_form $container %proc $ctx
+
   ########################################################################
   # Extern callable methods
   ########################################################################

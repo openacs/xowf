@@ -238,15 +238,10 @@ State done \
   }]
 }
 
-#MAP OLD demc-exercise-1-1:checkbox,answer=demc-exercise-1-1
-#MAP demc-exercise-1-1 => mc-exercise-1-a1
-#MAP NEW mc-exercise-1-a1:checkbox,answer=demc-exercise-1-1
-#MAP match with *value=demc-exercise-1-1* -> 0
-
-
-:proc get_question_form_object {form_name} {
-  #:msg "renaming_form_loader for form_name <$form_name> (counter $counter)"
-  set form_id [:default_load_form_id $form_name]
+:proc get_question_form_object {ctx form_name} {
+  #:msg "renaming_form_loader for form_name <$form_name>"
+  set form_id [$ctx default_load_form_id $form_name]
+  set obj [$ctx object]
   set form_obj [::xo::db::CrClass get_instance_from_db -item_id $form_id]
 
   set form     [$form_obj get_property -name form]
@@ -257,12 +252,12 @@ State done \
   # Map "answer" to a generic name in the form "@answer@" and in the
   # form constraints
   #
-  #
   set strippedName [lindex [split [$form_obj name] :] end]
   regsub -all {[-]} $strippedName _ formName
   set newName ${formName}_a; #$counter
 
   regsub -all {@answer} $form @$newName form
+
   set fc [:map_form_constraints $fc "answer" $newName]
   set disabled_fc [lmap f $fc {
     if {[string match "$newName*" $f]} { append f ,disabled=true }
@@ -314,11 +309,11 @@ State done \
   #
   # Update IP address each time the form is loaded.
   #
-  if {[${:object} state] in {"initial" "working"}} {
-    ${:object} set_property ip [expr {[ns_conn isconnected] ? [ad_conn peeraddr] : "nowhere"}]
+  if {[$obj state] in {"initial" "working"}} {
+    $obj set_property ip [expr {[ns_conn isconnected] ? [ad_conn peeraddr] : "nowhere"}]
   }
 
-  :set_title -question 1 -minutes [:minutes_string $form_obj]
+  :set_title $obj -question 1 -minutes [:minutes_string $form_obj]
 
   return $form_obj
 }
@@ -327,12 +322,12 @@ State done \
 #
 # Set "title" with question and user information
 #
-:proc set_title {{-question:boolean true} {-minutes ""}} {
+:proc set_title {obj {-question:boolean true} {-minutes ""}} {
   set t [list ]
-  set state [${:object} state]
-  set position [${:object} property position]
+  set state [$obj state]
+  set position [$obj property position]
   if {$question && $state eq "working"} {
-    set titleString "[_ xowf.question] [expr {$position + 1}]: [lindex [${:object} property titles] $position]"
+    set titleString "[_ xowf.question] [expr {$position + 1}]: [lindex [$obj property titles] $position]"
     if {$minutes ne ""} {
       append titleString " $minutes"
     }
@@ -340,9 +335,9 @@ State done \
   }
   lappend title \
       "@wfTitle@" \
-      "IP: [${:object} property ip]"
+      "IP: [$obj property ip]"
 
-  ${:object} title [join $title " · "]
+  $obj title [join $title " · "]
 }
 
 #
@@ -374,17 +369,17 @@ State done \
 # This form loader is also called indirectly by www-print-answers of
 # oneline-exam.wf
 #
-:proc summary_form {form_title} {
-  #:msg "summary_form_loader $form_title [${:object} instance_attributes]"
+:proc summary_form {ctx form_title} {
+  set obj [$ctx object]
+  #:msg "summary_form_loader $form_title [$obj instance_attributes]"
 
   #:set_title -question 0
   set summary_form ""
   set fc {}
   set counter 0
-  foreach form_name [${:object} property pages] {
-    set form_obj [:get_question_form_object $form_name]
-    #set form_id [:default_load_form_id $form_name]
-    set title [lindex [${:object} property titles] $counter]
+  foreach form_name [$obj property pages] {
+    set form_obj [:get_question_form_object $ctx $form_name]
+    set title [lindex [$obj property titles] $counter]
     set minutes [:minutes_string $form_obj]
     append summary_form \
         "<h3>[_ xowf.question] [incr counter]: $title $minutes</h3>" \n \
@@ -421,7 +416,12 @@ State done \
   # ensure default value is updated for each instance individually
   Property ip -default [expr {[ns_conn isconnected] ? [ad_conn peeraddr] : "nowhere"}]
 
-  set working_state_object [[:wf_context] wf_definition_object working]
+  set ctx [:wf_context]
+  set container [$ctx wf_container]
+  $ctx forward get_question_form_object $container %proc $ctx
+  $ctx forward summary_form $container %proc $ctx
+
+  set working_state_object [$ctx wf_definition_object working]
   $working_state_object set form [:property current_form]
   # fallback if the current_form isn't set
   if {[$working_state_object set form] eq ""} {
