@@ -279,7 +279,8 @@ State done \
       set newName $prefix[incr counter]
       #:log "rename= $oldName -> '$newName'"
       set fc [:map_form_constraints $fc $oldName $newName]
-      set disabled_fc [lmap f $fc {
+      set disabled_fc [:map_form_constraints $disabled_fc $oldName $newName]
+      set disabled_fc [lmap f $disabled_fc {
         if {[string match "$newName*" $f]} { append f ,disabled=true }
         set f
       }]
