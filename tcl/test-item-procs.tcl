@@ -524,7 +524,7 @@ namespace eval ::xowiki::formfield {
     } else {
       set autoCorrectSpec ""
     }
-    :msg autoCorrectSpec=$autoCorrectSpec
+    #:msg autoCorrectSpec=$autoCorrectSpec
     :create_components  [subst {
       {text  {$widget,height=100px,label=Teilaufgabe,plugins=OacsFs}}
       $autoCorrectSpec
