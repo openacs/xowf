@@ -520,7 +520,7 @@ namespace eval ::xowiki::formfield {
     #:log "[:name] auto_correct ${:auto_correct}"
 
     if {${:auto_correct}} {
-      set autoCorrectSpec {{correct_when {text,label=#xowf.correct_when#}}}
+      set autoCorrectSpec {{correct_when {correct_when,label=#xowf.correct_when#}}}
     } else {
       set autoCorrectSpec ""
     }
