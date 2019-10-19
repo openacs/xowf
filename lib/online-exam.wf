@@ -364,8 +364,8 @@ Action instproc unpublish_link {obj} {
         regsub -all {<div class=\"question-text\"} $answer {<div class='question-text'} answer
         #regsub -all {<textarea|<input } $answer {<p style='white-space:pre-wrap;'} answer
         #regsub -all {</textarea>|</input>} $answer {</p>} answer
-        regsub -all {<textarea } $answer {<p style='white-space:pre-wrap;'} answer
-        regsub -all {</textarea>} $answer {</p>} answer
+        #regsub -all {<textarea } $answer {<p style='white-space:pre-wrap;'} answer
+        #regsub -all {</textarea>} $answer {</p>} answer
         regsub -all {<hr>} $answer {} answer
         regsub -all {IP\: (.*)} $title "$ia(ip)" title
         append HTML "\n<div class='single_exam'><h1>$title</h1>$text$answer</div>\n"
