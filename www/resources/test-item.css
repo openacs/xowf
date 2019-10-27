@@ -17,6 +17,21 @@ div.single_exam div.incorrect input\[type="text"\]:disabled {
 }
 
 /*
+ * Exam preview
+ */
+div.exam-preview {
+    background: #fafafa;
+    padding: 10px;
+    margin:10px;
+    background-size: 40px 40px;
+    background-image: linear-gradient(to right, #eee 1px, transparent 1px), linear-gradient(to bottom, #eee 1px, transparent 1px);
+}
+div.exam-preview div.question_text {
+    background-color: inherit;
+}
+
+
+/*
  * item-styling
  */
 div.question_text {
