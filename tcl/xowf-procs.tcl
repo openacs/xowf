@@ -21,7 +21,7 @@ namespace eval ::xowf {
   #
   # Should we use a shared or a per-context workflow definition.
   #
-  set ::xowf::sharedWorkflowDefinition 0
+  set ::xowf::sharedWorkflowDefinition 1
 
   ::xo::PackageMgr create ::xowf::Package \
       -package_key "xowf" -pretty_name "XoWiki Workflow" \
@@ -540,6 +540,7 @@ namespace eval ::xowf {
       # container, which will be recreated later.
       #
       if {[nsf::is object ${:wf_container}]} {
+        set ok 1
         #set ok [expr {$workflow_definition eq [${:wf_container} set __workflow_definition]}]
         if {[${:wf_container} exists __xowf_depends]} {
           set depends [${:wf_container} set __xowf_depends]
