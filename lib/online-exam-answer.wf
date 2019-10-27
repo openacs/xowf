@@ -186,6 +186,7 @@ State parameter {
     ../file:seal.js?m=download
   }}
   {extra_css {
+    /resources/xowf/test-item.css
     ../file:seal.js?m=download
   }}
   {form_loader get_question_form_object}
@@ -342,7 +343,7 @@ State done \
 }
 
 #
-# Get an attribute of the origninal question
+# Get an attribute of the original question
 #
 :proc question_property {form_obj:object attribute {default ""}} {
   set question [$form_obj get_property -name question]

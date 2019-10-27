@@ -377,28 +377,7 @@ Action instproc unpublish_link {obj} {
          <link rel="stylesheet" href="/resources/openacs-bootstrap3-theme/bootstrap/3.4.1/css/bootstrap.min.css" type="text/css" media="all">
         <link rel="stylesheet" href="/resources/openacs-bootstrap3-theme/css/main.css" type="text/css" media="all">
         <link rel="stylesheet" href="/resources/openacs-bootstrap3-theme/css/color/grey.css" type="text/css" media="all">
-        <style>
-        div.single_exam {
-          border-style: solid;
-          border-width: 1px;
-          border-color: #aaaaaa;
-          padding: 0px 5px 5px 20px;
-        }
-        div.single_exam div.correct input\[type="text"\]:disabled {
-          background: #ddFFdd;
-          color: black;
-        }
-        div.single_exam div.incorrect input\[type="text"\]:disabled {
-          background: #FFdddd;
-          color: black;
-        }
-        div.question_text {
-          background-color: #eeeeee;
-        }
-        div.form-label {
-          display: none;
-        }
-        </style>
+        <link rel="stylesheet" href="/resources/xowf/test-item.css" type="text/css" media="all">        
         </head>
         <body>$HTML
       }]

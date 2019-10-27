@@ -1,0 +1,64 @@
+/*
+ * Single_exam styling
+ */
+div.single_exam {
+    border-style: solid;
+    border-width: 1px;
+    border-color: #aaaaaa;
+    padding: 0px 5px 5px 20px;
+}
+div.single_exam div.correct input\[type="text"\]:disabled {
+    background: #ddFFdd;
+    color: black;
+}
+div.single_exam div.incorrect input\[type="text"\]:disabled {
+    background: #FFdddd;
+    color: black;
+}
+
+/*
+ * item-styling
+ */
+div.question_text {
+    background-color: #fafafa;
+}
+div.form-label {
+    display: none;
+}
+
+div.mc_interaction, div.sc_interaction, div.text_entry_interaction  {
+    padding: 15px 0px 0px 15px;
+}
+div.mc_interaction label, div.sc_interaction label {
+    font-weight: normal;
+}
+label div.richtext-label {
+    display: inline-block;
+    max-width: 500px;
+    padding: 0px 0px 0px 15px;
+}
+
+div.mc_interaction label input[type="checkbox"],
+div.sc_interaction label input[type="radio"] {
+    vertical-align: top;
+}
+
+div.text_entry_interaction li {
+    padding: 0px 0px 15px 0px;
+}
+
+/*
+ * Feedback styling
+ */
+div.text_interaction div.incorrect {
+    background: #ffcccc;
+}
+div.text_entry_interaction div.incorrect input:disabled {
+    background: #ffdddd;
+}
+div.mc_interaction label.correct, div.sc_interaction label.correct {
+    background: #ccffcc;
+}
+div.mc_interaction label.incorrect, div.sc_interaction label.incorrect {
+    background: #ffdddd;
+}
