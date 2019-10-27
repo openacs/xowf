@@ -150,7 +150,7 @@ namespace eval ::xowf {
           # separate these by an empty line for safety)
           #
           append :object-specific \n [lindex $args 0]
-          ns_log notice "=== object-specific [self] ${:object-specific}"
+          #ns_log notice "=== object-specific [self] ${:object-specific}"
         }
         default {
           error "wrong number of arguments"
@@ -474,6 +474,15 @@ namespace eval ::xowf {
   #}
 
   Context instproc create_workflow_definition {workflow_definition} {
+    #
+    # Validation: since for shared workflow definitions, the workflow
+    # container is named after the revision, we need only a validation
+    # of "xowf::include" content (external source content). So the,
+    # container-specific workflow_definition is revision specific, and
+    # it will never change.
+    #
+    # set :__workflow_definition [list $workflow_definition]
+    #
     if {[catch {${:wf_container} contains "
        Class create Action   -superclass  ::xowf::Action
        Class create State    -superclass  ::xowf::State
@@ -486,6 +495,15 @@ namespace eval ::xowf {
          ===== workflow_definition: $workflow_definition"
       :msg -html t "Error in workflow definition: [ns_quotehtml $errorMsg]"
     }
+
+    #
+    # Store state of xowf-depends in the container for later
+    # comparison.
+    #
+    if {[info exists ::__xowf_depends]} {
+      ${:wf_container} set __xowf_depends [set ::__xowf_depends]
+    }
+
     if {${:all_roles}} {
       #:msg want.to.create=[array names :handled_roles]
       foreach role [array names :handled_roles] {
@@ -514,6 +532,30 @@ namespace eval ::xowf {
       } else {
         set :wf_container ::xowf::[[${:object} page_template] revision_id]
       }
+
+      #
+      # Validate workflow container: We cannot trust the shared
+      # definition in case some xowf-include files were changed. When
+      # we detect such situations, we delete the shared worklow
+      # container, which will be recreated later.
+      #
+      if {[nsf::is object ${:wf_container}]} {
+        #set ok [expr {$workflow_definition eq [${:wf_container} set __workflow_definition]}]
+        if {[${:wf_container} exists __xowf_depends]} {
+          set depends [${:wf_container} set __xowf_depends]
+          foreach {fn mtime} $depends {
+            if {[file mtime $fn] ne $mtime} {
+              set ok 0
+              break
+            }
+          }
+        }
+        if {!$ok} {
+          ${:wf_container} destroy
+          ns_log notice "xowf: invalidate container ${:wf_container}"
+        }
+      }
+
       if {![nsf::is object ${:wf_container}]} {
         #
         # We require an xotcl::Object, since the container needs the
@@ -548,7 +590,7 @@ namespace eval ::xowf {
       #
       set os_code [${:wf_container} object-specific]
       if {$os_code ne ""} {
-        :log "=== object-specific ${:object} eval <$os_code>"
+        #:log "=== object-specific ${:object} eval <$os_code>"
         ${:object} eval $os_code
       }
     }
@@ -1254,35 +1296,16 @@ namespace eval ::xowf {
 
   WorkflowPage ad_instproc post_process_form_fields {form_fields} {
   } {
-    :log ------------------post_process_form_fields-feedback_mode=[info exists :__feedback_mode]
+    #:log ------------------post_process_form_fields-feedback_mode=[info exists :__feedback_mode]
     if {[info exists :__feedback_mode]} {
       #
       # Provide feedback for every alternative
       #
       foreach f $form_fields {
-        set correct [$f answer_is_correct]
-        #:log "[$f name] [$f info class]: correct? $correct"
-        switch -- $correct {
-          0 { continue }
-          -1 { set result "incorrect"}
-          1 { set result "correct"  }
-        }
-        $f form_widget_CSSclass $result
-        $f set evaluated_answer_result $result
-
-        set feedback ""
-        if {[$f exists feedback_answer_$result]} {
-          set feedback [$f feedback_answer_$result]
-        } else {
-          set feedback [_ xowf.answer_$result]
-        }
-        #:log "===${:__feedback_mode}=[$f exists correct_when]============[$f serialize]"
-        if {${:__feedback_mode} > 1 && [$f exists correct_when]} {
-          append feedback " [$f set correct_when]"
-        }
-        $f help_text $feedback
+        $f set_feedback ${:__feedback_mode}
       }
     }
+    #:log ------------------post_process_form_fields-feedback_mode=[info exists :__feedback_mode]-DONE
   }
 
   WorkflowPage ad_instproc post_process_dom_tree {dom_doc dom_root form_fields} {
@@ -2269,6 +2292,14 @@ namespace eval ::xowf {
     if {![file readable $fname]} {
       error "file '$fname' not found"
     }
+
+    #
+    # Tell the caller, what files were included in the thread
+    # invocation. It would be nicer to have this more OO, such we can
+    # avoid the gobal variables ::__xowf_depends.
+    #
+    lappend ::__xowf_depends $fname [file mtime $fname]
+
     set f [open $fname]; set wfDefinition [read $f]; close $f
     #::xotcl::Object log "INCLUDE $wfName [list $vars]"
     if {[llength $vars] > 0} {
