@@ -2297,7 +2297,7 @@ namespace eval ::xowf {
     #
     # Tell the caller, what files were included in the thread
     # invocation. It would be nicer to have this more OO, such we can
-    # avoid the gobal variables ::__xowf_depends.
+    # avoid the global variable ::__xowf_depends.
     #
     lappend ::__xowf_depends $fname [file mtime $fname]
 
