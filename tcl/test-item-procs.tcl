@@ -864,7 +864,7 @@ namespace eval ::xowf::test_item {
       lappend disabled_fc @cr_fields:hidden
       #:msg fc=$fc
 
-      $form_obj set_property form $form
+      $form_obj set_property -new 1 form $form
       $form_obj set_property -new 1 form_constraints $fc
       $form_obj set_property -new 1 disabled_form_constraints $disabled_fc
 
