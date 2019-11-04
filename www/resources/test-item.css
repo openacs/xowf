@@ -41,7 +41,7 @@ div.form-label {
     display: none;
 }
 
-div.mc_interaction, div.sc_interaction, div.text_entry_interaction  {
+div.mc_interaction, div.sc_interaction, div.text_entry_interaction, div.text_interaction {
     padding: 15px 0px 0px 15px;
 }
 div.mc_interaction label, div.sc_interaction label {
@@ -56,10 +56,11 @@ label div.richtext-label {
 div.mc_interaction label input[type="checkbox"],
 div.sc_interaction label input[type="radio"] {
     vertical-align: top;
+    margin: 0px 0px 0px 10px;
 }
 
 div.text_entry_interaction li {
-    padding: 0px 0px 15px 0px;
+    padding: 0px 0px 10px 0px;
 }
 
 /*
@@ -71,9 +72,32 @@ div.text_interaction div.incorrect {
 div.text_entry_interaction div.incorrect input:disabled {
     background: #ffdddd;
 }
-div.mc_interaction label.correct, div.sc_interaction label.correct {
-    background: #ccffcc;
+div.text_interaction div.textarea,
+div.text_entry_interaction div.text {
+    background: #eee;
+    white-space: pre-wrap;
+    padding: 10px 10px 10px 10px;
 }
-div.mc_interaction label.incorrect, div.sc_interaction label.incorrect {
-    background: #ffdddd;
+
+div.text_interaction div.correct,
+div.text_entry_interaction div.correct,
+div.mc_interaction label.correct,
+div.sc_interaction label.correct
+{
+    border-width: 0px 0px 0px 4px;
+    border-style: solid;
+    border-color: green;
+}
+div.text_interaction div.incorrect,
+div.text_entry_interaction div.incorrect,
+div.mc_interaction label.incorrect,
+div.sc_interaction label.incorrect
+{
+    border-width: 0px 0px 0px 4px;
+    border-style: solid;
+    border-color: red;
+}
+div.text_interaction div.textarea span.match,
+div.text_entry_interaction div.text span.match {
+    background: #FFFF2F; /*#FFFFAA;*/
 }

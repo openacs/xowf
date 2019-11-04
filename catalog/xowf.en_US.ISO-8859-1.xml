@@ -3,6 +3,7 @@
 
   <msg key="Exercise">Exercise</msg>
   <msg key="Grading-Schema">Grading Schema</msg>
+  <msg key="Shuffle">Shuffle</msg>  
   <msg key="Minutes">Minutes</msg>
   <msg key="alternative">Alternative</msg>
   <msg key="answer_correct">That is correct!</msg>
@@ -44,7 +45,7 @@
   <msg key="print">Print</msg>
   <msg key="online-exam-exam_instances">Listing of Filled-out Exams</msg>
   <msg key="online-exam-try_out">Do you want to try out the exam?</msg>
-  <msg key="online-exam-can_answer">tudents can now answer via</msg>  
+  <msg key="online-exam-can_answer">Students can now answer via</msg>  
   <msg key="testrun">Testrun</msg>
   <msg key="online-exam-not-published">The Exam has not been published</msg>
   <msg key="online-exam-finished">The Exam is finished</msg>

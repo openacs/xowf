@@ -9,7 +9,7 @@
 # can test the exam by entering test answers. The results are provided
 # in form of a table.
 #
-# When the teacher is satisfied for the exam, the exam can be
+# When the teacher is satisfied with the exam, the exam can be
 # published. In this step, all answers of the testing phase are
 # deleted. In the process of publishing, the link to start the exam is
 # offered to the user.  When the exam is published, the teacher can
@@ -21,11 +21,6 @@
 #
 # You might with to add the following entries to the folder to ease
 # creation of exercises and exams
-#
-#  OLD HTML variant
-#   {entry -name New.App.Frage -label TextQuestion -form en:Frage.form}
-#
-# NEW question types
 #
 #   {entry -name New.App.TextInteraction -label "Text Interaction" -form en:TestItemText.form}
 #   {entry -name New.App.TextEntryInteraction -label "Text Entry Interaction" -form en:TestItemTextEntry.form}
@@ -45,6 +40,9 @@ Action unpublish -next_state done -label #xowf.online-exam-unpublish#
 Action republish -next_state published -label #xowf.online-exam-republish#
 Action restart -next_state initial -label #xowf.restart#
 
+State parameter {
+  {extra_css {/resources/xowf/test-item.css}}
+}
 State initial -actions {select} -form en:select_question.form -view_method edit
 State created -actions {publish restart} -form_loader load_form -view_method edit \
     -form "#xowf.online-exam-draft_exam#"
@@ -88,7 +86,7 @@ unpublish proc activate {obj} {
 ########################################################################
 # create_answer_workflow: create a workflow based on the template
 # provided in this method for answering the question for the
-# students. The name of the workflow is derived from the wokflow
+# students. The name of the workflow is derived from the workflow
 # instance and recorded in the formfield "wfName".
 #
 :proc create_answer_workflow {obj} {
@@ -110,19 +108,13 @@ unpublish proc activate {obj} {
   set wfQuestionNames {}
   set wfQuestionTitles {}
   set attributeNames {}
-  foreach q $questionObjs {
-    set counter 0
-    set prefix [lindex [split [$q name] :] end]-a
-    dom parse -simple -html [$q property form] doc
-    $doc documentElement root
-    if {$root ne ""} {
-      foreach node [$root selectNodes "//textarea|//input"] {
-        set newName $prefix[incr counter]
-        lappend attributeNames $newName
-      }
-    }
-    lappend wfQuestionNames ../[$q name]
-    lappend wfQuestionTitles [$q title]
+  foreach form_obj $questionObjs {
+
+    lappend attributeNames [xowf::test_item::renaming_form_loader \
+                                form_name_based_attribute_stem [$form_obj name]]
+
+    lappend wfQuestionNames ../[$form_obj name]
+    lappend wfQuestionTitles [$form_obj title]
   }
   set wfID [$obj item_id]
 
@@ -148,7 +140,7 @@ unpublish proc activate {obj} {
              -package_id [$obj package_id] \
              -default_variables [list title $wfTitle] \
              -instance_attributes [list workflow_definition $wfDef \
-                                       form_constraints "@table:_name,_state,$attributeNames @cr_fields:hidden"]]
+                                       form_constraints "@table:_name,_state,$attributeNames,_last_modified @cr_fields:hidden"]]
   $f save_new
   #:log "create_answer_workflow $obj DONE [$f pretty_link]"
 }
@@ -232,7 +224,9 @@ Action instproc unpublish_link {obj} {
 
 ########################################################################
 # form loader: create dynamically a form containing the disabled
-# questions and the survey results (the results can be refreshed)
+# questions as a preview and the survey results (the results can be
+# refreshed). This is a simplified version of get_question_form_object
+# of online-exam-answer.wf.
 #
 :proc load_form {ctx title} {
   set obj [$ctx object]
@@ -241,15 +235,29 @@ Action instproc unpublish_link {obj} {
   set questions [:get_questions $obj]
   set counter 0
   set fullQuestionForm ""
+  set full_fc {}
   foreach q $questions {
-    append fullQuestionForm \
-        "<h2>#xowf.question# [incr counter]</h2>\n" \
-        [$q property form]
-  }
+    set raw_form [$q property form]
+    set raw_fc [$q property form_constraints]
+    set newName answer$counter
 
-  # Disable fields, remove wrapping form
-  regsub -all {<input } $fullQuestionForm {<input disabled='disabled' } fullQuestionForm
-  regsub -all {<textarea } $fullQuestionForm {<textarea disabled='disabled' } fullQuestionForm
+    regsub {@answer@} $raw_form "@$newName@" formContent
+    set fc [lmap f $raw_fc {
+      if {[string match "answer:*" $f]} {
+        regsub answer $f $newName f
+        append f ,disabled=true
+      }
+      set f}]
+
+    append fullQuestionForm \
+        "<h3>#xowf.question# [incr counter]</h3>\n" \
+        $formContent
+    lappend full_fc {*}$fc
+  }
+  set full_fc [lsort -unique $full_fc]
+  #:log fullQuestionForm=$fullQuestionForm\n$full_fc
+
+  # Remove wrapping forms
   regsub -all {</?form[^>]*>} $fullQuestionForm {} fullQuestionForm
 
   #:log  fullQuestionForm=$fullQuestionForm
@@ -278,10 +286,14 @@ Action instproc unpublish_link {obj} {
   set extraAction ""
   switch [$obj property _state] {
     "created"   {
-      set extraAction "<br>#xowf.online-exam-try_out# <a class='btn btn-default' href='[ns_quotehtml $tLink]'>#xowf.testrun#</a>"
+      append extraAction "<br>" \
+          "#xowf.online-exam-try_out# " \
+          "<a class='btn btn-default' href='[ns_quotehtml $tLink]'>#xowf.testrun#</a>"
     }
     "published" {
-      set extraAction "<br>#xowf.online-exam-can_answer# <a href='$aLink'>$aLink</a>"
+      append extraAction "<br>" \
+          "#xowf.online-exam-can_answer# " \
+          "<a href='$aLink'>$aLink</a>"
     }
   }
   append text "$menu $extraAction\n"
@@ -292,13 +304,12 @@ Action instproc unpublish_link {obj} {
                     : ""}]
   append report "<br> $menu"
 
-  set style "background: #dddddd; padding: 10px; margin:10px;"
   set f [::xowiki::Form new \
              -set name en:question \
-             -form [subst {<form>$text<div style='$style'>$fullQuestionForm</div>$report</form> text/html}] \
+             -form [subst {<form>$text<div class='exam-preview'>$fullQuestionForm</div>$report</form> text/html}] \
              -text {} \
              -anon_instances t \
-             -form_constraints {@cr_fields:hidden answer:disabled,label=#xowf.answer#} \
+             -form_constraints $full_fc \
             ]
 }
 
@@ -318,7 +329,9 @@ Action instproc unpublish_link {obj} {
 
   set ctx [:wf_context]
   set container [$ctx wf_container]
-  $ctx forward load_form $container %proc $ctx
+  if {$ctx ne $container} {
+    $ctx forward load_form $container %proc $ctx
+  }
 
   ########################################################################
   # Extern callable methods
@@ -346,38 +359,43 @@ Action instproc unpublish_link {obj} {
     set wf [[$ctx wf_container] get_answer_wf [self]]
     if {$wf ne ""} {
       set items [[$ctx wf_container] get_wf_instances $wf]
+
+      set examTitle ${:title}
       foreach i [$items children] {
+        set uid [$i property _creation_user]
+        set userName [acs_user::get_element -user_id $uid -element username]
+
+        if {[$i state] ne "done"} {
+          ns_log notice "online-exam: submission of $userName is not finished (state [$i state])"
+          continue
+        }
+
         set time [::xo::db::tcl_date [$i property _last_modified] tz_var]
         set pretty_date [clock format [clock scan $time] -format "%Y-%m-%d %T"]
-        set uid [$i property _creation_user]
-        set text "<h2>[acs_user::get_element -user_id $uid -element username] / [::xo::get_user_name $uid] / $pretty_date</h2>"
         #
         # The call to "render_content" calls actually the
-        # "summary_form" of the oneline-exam-answer workflow.
+        # "summary_form" of online-exam-answer.wf when the submit
+        # instance is in state "done". We set the __feedback_mode to
+        # get the auto-correction included.
         #
         $i set __feedback_mode 2
         set question_form [$i render_content]
 
-        set answer $question_form
-        set title [$i title]
-        array set ia [$i set instance_attributes]
-        regsub -all {<div class=\"question-text\"} $answer {<div class='question-text'} answer
-        #regsub -all {<textarea|<input } $answer {<p style='white-space:pre-wrap;'} answer
-        #regsub -all {</textarea>|</input>} $answer {</p>} answer
-        #regsub -all {<textarea } $answer {<p style='white-space:pre-wrap;'} answer
-        #regsub -all {</textarea>} $answer {</p>} answer
-        regsub -all {<hr>} $answer {} answer
-        regsub -all {IP\: (.*)} $title "$ia(ip)" title
-        append HTML "\n<div class='single_exam'><h1>$title</h1>$text$answer</div>\n"
+        append HTML "\n<div class='single_exam'>" \
+            "<h1>$examTitle - IP [$i property ip]</h1>" \
+            "<h2>$userName · [::xo::get_user_name $uid] · $pretty_date</h2>" \
+            $question_form \
+            "</div>\n"
       }
     }
+
     if {$HTML ne ""} {
       ns_return 200 text/html [subst {<!DOCTYPE HTML>
         <html><head><meta http-equiv='content-type' content='text/html; charset=utf-8' />
-         <link rel="stylesheet" href="/resources/openacs-bootstrap3-theme/bootstrap/3.4.1/css/bootstrap.min.css" type="text/css" media="all">
+        <link rel="stylesheet" href="/resources/openacs-bootstrap3-theme/bootstrap/3.4.1/css/bootstrap.min.css" type="text/css" media="all">
         <link rel="stylesheet" href="/resources/openacs-bootstrap3-theme/css/main.css" type="text/css" media="all">
         <link rel="stylesheet" href="/resources/openacs-bootstrap3-theme/css/color/grey.css" type="text/css" media="all">
-        <link rel="stylesheet" href="/resources/xowf/test-item.css" type="text/css" media="all">        
+        <link rel="stylesheet" href="/resources/xowf/test-item.css" type="text/css" media="all">
         </head>
         <body>$HTML
       }]

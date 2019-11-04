@@ -13,7 +13,7 @@ namespace eval ::xowiki::formfield {
     return [${:object} property form ""]
   }
   FormGeneratorField instproc render_input {} {
-    ::xo::Page requireCSS /resources/xowf/myform.css
+    ::xo::Page requireCSS /resources/xowf/form-generator.css
     next
   }
 
@@ -30,7 +30,7 @@ namespace eval ::xowiki::formfield {
     Abstract class for defining common attributes for all Test Item
     fields.
 
-    @param feedback_level "full", or "none"
+    @param feedback_level "full", "single", or "none"
     @param auto_correct boolean to let user add auto correction fields
   }
   TestItemField set abstract 1
@@ -53,50 +53,50 @@ namespace eval ::xowiki::formfield {
     a question is saved, a HTML form is generated, which is used as a
     question.
 
-    @param feedback_level "full", or "none"
+    @param feedback_level "full", "single", or "none"
     @param grading one of "exact", "partial", or "none"
     @param nr_choices number of choices
     @param question_type "mc", "sc", "ot", or "te"
   }
 
   #
-  # provide a default setting for xinha JavaScript for test-items
+  # Provide a default setting for the rich-text widgets.
   #
-  test_item set xinha(javascript) [::xowiki::formfield::FormField fc_encode {
-    xinha_config.toolbar = [
-                            ['popupeditor', 'bold','italic','createlink','insertimage','separator'],
-                            ['killword','removeformat','htmlmode']
-                           ];
-  }]
   test_item set richtextWidget {richtext,editor=ckeditor4,ck_package=standard,extraPlugins=}
 
-  test_item instproc feed_back_definition {auto_correct} {
+  test_item instproc feed_back_definition {} {
     #
     # Return the definition of the feed_back widgets depending on the
-    # value of auto_correct. If we can't determine automatically,
-    # what's wrong, we can't provide different feedback for right or
-    # wrong.
+    # value of :feedback_level.
     #
     if {${:feedback_level} eq "none"} {
       return ""
     }
 
     set widget [test_item set richtextWidget]
-    if {$auto_correct} {
-      return [subst {
-        {feedback_correct   {$widget,height=150px,label=#xowf.feedback_correct#}}
-        {feedback_incorrect {$widget,height=150px,label=#xowf.feedback_incorrect#}}
-      }]
+    switch ${:feedback_level} {
+      "none" {
+        set definition ""
+      }
+      "single" {
+        set definition [subst {
+          {feedback_correct   {$widget,height=150px,label=#xowf.feedback#}}
+        }]
+      }
+      "full" {
+        set definition [subst {
+          {feedback_correct   {$widget,height=150px,label=#xowf.feedback_correct#}}
+          {feedback_incorrect {$widget,height=150px,label=#xowf.feedback_incorrect#}}
+        }]
+      }
     }
-    return [subst {
-      {feedback {$widget,label=Korrekturhinweis}}
-    }]
+    return $definition
   }
 
   #
   # "test_item" is the wrapper for interaction to be used in
   # evaluations. Different wrapper can be defined in a similar way for
-  # questionairs, which might need less input fields.
+  # questionnaires, which might need less input fields.
   #
   test_item instproc initialize {} {
     if {${:__state} ne "after_specs"} {
@@ -107,24 +107,39 @@ namespace eval ::xowiki::formfield {
     # Provide some settings for name short-cuts
     #
     switch -- ${:question_type} {
-      mc { # we should support as well: minChoices, maxChoices, shuffle
+      mc { # we should support as well: minChoices, maxChoices
+        #
+        # Old style, kept just for backwards compatibility for the
+        # time being. one should use "mc2" instead.
+        #
         set interaction_class mc_interaction
         set options nr_choices=[:nr_choices]
+        set options ""
         set auto_correct true
+        set can_shuffle false
       }
-      sc { # we should support as well: minChoices, maxChoices, shuffle
+      sc { # we should support as well: minChoices, maxChoices
         set interaction_class mc_interaction
         set options nr_choices=[:nr_choices],multiple=false
         set auto_correct true
+        set can_shuffle true
+      }
+      mc2 { # we should support as well: minChoices, maxChoices
+        set interaction_class mc_interaction2
+        set options ""
+        set auto_correct true
+        set can_shuffle true
       }
       ot {
         set interaction_class text_interaction
         set auto_correct ${:auto_correct}
+        set can_shuffle false
       }
       te {
         set interaction_class text_entry_interaction
         #set options nr_choices=[:nr_choices]
         set auto_correct ${:auto_correct}
+        set can_shuffle true
       }
       default {error "unknown question type: ${:question_type}"}
     }
@@ -152,11 +167,18 @@ namespace eval ::xowiki::formfield {
       set gradingSpec ""
     }
 
+    if {$can_shuffle} {
+      set shuffle_options "{None none} {{Per user} peruser} {Always always}"
+      set shuffleSpec [subst {{shuffle {radio,horizontal=true,options=$shuffle_options,default=none,label=#xowf.Shuffle#}}}]
+    } else {
+      set shuffleSpec ""
+    }
     :create_components  [subst {
       {minutes number,min=1,default=2,label=#xowf.Minutes#}
       $gradingSpec
-      {interaction {$interaction_class,$options,feedback_level=${:feedback_level},auto_correct=${:auto_correct}}}
-      [:feed_back_definition $auto_correct]
+      $shuffleSpec
+      {interaction {$interaction_class,$options,feedback_level=${:feedback_level},auto_correct=${:auto_correct},label=}}
+      [:feed_back_definition]
     }]
     set :__initialized 1
   }
@@ -172,14 +194,14 @@ namespace eval ::xowiki::formfield {
   ###########################################################
 
   Class create mc_interaction -superclass TestItemField -parameter {
-    {shuffle false}
     {nr_choices 5}
     {multiple true}
   }
+  mc_interaction set auto_correct true
 
   mc_interaction instproc set_compound_value {value} {
     set r [next]
-    if {![:multiple]} {
+    if {!${:multiple}} {
       # For single choice questions, we have a fake-field for denoting
       # the correct entry. We have to distribute this to the radio
       # element, which is rendered.
@@ -197,12 +219,11 @@ namespace eval ::xowiki::formfield {
 
   mc_interaction instproc initialize {} {
     if {${:__state} ne "after_specs"} return
-    test_item instvar {xinha(javascript) javascript}
     #
     # build choices
     #
 
-    if {![:multiple]} {
+    if {!${:multiple}} {
       append choices "{correct radio,omit}\n"
     }
     #
@@ -211,11 +232,11 @@ namespace eval ::xowiki::formfield {
     set widget [test_item set richtextWidget]
     :create_components  [subst {
       {text  {$widget,required,height=150px,label=#xowf.exercise-text#}}
-      {mc {mc_choice,feedback_level=${:feedback_level},label=#xowf.alternative#,multiple=[:multiple],repeat=1..${:nr_choices}}}
+      {mc {mc_choice,feedback_level=${:feedback_level},label=#xowf.alternative#,multiple=${:multiple},repeat=1..${:nr_choices}}}
     }]
     set :__initialized 1
   }
-  mc_interaction set auto_correct true
+
   mc_interaction instproc convert_to_internal {} {
     #
     # Build a form from the components of the exercise on the fly.
@@ -231,7 +252,7 @@ namespace eval ::xowiki::formfield {
     set mc [:get_named_sub_component_value mc]
     ns_log notice "MC <$mc>"
 
-    if {![:multiple]} {
+    if {!${:multiple}} {
       set correct_field_name [:get_named_sub_component_value correct]
     }
 
@@ -257,7 +278,7 @@ namespace eval ::xowiki::formfield {
       #
       # fill values into form
       #
-      if {[:multiple]} {
+      if {${:multiple}} {
         set correct $value(correct)
         append form \
             "<tr><td class='selection'>" \
@@ -290,7 +311,7 @@ namespace eval ::xowiki::formfield {
       #:msg "$input_field_name .correct = $value(correct)"
     }
 
-    if {![:multiple]} {
+    if {!${:multiple}} {
       regexp {[.]([^.]+)$} $correct_field_name _ correct_field_value
       lappend fc "radio:text,answer=$correct_field_value"
     }
@@ -318,12 +339,8 @@ namespace eval ::xowiki::formfield {
   mc_choice instproc initialize {} {
     if {${:__state} ne "after_specs"} return
 
-    if {1} {
-      test_item instvar {xinha(javascript) javascript}
-      set text_config [subst {height=100px,label=Text}]
-    } else {
-      set text_config [subst {editor=wym,height=100px,label=Text}]
-    }
+    set text_config [subst {height=100px,label=Text}]
+
     if {[:feedback_level] eq "full"} {
       set feedback_fields {
         {feedback_correct {textarea,cols=60,label=#xowf.feedback_correct#}}
@@ -334,7 +351,7 @@ namespace eval ::xowiki::formfield {
     }
 
     set widget [test_item set richtextWidget]
-    if {[:multiple]} {
+    if {${:multiple}} {
       # We are in a multiple-choice item; provide for editing a radio
       # group per alternative.
       :create_components [subst {
@@ -370,14 +387,13 @@ namespace eval ::xowiki::formfield {
 
   text_interaction instproc initialize {} {
     if {${:__state} ne "after_specs"} return
-    test_item instvar {xinha(javascript) javascript}
     #
     # Create component structure.
     #
     set widget [test_item set richtextWidget]
 
     if {${:auto_correct}} {
-      set autoCorrectSpec {{correct_when {text,label=#xowf.correct_when#}}}
+      set autoCorrectSpec {{correct_when {correct_when,label=#xowf.correct_when#}}}
     } else {
       set autoCorrectSpec ""
     }
@@ -407,12 +423,14 @@ namespace eval ::xowiki::formfield {
 
     append form \
         "<form>\n" \
+        "<div class='text_interaction'>\n" \
         "<div class='question_text'>$intro_text</div>\n" \
         "@answer@\n" \
+        "</div>\n" \
         "</form>\n"
     append fc \
         "@categories:off @cr_fields:hidden\n" \
-        "{answer:textarea,rows=$lines,cols=$columns,$correct_when,label=Answer}"
+        "{answer:textarea,disabled_as_div=1,rows=$lines,cols=$columns,$correct_when,label=Answer}"
 
     #ns_log notice "text_interaction $form\n$fc"
     ${:object} set_property -new 1 form $form
@@ -436,49 +454,54 @@ namespace eval ::xowiki::formfield {
 
   text_entry_interaction instproc initialize {} {
     if {${:__state} ne "after_specs"} return
-    test_item instvar {xinha(javascript) javascript}
     #
     # Create component structure.
     #
     set widget [test_item set richtextWidget]
     ns_log notice "[self] [:info class] auto_correct=${:auto_correct}"
 
-    :create_components  [subst {
+    :create_components [subst {
       {text  {$widget,label=#xowf.exercise-text#,plugins=OacsFs}}
-      {answer {text_entry_field,repeat=1..5}}
+      {answer {text_entry_field,repeat=1..5,label=}}
     }]
     set :__initialized 1
   }
 
   text_entry_interaction instproc convert_to_internal {} {
-    set intro_text [:get_named_sub_component_value text]
 
-    #:msg " input_field_names=${:input_field_names}"
+    set intro_text   [:get_named_sub_component_value text]
     set answerFields [:get_named_sub_component_value answer]
-    ns_log notice "answerFields <$answerFields>"
+    set shuffle_kind [${:parent_field} get_named_sub_component_value shuffle]
 
+    set options {}
+    set answer {}
     set count 0
-    set list "<ul>\n"
+
     foreach {fieldName value} $answerFields {
+      # skip template entry
       if {[lindex [split $fieldName .] end] eq 0} {
         continue
       }
-      ns_log notice ...fieldName=$fieldName->$value
+      #ns_log notice ...fieldName=$fieldName->$value
       set af answer[incr count]
-      append list "<li>[dict get $value $fieldName.text] @${af}@<p></li>\n"
-      set correct_when [dict get $value $fieldName.correct_when]
-      # inline=true;
-      lappend fc ${af}:text,label=,[::xowiki::formfield::FormField fc_encode correct_when=$correct_when]
-      #ns_log notice "correct_when <$correct_when>"
+      lappend options [list [dict get $value $fieldName.text] $af]
+      lappend answer [dict get $value $fieldName.correct_when]
     }
 
-    append list "</ul>\n"
+    set options [::xowiki::formfield::FormField fc_encode $options]
+    set answer [::xowiki::formfield::FormField fc_encode $answer]
+
     append form \
         "<form>\n" \
+        "<div class='text_entry_interaction'>\n" \
         "<div class='question_text'>$intro_text</div>\n" \
-        "$list" \n \
+        "@answer@" \n \
+        "</div>\n" \
         "</form>\n"
-    lappend fc @categories:off @cr_fields:hidden
+    set fc {}
+    lappend fc \
+        "answer:text_fields,disabled_as_div=1,options=$options,shuffle_kind=$shuffle_kind,answer=$answer,label="  \
+        @categories:off @cr_fields:hidden
 
     ns_log notice "text_entry_interaction $form\n$fc"
     ${:object} set_property -new 1 form $form
@@ -534,6 +557,102 @@ namespace eval ::xowiki::formfield {
 
 }
 
+namespace eval ::xowiki::formfield {
+  ###########################################################
+  #
+  # ::xowiki::formfield::mc_interaction2
+  #
+  ###########################################################
+
+  Class create mc_interaction2 -superclass TestItemField -parameter {
+  }
+
+  mc_interaction2 instproc initialize {} {
+    if {${:__state} ne "after_specs"} return
+    #
+    # Create component structure.
+    #
+    set widget [test_item set richtextWidget]
+    #ns_log notice "[self] [:info class] auto_correct=${:auto_correct}"
+
+    :create_components  [subst {
+      {text  {$widget,label=#xowf.exercise-text#,plugins=OacsFs}}
+      {answer {mc_field,repeat=1..10,label=}}
+    }]
+    set :__initialized 1
+  }
+
+  mc_interaction2 instproc convert_to_internal {} {
+
+    set intro_text   [:get_named_sub_component_value text]
+    set shuffle_kind [${:parent_field} get_named_sub_component_value shuffle]
+    set answerFields [:get_named_sub_component_value answer]
+
+    set count 0
+    set options {}
+    set correct {}
+    foreach {fieldName value} $answerFields {
+      # skip template entry
+      if {[lindex [split $fieldName .] end] eq 0} {
+        continue
+      }
+      ns_log notice ...fieldName=$fieldName->$value
+      #set af answer[incr count]
+      set text [dict get $value $fieldName.text]
+      # trim leading <p> since this causes a newline in the checkbox label
+      regexp {^\s*(<p>)(.*)$} $text . . text
+      lappend options [list $text [incr count]]
+      lappend correct [dict get $value $fieldName.correct]
+    }
+    set options [::xowiki::formfield::FormField fc_encode $options]
+    set fc [list answer:checkbox,richtext=1,answer=$correct,shuffle_kind=$shuffle_kind,options=$options]
+
+    append form \
+        "<form>\n" \
+        "<div class='mc_interaction'>\n" \
+        "<div class='question_text'>$intro_text</div>\n" \
+        "@answer@" \n \
+        "</div>" \n \
+        "</form>\n"
+    lappend fc @categories:off @cr_fields:hidden
+
+    ns_log notice "mc_interaction2 $form\n$fc"
+    ${:object} set_property -new 1 form $form
+    ${:object} set_property -new 1 form_constraints $fc
+    set anon_instances true ;# TODO make me configurable
+    ${:object} set_property -new 1 anon_instances $anon_instances
+    ${:object} set_property -new 1 auto_correct ${:auto_correct}
+    ${:object} set_property -new 1 has_solution false
+  }
+
+  #
+  # ::xowiki::formfield::mc_field
+  #
+  Class create mc_field -superclass TestItemField -parameter {
+  }
+
+  mc_field instproc initialize {} {
+    if {${:__state} ne "after_specs"} return
+    #
+    # Create component structure.
+    #
+    set widget [test_item set richtextWidget]
+
+    if {${:auto_correct}} {
+      set autoCorrectSpec {{correct_when {correct_when,label=#xowf.correct_when#}}}
+    } else {
+      set autoCorrectSpec ""
+    }
+    #:msg autoCorrectSpec=$autoCorrectSpec
+    :create_components  [subst {
+      {text  {$widget,height=100px,label=Teilaufgabe,plugins=OacsFs}}
+      {correct {boolean,horizontal=true,label=Korrekt}}
+    }]
+    set :__initialized 1
+  }
+
+}
+
 
 namespace eval ::xowiki::formfield {
   ###########################################################
@@ -561,8 +680,10 @@ namespace eval ::xowiki::formfield {
     set intro_text [:get_named_sub_component_value text]
     append form \
         "<form>\n" \
-        "<div class='question_text'>$intro_text</div>\n" \
+        "<div class='upload_interaction'>\n" \
+    "<div class='question_text'>$intro_text</div>\n" \
         "@answer@" \
+        "</div>\n" \
         "</form>\n"
     append fc \
         "@categories:off @cr_fields:hidden\n" \
@@ -676,6 +797,80 @@ namespace eval ::xowiki::formfield {
     ${:object} set_property -new 1 auto_correct true ;# should be computed
     ${:object} set_property -new 1 has_solution true ;# should be computed
     #:msg "fc=$fc"
+  }
+}
+
+namespace eval ::xowf::test_item {
+
+  nx::Object create renaming_form_loader {
+    #
+    # Form loader that renames "generic" form-field-names as provided
+    # by the test-item form-field classes (@answer@) into names based
+    # on the form name, such that multiple of these form names can be
+    # processed together without name clashes.
+    #
+
+    :object method map_form_constraints {form_constraints oldName newName} {
+      #
+      # Rename form constraints starting with $oldName into $newName.
+      # Handle as well "answer=$oldName" form constraint properties.
+      #
+      return [lmap f $form_constraints {
+        #:msg check?'$f'
+        if {[string match "${oldName}*" $f]} {
+          regsub $oldName $f $newName f
+          if {[string match "*answer=$oldName*" $f]} {
+            regsub answer=$oldName $f answer=$newName f
+            #:log "MAP VALUE=answer=$oldName => answer=$newName "
+          }
+        }
+        set f
+      }]
+    }
+
+    :public object method form_name_based_attribute_stem {formName} {
+      #
+      # Produce from the provided 'formName' an attribute stem for the
+      # input fields of this form.
+      #
+      set strippedName [lindex [split $formName :] end]
+      regsub -all {[-]} $strippedName _ stem
+      return ${stem}_
+    }
+
+    :public object method get_form_object {{-set_title:boolean true} ctx form_name} {
+      #:msg "renaming_form_loader for form_name <$form_name>"
+      set form_id [$ctx default_load_form_id $form_name]
+      set obj [$ctx object]
+      set form_obj [::xo::db::CrClass get_instance_from_db -item_id $form_id]
+
+      set form     [$form_obj get_property -name form]
+      set fc       [$form_obj get_property -name form_constraints]
+
+      #
+      # Map "answer" to a generic name in the form "@answer@" and in the
+      # form constraints.
+      #
+      set newName [:form_name_based_attribute_stem [$form_obj name]]
+
+      regsub -all {@answer} $form @$newName form
+      set fc [:map_form_constraints $fc "answer" $newName]
+      set disabled_fc [lmap f $fc {
+        if {[string match "$newName*" $f]} { append f ,disabled=true }
+        set f
+      }]
+
+      lappend fc @cr_fields:hidden
+      lappend disabled_fc @cr_fields:hidden
+      #:msg fc=$fc
+
+      $form_obj set_property form $form
+      $form_obj set_property -new 1 form_constraints $fc
+      $form_obj set_property -new 1 disabled_form_constraints $disabled_fc
+
+      return $form_obj
+    }
+
   }
 }
 

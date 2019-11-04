@@ -85,10 +85,11 @@ Action initialize -proc activate {obj} {
   set parent_state [$parent_obj state]
 
   #
-  # Don't allow one to enter values when the state of the master workflow
-  # is not published (e.g. trial mode, or closed) or when try-out-mode
-  # is not set
+  # Don't allow one to enter values when the state of the master
+  # workflow is not published (e.g. trial mode, or closed) or when
+  # teacher is not in the try-out-mode.
   #
+
   if {$parent_state ne "published" && [$obj property try_out_mode 0] == 0} {
     #:msg "LOCKED"
     set current_state [$obj property _state]
@@ -96,13 +97,14 @@ Action initialize -proc activate {obj} {
     set lockin_msg(initial) "#xowf.online-exam-not-published#"
     set lockin_msg(done) "#xowf.online-exam-finished#"
 
-    foreach a [Action info instances] {
-      if {[namespace tail $a] eq "logout"} continue
-      $a next_state $lockin_state
-      $a proc activate {obj} [list util_user_message -message $lockin_msg($lockin_state)]
-      $a set_property position 0
-      $a set_property current_form ""
-    }
+    util_user_message -message $lockin_msg($lockin_state)
+    #
+    # Force the user in the done state. Alternatively, we could
+    # provide a different form or push the user to some other state.
+    #
+    set ctx [:wf_context]
+    $ctx set_current_state $lockin_state
+
   } else {
     #:msg "not LOCKED"
   }
@@ -222,91 +224,14 @@ State done \
 #
 # Field-renaming form loader
 #
-# The renaming is performed for simple plain HTML forms and forms with
-# @answers.
-#
-:proc map_form_constraints {form_constraints oldName newName} {
-  return [lmap f $form_constraints {
-    #:msg check?'$f'
-    if {[string match "${oldName}*" $f]} {
-      regsub $oldName $f $newName f
-      if {[string match "*answer=$oldName*" $f]} {
-        regsub answer=$oldName $f answer=$newName f
-        #:log "MAP VALUE=answer=$oldName => answer=$newName "
-      }
-    }
-    set f
-  }]
-}
 
-:proc get_question_form_object {ctx form_name} {
-  #:msg "renaming_form_loader for form_name <$form_name>"
-  set form_id [$ctx default_load_form_id $form_name]
+proc get_question_form_object {ctx form_name} {
   set obj [$ctx object]
-  set form_obj [::xo::db::CrClass get_instance_from_db -item_id $form_id]
-
-  set form     [$form_obj get_property -name form]
-  #set fc      [:get_form_constraints]
-  set fc       [$form_obj get_property -name form_constraints]
 
   #
-  # Map "answer" to a generic name in the form "@answer@" and in the
-  # form constraints
+  # Load the form.
   #
-  set strippedName [lindex [split [$form_obj name] :] end]
-  regsub -all {[-]} $strippedName _ formName
-  set newName ${formName}_a; #$counter
-
-  regsub -all {@answer} $form @$newName form
-
-  set fc [:map_form_constraints $fc "answer" $newName]
-  set disabled_fc [lmap f $fc {
-    if {[string match "$newName*" $f]} { append f ,disabled=true }
-    set f
-    }]
-
-  lappend fc @cr_fields:hidden
-  lappend disabled_fc @cr_fields:hidden
-  #:msg fc=$fc
-
-  dom parse -simple -html $form doc
-  set prefix [lindex [split [$form_id name] :] end]-a
-  set counter 0
-  $doc documentElement root
-  if {$root ne ""} {
-    $root setAttribute id "online-exam-answer"
-    foreach node [$root selectNodes "//textarea|//input"] {
-      set oldName [$node getAttribute name]
-      set newName $prefix[incr counter]
-      #:log "rename= $oldName -> '$newName'"
-      set fc [:map_form_constraints $fc $oldName $newName]
-      set disabled_fc [:map_form_constraints $disabled_fc $oldName $newName]
-      set disabled_fc [lmap f $disabled_fc {
-        if {[string match "$newName*" $f]} { append f ,disabled=true }
-        set f
-      }]
-      $node setAttribute name $newName
-      if {[$node hasAttribute value]} {
-        set oldValue [$node getAttribute value]
-        if {$oldValue eq $oldName} {
-          $node setAttribute value $newName
-        }
-      }
-      #lappend fc $newName:richtext,editor=xinha,slim=true
-    }
-    $form_obj set_property form [$root asHTML]
-    #:log "FORM-DOM\n[$root asHTML]"
-  }
-  #
-  # The computation and setting of the form_constraints has
-  # no effect, when the input field is provided raw in the form
-  # (e.g. as a handcoded textarea), but it is useful for other cases.
-  #
-  #:log "FORM\n$form"
-  #:log "updating form_constraints to -> [llength $fc]\n[join $fc \n]"
-  #:log "updating disabled_form_constraints to -> [llength $disabled_fc] \n[join $disabled_fc \n]"
-  $form_obj set_property -new 1 form_constraints $fc
-  $form_obj set_property -new 1 disabled_form_constraints $disabled_fc
+  set form_obj [::xowf::test_item::renaming_form_loader get_form_object $ctx $form_name]
 
   #
   # Update IP address each time the form is loaded.
@@ -315,17 +240,20 @@ State done \
     $obj set_property ip [expr {[ns_conn isconnected] ? [ad_conn peeraddr] : "nowhere"}]
   }
 
-  :set_title $obj -question 1 -minutes [:minutes_string $form_obj]
+  #
+  # Update the title of the page
+  #
+  :set_title $obj -question true -minutes [:minutes_string $form_obj]
 
   return $form_obj
 }
 
 
 #
-# Set "title" with question and user information
+# Set "title" with question and user information.
 #
 :proc set_title {obj {-question:boolean true} {-minutes ""}} {
-  set t [list ]
+  set t [list]
   set state [$obj state]
   set position [$obj property position]
   if {$question && $state eq "working"} {
@@ -336,9 +264,9 @@ State done \
     lappend title $titleString
   }
   lappend title \
-      "@wfTitle@" \
+      "[$obj title]" \
       "IP: [$obj property ip]"
-
+  #ns_log notice "SETTING $obj title [join $title { · }] (Container)"
   $obj title [join $title " · "]
 }
 
@@ -366,7 +294,7 @@ State done \
 }
 
 #
-# Form loader for summary (shows all submission of a user)
+# Form loader for summary (shows all submission data of a user)
 #
 # This form loader is also called indirectly by www-print-answers of
 # oneline-exam.wf
@@ -375,12 +303,11 @@ State done \
   set obj [$ctx object]
   #:msg "summary_form_loader $form_title [$obj instance_attributes]"
 
-  #:set_title -question 0
   set summary_form ""
   set fc {}
   set counter 0
   foreach form_name [$obj property pages] {
-    set form_obj [:get_question_form_object $ctx $form_name]
+    set form_obj [::xowf::test_item::renaming_form_loader get_form_object $ctx $form_name]
     set title [lindex [$obj property titles] $counter]
     set minutes [:minutes_string $form_obj]
     append summary_form \
@@ -390,18 +317,14 @@ State done \
     lappend fc {*}[$form_obj property disabled_form_constraints]
   }
 
-  #set correct [$i answer_is_correct]
-  #append question_form "<br><hr>correct $correct<hr>"
-  #:log "render_content [$i name] ([$i info class]) [$i procsearch render_content] correct=$correct"
+  :set_title $obj -question 0
 
-  # Disable all raw input fields and remove wrapping form
-  regsub -all {<textarea } $summary_form {<textarea disabled='disabled' } summary_form
-  regsub -all {<input } $summary_form {<input disabled='disabled' } summary_form
+  # get rid of all inner forms
   regsub -all {</?form[^>]*>} $summary_form {} summary_form
-  #:msg "final fc $fc"
 
   return [::xowiki::Form new \
-              -set name en:summary \
+              -name en:summary \
+              -title "Summary" \
               -form [list <form><div>$summary_form</div></form> text/html] \
               -text {} \
               -anon_instances t \
@@ -420,9 +343,10 @@ State done \
 
   set ctx [:wf_context]
   set container [$ctx wf_container]
-  $ctx forward get_question_form_object $container %proc $ctx
-  $ctx forward summary_form $container %proc $ctx
-
+  if {$ctx ne $container} {
+    $ctx forward get_question_form_object $container %proc $ctx
+    $ctx forward summary_form $container %proc $ctx
+  }
   set working_state_object [$ctx wf_definition_object working]
   $working_state_object set form [:property current_form]
   # fallback if the current_form isn't set
