@@ -2151,18 +2151,6 @@ namespace eval ::xowf {
     return $count
   }
 
-  # Some example hstore queries (over all revisions)
-  #    select hkey from xowiki_page_instance where hkey is not null;
-  #    select hkey from xowiki_page_instance where defined(hkey, 'team_email');
-  #    select hkey from xowiki_page_instance where exist(hkey, 'team_email');
-  #    select hkey from xowiki_page_instance where  'team_email=>neumann@wu-wien.ac.at' <@ hkey;
-  #    select (each(hkey)).key, (each(hkey)).value from xowiki_page_instance;
-  #    select page_instance_id, (each(hkey)).key, (each(hkey)).value from xowiki_page_instance
-  #        where 'assignee=>539,priority=>1' <@ hkey;
-  #    select key, count(*) from (select (each(hkey)).key from xowiki_page_instance) as stat
-  #        group by key order by count desc, key;
-  #
-
 }
 
 
