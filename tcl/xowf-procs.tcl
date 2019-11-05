@@ -2151,40 +2151,6 @@ namespace eval ::xowf {
     return $count
   }
 
-  ad_proc update_hstore {package_id} {
-    update all instance attributes in hstore
-  } {
-    if {![::xo::dc has_hstore] && [::$package_id get_parameter use_hstore 0] } {
-      return 0
-    }
-    #
-    # This proc can be used from ds/shell as follows
-    #
-    #    ::xowf::Package initialize -url /xowf
-    #    ::xowf::update_hstore $package_id
-    #
-    # Check the result
-    #
-    #    select hkey from xowiki_page_instance where hkey is not null;
-    #
-    ::xowf::Package initialize -package_id $package_id
-    #
-    # we get all revisions, so use the lower level interface
-    #
-    set items [::xowiki::FormPage instantiate_objects \
-                   -sql "select * from xowiki_form_pagei bt,cr_items i \
-                where bt.object_package_id = $package_id and bt.item_id = i.item_id" \
-                   -object_class ::xowiki::FormPage]
-    set count 0
-    foreach i [$items children] {
-      #$i msg "working on [$i set xowiki_form_page_id]"
-      $i save_in_hstore
-      incr count
-    }
-    $items msg "fetched $count objects from parent_id [::$package_id folder_id]"
-    return 1
-  }
-
   # Some example hstore queries (over all revisions)
   #    select hkey from xowiki_page_instance where hkey is not null;
   #    select hkey from xowiki_page_instance where defined(hkey, 'team_email');
