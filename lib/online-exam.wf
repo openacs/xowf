@@ -359,7 +359,9 @@ Action instproc unpublish_link {obj} {
     set wf [[$ctx wf_container] get_answer_wf [self]]
     if {$wf ne ""} {
       set items [[$ctx wf_container] get_wf_instances $wf]
-
+      set withSignature [expr {[dict exists ${:instance_attributes} signature]
+                               ? [dict get ${:instance_attributes} signature]
+                               : 0 }]
       set examTitle ${:title}
       foreach i [$items children] {
         set uid [$i property _creation_user]
@@ -380,10 +382,24 @@ Action instproc unpublish_link {obj} {
         #
         $i set __feedback_mode 2
         set question_form [$i render_content]
-
+        
+        if {$withSignature} {
+          set answerAttributes [xowf::test_item::renaming_form_loader \
+                                    answer_attributes [$i instance_attributes]]
+          set sha256 [ns_md string -digest sha256 $answerAttributes]
+          set signatureString "<div class='signature'>Aktuelle Signatur: $sha256</div>\n"
+          set submissionSignature [$i property signature ""]
+          if {$submissionSignature ne ""} {
+            append signatureString "<div>Abgabe Signatur: $submissionSignature<div>\n"
+          }
+        } else {
+          set signatureString ""
+        }
+        
         append HTML "\n<div class='single_exam'>" \
             "<h1>$examTitle - IP [$i property ip]</h1>" \
             "<h2>$userName · [::xo::get_user_name $uid] · $pretty_date</h2>" \
+            $signatureString \
             $question_form \
             "</div>\n"
       }

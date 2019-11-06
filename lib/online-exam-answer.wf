@@ -140,7 +140,10 @@ Action nextQuestion \
 
 Action review \
     -next_state done \
-    -label #xowf.online-exam-review#
+    -label #xowf.online-exam-review# \
+    -proc activate {obj} {
+      [[$obj wf_context ] wf_container] addSignature $obj
+    }
 
 Action save \
     -label #xowf.online-exam-save#
@@ -148,6 +151,7 @@ Action save \
 Action logout \
     -label #xowf.online-exam-submit# \
     -proc activate {obj} {
+      [[$obj wf_context ] wf_container] addSignature $obj
       set pid [$obj package_id]
       set try_out_mode [$obj property try_out_mode 0]
       set return_url [$obj property return_url .]
@@ -217,14 +221,13 @@ State done \
 
 ########################################################################
 #
-# Helper methods for the workflow context
+# Helper methods for the workflow container
 #
 ########################################################################
 
 #
 # Field-renaming form loader
 #
-
 proc get_question_form_object {ctx form_name} {
   set obj [$ctx object]
 
@@ -248,7 +251,6 @@ proc get_question_form_object {ctx form_name} {
   return $form_obj
 }
 
-
 #
 # Set "title" with question and user information.
 #
@@ -264,7 +266,7 @@ proc get_question_form_object {ctx form_name} {
     lappend title $titleString
   }
   lappend title \
-      "[$obj title]" \
+      [$obj title] \
       "IP: [$obj property ip]"
   #ns_log notice "SETTING $obj title [join $title { · }] (Container)"
   $obj title [join $title " · "]
@@ -331,6 +333,15 @@ proc get_question_form_object {ctx form_name} {
               -form_constraints [lsort -unique $fc]]
 }
 
+:proc addSignature {obj} {
+  set answerAttributes [xowf::test_item::renaming_form_loader \
+                            answer_attributes [$obj instance_attributes]]
+  set sha256 [ns_md string -digest sha256 $answerAttributes]
+  $obj set_property -new true signature $sha256
+  return $sha256
+}
+
+
 ########################################################################
 #
 # Object specific operations
@@ -338,7 +349,9 @@ proc get_question_form_object {ctx form_name} {
 ########################################################################
 
 :object-specific {
-  # ensure default value is updated for each instance individually
+  #
+  # Ensure default value is updated for each instance individually.
+  #
   Property ip -default [expr {[ns_conn isconnected] ? [ad_conn peeraddr] : "nowhere"}]
 
   set ctx [:wf_context]
