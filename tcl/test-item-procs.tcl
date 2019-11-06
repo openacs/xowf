@@ -838,6 +838,17 @@ namespace eval ::xowf::test_item {
       return ${stem}_
     }
 
+
+    :public object method answer_attributes {instance_attributes} {
+      set result ""
+      foreach key [lsort [dict keys $instance_attributes]] {
+        if {[string match *_ $key]} {
+          lappend result $key [dict get $instance_attributes $key]
+        }
+      }
+      return $result
+    }
+
     :public object method get_form_object {{-set_title:boolean true} ctx form_name} {
       #:msg "renaming_form_loader for form_name <$form_name>"
       set form_id [$ctx default_load_form_id $form_name]
