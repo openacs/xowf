@@ -19,13 +19,16 @@
   <msg key="lines">Zeilen</msg>
   <msg key="menu-New-Extra-Workflow">Neuer Workflow</msg>
   <msg key="answer">Antwort</msg>
-  <msg key="answer_lines">Antwortzeiten</msg>
+  <msg key="answers">Antworten</msg>
+  <msg key="submitted_answers">Abgegebene Antworten</msg>
+  <msg key="answer_lines">Antwortzeilen</msg>
   <msg key="answer_columns">Antwortspalten</msg>
   <msg key="correct_when">Richig wenn...</msg>
   <msg key="online-exam-draft_exam">Prüfungsentwurf (Prüfung nicht freigeschaltet)</msg>
   <msg key="online-exam-open">Prüfung ist freigeschaltet</msg>
   <msg key="online-exam-closed">Prüfung ist geschlossen</msg>
   <msg key="question">Frage</msg>
+  <msg key="questions">Fragen</msg>  
   <msg key="first_question">Erste Frage</msg>  
   <msg key="next_question">Nächste Frage</msg>
   <msg key="previous_question">Vorherige Frage</msg>  
@@ -41,11 +44,39 @@
   <msg key="online-exam-republish">Schalte Prüfung nochmals frei</msg>
   <msg key="refresh">Aktualisieren</msg>
   <msg key="print">Drucken</msg>
+  
   <msg key="online-exam-exam_instances">Liste der Bearbeitungen</msg>
-  <msg key="online-exam-try_out">Wollen Sie einen Probelauf druchführen?</msg>
+  <msg key="online-exam-try_out">Wollen Sie einen Probelauf durchführen?</msg>
   <msg key="online-exam-can_answer">Studierende können die Fragen mit folgendem Link beantworten</msg>    
   <msg key="testrun">Probelauf</msg>
   <msg key="online-exam-not-published">Die Prüfung ist von der Aufsicht nicht freigegeben!</msg>
   <msg key="online-exam-finished">Die Prüfungszeit ist beendet</msg>
+  <msg key="online-exam-protocol">Prüfungsprotokoll</msg>
+  <msg key="online-exam-submitted_exams_heading">Abgegebene Prüfungen</msg>
+  <msg key="online-exam-submitted_exams_msg">Studierende haben eine Prüfung abgegeben</msg>
+
+  <msg key="participants_answered_question">Teilnehmer haben diese Frage beantwortet</msg>
+  <msg key="please_answer">Bitte beantworten Sie</msg>
+  <msg key="results">Ergebnisse</msg>
+  <msg key="results_of">Ergebnisse von</msg>
+  <msg key="inclass-quiz-unpublish">Quiz beenden</msg>
+  <msg key="inclass-quiz-save">Antwort speichern</msg>
+  <msg key="inclass-quiz-draft">Entwurf (Quiz ist nicht freigegeben)</msg>
+  <msg key="inclass-quiz-submit">Abgabe</msg>
+  <msg key="inclass-quiz-publish">Gebe Quiz frei</msg>
+  <msg key="inclass-quiz-waiting_for_next">Warte auf nächste Frage ...</msg>
+  <msg key="inclass-quiz-not_available">Der Quiz kann derzeit nicht beantwortet werden</msg>
+  <msg key="inclass-quiz-already_answered">Sie haben Frage %number% beantwortet</msg>
+  <msg key="Shuffle">Zufallsauswahl</msg>  
+  <msg key="shuffle_none">Nie</msg>
+  <msg key="shuffle_peruser">Pro Benutzer</msg>
+  <msg key="shuffle_always">Immer</msg>  
+
+  <msg key="short_text_question">Kurztextfrage</msg>
+  <msg key="sc_question">Single-Choice-Frage</msg>
+  <msg key="mc_question">Multiple-Choice-Frage</msg>
+  <msg key="text_question">Textfrage</msg>    
+  <msg key="sub_question">Teilfrage</msg>
+  <msg key="show_max">Zeige maximal</msg>
 
 </message_catalog>

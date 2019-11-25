@@ -4,12 +4,12 @@
 # ========================================================
 #
 # This workflow lets a teacher choose from a predefined set of exam
-# questions, which are typically open text questions.  The teacher
-# selects one or several exam question via drag and drop. The teacher
+# questions, which are typically open text questions.  A teacher
+# selects one or several exam questions via drag and drop. The teacher
 # can test the exam by entering test answers. The results are provided
 # in form of a table.
 #
-# When the teacher is satisfied with the exam, the exam can be
+# When a teacher is satisfied with the exam, the exam can be
 # published. In this step, all answers of the testing phase are
 # deleted. In the process of publishing, the link to start the exam is
 # offered to the user.  When the exam is published, the teacher can
@@ -19,26 +19,39 @@
 # the results via csv), or the teacher can produce a printer friendly
 # version of the answers.
 #
-# You might with to add the following entries to the folder to ease
+# An admin might with to add the following entries to the folder to ease
 # creation of exercises and exams
 #
 #   {entry -name New.App.TextInteraction -label "Text Interaction" -form en:TestItemText.form}
-#   {entry -name New.App.TextEntryInteraction -label "Text Entry Interaction" -form en:TestItemTextEntry.form}
+#   {entry -name New.App.ShortTextInteraction -label "Short Text Interaction" -form en:TestItemShortText.form}
 #   {entry -name New.App.MCInteraction -label "MC Interaction" -form en:TestItemMC.form}
+#   {entry -name New.App.SCInteraction -label "SC Interaction" -form en:TestItemSC.form}
 #   {entry -name New.App.Exam -label Exam -form en:online-exam.wf}
+#
+# The policy has to allow the following methods on FormPages:
+#
+#  - "answer" (for students),
+#  - "edit" (for students),
+#  - "poll" (for teachers),
+#  - "print-answers" (for teachers),
+#  - "delete" (for teachers),
 #
 # Gustaf Neumann, Feb 2012
 ########################################################################
-set :autoname 1
-set :debug 1
-#set :masterWorkflow //xowf/de:workflow.wf
-set :masterWorkflow en:Workflow.form
+set :autoname 1   ;# to avoid editable name field
+set :policy ::xowf::test_item::test-item-policy-publish
+set :debug 0
+set :live_updates 0
 
-Action select -next_state created -label #xowf.online-exam-select#
-Action publish -next_state published -label #xowf.online-exam-publish#
+Action select -next_state created -label #xowf.online-exam-select# \
+    -title #xowf.online-exam-title-select#
+Action publish -next_state published -label #xowf.online-exam-publish# \
+    -title #xowf.online-exam-title-publish#
 Action unpublish -next_state done -label #xowf.online-exam-unpublish#
-Action republish -next_state published -label #xowf.online-exam-republish#
-Action restart -next_state initial -label #xowf.restart#
+Action republish -next_state published -label #xowf.online-exam-republish# \
+    -title #xowf.online-exam-title-republish#
+Action restart -next_state initial -label #xowf.restart# \
+    -title #xowf.online-exam-title-restart#
 
 State parameter {
   {extra_css {/resources/xowf/test-item.css}}
@@ -56,7 +69,9 @@ State done -actions {republish restart} -form_loader load_form -view_method edit
 # exercises, the answer workflow is created.
 #
 select proc activate {obj} {
-  [[$obj wf_context] wf_container] create_answer_workflow $obj
+  xowf::test_item::answer_manager create_workflow \
+      -answer_workflow /packages/xowf/lib/online-exam-answer.wf \
+      $obj
 }
 
 ########################################################################
@@ -64,7 +79,7 @@ select proc activate {obj} {
 # publish user participation link.
 #
 publish proc activate {obj} {
-  [[$obj wf_context] wf_container] delete_all_answer_data $obj
+  xowf::test_item::answer_manager delete_all_answer_data $obj
   :publish_link $obj
 }
 
@@ -84,107 +99,14 @@ unpublish proc activate {obj} {
 }
 
 ########################################################################
-# create_answer_workflow: create a workflow based on the template
-# provided in this method for answering the question for the
-# students. The name of the workflow is derived from the workflow
-# instance and recorded in the formfield "wfName".
-#
-:proc create_answer_workflow {obj} {
-  #:log "create_answer_workflow $obj"
-
-  # first delete workflow and data, when it exists
-  if {[$obj property wfName] ne ""} {
-    set wf [:delete_all_answer_data $obj]
-    if {$wf ne ""} {$wf delete}
-  }
-
-  # create a fresh workflow
-  set wfName [$obj name].wf
-  $obj set_property -new 1 wfName $wfName
-
-  set wfMaster ${:masterWorkflow}
-  set wfTitle [$obj property _title]
-  set questionObjs [[[$obj wf_context] wf_container] get_questions $obj]
-  set wfQuestionNames {}
-  set wfQuestionTitles {}
-  set attributeNames {}
-  foreach form_obj $questionObjs {
-
-    lappend attributeNames [xowf::test_item::renaming_form_loader \
-                                form_name_based_attribute_stem [$form_obj name]]
-
-    lappend wfQuestionNames ../[$form_obj name]
-    lappend wfQuestionTitles [$form_obj title]
-  }
-  set wfID [$obj item_id]
-
-  set wfDef [subst -nocommands {
-    set wfID $wfID
-    set wfTitle "$wfTitle"
-    set wfQuestionNames [list $wfQuestionNames]
-    set wfQuestionTitles [list $wfQuestionTitles]
-    xowf::include /packages/xowf/lib/online-exam-answer.wf [list wfID wfTitle wfQuestionNames wfQuestionTitles]
-  }]
-  set attributeNames [join $attributeNames ,]
-
-  #:log "create workflow by filling out form '$wfMaster'"
-  set WF [::xowiki::Weblog instantiate_forms \
-              -parent_id [$obj parent_id] -package_id [$obj package_id] \
-              -default_lang [$obj lang] \
-              -forms $wfMaster]
-  set f [$WF create_form_page_instance \
-             -name $wfName \
-             -nls_language [$obj nls_language] \
-             -publish_status ready \
-             -parent_id [$obj item_id] \
-             -package_id [$obj package_id] \
-             -default_variables [list title $wfTitle] \
-             -instance_attributes [list workflow_definition $wfDef \
-                                       form_constraints "@table:_name,_state,$attributeNames,_last_modified @cr_fields:hidden"]]
-  $f save_new
-  #:log "create_answer_workflow $obj DONE [$f pretty_link]"
-}
-
-########################################################################
-# get_answer_wf: return the workflow denoted by the property wfName in obj
-#
-:proc get_answer_wf {obj} {
-  return [::xowiki::Weblog instantiate_forms \
-              -parent_id [$obj item_id] -package_id [$obj package_id] \
-              -default_lang [$obj lang] \
-              -forms [$obj property wfName]]
-}
-
-########################################################################
-# get_wf_instances: return the workflow instances
-#
-:proc get_wf_instances {{-initialize false} wf} {
-  return [::xowiki::FormPage get_form_entries \
-              -base_item_ids [$wf item_id] -form_fields "" \
-              -always_queried_attributes "*" -initialize $initialize \
-              -publish_status all -package_id [$wf package_id]]
-}
-
-########################################################################
-# delete_all_answer_data: delete all instances of the answer workflow
-#
-:proc delete_all_answer_data {obj} {
-  set wf [:get_answer_wf $obj]
-  if {$wf ne ""} {
-    set items [:get_wf_instances -initialize false $wf]
-    foreach i [$items children] { $i delete }
-  }
-  return $wf
-}
-
-########################################################################
 # publish_link: make the user participation link available for the
 # target group
 #
 Action instproc publish_link {obj} {
   set aLink [$obj pretty_link -query m=answer]
-  util_user_message -html -message "[$obj name] is available as <a target='_blank' href='[ns_quotehtml $aLink]'>[ns_quotehtml $aLink]</a>"
-  # TODO: make it happen
+  util_user_message -html \
+      -message "[$obj name] is available as <a target='_blank' href='[ns_quotehtml $aLink]'>[ns_quotehtml $aLink]</a>"
+  # TODO: make it happen in the LMS
 }
 
 ########################################################################
@@ -193,77 +115,26 @@ Action instproc publish_link {obj} {
 #
 Action instproc unpublish_link {obj} {
   util_user_message -html -message "[$obj name] is closed</a>"
-  # TODO: make it happen
+  # TODO: make it happen in the LMS
 }
-
-
-
-
-########################################################################
-# get_questions: load and initialize the interaction forms
-#
-:proc get_questions {obj} {
-  set questions [lmap ref [$obj property question] {
-    if {![string match "*/*" $ref]} {
-      set ref [[$obj parent_id] name]/$ref
-    }
-    set ref
-  }]
-  set questionNames [join $questions |]
-  set questionForms [::xowiki::Weblog instantiate_forms \
-                         -package_id [$obj package_id] \
-                         -default_lang [$obj lang] \
-                         -forms $questionNames]
-  if {[llength $questionForms] < 1} {
-    error "unknown form $questionNames"
-  }
-  #:msg "questionNames '$questionNames', questionForms 'questionForms'"
-  return $questionForms
-}
-
 
 ########################################################################
 # form loader: create dynamically a form containing the disabled
 # questions as a preview and the survey results (the results can be
-# refreshed). This is a simplified version of get_question_form_object
-# of online-exam-answer.wf.
+# refreshed). 
 #
 :proc load_form {ctx title} {
   set obj [$ctx object]
   set state [$obj property _state]
 
-  set questions [:get_questions $obj]
-  set counter 0
-  set fullQuestionForm ""
-  set full_fc {}
-  foreach q $questions {
-    set raw_form [$q property form]
-    set raw_fc [$q property form_constraints]
-    set newName answer$counter
-
-    regsub {@answer@} $raw_form "@$newName@" formContent
-    set fc [lmap f $raw_fc {
-      if {[string match "answer:*" $f]} {
-        regsub answer $f $newName f
-        append f ,disabled=true
-      }
-      set f}]
-
-    append fullQuestionForm \
-        "<h3>#xowf.question# [incr counter]</h3>\n" \
-        $formContent
-    lappend full_fc {*}$fc
-  }
-  set full_fc [lsort -unique $full_fc]
-  #:log fullQuestionForm=$fullQuestionForm\n$full_fc
-
-  # Remove wrapping forms
-  regsub -all {</?form[^>]*>} $fullQuestionForm {} fullQuestionForm
+  set combined_form_info [::xowf::test_item::question_manager combined_question_form -with_numbers $obj]
+  set fullQuestionForm [dict get $combined_form_info form]
+  set full_fc [dict get $combined_form_info disabled_form_constraints]
 
   #:log  fullQuestionForm=$fullQuestionForm
   set text "<h2>$title</h2>"
 
-  set wf [:get_answer_wf $obj]
+  set wf [xowf::test_item::answer_manager get_answer_wf $obj]
   if {$wf eq ""} {
     :msg "cannot get current workflow for [$obj name]"
     set lLink "."
@@ -273,18 +144,20 @@ Action instproc unpublish_link {obj} {
     set menu ""
   } else {
     set wf_pretty_link [$wf pretty_link]
-    set tLink "$wf_pretty_link?m=create-new&p.return_url=[::xo::cc url]&p.try_out_mode=1"
+    set tLink [export_vars -base $wf_pretty_link {
+      {m create-new} {p.return_url "[::xo::cc url]"} {p.try_out_mode 1} {title "[$obj title]"}
+    }]
     set lLink "$wf_pretty_link?m=list"
     set aLink [$obj pretty_link -query m=answer]
     set pLink [$obj pretty_link -query m=print-answers]
     #util_user_message -html -message "$survey is available as <a target='_blank' href='$pLink'>$pLink</a>"
     set menu "\[<a href='[ns_quotehtml [::xo::cc url]]'>#xowf.refresh#</a>,\
          <a href='[ns_quotehtml $lLink]'>#xowf.online-exam-exam_instances#</a>,\
-         <a href='[ns_quotehtml $pLink]'>#xowf.print#</a>\]"
+         <a href='[ns_quotehtml $pLink]'>#xowf.online-exam-protocol#</a>\]"
   }
 
   set extraAction ""
-  switch [$obj property _state] {
+  switch $state {
     "created"   {
       append extraAction "<br>" \
           "#xowf.online-exam-try_out# " \
@@ -296,15 +169,30 @@ Action instproc unpublish_link {obj} {
           "<a href='$aLink'>$aLink</a>"
     }
   }
-  append text "$menu $extraAction\n"
+  if {$state in {published done}} {
+    if {$state eq "done"} {
+      [$ctx object] setCSSDefaults
+      set marked [xowf::test_item::answer_manager marked_results $wf $combined_form_info]
+    }
+    set answerStats [xowf::test_item::answer_manager answers_panel \
+                         -heading "#xowf.online-exam-submitted_exams_heading#" \
+                         -submission_msg "#xowf.online-exam-submitted_exams_msg#" \
+                         -polling=[expr {${:live_updates} && $state ne "done"}] \
+                         -manager_obj $obj \
+                         -target_state done \
+                         -wf $wf]
+  } else {
+    set answerStats ""    
+  }
 
-  set wfName [$obj property wfName]
-  set report [expr {$wfName ne ""
-                    ? "{{form-stats -parent_id [$obj item_id] -form $wfName}}\n"
-                    : ""}]
-  append report "<br> $menu"
+  append text "$menu $answerStats\n"  
+  append report "$menu $extraAction"
 
+  # Remove wrapping forms
+  regsub -all {</?form[^>]*>} $fullQuestionForm {} fullQuestionForm
+  
   set f [::xowiki::Form new \
+             -destroy_on_cleanup \
              -set name en:question \
              -form [subst {<form>$text<div class='exam-preview'>$fullQuestionForm</div>$report</form> text/html}] \
              -text {} \
@@ -321,21 +209,14 @@ Action instproc unpublish_link {obj} {
 
 :object-specific {
 
-  ########################################################################
-  #
-  # Helper methods for the workflow context
-  #
-  ########################################################################
-
   set ctx [:wf_context]
   set container [$ctx wf_container]
   if {$ctx ne $container} {
     $ctx forward load_form $container %proc $ctx
   }
 
-  ########################################################################
-  # Extern callable methods
-  ########################################################################
+  ${container}::Property return_url -default "" -allow_query_parameter true
+  ::xo::cc unset_query_parameter return_url
 
   ########################################################################
   # web-callable method "delete"
@@ -343,8 +224,7 @@ Action instproc unpublish_link {obj} {
   # Delete the workflow instance and all its associated data.
   #
   :proc www-delete {} {
-    set ctx [::xowf::Context require [self]]
-    [$ctx wf_container] delete_all_answer_data [self]
+    xowf::test_item::answer_manager delete_all_answer_data [self]
     next
   }
 
@@ -356,9 +236,9 @@ Action instproc unpublish_link {obj} {
   :proc www-print-answers {} {
     set HTML ""
     set ctx [::xowf::Context require [self]]
-    set wf [[$ctx wf_container] get_answer_wf [self]]
+    set wf [xowf::test_item::answer_manager get_answer_wf [self]]
     if {$wf ne ""} {
-      set items [[$ctx wf_container] get_wf_instances $wf]
+      set items [xowf::test_item::answer_manager get_wf_instances $wf]
       set withSignature [expr {[dict exists ${:instance_attributes} signature]
                                ? [dict get ${:instance_attributes} signature]
                                : 0 }]
@@ -397,46 +277,55 @@ Action instproc unpublish_link {obj} {
         }
         
         append HTML "\n<div class='single_exam'>" \
-            "<h1>$examTitle - IP [$i property ip]</h1>" \
-            "<h2>$userName · [::xo::get_user_name $uid] · $pretty_date</h2>" \
+            "<h2>$userName · [::xo::get_user_name $uid] · $pretty_date · IP [$i property ip]</h2>" \
             $signatureString \
             $question_form \
             "</div>\n"
       }
     }
 
-    if {$HTML ne ""} {
-      ns_return 200 text/html [subst {<!DOCTYPE HTML>
-        <html><head><meta http-equiv='content-type' content='text/html; charset=utf-8' />
-        <link rel="stylesheet" href="/resources/openacs-bootstrap3-theme/bootstrap/3.4.1/css/bootstrap.min.css" type="text/css" media="all">
-        <link rel="stylesheet" href="/resources/openacs-bootstrap3-theme/css/main.css" type="text/css" media="all">
-        <link rel="stylesheet" href="/resources/openacs-bootstrap3-theme/css/color/grey.css" type="text/css" media="all">
-        <link rel="stylesheet" href="/resources/xowf/test-item.css" type="text/css" media="all">
-        </head>
-        <body>$HTML
-      }]
+    if {$HTML eq ""} {
+      set HTML "#xowiki.no_data#"
     } else {
-      util_user_message -html -message "No answer data available"
-      ad_returnredirect [::xo::cc url]
+      set HTML "<h1>#xowf.online-exam-protocol#</h1>$HTML"
     }
-    ad_script_abort
+    ::xo::cc set_parameter template_file view-plain-master
+    ::xo::cc set_parameter MenuBar 0
+    xo::Page requireCSS /resources/xowf/test-item.css
+    :www-view $HTML
   }
 
   ########################################################################
   # web-callable method "answer"
   #
-  # answer the exam; this is a convenience routine to shorten
-  # the published URL; make sure that no-one tries to start the answer
-  # workflow in a state different to "published".
+  # Create or use an answering workflow for the current exam. This is
+  # a convenience routine to shorten the published URL.
   #
   :proc www-answer {} {
+    #
+    # Make sure that no-one tries to start the answer workflow in a
+    # state different to "published".
+    #
     if {[:property _state] ne "published"} {
       util_user_message -html -message "Cannot start answer workflow in this state"
     } else {
-      set ctx [::xowf::Context require [self]]
-      set wf [[$ctx wf_container] get_answer_wf [self]]
+      set wf [xowf::test_item::answer_manager get_answer_wf [self]]
       $wf www-create-or-use -parent_id [:item_id]
     }
+  }
+
+  ########################################################################
+  # AJAX call "poll"
+  #
+  # Return statistics about working and finished exams.
+  #
+  :proc www-poll {} {
+    set wf [xowf::test_item::answer_manager get_answer_wf [self]]
+    set answers [xowf::test_item::answer_manager get_answers $wf]
+    set answered [xowf::test_item::answer_manager get_answers -state done $wf]
+    ns_return 200 text/plain [llength $answered]/[llength $answers]
+    #ns_log notice "MASTER POLL [self] ${:name}, returned [llength $answered]/[llength $answers]"
+    ad_script_abort
   }
 }
 

@@ -5,60 +5,28 @@
 # to create the exam, to try it out and to publish it
 # (online-exam.wf).
 #
-# This workflow is similar to the classical "iterate.wf" but is more
-# configurable (the answer forms are passed via template
-# variables). The workflow uses a form-loader which renames the input
-# fields to avoid potential name clashes.
+# This workflow is based on the test-item infrastrstructure using
+# the "renaming_form_loader" and "question_manager".
 #
-# Template variables:
-#  @wfTitle@
-#  @wfQuestionNames@
-#  @wfQuestionTitles@
-#  @wfID@
 
-
-set :autoname 1
-set :debug 1
-
-set pages [list @wfQuestionNames@]
-set titles [list @wfQuestionTitles@]
+set :autoname 1   ;# to avoid editable name field
+set :policy ::xowf::test_item::test-item-policy-answser
+set :debug 0
 
 ########################################################################
 #
 # Properties
 #
-# pages: the form pages used as in/out forms
 # position: the current page in the exam
 # return_url: when the exam is finished, the user proceeds to this url
 # try_out_mode: a teacher can try the exam in this mode
-# current_form: used internally to keep the current form
 # ip: IP address of the user, kept in the instance attribute for auditing
 #
 ########################################################################
 
-Property pages -default $pages
-Property titles -default $titles
-Property position -default 0 -allow_query_parameter true
+Property position -default 0
 Property return_url -default "" -allow_query_parameter true
 Property try_out_mode -default 0 -allow_query_parameter true
-Property current_form -default ""
-
-Condition more_ahead \
-    -expr {[$obj property position] < [llength [$obj property pages]]-1}
-
-Condition more_before \
-    -expr {[$obj property position] > 0}
-
-set page_count 1
-set page_actions {}
-foreach page $pages {
-  Action $page_count \
-      -next_state working \
-      -label "$page_count" \
-      -proc activate {obj} [list :goto_page [expr {$page_count -1}]]
-  lappend page_actions $page_count
-  incr page_count
-}
 
 ########################################################################
 #
@@ -67,29 +35,25 @@ foreach page $pages {
 ########################################################################
 
 Action allocate -proc activate {obj} {
-  #:msg "allocate $obj"
   # Called, when we try to create or use a workflow instance
   # via a workflow definition ($obj is a workflow definition)
   $obj set_property -new 1 name ___[::xo::cc set untrusted_user_id]
+  set parent_obj [::xo::db::CrClass  get_instance_from_db -item_id [$obj parent_id]]
+  :payload [list title [$parent_obj title]]
 }
 
 Action initialize -proc activate {obj} {
   # called, after workflow instance was created
 
-  $obj set_property -new 1 _title "@wfTitle@"
-  set parent_id [$obj parent_id]
-  #set package_id [$obj package_id]
-
   # make sure to create the parent (the controlling workflow)
-  set parent_obj [::xo::db::CrClass  get_instance_from_db -item_id $parent_id]
+  set parent_obj [::xo::db::CrClass get_instance_from_db -item_id [$obj parent_id]]
   set parent_state [$parent_obj state]
 
   #
-  # Don't allow one to enter values when the state of the master
-  # workflow is not published (e.g. trial mode, or closed) or when
-  # teacher is not in the try-out-mode.
+  # Don't allow one to enter values when the state of the parent
+  # workflow is not published (the teacher has not published the exam,
+  # or closed it already). Only allow usage in the try-out-mode.
   #
-
   if {$parent_state ne "published" && [$obj property try_out_mode 0] == 0} {
     #:msg "LOCKED"
     set current_state [$obj property _state]
@@ -100,10 +64,9 @@ Action initialize -proc activate {obj} {
     util_user_message -message $lockin_msg($lockin_state)
     #
     # Force the user in the done state. Alternatively, we could
-    # provide a different form or push the user to some other state.
+    # handle this in the provide a different form or push the user to some other state.
     #
-    set ctx [:wf_context]
-    $ctx set_current_state $lockin_state
+    [:wf_context] set_current_state $lockin_state
 
   } else {
     #:msg "not LOCKED"
@@ -111,12 +74,11 @@ Action initialize -proc activate {obj} {
 }
 
 Action instproc goto_page {position} {
-  set pages [:property pages]
   :set_property position $position
-  :set_property current_form [lindex $pages $position]
 }
-Action instproc set_page {increment} {
-  set pages [:property pages]
+Action instproc set_page {obj increment} {
+  set parent_obj [::xo::db::CrClass  get_instance_from_db -item_id [$obj parent_id]]
+  set pages [::xowf::test_item::question_manager question_names $parent_obj]
   set position [:property position 0]
   incr position $increment
   if {$position < 0} {
@@ -124,19 +86,18 @@ Action instproc set_page {increment} {
   } elseif {$position >= [llength $pages]} {
     set position [expr {[llength $pages] - 1}]
   }
-  :set_property position $position
-  :set_property current_form [lindex $pages $position]
+  :goto_page $position
 }
 
 Action prevQuestion \
     -next_state working \
     -label #xowf.previous_question# \
-    -proc activate {obj} {:set_page -1}
+    -proc activate {obj} {:set_page $obj -1}
 
 Action nextQuestion \
     -next_state working \
     -label #xowf.next_question# \
-    -proc activate {obj} {:set_page 1}
+    -proc activate {obj} {:set_page $obj 1}
 
 Action review \
     -next_state done \
@@ -169,14 +130,12 @@ Action start \
     -label #xowf.online-exam-start# \
     -proc activate {obj} {
       $obj set_property position 0
-      $obj set_property current_form [lindex [$obj property pages] 0]
     }
 
 Action start_again \
     -label #xowf.first_question# \
     -next_state working -proc activate {obj} {
       $obj set_property position 0
-      $obj set_property current_form [lindex [$obj property pages] 0]
     }
 
 ########################################################################
@@ -193,28 +152,17 @@ State parameter {
   }}
   {extra_css {
     /resources/xowf/test-item.css
-    ../file:seal.js?m=download
   }}
-  {form_loader get_question_form_object}
 }
 
-State working
-working set page_actions $page_actions
-working proc actions {} {
-  set actions ""
-  if {[more_before]} {lappend actions prevQuestion}
-  set actions [concat $actions ${:page_actions}]
-  if {[more_ahead]} {lappend actions nextQuestion}
-  lappend actions save review
-}
+State working \
+    -form_loader working_form_loader
 
 State initial \
     -actions {start logout} \
     -form "../en:exam-start"
 
-set done_actions [concat $page_actions {start_again logout}]
 State done \
-    -actions $done_actions \
     -form "../en:exam-done" \
     -form_loader summary_form
 
@@ -228,13 +176,19 @@ State done \
 #
 # Field-renaming form loader
 #
-proc get_question_form_object {ctx form_name} {
+proc working_form_loader {ctx form_name} {
   set obj [$ctx object]
+  set position [$obj property position]
+  
+  set parent_id [$obj parent_id]
+  #:msg "waiting_form_loader $form_title [$obj instance_attributes]"
+  set parent_obj [::xo::db::CrClass get_instance_from_db -item_id $parent_id]
+  set parent_state [$parent_obj state]
 
   #
   # Load the form.
   #
-  set form_obj [::xowf::test_item::renaming_form_loader get_form_object $ctx $form_name]
+  set form_obj [::xowf::test_item::question_manager nth_question_obj $parent_obj $position]  
 
   #
   # Update IP address each time the form is loaded.
@@ -246,53 +200,33 @@ proc get_question_form_object {ctx form_name} {
   #
   # Update the title of the page
   #
-  :set_title $obj -question true -minutes [:minutes_string $form_obj]
+  set minutes  [::xowf::test_item::question_manager minutes_string $form_obj]
+
+  :set_title $obj -question true -minutes $minutes
 
   return $form_obj
 }
 
 #
-# Set "title" with question and user information.
+# Set "title" with question/user/IP information.
 #
 :proc set_title {obj {-question:boolean true} {-minutes ""}} {
-  set t [list]
-  set state [$obj state]
-  set position [$obj property position]
-  if {$question && $state eq "working"} {
-    set titleString "[_ xowf.question] [expr {$position + 1}]: [lindex [$obj property titles] $position]"
-    if {$minutes ne ""} {
-      append titleString " $minutes"
-    }
-    lappend title $titleString
+  set parent_obj [::xo::db::CrClass  get_instance_from_db -item_id [$obj parent_id]]  
+  if {$question && [$obj state] eq "working"} {
+    set form_info [::xowf::test_item::question_manager nth_question_form \
+                       -with_numbers \
+                       -position [$obj property position] \
+                       $parent_obj]
+    set question_title [dict get $form_info title_infos title]
+    set number [dict get $form_info title_infos number]
+    set titleString "[_ xowf.question] $number: $question_title $minutes"
+    set title [list [string trim $titleString]]
   }
   lappend title \
-      [$obj title] \
+      [$parent_obj title] \
       "IP: [$obj property ip]"
-  #ns_log notice "SETTING $obj title [join $title { · }] (Container)"
+  #ns_log notice "SETTING $obj title [join $title { · }]"
   $obj title [join $title " · "]
-}
-
-#
-# Get an attribute of the original question
-#
-:proc question_property {form_obj:object attribute {default ""}} {
-  set question [$form_obj get_property -name question]
-  #:msg question=$question
-  if {[dict exists $question question.$attribute]} {
-    set value [dict get $question question.$attribute]
-  } else {
-    set value $default
-  }
-  #:msg "question_property-$attribute='$value' {$question}"
-  return $value
-}
-
-:proc minutes_string {form_obj:object} {
-  set minutes [:question_property $form_obj minutes]
-  if {$minutes ne ""} {
-    set key [expr {$minutes eq "1" ? [_ xowiki.minute] : [_ xowiki.minutes]}]
-    set minutes "($minutes $key)"
-  }
 }
 
 #
@@ -305,32 +239,26 @@ proc get_question_form_object {ctx form_name} {
   set obj [$ctx object]
   #:msg "summary_form_loader $form_title [$obj instance_attributes]"
 
-  set summary_form ""
-  set fc {}
-  set counter 0
-  foreach form_name [$obj property pages] {
-    set form_obj [::xowf::test_item::renaming_form_loader get_form_object $ctx $form_name]
-    set title [lindex [$obj property titles] $counter]
-    set minutes [:minutes_string $form_obj]
-    append summary_form \
-        "<h3>[_ xowf.question] [incr counter]: $title $minutes</h3>" \n \
-        [$form_obj property form] \
-        \n<hr>\n
-    lappend fc {*}[$form_obj property disabled_form_constraints]
-  }
+  set parent_obj [::xo::db::CrClass  get_instance_from_db -item_id [$obj parent_id]]
+  set form_info [::xowf::test_item::question_manager combined_question_form \
+                     -with_numbers \
+                     -with_title \
+                     $parent_obj]
 
-  :set_title $obj -question 0
-
-  # get rid of all inner forms
+  set summary_form [dict get $form_info form]
+  set summary_fc [dict get $form_info disabled_form_constraints]
   regsub -all {</?form[^>]*>} $summary_form {} summary_form
 
+  :set_title $obj -question false
+
   return [::xowiki::Form new \
+              -destroy_on_cleanup \
               -name en:summary \
-              -title "Summary" \
+              -title $form_title \
               -form [list <form><div>$summary_form</div></form> text/html] \
               -text {} \
               -anon_instances t \
-              -form_constraints [lsort -unique $fc]]
+              -form_constraints $summary_fc]
 }
 
 :proc addSignature {obj} {
@@ -357,16 +285,43 @@ proc get_question_form_object {ctx form_name} {
   set ctx [:wf_context]
   set container [$ctx wf_container]
   if {$ctx ne $container} {
-    $ctx forward get_question_form_object $container %proc $ctx
+    $ctx forward working_form_loader $container %proc $ctx
     $ctx forward summary_form $container %proc $ctx
   }
-  set working_state_object [$ctx wf_definition_object working]
-  $working_state_object set form [:property current_form]
-  # fallback if the current_form isn't set
-  if {[$working_state_object set form] eq ""} {
-    $working_state_object set form [lindex [:property pages] 0]
-  }
+set :policy ::xowf::test_item::test-item-policy1
 
+  if {${:state} in {working done}} {
+    set parent_obj [::xo::db::CrClass  get_instance_from_db -item_id [:parent_id]]
+    set question_names [::xowf::test_item::question_manager question_names $parent_obj]
+    set current_position [:property position]
+
+    set actions {}
+    if {$current_position > 0 && ${:state} eq "working"} {
+      lappend actions prevQuestion
+    }
+    set count 0
+    foreach question $question_names {
+      incr count
+      ${container}::::Action ${container}::$count \
+          -label "$count" \
+          -next_state working \
+          -extra_css_class [expr {$current_position == $count - 1 ? "current" : ""}] \
+          -proc activate {obj} \
+          [list :goto_page [expr {$count -1}]]
+      lappend actions $count
+    }
+    if { ${:state} eq "working"
+         && [::xowf::test_item::question_manager more_ahead -position $current_position $parent_obj]
+       } {
+      lappend actions nextQuestion
+    }
+    if {${:state} eq "working" } {
+      lappend actions save review
+    } else {
+      lappend actions logout
+    }
+    ${container}::${:state} actions $actions
+  }
 }
 
 #

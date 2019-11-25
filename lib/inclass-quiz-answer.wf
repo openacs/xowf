@@ -1,0 +1,242 @@
+# -*- Tcl -*-
+#
+# Workflow template for answering online exams. The workflow is
+# typically controlled from a parent workflow that a teacher can use
+# to create the exam, to try it out and to publish it
+# (online-exam.wf).
+#
+# This workflow is similar to the classical "iterate.wf" but is more
+# configurable (the answer forms are passed via template
+# variables). The workflow uses a form-loader which renames the input
+# fields to avoid potential name clashes.
+#
+
+set :autoname 1  ;# to avoid editable name field
+set :policy ::xowf::test_item::test-item-policy-answer
+set :debug 0
+set :live_updates 1
+
+# try_out_mode: a teacher can try the exam in this mode
+#Property try_out_mode -default 0 -allow_query_parameter true
+
+########################################################################
+#
+# Action definitions
+#
+########################################################################
+
+Action allocate -proc activate {obj} {
+  # Called, when we try to create or use a workflow instance
+  # via a workflow definition ($obj is a workflow definition)
+  $obj set_property -new 1 name ___[::xo::cc set untrusted_user_id]
+  set parent_obj [::xo::db::CrClass  get_instance_from_db -item_id [$obj parent_id]]
+  :payload [list title [$parent_obj title]]
+}
+
+Action initialize -proc activate {obj} {
+  # called, after workflow instance was created
+}
+
+Action save \
+    -label #xowf.inclass-quiz-save#
+
+Action submit \
+    -label #xowf.inclass-quiz-submit#
+
+########################################################################
+#
+# State definitions
+#
+########################################################################
+
+State parameter {
+  {view_method edit}
+  {extra_js {
+    urn:ad:js:jquery
+    ../file:seal.js?m=download
+  }}
+  {extra_css {
+    /resources/xowf/test-item.css
+  }}
+}
+
+State waiting -form_loader waiting_form
+
+State initial \
+    -actions {submit} \
+    -form_loader waiting_form
+
+########################################################################
+#
+# Helper methods for the workflow container
+#
+########################################################################
+
+:proc waiting_form {ctx form_title} {
+  set obj [$ctx object]
+  set parent_id [$obj parent_id]
+  #:msg "waiting_form_loader $form_title [$obj instance_attributes]"
+  set parent_obj [::xo::db::CrClass  get_instance_from_db -item_id $parent_id]
+  set parent_state [$parent_obj state]
+  set waiting_form_obj ""
+  set hint ""
+  set more_ahead 1
+  set quiz_available 1
+
+  #if {$parent_state eq "created" && [$obj property try_out_mode]} {
+  #  ns_log notice "FAKE state as published"
+  #  set parent_state "published"
+  #}
+  
+  switch $parent_state {
+    "published" {
+      #
+      # When the parent-workflow is in published state, check, if the
+      # current_question was already answered.
+      #
+      set form_obj [xowf::test_item::question_manager current_question_obj $parent_obj]
+      set form_obj [xowf::test_item::renaming_form_loader rename_attributes $form_obj]
+      set form_name [$form_obj name]
+      set form_answer [xowf::test_item::renaming_form_loader answer_for_form \
+                           $form_name \
+                           [$obj instance_attributes]]
+      ns_log notice "CURRENT answer '$form_answer' form_name $form_name"
+      if {$form_answer eq ""} {
+        #
+        # It was not answered yet, show the question as 'waiting_form'
+        # with the regular submit button.
+        
+        set waiting_form_obj $form_obj
+        [self]::submit label #xowf.inclass-quiz-submit#
+        
+        #
+        # Update the title of the page
+        #
+        set title_list {}
+        lappend title_list \
+            [$obj title] \
+            [xowf::test_item::question_manager current_question_title -with_numbers $parent_obj]
+        $obj title [join $title_list " · "]
+
+        #set minutes [xowf::test_item::question_manager question_property $form_obj minutes]
+        #ns_log notice "form_obj minutes $minutes"      
+        
+        #
+        # Update IP address each time the question form is loaded.
+        #
+        if {[$obj state] in {"initial"}} {
+          $obj set_property ip [expr {[ns_conn isconnected] ? [ad_conn peeraddr] : "nowhere"}]
+        }
+
+      } else {
+        set question_number [xowf::test_item::question_manager current_question_number $parent_obj]
+        set hint "<p>[_ xowf.inclass-quiz-already_answered [list number $question_number]].</p>"
+        set more_ahead [xowf::test_item::question_manager more_ahead $parent_obj]
+      }
+    }
+    "results" {
+    }
+    default {
+      set hint "<p>#xowf.inclass-quiz-not_available#</p>"
+      set quiz_available 0
+      set more_ahead 0
+    }
+  }
+
+  if {${:live_updates} && $quiz_available} {
+    #
+    # auto referesh: when in $parent_obj 'state' or 'position' changes,
+    # do automatically a reload of the current page.
+    #
+    set payload [$parent_obj state]-[$parent_obj property position]
+    set url [$obj pretty_link -query m=poll&payload=$payload]
+    template::add_body_script -script [subst {
+      (function poll() {
+        setTimeout(function() {
+          var xhttp = new XMLHttpRequest();
+          xhttp.open("GET", '$url', true);
+          xhttp.onreadystatechange = function() {
+            if (this.readyState == 4 && this.status == 200) {
+              var data = xhttp.responseText;
+              if (data == "1") {
+                poll();
+              } else {
+                location.reload();
+              }
+            }
+          };
+          xhttp.send();
+        }, 5000);
+      })();
+    }]
+  }
+  
+  if {$waiting_form_obj eq ""} {
+    #
+    # Show the waiting form
+    #
+    if {$more_ahead} {
+   
+      #template::head::add_meta -http_equiv refresh -content 2
+      append hint "<p>#xowf.inclass-quiz-waiting_for_next#</p>"
+    }
+    set form [subst {
+      <form><div class="waiting-form">$hint</div></form>
+    }]
+    set waiting_form_obj [::xowiki::Form new \
+                              -destroy_on_cleanup \
+                              -name en:waiting \
+                              -title Waiting... \
+                              -form [list $form text/html] \
+                              -text {} \
+                              -anon_instances t \
+                              -form_constraints {}]
+    [self]::submit label #xowf.refresh#
+  }
+  return $waiting_form_obj
+}
+
+
+########################################################################
+#
+# Object specific operations
+#
+########################################################################
+
+:object-specific {
+  #:msg "state=${:state}"
+  
+  set ctx [:wf_context]
+  set container [$ctx wf_container]
+  if {$ctx ne $container} {
+    $ctx forward waiting_form $container %proc $ctx
+  }
+
+  ########################################################################
+  #
+  # Properties (depending on every single query)
+  #
+  # return_url: when the exam is finished, the user proceeds to this url
+  # ip: IP address of the user, kept in the instance attribute for auditing
+  #
+  ########################################################################
+
+  ${container}::Property ip -default [expr {[ns_conn isconnected] ? [ad_conn peeraddr] : "nowhere"}]
+  ${container}::Property return_url -default "" -allow_query_parameter true
+
+  :proc www-poll {} {
+    set parent_obj [::xo::db::CrClass  get_instance_from_db -item_id ${:parent_id}]
+    set payload [$parent_obj state]-[$parent_obj property position]
+    set old_payload [:query_parameter "payload:graph" ""]
+    ns_return 200 text/plain [string equal $payload $old_payload]
+    #ns_log notice "POLL [self] ${:name}, payload change [list $payload == $old_payload]"
+    ad_script_abort
+  }
+}
+
+#
+# Local variables:
+#    mode: tcl
+#    tcl-indent-level: 2
+#    indent-tabs-mode: nil
+# End:

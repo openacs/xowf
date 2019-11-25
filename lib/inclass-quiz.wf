@@ -1,0 +1,471 @@
+# -*- Tcl -*-
+########################################################################
+# In-class-quiz workflow, designed similar to online-exam
+# ========================================================
+#
+# This teacher paced inclass quiz workflow lets a teacher choose from
+# a predefined set of quiz questions.  The teacher selects one or
+# several quiz question via drag and drop. 
+#
+# When the quiz is published, the students can be offered a display of
+# the question with a QR code. Teacher can see the incoming answers in
+# the report (without manual refresh when "live_updates" are
+# activated). After every question the teacher can toggle to a
+# "results" display showing the actial answer with statistics as
+# provided by the participants. 
+#
+# An admin might with to add the following entries to the folder to
+# ease creation of exercises and exams
+#
+#   {entry -name New.App.TextInteraction -label "Text Interaction" -form en:TestItemText.form}
+#   {entry -name New.App.ShortTextInteraction -label "Short Text Interaction" -form en:TestItemShortText.form}
+#   {entry -name New.App.MCInteraction -label "MC Interaction" -form en:TestItemMC.form}
+#   {entry -name New.App.SCInteraction -label "SC Interaction" -form en:TestItemSC.form}
+#   {entry -name New.App.Quiz -label Quiz -form en:inclass-quiz.wf}
+#
+# The policy has to allow the following methods on FormPages:
+#
+#  - "answer" (for students),
+#  - "edit" (for students),
+#  - "poll" (for students),
+#  - "delete" (for teachers),
+#  - "print-answers" (for teachers),
+#  - "qrcode" (for teachers),
+#
+#
+#  TODO:
+#   - full result exports
+#     * result export
+#     * and/or "print-answers" in inclass-quiz
+#   - word statistics for multiline text?
+#   - multiline in text_fields (short answers)
+#   - test cases
+#   - check mobile usability
+#
+# Gustaf Neumann, Nov 2019
+########################################################################
+set :autoname 1 ;# to avoid editable name field
+set :policy ::xowf::test_item::test-item-policy-publish
+set :debug 0
+set :live_updates 1
+
+Property position -default 0 -allow_query_parameter true
+
+Action select -next_state created -label #xowf.inclass-quiz-create#
+Action publish -next_state published -label #xowf.inclass-quiz-publish#
+Action unpublish -next_state done -label #xowf.inclass-quiz-unpublish#
+Action republish -next_state published -label #xowf.inclass-quiz-republish#
+Action restart -next_state initial -label #xowf.restart#
+Action show_results -next_state results -label #xowf.results#
+
+State parameter {
+  {extra_css {/resources/xowf/test-item.css}}
+}
+State initial -actions {select} -form en:quiz-select_question.form -view_method edit
+State created -actions {publish restart} -form_loader load_form -view_method edit \
+    -form "#xowf.inclass-quiz-draft#"
+State published -actions {show_results unpublish} -form_loader load_form -view_method edit \
+    -form "#xowf.inclass-quiz-open#"
+State results -actions {publish unpublish} -form_loader load_form -view_method edit \
+    -form "#xowf.inclass-quiz-open#"
+State done -actions {republish restart} -form_loader load_form -view_method edit \
+    -form "#xowf.inclass-quiz-closed#"
+
+########################################################################
+# Activate action select: After the teacher has selected the
+# exercises, the answer workflow is created.
+#
+select proc activate {obj} {
+  xowf::test_item::answer_manager create_workflow \
+      -answer_workflow /packages/xowf/lib/inclass-quiz-answer.wf \
+      $obj
+}
+
+########################################################################
+# Activate action publish: delete all responses for the workflow.
+#
+publish proc activate {obj} {
+  #xowf::test_item::answer_manager delete_all_answer_data $obj
+  #:publish_link $obj
+}
+
+########################################################################
+# Activate action republish: publish user participation link.
+#
+republish proc activate {obj} {
+  :publish_link $obj
+}
+
+########################################################################
+# When the user un-publishes an exam, just the user participation
+# link should be removed for the users
+#
+unpublish proc activate {obj} {
+  :unpublish_link $obj
+}
+
+########################################################################
+# publish_link: make the user participation link available for the
+# target group
+#
+Action instproc publish_link {obj} {
+  set aLink [$obj pretty_link -query m=answer]
+  util_user_message -html \
+      -message "[$obj name] is available as <a target='_blank' href='[ns_quotehtml $aLink]'>[ns_quotehtml $aLink]</a>"
+  # TODO: make it happen
+}
+
+########################################################################
+# unpublish_link: remove the user participation link for the target
+# group.
+#
+Action instproc unpublish_link {obj} {
+  util_user_message -html -message "[$obj name] is closed</a>"
+  # TODO: make it happen
+}
+
+########################################################################
+# answers_panel: show a summary of the submitted answers.
+#
+:proc answers_panel {obj state wf current_question {extra_text ""}} {
+  set answers [xowf::test_item::answer_manager get_answers $wf]
+  set nrParticipants [llength $answers]
+  set answered [xowf::test_item::renaming_form_loader answers_for_form [$current_question name] $answers]
+  set nrAnswered [llength $answered]
+
+  set answerStatus [subst {
+    <div class='panel panel-default'>
+    <div class='panel-heading'>#xowf.submitted_answers#</div>
+    <div class='panel-body'>
+    <span id="answer-status">$nrAnswered/$nrParticipants</span> #xowf.participants_answered_question#
+    </div>
+    $extra_text
+    </div>
+  }]
+
+  if {${:live_updates} && $state ne "done"} {
+    #
+    # auto refresh: when in $parent_obj 'state' or 'position' changes,
+    # do automatically a reload of the current page.
+    #
+    set url [$obj pretty_link -query m=poll]
+    template::add_body_script -script [subst {
+      (function poll() {
+        setTimeout(function() {
+          var xhttp = new XMLHttpRequest();
+          xhttp.open("GET", '$url', true);
+          xhttp.onreadystatechange = function() {
+            if (this.readyState == 4 && this.status == 200) {
+              var data = xhttp.responseText;
+              var el = document.querySelector('#answer-status');
+              el.innerHTML = data;
+              poll();
+            }
+          };
+          xhttp.send();
+        }, 1000);
+      })();
+    }]
+  }
+
+  return $answerStatus
+}
+
+########################################################################
+# form loader: create dynamically a form containing the disabled
+# questions as a preview and the survey results (the results can be
+# refreshed). This is a simplified version of get_question_form_object
+# of online-exam-answer.wf.
+#
+:proc load_form {ctx title} {
+  set obj [$ctx object]
+  set state [$obj property _state]
+
+  switch $state {
+    "created" {
+      set current_form_info [::xowf::test_item::question_manager combined_question_form \
+                                 -with_numbers $obj]
+    }
+    default {
+      set title [xowf::test_item::question_manager current_question_title -with_numbers $obj]
+      switch $state {
+        "published" {set title "#xowf.please_answer#: $title"}
+        "results" {set title "#xowf.results_of#: $title"}
+      }
+      set current_question [xowf::test_item::question_manager current_question_obj $obj]
+      set current_form_info [::xowf::test_item::question_manager current_question_form $obj]
+    }
+  }
+
+  set fullQuestionForm [dict get $current_form_info form]
+  set full_fc [dict get $current_form_info disabled_form_constraints]
+  set wf [xowf::test_item::answer_manager get_answer_wf $obj]
+
+  set qrCode ""
+  set answerStatus ""
+  switch $state {
+    "created" {
+      template::add_body_script -script urn:ad:js:bootstrap3
+      set fullQuestionForm [subst {
+        <span class="glyphicon glyphicon-chevron-down"><button type="button" class="btn btn-small" data-toggle="collapse" data-target="#questions">#xowf.questions#</button></span>
+        <div id="questions" class="collapse">
+        $fullQuestionForm
+        </div>
+      }]
+    }
+
+    "published" {
+      set qrCode [subst {<div><img class='img-thumbnail' src="[$obj pretty_link -query m=qrcode]" ></div>}]
+      set answerStatus [xowf::test_item::answer_manager answers_panel \
+                            -polling=${:live_updates} \
+                            -manager_ob $obj \
+                            -wf $wf \
+                            -current_question $current_question]
+      #set answerStatus [:answers_panel $obj $state $wf $current_question]
+    }
+    "done" -
+    "results" {
+      [$ctx object] setCSSDefaults
+      set marked [xowf::test_item::answer_manager marked_results $wf $current_form_info]
+      #set answerStatus [:answers_panel $obj $state $wf $current_question "<pre>$marked</pre>"]
+      set answerStatus [xowf::test_item::answer_manager answers_panel \
+                            -polling=[expr {${:live_updates} && $state ne "done"}] \
+                            -manager_ob $obj \
+                            -wf $wf \
+                            -current_question $current_question]
+    }
+    default {
+      :msg "not handled: state=$state"
+    }
+  }
+
+  #:log  fullQuestionForm=$fullQuestionForm
+  set text "<h2>$title</h2>"
+
+  if {$wf eq ""} {
+    :msg "cannot get current workflow for [$obj name]"
+    set tLink "."
+    set aLink "."
+    set menu ""
+  } else {
+    set wf_pretty_link [$wf pretty_link]
+    set tLink "$wf_pretty_link?m=create-new&p.return_url=[::xo::cc url]&p.try_out_mode=1"
+    set lLink "$wf_pretty_link?m=list"
+    set aLink [$obj pretty_link -query m=answer]
+    set pLink [$obj pretty_link -query m=print-answers]
+    set pLink . ;# deactivated for the time being
+    #util_user_message -html -message "$survey is available as <a target='_blank' href='$pLink'>$pLink</a>"
+    set menu [subst {\[<a href='[ns_quotehtml [::xo::cc url]]'>#xowf.refresh#</a>,
+      <a href='[ns_quotehtml $lLink]'>#xowf.online-exam-exam_instances#</a>,
+      <a href='[ns_quotehtml $pLink]'>#xowf.print#</a>\]}]
+  }
+
+  set extraAction ""
+  switch [$obj property _state] {
+    "created"   {
+      #
+      # Deactive try out mode, since in the inclass quiz is designed
+      # in a way that teacher controls the pace of exercises. When the
+      # inclass-quiz is just published via QR-code, there is actually
+      # very little need to define a try-out mode....
+      #
+      #append extraAction "<br>" \
+      #    "#xowf.online-exam-try_out# " \
+      #    "<a class='btn btn-default' href='[ns_quotehtml $tLink]'>#xowf.testrun#</a>"
+    }
+    "published" {
+      append extraAction "<br>" \
+          "#xowf.online-exam-can_answer# " \
+          "<a href='$aLink'>$aLink</a>"
+    }
+  }
+
+  # Remove wrapping forms
+  regsub -all {</?form[^>]*>} $fullQuestionForm {} fullQuestionForm
+
+  append text [subst {
+    <div class='container-fluid'><div class='row'>
+    <div class="col-sm-12">$answerStatus</div>
+    <div class="col-sm-9 quiz-preview">$fullQuestionForm</div>
+    <div class="col-sm-3">$qrCode</div>
+    </div></div>
+  }]
+
+  set wfName [$obj property wfName]
+  set footer "<br> $menu $extraAction "
+
+  set f [::xowiki::Form new \
+             -destroy_on_cleanup \
+             -name en:question \
+             -form [subst {<form>$text$footer</form> text/html}] \
+             -text {} \
+             -anon_instances t \
+             -form_constraints $full_fc \
+            ]
+}
+
+########################################################################
+#
+# Object specific operations
+#
+########################################################################
+
+:object-specific {
+
+  set ctx [:wf_context]
+  set container [$ctx wf_container]
+  if {$ctx ne $container} {
+    $ctx forward load_form $container %proc $ctx
+  }
+
+  ${container}::Property return_url -default "" -allow_query_parameter true
+  ::xo::cc unset_query_parameter return_url
+
+  ########################################################################
+  #
+  # Setup actions
+  #
+  ########################################################################
+
+  foreach action [${container}::Action info instances] {
+    if {[string is integer [namespace tail $action]]} {
+      $action destroy
+    }
+  }
+  if {${:state} in {published results done} } {
+    set questions [:property question]
+    set position [:property position]
+    set count 0
+    set actions {}
+    foreach question $questions {
+      incr count
+      ${container}::Action ${container}::$count \
+          -label "$count" \
+          -extra_css_class [expr {$position == $count - 1 ? "current" : ""}] \
+          -proc activate {obj} \
+          [list ::xowf::test_item::question_manager goto_page [self] [expr {$count -1}]]
+      lappend actions $count
+    }
+    #:msg "state?${:state} adding actions"
+    switch ${:state} {
+      "published" {lappend actions show_results unpublish}
+      "results"   {lappend actions publish unpublish}
+      "done"      {lappend actions republish restart}
+    }
+    ${container}::${:state} actions $actions
+  }
+
+  switch ${:state} {
+    "results" { ${container}::publish label #xowf.inclass-quiz-publish_question# }
+    default   { ${container}::publish label #xowf.inclass-quiz-publish#          }
+  }
+
+
+  ########################################################################
+  # Extern callable methods
+  ########################################################################
+
+  ########################################################################
+  # web-callable method "delete"
+  #
+  # Delete the workflow instance and all its associated data.
+  #
+  :proc www-delete {} {
+    xowf::test_item::answer_manager delete_all_answer_data [self]
+    next
+  }
+
+  ########################################################################
+  # web-callable method "print-answers"
+  #
+  # Print the answers in a somewhat printer friendly way.
+  #
+  :proc www-print-answers {} {
+    set HTML ""
+    set wf [xowf::test_item::answer_manager get_answer_wf [self]]
+    if {$wf ne ""} {
+      set items [xowf::test_item::answer_manager get_wf_instances $wf]
+
+      set examTitle ${:title}
+      foreach i [$items children] {
+        set uid [$i property _creation_user]
+        set userName [acs_user::get_element -user_id $uid -element username]
+
+        set time [::xo::db::tcl_date [$i property _last_modified] tz_var]
+        set pretty_date [clock format [clock scan $time] -format "%Y-%m-%d %T"]
+        #
+        # The call to "render_content" calls actually the
+        # "summary_form" of online-exam-answer.wf when the submit
+        # instance is in state "done". We set the __feedback_mode to
+        # get the auto-correction included.
+        #
+        $i set __feedback_mode 2
+        set question_form [$i render_content]
+
+        append HTML "\n<div class='single_exam'>" \
+            "<h1>$examTitle - IP [$i property ip]</h1>" \
+            "<h2>$userName · [::xo::get_user_name $uid] · $pretty_date</h2>" \
+            $question_form \
+            "</div>\n"
+      }
+    }
+
+    if {$HTML ne ""} {
+      ns_return 200 text/html [subst {<!DOCTYPE HTML>
+        <html><head><meta http-equiv='content-type' content='text/html; charset=utf-8' />
+        <link rel="stylesheet" href="/resources/openacs-bootstrap3-theme/bootstrap/3.4.1/css/bootstrap.min.css" type="text/css" media="all">
+        <link rel="stylesheet" href="/resources/openacs-bootstrap3-theme/css/main.css" type="text/css" media="all">
+        <link rel="stylesheet" href="/resources/openacs-bootstrap3-theme/css/color/grey.css" type="text/css" media="all">
+        <link rel="stylesheet" href="/resources/xowf/test-item.css" type="text/css" media="all">
+        </head>
+        <body>$HTML
+      }]
+    } else {
+      util_user_message -html -message "No answer data available"
+      ad_returnredirect [::xo::cc url]
+    }
+    ad_script_abort
+  }
+
+  ########################################################################
+  # web-callable method "answer"
+  #
+  # answer the exam; this is a convenience routine to shorten
+  # the published URL; make sure that no-one tries to start the answer
+  # workflow in a state different from "published".
+  #
+  :proc www-answer {} {
+    if {[:property _state] ne "published"} {
+      util_user_message -html -message "Cannot start answer workflow in this state"
+    } else {
+      set wf [xowf::test_item::answer_manager get_answer_wf [self]]
+      $wf www-create-or-use -parent_id [:item_id]
+    }
+  }
+
+  :proc www-qrcode {} {
+    set aLink [:pretty_link -absolute true -query m=answer]
+    set fn /tmp/qr-${:item_id}.png
+    exec qrencode -o $fn -l h $aLink
+    ns_returnfile 200 image/png $fn
+    ad_script_abort
+  }
+
+  :proc www-poll {} {
+    set wf [xowf::test_item::answer_manager get_answer_wf [self]]
+    set current_question [xowf::test_item::question_manager current_question_obj [self]]
+    set answers [xowf::test_item::answer_manager get_answers $wf]
+    set answered [xowf::test_item::renaming_form_loader answers_for_form [$current_question name] $answers]
+    ns_return 200 text/plain [llength $answered]/[llength $answers]
+    #ns_log notice "MASTER POLL [self] ${:name}, returned [llength $answered]/[llength $answers]"
+    ad_script_abort
+  }
+  ns_log notice "INCLASS-QUIZ [self] ${:instance_attributes}"
+}
+
+#
+# Local variables:
+#    mode: tcl
+#    tcl-indent-level: 2
+#    indent-tabs-mode: nil
+# End:

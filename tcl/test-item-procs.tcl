@@ -1,4 +1,11 @@
+::xo::library doc {
+  Test Item procs - support for different kind of tests and exercises.
+
+  @author Gustaf Neumann
+}
+
 :::xo::db::require package xowiki
+
 namespace eval ::xowiki::formfield {
   ###########################################################
   #
@@ -56,7 +63,7 @@ namespace eval ::xowiki::formfield {
     @param feedback_level "full", "single", or "none"
     @param grading one of "exact", "partial", or "none"
     @param nr_choices number of choices
-    @param question_type "mc", "sc", "ot", or "te"
+    @param question_type "mc", "sc", "ot", or "st"
   }
 
   #
@@ -119,8 +126,8 @@ namespace eval ::xowiki::formfield {
         set can_shuffle false
       }
       sc { # we should support as well: minChoices, maxChoices
-        set interaction_class mc_interaction
-        set options nr_choices=[:nr_choices],multiple=false
+        set interaction_class mc_interaction2
+        set options multiple=false
         set auto_correct true
         set can_shuffle true
       }
@@ -135,8 +142,9 @@ namespace eval ::xowiki::formfield {
         set auto_correct ${:auto_correct}
         set can_shuffle false
       }
-      te {
-        set interaction_class text_entry_interaction
+      te -
+      st {
+        set interaction_class short_text_interaction
         #set options nr_choices=[:nr_choices]
         set auto_correct ${:auto_correct}
         set can_shuffle true
@@ -168,13 +176,16 @@ namespace eval ::xowiki::formfield {
     }
 
     if {$can_shuffle} {
-      set shuffle_options "{None none} {{Per user} peruser} {Always always}"
-      set shuffleSpec [subst {{shuffle {radio,horizontal=true,options=$shuffle_options,default=none,label=#xowf.Shuffle#}}}]
+      set shuffle_options "{#xowf.shuffle_none# none} {#xowf.shuffle_peruser# peruser} {#xowf.shuffle_always# always}"
+      set shuffleSpec [subst {
+        {shuffle {radio,horizontal=true,form_item_wrapper_CSSclass=form-inline,options=$shuffle_options,default=none,label=#xowf.Shuffle#}}
+        {show_max {number,form_item_wrapper_CSSclass=form-inline,min=2,label=#xowf.show_max#}}
+      }]
     } else {
       set shuffleSpec ""
     }
     :create_components  [subst {
-      {minutes number,min=1,default=2,label=#xowf.Minutes#}
+      {minutes number,form_item_wrapper_CSSclass=form-inline,min=1,default=2,label=#xowf.Minutes#}
       $gradingSpec
       $shuffleSpec
       {interaction {$interaction_class,$options,feedback_level=${:feedback_level},auto_correct=${:auto_correct},label=}}
@@ -201,6 +212,7 @@ namespace eval ::xowiki::formfield {
 
   mc_interaction instproc set_compound_value {value} {
     set r [next]
+
     if {!${:multiple}} {
       # For single choice questions, we have a fake-field for denoting
       # the correct entry. We have to distribute this to the radio
@@ -218,6 +230,7 @@ namespace eval ::xowiki::formfield {
   }
 
   mc_interaction instproc initialize {} {
+
     if {${:__state} ne "after_specs"} return
     #
     # build choices
@@ -250,7 +263,7 @@ namespace eval ::xowiki::formfield {
 
     #:msg " input_field_names=${:input_field_names}"
     set mc [:get_named_sub_component_value mc]
-    ns_log notice "MC <$mc>"
+    #ns_log notice "MC <$mc>"
 
     if {!${:multiple}} {
       set correct_field_name [:get_named_sub_component_value correct]
@@ -400,8 +413,8 @@ namespace eval ::xowiki::formfield {
 
     :create_components  [subst {
       {text  {$widget,label=#xowf.exercise-text#,plugins=OacsFs}}
-      {lines {number,min=1,default=10,label=#xowf.answer_lines#}}
-      {columns {number,min=1,max=80,default=60,label=#xowf.answer_columns#}}
+      {lines {number,form_item_wrapper_CSSclass=form-inline,min=1,default=10,label=#xowf.answer_lines#}}
+      {columns {number,form_item_wrapper_CSSclass=form-inline,min=1,max=80,default=60,label=#xowf.answer_columns#}}
       $autoCorrectSpec
     }]
     set :__initialized 1
@@ -409,16 +422,14 @@ namespace eval ::xowiki::formfield {
 
   text_interaction instproc convert_to_internal {} {
     set intro_text [:get_named_sub_component_value text]
-    set lines      [:get_named_sub_component_value lines]
-    set columns    [:get_named_sub_component_value columns]
+
+    dict set fc_dict rows [:get_named_sub_component_value lines]
+    dict set fc_dict cols [:get_named_sub_component_value columns]
+    dict set fc_dict disabled_as_div 1
+    dict set fc_dict label #xowf.answer#
 
     if {${:auto_correct}} {
-      set correct_when [:get_named_sub_component_value correct_when]
-      set correct_when [::xowiki::formfield::FormField fc_encode correct_when=$correct_when],
-      #ns_log notice "correct_when <$correct_when>"
-
-    } else {
-      set correct_when ""
+      dict set fc_dict correct_when [:get_named_sub_component_value correct_when]
     }
 
     append form \
@@ -430,7 +441,7 @@ namespace eval ::xowiki::formfield {
         "</form>\n"
     append fc \
         "@categories:off @cr_fields:hidden\n" \
-        "{answer:textarea,disabled_as_div=1,rows=$lines,cols=$columns,$correct_when,label=Answer}"
+        "{answer:[:dict_to_fc -type textarea $fc_dict]}"
 
     #ns_log notice "text_interaction $form\n$fc"
     ${:object} set_property -new 1 form $form
@@ -445,14 +456,14 @@ namespace eval ::xowiki::formfield {
 namespace eval ::xowiki::formfield {
   ###########################################################
   #
-  # ::xowiki::formfield::text_entry_interaction
+  # ::xowiki::formfield::short_text_interaction
   #
   ###########################################################
 
-  Class create text_entry_interaction -superclass TestItemField -parameter {
+  Class create short_text_interaction -superclass TestItemField -parameter {
   }
 
-  text_entry_interaction instproc initialize {} {
+  short_text_interaction instproc initialize {} {
     if {${:__state} ne "after_specs"} return
     #
     # Create component structure.
@@ -461,19 +472,19 @@ namespace eval ::xowiki::formfield {
     ns_log notice "[self] [:info class] auto_correct=${:auto_correct}"
 
     :create_components [subst {
-      {text  {$widget,label=#xowf.exercise-text#,plugins=OacsFs}}
-      {answer {text_entry_field,repeat=1..5,label=}}
+      {text  {$widget,height=100px,label=#xowf.exercise-text#,plugins=OacsFs}}
+      {answer {short_text_field,repeat=1..5,label=}}
     }]
     set :__initialized 1
   }
 
-  text_entry_interaction instproc convert_to_internal {} {
+  short_text_interaction instproc convert_to_internal {} {
 
     set intro_text   [:get_named_sub_component_value text]
     set answerFields [:get_named_sub_component_value answer]
-    set shuffle_kind [${:parent_field} get_named_sub_component_value shuffle]
 
     set options {}
+    set render_hints {}
     set answer {}
     set count 0
 
@@ -486,24 +497,33 @@ namespace eval ::xowiki::formfield {
       set af answer[incr count]
       lappend options [list [dict get $value $fieldName.text] $af]
       lappend answer [dict get $value $fieldName.correct_when]
+      lappend render_hints [list \
+                                  words [dict get $value $fieldName.options] \
+                                  lines [dict get $value $fieldName.lines]]
     }
 
-    set options [::xowiki::formfield::FormField fc_encode $options]
-    set answer [::xowiki::formfield::FormField fc_encode $answer]
+    dict set fc_dict shuffle_kind [${:parent_field} get_named_sub_component_value shuffle]
+    dict set fc_dict show_max [${:parent_field} get_named_sub_component_value show_max]
+    dict set fc_dict disabled_as_div 1
+    dict set fc_dict label ""
+    dict set fc_dict options $options
+    dict set fc_dict answer $answer
+    dict set fc_dict render_hints $render_hints
 
     append form \
         "<form>\n" \
-        "<div class='text_entry_interaction'>\n" \
+        "<div class='short_text_interaction'>\n" \
         "<div class='question_text'>$intro_text</div>\n" \
         "@answer@" \n \
         "</div>\n" \
         "</form>\n"
+
     set fc {}
     lappend fc \
-        "answer:text_fields,disabled_as_div=1,options=$options,shuffle_kind=$shuffle_kind,answer=$answer,label="  \
+        answer:[:dict_to_fc -type text_fields $fc_dict] \
         @categories:off @cr_fields:hidden
 
-    ns_log notice "text_entry_interaction $form\n$fc"
+    ns_log notice "short_text_interaction $form\n$fc"
     ${:object} set_property -new 1 form $form
     ${:object} set_property -new 1 form_constraints $fc
     set anon_instances true ;# TODO make me configurable
@@ -513,12 +533,12 @@ namespace eval ::xowiki::formfield {
   }
 
   #
-  # ::xowiki::formfield::text_entry_field
+  # ::xowiki::formfield::short_text_field
   #
-  Class create text_entry_field -superclass TestItemField -parameter {
+  Class create short_text_field -superclass TestItemField -parameter {
   }
 
-  text_entry_field instproc initialize {} {
+  short_text_field instproc initialize {} {
     if {${:__state} ne "after_specs"} return
     #
     # Create component structure.
@@ -526,14 +546,14 @@ namespace eval ::xowiki::formfield {
     set widget [test_item set richtextWidget]
 
     #
-    # Get auto_correct from the interaction (passing "auto_correct="
-    # via form constrain would requires to extend the RepeatContainer,
+    # Get "auto_correct" from the interaction (passing "auto_correct="
+    # via form constrain would require to extend the RepeatContainer,
     # otherwise the attribute is rejected).
     #
     set p [:info parent]
     while {1} {
       if {![$p istype ::xowiki::formfield::FormField]} break
-      if {![$p istype ::xowiki::formfield::text_entry_interaction]} {
+      if {![$p istype ::xowiki::formfield::short_text_interaction]} {
         set p [$p info parent]
         continue
       }
@@ -547,10 +567,21 @@ namespace eval ::xowiki::formfield {
     } else {
       set autoCorrectSpec ""
     }
+    set render_hints [join {
+      "{#xowiki.number# number}"
+      "{#xowiki.single_word# single_word}"
+      "{#xowiki.multiple_words# multiple_words}"
+      "{#xowiki.multiple_lines# multiple_lines}"
+    } " "]
+    set textEntryConfigSpec [subst {
+        {options {radio,horizontal=true,form_item_wrapper_CSSclass=form-inline,options=$render_hints,default=single_word,label=#xowf.answer#}}
+        {lines {number,form_item_wrapper_CSSclass=form-inline,default=1,min=1,label=#xowf.lines#}}
+      }]
+
     #:msg autoCorrectSpec=$autoCorrectSpec
     :create_components  [subst {
-      {text  {$widget,height=100px,label=Teilaufgabe,plugins=OacsFs}}
-      $autoCorrectSpec
+      {text  {$widget,height=100px,label=#xowf.sub_question#,plugins=OacsFs}}
+      $textEntryConfigSpec $autoCorrectSpec
     }]
     set :__initialized 1
   }
@@ -565,9 +596,11 @@ namespace eval ::xowiki::formfield {
   ###########################################################
 
   Class create mc_interaction2 -superclass TestItemField -parameter {
+    {multiple true}
   }
 
   mc_interaction2 instproc initialize {} {
+
     if {${:__state} ne "after_specs"} return
     #
     # Create component structure.
@@ -576,7 +609,7 @@ namespace eval ::xowiki::formfield {
     #ns_log notice "[self] [:info class] auto_correct=${:auto_correct}"
 
     :create_components  [subst {
-      {text  {$widget,label=#xowf.exercise-text#,plugins=OacsFs}}
+      {text  {$widget,height=100px,label=#xowf.exercise-text#,plugins=OacsFs}}
       {answer {mc_field,repeat=1..10,label=}}
     }]
     set :__initialized 1
@@ -585,12 +618,11 @@ namespace eval ::xowiki::formfield {
   mc_interaction2 instproc convert_to_internal {} {
 
     set intro_text   [:get_named_sub_component_value text]
-    set shuffle_kind [${:parent_field} get_named_sub_component_value shuffle]
     set answerFields [:get_named_sub_component_value answer]
-
     set count 0
     set options {}
     set correct {}
+
     foreach {fieldName value} $answerFields {
       # skip template entry
       if {[lindex [split $fieldName .] end] eq 0} {
@@ -601,20 +633,31 @@ namespace eval ::xowiki::formfield {
       set text [dict get $value $fieldName.text]
       # trim leading <p> since this causes a newline in the checkbox label
       regexp {^\s*(<p>)(.*)$} $text . . text
+      regexp {^(.*)(</p>)\s*$} $text . text .
       lappend options [list $text [incr count]]
       lappend correct [dict get $value $fieldName.correct]
     }
-    set options [::xowiki::formfield::FormField fc_encode $options]
-    set fc [list answer:checkbox,richtext=1,answer=$correct,shuffle_kind=$shuffle_kind,options=$options]
 
+    dict set fc_dict richtext 1
+    dict set fc_dict answer $correct
+    dict set fc_dict options $options
+    dict set fc_dict shuffle_kind [${:parent_field} get_named_sub_component_value shuffle]
+    dict set fc_dict show_max [${:parent_field} get_named_sub_component_value show_max]
+
+    set interaction_class [expr {${:multiple} ? "mc_interaction" : "sc_interaction"}]
     append form \
         "<form>\n" \
-        "<div class='mc_interaction'>\n" \
+        "<div class='$interaction_class'>\n" \
         "<div class='question_text'>$intro_text</div>\n" \
         "@answer@" \n \
         "</div>" \n \
         "</form>\n"
-    lappend fc @categories:off @cr_fields:hidden
+
+    set widget [expr {${:multiple} ? "checkbox" : "radio"}]
+    set fc {}
+    lappend fc \
+        answer:[:dict_to_fc -type $widget $fc_dict] \
+        @categories:off @cr_fields:hidden
 
     ns_log notice "mc_interaction2 $form\n$fc"
     ${:object} set_property -new 1 form $form
@@ -645,7 +688,7 @@ namespace eval ::xowiki::formfield {
     }
     #:msg autoCorrectSpec=$autoCorrectSpec
     :create_components  [subst {
-      {text  {$widget,height=100px,label=Teilaufgabe,plugins=OacsFs}}
+      {text  {$widget,height=50px,label=#xowf.sub_question#,plugins=OacsFs}}
       {correct {boolean,horizontal=true,label=Korrekt}}
     }]
     set :__initialized 1
@@ -681,7 +724,7 @@ namespace eval ::xowiki::formfield {
     append form \
         "<form>\n" \
         "<div class='upload_interaction'>\n" \
-    "<div class='question_text'>$intro_text</div>\n" \
+        "<div class='question_text'>$intro_text</div>\n" \
         "@answer@" \
         "</div>\n" \
         "</form>\n"
@@ -809,6 +852,14 @@ namespace eval ::xowf::test_item {
     # on the form name, such that multiple of these form names can be
     # processed together without name clashes.
     #
+    # - answer_attributes
+    # - answer_for_form
+    # - answers_for_form
+    # - form_name_based_attribute_stem
+    #
+    # - get_form_object
+    # - rename_attributes
+    #
 
     :object method map_form_constraints {form_constraints oldName newName} {
       #
@@ -840,6 +891,10 @@ namespace eval ::xowf::test_item {
 
 
     :public object method answer_attributes {instance_attributes} {
+      #
+      # Return all form-loader specific attributes from
+      # instance_attributes.
+      #
       set result ""
       foreach key [lsort [dict keys $instance_attributes]] {
         if {[string match *_ $key]} {
@@ -849,14 +904,48 @@ namespace eval ::xowf::test_item {
       return $result
     }
 
-    :public object method get_form_object {{-set_title:boolean true} ctx form_name} {
-      #:msg "renaming_form_loader for form_name <$form_name>"
-      set form_id [$ctx default_load_form_id $form_name]
-      set obj [$ctx object]
-      set form_obj [::xo::db::CrClass get_instance_from_db -item_id $form_id]
+    :public object method answer_for_form {formName instance_attributes} {
+      #
+      # Return answer for the provided formName from
+      # instance_attributes of a single object.
+      #
+      set result ""
+      set stem [:form_name_based_attribute_stem $formName]
+      set answerAttributes [:answer_attributes $instance_attributes]
+      ns_log notice "answer_for_form\ninstance_attributes $instance_attributes"
+      if {[dict exists $answerAttributes $stem]} {
+        set value [dict get $answerAttributes $stem]
+        if {$value ne ""} {
+          lappend result $value
+        }
+      }
+      return $result
+    }
 
-      set form     [$form_obj get_property -name form]
-      set fc       [$form_obj get_property -name form_constraints]
+    :public object method answers_for_form {formName answers} {
+      #
+      # Return a list of dicts for the provided formName from the
+      # answers (as returned from [answer_manager get_answers ...]).
+      #
+      set stem [:form_name_based_attribute_stem $formName]
+      set result ""
+      foreach answer $answers {
+        set value answer_for_form
+        set answerAttributes [dict get $answer answerAttributes]
+        if {[dict exists $answerAttributes $stem]} {
+          set value [dict get $answerAttributes $stem]
+          if {$value ne ""} {
+            lappend result [list item [dict get $answer item] value $value]
+          }
+        }
+      }
+      return $result
+    }
+
+    :public object method rename_attributes {form_obj:object} {
+
+      set form [$form_obj get_property -name form]
+      set fc   [$form_obj get_property -name form_constraints]
 
       #
       # Map "answer" to a generic name in the form "@answer@" and in the
@@ -879,15 +968,519 @@ namespace eval ::xowf::test_item {
       $form_obj set_property -new 1 form_constraints $fc
       $form_obj set_property -new 1 disabled_form_constraints $disabled_fc
 
+      #ns_log notice "RENAMED form $form\n$fc\n$disabled_fc"
       return $form_obj
+    }
+
+    :public object method get_form_object {{-set_title:boolean true} ctx:object form_name} {
+      #:msg "renaming_form_loader for form_name <$form_name>"
+      set form_id [$ctx default_load_form_id $form_name]
+      set obj [$ctx object]
+      set form_obj [::xo::db::CrClass get_instance_from_db -item_id $form_id]
+      return [:rename_attributes $form_obj]
     }
 
   }
 }
 
+namespace eval ::xowf::test_item {
+
+  nx::Object create answer_manager {
+
+    #
+    # Public API:
+    #
+    #  - create_workflow
+    #  - delete_all_answer_data
+    #  - get_answer_wf
+    #  - get_wf_instances
+    #  - get_answers
+    #
+    #  - marked_results
+    #  - answers_panel
+    #
+    :public object method create_workflow {
+      {-answer_workflow /packages/xowf/lib/online-exam-answer.wf}
+      {-master_workflow en:Workflow.form}
+      parentObj:object
+    } {
+      #
+      # Create a workflow based on the template provided in this
+      # method for answering the question for the students. The name
+      # of the workflow is derived from the workflow instance and
+      # recorded in the formfield "wfName".
+      #
+      #:log "create_answer_workflow $parentObj"
+
+      # first delete workflow and data, when it exists
+      if {[$parentObj property wfName] ne ""} {
+        set wf [:delete_all_answer_data $parentObj]
+        if {$wf ne ""} {$wf delete}
+      }
+
+      #
+      # Create a fresh workflow (e.g. instance of the online-exam,
+      # inclass-quiz, ...).
+      #
+      set wfName [$parentObj name].wf
+      $parentObj set_property -new 1 wfName $wfName
+
+      set wfTitle [$parentObj property _title]
+      set questionObjs [::xowf::test_item::question_manager question_objs $parentObj]
+
+      set wfQuestionNames {}
+      set wfQuestionTitles {}
+      set attributeNames {}
+      foreach form_obj $questionObjs {
+
+        lappend attributeNames [xowf::test_item::renaming_form_loader \
+                                    form_name_based_attribute_stem [$form_obj name]]
+
+        lappend wfQuestionNames ../[$form_obj name]
+        lappend wfQuestionTitles [$form_obj title]
+      }
+      set wfID [$parentObj item_id]
+
+      set wfDef [subst -nocommands {
+        set wfID $wfID
+        set wfQuestionNames [list $wfQuestionNames]
+        xowf::include $answer_workflow
+      }]
+      set attributeNames [join $attributeNames ,]
+
+      #:log "create workflow by filling out form '$master_workflow'"
+      set WF [::xowiki::Weblog instantiate_forms \
+                  -parent_id    [$parentObj parent_id] \
+                  -package_id   [$parentObj package_id] \
+                  -default_lang [$parentObj lang] \
+                  -forms        $master_workflow]
+
+      set wf [$WF create_form_page_instance \
+                  -name                $wfName \
+                  -nls_language        [$parentObj nls_language] \
+                  -publish_status      ready \
+                  -parent_id           [$parentObj item_id] \
+                  -package_id          [$parentObj package_id] \
+                  -default_variables   [list title $wfTitle] \
+                  -instance_attributes [list workflow_definition $wfDef \
+                                            form_constraints "@table:_name,_state,$attributeNames,_last_modified @cr_fields:hidden"]]
+      $wf save_new
+      ns_log notice "create_answer_workflow $wf DONE [$wf pretty_link] IA <[$wf instance_attributes]>"
+      ns_log notice "create_answer_workflow parent $parentObj IA <[$parentObj instance_attributes]>"
+    }
+
+    ########################################################################
+
+    :public object method delete_all_answer_data {obj:object} {
+      #
+      # Delete all instances of the answer workflow
+      #
+      set wf [:get_answer_wf $obj]
+      if {$wf ne ""} {
+        set items [:get_wf_instances -initialize false $wf]
+        foreach i [$items children] { $i delete }
+      }
+      return $wf
+    }
+
+
+    ########################################################################
+
+    :public object method get_answer_wf {obj:object} {
+      #
+      # return the workflow denoted by the property wfName in obj
+      #
+      return [::xowiki::Weblog instantiate_forms \
+                  -parent_id    [$obj item_id] \
+                  -package_id   [$obj package_id] \
+                  -default_lang [$obj lang] \
+                  -forms        [$obj property wfName]]
+    }
+
+    ########################################################################
+
+    :public object method get_wf_instances {{-initialize false} wf:object} {
+      # get_wf_instances: return the workflow instances
+      return [::xowiki::FormPage get_form_entries \
+                  -base_item_ids             [$wf item_id] \
+                  -form_fields               "" \
+                  -always_queried_attributes "*" \
+                  -initialize                $initialize \
+                  -publish_status            all \
+                  -package_id                [$wf package_id]]
+    }
+
+    ########################################################################
+
+    :public object method get_answers {{-state ""} wf:object} {
+      set results {}
+      set items [:get_wf_instances $wf]
+      foreach i [$items children] {
+        if {$state ne "" && [$i state] ne $state} {
+          continue
+        }
+        set answerAttributes [xowf::test_item::renaming_form_loader answer_attributes \
+                                  [$i instance_attributes]]
+        lappend results [list item $i answerAttributes $answerAttributes state [$i state]]
+      }
+      return $results
+    }
+
+    ########################################################################
+
+    :object method participant_result {obj:object form_info} {
+      set form_fields [$obj create_form_fields_from_form_constraints \
+                           -lookup \
+                           [dict get $form_info disabled_form_constraints]]
+      $obj form_field_index $form_fields
+
+      set instance_attributes [$obj instance_attributes]
+      set answer [list item $obj]
+      foreach f $form_fields {
+        set att [$f name]
+
+        #ns_log notice "### '$att' exists [dict exists $instance_attributes $att]"
+        if {[dict exists $instance_attributes $att]} {
+          set value [dict get $instance_attributes $att]
+          #ns_log notice "### '$att' value '$value'"
+          $obj combine_data_and_form_field_default 1 $f $value
+          $f set_feedback 1
+          $f add_statistics -options {word_statistics word_cloud}
+          #
+          # Leave the form-field in statistics mode in a state with
+          # correct anwers.
+          #
+          $f make_correct
+          #ns_log notice "FIELD $f [$f name] [$f info class] -> VALUE [$f set value]"
+
+          lappend answer \
+              [list name $att \
+                   value $value \
+                   correction [$f set correction] \
+                   evaluated_answer_result [$f set evaluated_answer_result]]
+        }
+      }
+      return $answer
+    }
+
+    :public object method marked_results {wf:object form_info} {
+      set items [:get_wf_instances $wf]
+      set results ""
+      foreach i [$items children] {
+        set participantResult [:participant_result $i $form_info]
+        append results $participantResult \n
+      }
+      return $results
+    }
+
+    :public object method answers_panel {
+      {-polling:switch false}
+      {-heading #xowf.submitted_answers#}
+      {-submission_msg #xowf.participants_answered_question#}
+      {-manager_obj:object}
+      {-target_state}
+      {-wf:object}
+      {-current_question ""}
+      {-extra_text ""}
+    } {
+      set answers [xowf::test_item::answer_manager get_answers $wf]
+      set nrParticipants [llength $answers]
+      if {$current_question ne ""} {
+        set answered [xowf::test_item::renaming_form_loader answers_for_form \
+                          [$current_question name] \
+                          $answers]
+      } else {
+        set answered [xowf::test_item::answer_manager get_answers \
+                          -state $target_state $wf]
+      }
+      set nrAnswered [llength $answered]
+
+      set answerStatus [subst {
+        <div class='panel panel-default'>
+        <div class='panel-heading'>$heading</div>
+        <div class='panel-body'>
+        <span id="answer-status">$nrAnswered/$nrParticipants</span> $submission_msg
+        </div>
+        $extra_text
+        </div>
+      }]
+
+      if {$polling} {
+        #
+        # auto refresh: when in $parent_obj 'state' or 'position' changes,
+        # do automatically a reload of the current page.
+        #
+        set url [$manager_obj pretty_link -query m=poll]
+        template::add_body_script -script [subst {
+          (function poll() {
+            setTimeout(function() {
+              var xhttp = new XMLHttpRequest();
+              xhttp.open("GET", '$url', true);
+              xhttp.onreadystatechange = function() {
+                if (this.readyState == 4 && this.status == 200) {
+                  var data = xhttp.responseText;
+                  var el = document.querySelector('#answer-status');
+                  el.innerHTML = data;
+                  poll();
+                }
+              };
+              xhttp.send();
+            }, 1000);
+          })();
+        }]
+      }
+
+      return $answerStatus
+    }
+  }
+}
+
+namespace eval ::xowf::test_item {
+
+
+  nx::Object create question_manager {
+    #
+    # This code manages questions and the information related to a
+    # current (selected) question via qthe "position" instance
+    # attribute. It provides the following public API:
+    #
+    #   - goto_page
+    #   - more_ahead
+    #
+    #   - current_question_form
+    #   - current_question_obj
+    #   - current_question_name
+    #   - current_question_title
+    #   - nth_question_obj
+    #   - nth_question_form
+    #
+    #   - combined_question_form
+    #   - question_objs
+    #   - question_names
+    #   - question_property
+    #
+    :public object method goto_page {obj:object position} {
+      $obj set_property position $position
+    }
+
+    :public object method more_ahead {{-position ""} obj:object} {
+      if {$position eq ""} {
+        set position [$obj property position]
+      }
+      set questions [dict get [$obj instance_attributes] question]
+      return [expr {$position + 1 < [llength $questions]}]
+    }
+
+    :object method load_question_objs {obj names} {
+      set questions [lmap ref $names {
+        if {![string match "*/*" $ref]} {
+          set ref [[$obj parent_id] name]/$ref
+        }
+        set ref
+      }]
+      set questionNames [join $questions |]
+      set questionForms [::xowiki::Weblog instantiate_forms \
+                             -package_id [$obj package_id] \
+                             -default_lang [$obj lang] \
+                             -forms $questionNames]
+      return $questionForms
+    }
+
+    :public object method current_question_name {obj:object} {
+      set questions [dict get [$obj instance_attributes] question]
+      return [lindex [dict get [$obj instance_attributes] question] [$obj property position]]
+    }
+
+    :public object method current_question_obj {obj:object} {
+      return [:load_question_objs $obj [:current_question_name $obj]]
+    }
+
+    :public object method question_objs {obj:object} {
+      return [:load_question_objs $obj [$obj property question]]
+    }
+    :public object method question_names {obj:object} {
+      return [$obj property question]
+    }
+
+    :public object method nth_question_obj {obj:object position:integer} {
+      set questions [dict get [$obj instance_attributes] question]
+      return [:load_question_objs $obj [lindex $questions $position]]
+    }
+
+    :object method question_info {
+      {-numbers ""}
+      {-with_title:switch false}
+      form_objs
+    } {
+      set full_form {}
+      set full_fc {}
+      set full_disabled_fc {}
+      set titles {}
+      foreach form_obj $form_objs number $numbers {
+        set form_obj [::xowf::test_item::renaming_form_loader rename_attributes $form_obj]
+        set form_title [$form_obj title]
+        set title ""
+        if {$number ne ""} {
+          append title "#xowf.question# $number:"
+        }
+        if {$with_title} {
+          append title " $form_title"
+        }
+        append full_form "<h3>$title</h3>\n"
+        append full_form [$form_obj property form] \n
+        lappend title_infos \
+            title $form_title \
+            minutes [:question_property $form_obj minutes] \
+            number $number
+        lappend full_fc [$form_obj property form_constraints]
+        lappend full_disabled_fc [$form_obj property disabled_form_constraints]
+      }
+      return [list \
+                  form $full_form \
+                  title_infos $title_infos \
+                  form_constraints [join [lsort -unique $full_fc] \n] \
+                  disabled_form_constraints [join [lsort -unique $full_disabled_fc] \n]]
+    }
+
+
+    :public object method question_property {form_obj:object attribute {default ""}} {
+      #
+      # Get an attribute of the original question
+      #
+      set question [$form_obj get_property -name question]
+      #:msg question=$question
+      if {[dict exists $question question.$attribute]} {
+        set value [dict get $question question.$attribute]
+      } else {
+        set value $default
+      }
+      return $value
+    }
+
+    :public object method minutes_string {form_obj:object} {
+      #
+      # Get an attribute of the original question
+      #
+      set minutes [:question_property $form_obj minutes]
+      if {$minutes ne ""} {
+        set key [expr {$minutes eq "1" ? [_ xowiki.minute] : [_ xowiki.minutes]}]
+        set minutes "($minutes $key)"
+      }
+    }
+
+    :public object method combined_question_form {
+      {-with_numbers:switch false}
+      {-with_title:switch false}
+      obj:object
+    } {
+      set form_objs [:question_objs $obj]
+      if {$with_numbers} {
+        set numbers ""
+        for {set i 1} {$i <= [llength $form_objs]} {incr i} {
+          lappend numbers $i
+        }
+        return [:question_info -with_title=$with_title -numbers $numbers $form_objs]
+      } else {
+        return [:question_info -with_title=$with_title $form_objs]
+      }
+    }
+
+    :public object method current_question_form {
+      {-with_numbers:switch false}
+      {-with_title:switch false}
+      obj:object
+    } {
+      return [:nth_question_form -with_numbers=$with_numbers -with_title=$with_title $obj]
+    }
+
+    :public object method nth_question_form {
+      {-position:integer}
+      {-with_numbers:switch false}
+      {-with_title:switch false}
+      obj:object
+    } {
+      ns_log notice "==== provided position [info exists position]"
+      if {![info exists position]} {
+        set position [$obj property position]
+        ns_log notice "==== provided position property $position"
+      }
+      set form_objs [:nth_question_obj $obj $position]
+      if {$with_numbers} {
+        set number [expr {$position + 1}]
+        return [:question_info -with_title=$with_title -numbers $number $form_objs]
+      } else {
+        return [:question_info -with_title=$with_title $form_objs]
+      }
+    }
+
+    :public object method current_question_number {obj:object} {
+      return [expr {[$obj property position] + 1}]
+    }
+    :public object method current_question_title {{-with_numbers:switch false} obj:object} {
+      if {$with_numbers} {
+        return "#xowf.question# [:current_question_number $obj]"
+      }
+    }
+
+
+    # :public object method set_page {obj increment} {
+    #   #set pages [$obj property pages]
+    #   set position [$obj property position 0]
+    #   incr position $increment
+    #   if {$position < 0} {
+    #     set position 0
+    #   } elseif {$position >= [llength $pages]} {
+    #     set position [expr {[llength $pages] - 1}]
+    #   }
+    #   $obj set_property position $position
+    #   #$obj set_property -new 1 current_form [lindex $pages $position]
+    # }
+  }
+}
+
+namespace eval ::xowf::test_item {
+
+  #
+  # Copy the default policy (policy1) from xowiki and add elements for
+  # FormPages as needed by the demo workflows:
+  #
+  #   - online-exam.wf, online-exam-answer.wf
+  #   - inclass-quiz.wf, inclass-quiz-answer.wf
+  #
+  ::xowiki::policy1 copy ::xowf::test_item::test-item-policy-publish
+  ::xowiki::policy1 copy ::xowf::test_item::test-item-policy-answer
+
+  #
+  # Add policy rules as used in two demo workflow. We are permissive
+  # for student actions and require admin right for teacher activities.
+  #
+  test-item-policy-publish contains {
+    Class create FormPage -array set require_permission {
+      answer         {{item_id read}}
+      poll           admin
+      edit           admin
+      print-answers  admin
+      delete         admin
+      qrcode         admin
+    }
+  }
+  test-item-policy-answer contains {
+    Class create FormPage -array set require_permission {
+      poll           {{item_id read}}
+      edit           {{item_id read}}
+    }
+  }
+
+  #ns_log notice [::xowf::test_item::test-item-policy1 serialize]
+  #ns_log notice ===================================
+
+}
+
+
 #
 # Local variables:
 #    mode: tcl
 #    tcl-indent-level: 2
+#    eval: (setq tcl-type-alist (remove* "method" tcl-type-alist :test 'equal :key 'car))
 #    indent-tabs-mode: nil
 # End:

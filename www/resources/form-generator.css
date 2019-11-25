@@ -9,3 +9,27 @@
 .xowiki-content .margin-form  fieldset div.form-help-text {
     margin-left: 11em;
 }
+
+.xowiki-content fieldset div.form-label {
+    padding: 0px 0px 0px 6px;
+}
+/*
+ * Styling of form-inline (e.g. shuffle)
+ */
+.xowiki-content fieldset div.form-inline {
+    display: inline-block;
+    padding: 0px 20px 0px 6px;
+}
+
+.xowiki-content fieldset div.form-inline div {
+    display: inline-block;
+}
+
+.xowiki-content fieldset div.form-inline div.form-label {
+    width: auto;
+    padding: 0px 15px 0px 0px;
+}
+.xowiki-content fieldset div.form-inline div input[type=number] {
+    width: 80px;
+}
+
