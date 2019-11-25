@@ -507,8 +507,10 @@ namespace eval ::xowf {
     if {${:all_roles}} {
       #:msg want.to.create=[array names :handled_roles]
       foreach role [array names :handled_roles] {
-        Context create ${:wf_container}-$role -workflow_definition $workflow_definition \
-            -in_role $role -object ${:object}
+        Context create ${:wf_container}-$role \
+            -workflow_definition $workflow_definition \
+            -in_role $role \
+            -object ${:object}
       }
     }
   }
@@ -832,6 +834,7 @@ namespace eval ::xowf {
   }
 
   Context instproc check {} {
+    ns_log notice "--- check context"
     # Check minimal contents
     set o [:wf_definition_object initial]
     if {![nsf::is object $o] || ![$o istype State]} {
@@ -892,8 +895,13 @@ namespace eval ::xowf {
       $page set __unresolved_object_type ::xowiki::Form
       foreach {type pages} [list wf_form [array names :forms] wf_parampage [array names :parampages]] {
         foreach p $pages {
-          array set "" [:resolve_form_name -object $page $p]
-          set l [::xowiki::Link new -volatile -lang en -page $page -type $type -name $(name) -item_id $(form_id)]
+          set form_info [:resolve_form_name -object $page $p]
+          set l [::xowiki::Link new -volatile \
+                     -lang en \
+                     -page $page \
+                     -type $type \
+                     -name [dict get $form_info name] \
+                     -item_id [dict get $form_info form_id]]
           #
           # The "render" method of the link does the optional fetch of
           # the names, and maintains the variable references of the
@@ -903,7 +911,7 @@ namespace eval ::xowf {
         }
       }
       set references [$page references get resolved]
-      #:log "-- link_text=$link_text// $references"
+      :log "-- link_text=$link_text// $references"
 
       if {[llength $references] > 0} {
         #:msg "updating references refs=$references"
@@ -1060,6 +1068,7 @@ namespace eval ::xowf {
     {payload ""}
     {roles all}
     {state_safe false}
+    {extra_css_class ""}
     {title}
   }
   Action instproc activate {obj} {;}
@@ -1126,7 +1135,6 @@ namespace eval ::xowf {
       }
     }
 
-    #xo::show_stack
     return [:info parent]
   }
 
@@ -1253,8 +1261,12 @@ namespace eval ::xowf {
     container and the included inputs.
   } {
     if {[llength $buttons] > 0} {
-      # take the form_button_wrapper_CSSclass from the first form field
-      ::html::div -class [[lindex $buttons 0] form_button_wrapper_CSSclass] {
+      #
+      # Take the form_button_wrapper_CSSclass from the first button.
+      #
+      set wrapper_CSSclass [[lindex $buttons 0] form_button_wrapper_CSSclass]
+
+      ::html::div -class $wrapper_CSSclass {
         foreach f $buttons {
           $f render_input
         }
@@ -1280,14 +1292,19 @@ namespace eval ::xowf {
         }
         if {$success} {
           set f [$formfieldButtonClass new -destroy_on_cleanup \
-                     -name __action_[namespace tail $action] -CSSclass $CSSclass]
+                     -name __action_[namespace tail $action] \
+                     -CSSclass $CSSclass]
+          if {[$action extra_css_class] ne ""} {
+            $f append form_button_CSSclass " " [$action extra_css_class]
+          }
+          #ns_log notice "RENDER BUTTON has CSSclass [$f CSSclass] // [$f form_button_CSSclass]"
           if {[$action exists title]} {$f title [$action title]}
           $f value [$action label]
           lappend buttons $f
         }
       }
       #
-      # render the widgets
+      # Render the button widgets.
       #
       :render_form_action_buttons_widgets -CSSclass $CSSclass $buttons
     } else {
@@ -1715,8 +1732,8 @@ namespace eval ::xowf {
   }
 
   WorkflowPage instproc www-create-or-use {
-    {-parent_id 0}
-    {-view_method edit}
+    {-parent_id:integer 0}
+    {-view_method:wordchar edit}
     {-name ""}
     {-nls_language ""}
   } {
@@ -1739,13 +1756,18 @@ namespace eval ::xowf {
       # not touch the instance variables.
       #
       set payload [${wfc}::allocate payload]
+      ns_log notice "AFTER ALLOCATE www-create-or-use <$payload>"
       set m ""
-      foreach p {name parent_id m} {
+      set title ""
+      foreach p {name title parent_id m} {
         if {[dict exists $payload $p]} {
           set $p [dict get $payload $p]
         }
       }
       set package ::${:package_id}
+      if {$title ne ""} {
+        ::xo::cc set_query_parameter title $title
+      }
 
       #
       # If these values are not set, try to obtain it the old-fashioned way.
