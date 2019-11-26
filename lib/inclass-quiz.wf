@@ -264,7 +264,7 @@ Action instproc unpublish_link {obj} {
   switch [$obj property _state] {
     "created"   {
       #
-      # Deactive try out mode, since in the inclass quiz is designed
+      # Deactivate try-out mode, since in the inclass quiz is designed
       # in a way that teacher controls the pace of exercises. When the
       # inclass-quiz is just published via QR-code, there is actually
       # very little need to define a try-out mode....
