@@ -125,53 +125,6 @@ Action instproc unpublish_link {obj} {
 }
 
 ########################################################################
-# answers_panel: show a summary of the submitted answers.
-#
-:proc answers_panel {obj state wf current_question {extra_text ""}} {
-  set answers [xowf::test_item::answer_manager get_answers $wf]
-  set nrParticipants [llength $answers]
-  set answered [xowf::test_item::renaming_form_loader answers_for_form [$current_question name] $answers]
-  set nrAnswered [llength $answered]
-
-  set answerStatus [subst {
-    <div class='panel panel-default'>
-    <div class='panel-heading'>#xowf.submitted_answers#</div>
-    <div class='panel-body'>
-    <span id="answer-status">$nrAnswered/$nrParticipants</span> #xowf.participants_answered_question#
-    </div>
-    $extra_text
-    </div>
-  }]
-
-  if {${:live_updates} && $state ne "done"} {
-    #
-    # auto refresh: when in $parent_obj 'state' or 'position' changes,
-    # do automatically a reload of the current page.
-    #
-    set url [$obj pretty_link -query m=poll]
-    template::add_body_script -script [subst {
-      (function poll() {
-        setTimeout(function() {
-          var xhttp = new XMLHttpRequest();
-          xhttp.open("GET", '$url', true);
-          xhttp.onreadystatechange = function() {
-            if (this.readyState == 4 && this.status == 200) {
-              var data = xhttp.responseText;
-              var el = document.querySelector('#answer-status');
-              el.innerHTML = data;
-              poll();
-            }
-          };
-          xhttp.send();
-        }, 1000);
-      })();
-    }]
-  }
-
-  return $answerStatus
-}
-
-########################################################################
 # form loader: create dynamically a form containing the disabled
 # questions as a preview and the survey results (the results can be
 # refreshed). This is a simplified version of get_question_form_object
@@ -227,9 +180,7 @@ Action instproc unpublish_link {obj} {
     "results" {
       [$ctx object] setCSSDefaults
       set marked [xowf::test_item::answer_manager marked_results $wf $current_form_info]
-      #set answerStatus [:answers_panel $obj $state $wf $current_question "<pre>$marked</pre>"]
       set answerStatus [xowf::test_item::answer_manager answers_panel \
-                            -polling=[expr {${:live_updates} && $state ne "done"}] \
                             -manager_ob $obj \
                             -wf $wf \
                             -current_question $current_question]
@@ -460,7 +411,7 @@ Action instproc unpublish_link {obj} {
     #ns_log notice "MASTER POLL [self] ${:name}, returned [llength $answered]/[llength $answers]"
     ad_script_abort
   }
-  ns_log notice "INCLASS-QUIZ [self] ${:instance_attributes}"
+  #ns_log notice "INCLASS-QUIZ [self] ${:instance_attributes}"
 }
 
 #
