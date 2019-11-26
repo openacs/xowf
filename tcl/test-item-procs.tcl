@@ -1054,6 +1054,11 @@ namespace eval ::xowf::test_item {
                   -package_id   [$parentObj package_id] \
                   -default_lang [$parentObj lang] \
                   -forms        $master_workflow]
+      set fc ""
+      append fc \
+          "@table:_item_id,_state,$attributeNames,_last_modified " \
+          "@table_properties:view_field=_item_id " \
+          @cr_fields:hidden
 
       set wf [$WF create_form_page_instance \
                   -name                $wfName \
@@ -1063,10 +1068,10 @@ namespace eval ::xowf::test_item {
                   -package_id          [$parentObj package_id] \
                   -default_variables   [list title $wfTitle] \
                   -instance_attributes [list workflow_definition $wfDef \
-                                            form_constraints "@table:_name,_state,$attributeNames,_last_modified @cr_fields:hidden"]]
+                                            form_constraints $fc]]
       $wf save_new
-      ns_log notice "create_answer_workflow $wf DONE [$wf pretty_link] IA <[$wf instance_attributes]>"
-      ns_log notice "create_answer_workflow parent $parentObj IA <[$parentObj instance_attributes]>"
+      #ns_log notice "create_answer_workflow $wf DONE [$wf pretty_link] IA <[$wf instance_attributes]>"
+      #ns_log notice "create_answer_workflow parent $parentObj IA <[$parentObj instance_attributes]>"
     }
 
     ########################################################################
@@ -1136,10 +1141,10 @@ namespace eval ::xowf::test_item {
 
       set instance_attributes [$obj instance_attributes]
       set answer [list item $obj]
+
       foreach f $form_fields {
         set att [$f name]
 
-        #ns_log notice "### '$att' exists [dict exists $instance_attributes $att]"
         if {[dict exists $instance_attributes $att]} {
           set value [dict get $instance_attributes $att]
           #ns_log notice "### '$att' value '$value'"
@@ -1399,10 +1404,8 @@ namespace eval ::xowf::test_item {
       {-with_title:switch false}
       obj:object
     } {
-      ns_log notice "==== provided position [info exists position]"
       if {![info exists position]} {
         set position [$obj property position]
-        ns_log notice "==== provided position property $position"
       }
       set form_objs [:nth_question_obj $obj $position]
       if {$with_numbers} {
