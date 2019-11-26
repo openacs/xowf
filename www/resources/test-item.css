@@ -46,7 +46,7 @@ div.text_interaction div.form-label
 
 div.mc_interaction,
 div.sc_interaction,
-div.text_entry_interaction,
+div.short_text_interaction,
 div.text_interaction {
     padding: 15px 0px 0px 15px;
 }
@@ -61,12 +61,12 @@ label div.richtext-label {
     width: 450px;
     padding: 0px 0px 0px 15px;
 }
-div.text_entry_interaction div.progress,
+div.short_text_interaction div.progress,
 div.mc_interaction div.progress,
 div.sc_interaction div.progress {
     margin: 0px;
 }
-div.text_entry_interaction div.progress div.progress-bar,
+div.short_text_interaction div.progress div.progress-bar,
 div.mc_interaction div.progress div.progress-bar,
 div.sc_interaction div.progress div.progress-bar {
     background-color: #ccc;
@@ -78,7 +78,7 @@ div.sc_interaction label input[type="radio"] {
     margin: 0px 0px 0px 10px;
 }
 
-div.text_entry_interaction li {
+div.short_text_interaction li {
     padding: 0px 0px 10px 0px;
 }
 
@@ -88,11 +88,11 @@ div.text_entry_interaction li {
 div.text_interaction div.incorrect {
     background: #ffcccc;
 }
-div.text_entry_interaction div.incorrect input:disabled {
+div.short_text_interaction div.incorrect input:disabled {
     background: #ffdddd;
 }
 div.text_interaction div.textarea,
-div.text_entry_interaction div.text {
+div.short_text_interaction div.text {
     background: #eee;
     white-space: pre-wrap;
     padding: 10px 10px 10px 10px;
@@ -103,7 +103,7 @@ div.text_entry_interaction div.text {
 }
 
 div.text_interaction div.correct,
-div.text_entry_interaction div.correct,
+div.short_text_interaction div.correct,
 div.mc_interaction label.correct,
 div.sc_interaction label.correct
 {
@@ -112,7 +112,7 @@ div.sc_interaction label.correct
     border-color: green;
 }
 div.text_interaction div.incorrect,
-div.text_entry_interaction div.incorrect,
+div.short_text_interaction div.incorrect,
 div.mc_interaction label.incorrect,
 div.sc_interaction label.incorrect
 {
@@ -121,7 +121,7 @@ div.sc_interaction label.incorrect
     border-color: red;
 }
 div.text_interaction div.textarea span.match,
-div.text_entry_interaction div.text span.match {
+div.short_text_interaction div.text span.match {
     background: #FFFF2F; /*#FFFFAA;*/
 }
 
@@ -154,12 +154,12 @@ form button.current {
 /*
  * Modal + jquery tag cloud
  */
-div.text_entry_interaction .modal {
+div.short_text_interaction .modal {
     display: block;     /* undo display:none          */
     height: 0;          /* height:0 is also invisible */
     overflow-y: hidden; /* no-overflow                */
 }
-div.text_entry_interaction .modal.fade.in {
+div.short_text_interaction .modal.fade.in {
   height: auto;         /* let the content decide it  */ 
 }
 
