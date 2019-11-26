@@ -154,12 +154,17 @@ form button.current {
 /*
  * Modal + jquery tag cloud
  */
-div.short_text_interaction .modal {
+div.short_text_interaction .modal,
+div.text_interaction .modal
+{
     display: block;     /* undo display:none          */
     height: 0;          /* height:0 is also invisible */
     overflow-y: hidden; /* no-overflow                */
 }
-div.short_text_interaction .modal.fade.in {
+
+div.short_text_interaction .modal.fade.in,
+div.text_interaction .modal.fade.in
+{
   height: auto;         /* let the content decide it  */ 
 }
 
