@@ -63,6 +63,7 @@
   <msg key="inclass-quiz-save">Antwort speichern</msg>
   <msg key="inclass-quiz-draft">Entwurf (Quiz ist nicht freigegeben)</msg>
   <msg key="inclass-quiz-submit">Abgabe</msg>
+  <msg key="inclass-quiz-publish_question">Frage zur Beantwortung freigeben</msg>
   <msg key="inclass-quiz-publish">Gebe Quiz frei</msg>
   <msg key="inclass-quiz-waiting_for_next">Warte auf nächste Frage ...</msg>
   <msg key="inclass-quiz-not_available">Der Quiz kann derzeit nicht beantwortet werden</msg>
