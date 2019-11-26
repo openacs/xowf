@@ -37,9 +37,10 @@ Property try_out_mode -default 0 -allow_query_parameter true
 Action allocate -proc activate {obj} {
   # Called, when we try to create or use a workflow instance
   # via a workflow definition ($obj is a workflow definition)
-  $obj set_property -new 1 name ___[::xo::cc set untrusted_user_id]
-  set parent_obj [::xo::db::CrClass  get_instance_from_db -item_id [$obj parent_id]]
-  :payload [list title [$parent_obj title]]
+  set parent_id [$obj parent_id]
+  set name [ns_md5 $parent_id-[::xo::cc set untrusted_user_id]]
+  set parent_obj [::xo::db::CrClass get_instance_from_db -item_id $parent_id]
+  :payload [list title [$parent_obj title] name $name]
 }
 
 Action initialize -proc activate {obj} {
