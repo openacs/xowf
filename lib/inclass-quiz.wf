@@ -30,7 +30,10 @@
 #  - "poll" (for students),
 #  - "delete" (for teachers),
 #  - "print-answers" (for teachers),
-#  - "qrcode" (for teachers),
+#  - "qrcode" (for teachers)
+#
+# For fully functioning, one has to install qrencode
+#     $ apt install qrencode
 #
 #
 #  TODO:

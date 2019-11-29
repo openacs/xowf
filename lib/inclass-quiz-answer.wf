@@ -194,6 +194,13 @@ State initial \
                               -form_constraints {}]
     [self]::submit label #xowf.refresh#
   }
+
+  if {[ad_conn mobile_p]} {
+    ::xo::cc set_parameter template_file view-plain-master
+    ::xo::cc set_parameter MenuBar 0
+  }
+
+  
   return $waiting_form_obj
 }
 
