@@ -115,7 +115,7 @@ State initial \
         #
         set title_list {}
         lappend title_list \
-            [$obj title] \
+            [$parent_obj title] \
             [xowf::test_item::question_manager current_question_title -with_numbers $parent_obj]
         $obj title [join $title_list " · "]
 

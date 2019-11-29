@@ -58,6 +58,7 @@
   <msg key="participants_answered_question">Teilnehmer haben diese Frage beantwortet</msg>
   <msg key="please_answer">Bitte beantworten Sie</msg>
   <msg key="results">Ergebnisse</msg>
+  <msg key="show_results">Zeige Antwortstatisktik</msg>  
   <msg key="results_of">Ergebnisse von</msg>
   <msg key="inclass-quiz-unpublish">Quiz beenden</msg>
   <msg key="inclass-quiz-save">Antwort speichern</msg>

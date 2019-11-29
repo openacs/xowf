@@ -59,7 +59,7 @@ Action publish -next_state published -label #xowf.inclass-quiz-publish#
 Action unpublish -next_state done -label #xowf.inclass-quiz-unpublish#
 Action republish -next_state published -label #xowf.inclass-quiz-republish#
 Action restart -next_state initial -label #xowf.restart#
-Action show_results -next_state results -label #xowf.results#
+Action show_results -next_state results -label #xowf.show_results#
 
 State parameter {
   {extra_css {/resources/xowf/test-item.css}}
@@ -171,7 +171,8 @@ Action instproc unpublish_link {obj} {
     }
 
     "published" {
-      set qrCode [subst {<div><img class='img-thumbnail' src="[$obj pretty_link -query m=qrcode]" ></div>}]
+      set src [$obj pretty_link -query m=qrcode]
+      set qrCode [subst {<div><img class='img-thumbnail qrcode' src="$src" ></div>}]
       set answerStatus [xowf::test_item::answer_manager answers_panel \
                             -polling=${:live_updates} \
                             -manager_ob $obj \

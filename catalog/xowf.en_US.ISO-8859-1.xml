@@ -41,6 +41,7 @@
   <msg key="please_answer">Please answer</msg>
   <msg key="participants_answered_question">participants answered this question</msg>
   <msg key="results">Results</msg>
+  <msg key="show_results">Show Results</msg>  
   <msg key="results_of">Results_of</msg>
 
   <msg key="online-exam-select">Create Exam</msg>
@@ -73,7 +74,7 @@
   <msg key="inclass-quiz-draft">Draft (quiz not published)</msg>
   <msg key="inclass-quiz-create">Create quiz</msg>
   <msg key="inclass-quiz-publish">Publish quiz</msg>
-  <msg key="inclass-quiz-publish_question">Publish question</msg>
+  <msg key="inclass-quiz-publish_question">Get answers for this question</msg>
   <msg key="inclass-quiz-unpublish">Close quiz</msg>
   <msg key="inclass-quiz-republish">Publish quiz again</msg>
   <msg key="inclass-quiz-save">Save Answer"</msg>
