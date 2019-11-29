@@ -1183,7 +1183,7 @@ namespace eval ::xowf::test_item {
       {-heading #xowf.submitted_answers#}
       {-submission_msg #xowf.participants_answered_question#}
       {-manager_obj:object}
-      {-target_state}
+      {-target_state ""}
       {-wf:object}
       {-current_question ""}
       {-extra_text ""}
@@ -1320,7 +1320,7 @@ namespace eval ::xowf::test_item {
       set full_form {}
       set full_fc {}
       set full_disabled_fc {}
-      set titles {}
+      set title_infos {}
       foreach form_obj $form_objs number $numbers {
         set form_obj [::xowf::test_item::renaming_form_loader rename_attributes $form_obj]
         set form_title [$form_obj title]
