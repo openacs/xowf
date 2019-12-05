@@ -28,7 +28,7 @@
   <msg key="online-exam-draft_exam">Draft Exam (not published)</msg>
   <msg key="online-exam-open">Exam open (published)</msg>
   <msg key="online-exam-closed">Exam closed</msg>
-  <msg key="answer">Antwort</msg>
+  <msg key="answer">Answer</msg>
   <msg key="question">Question</msg>
   <msg key="questions">Questions</msg>  
   <msg key="first_question">First Question</msg>  
@@ -42,8 +42,11 @@
   <msg key="participants_answered_question">participants answered this question</msg>
   <msg key="results">Results</msg>
   <msg key="show_results">Show Results</msg>  
-  <msg key="results_of">Results_of</msg>
+  <msg key="results_of">Results of</msg>
 
+  <msg key="online-exam-actual_signature">Actual Signature</msg>
+  <msg key="online-exam-submission_signature">Submission Signature</msg>    
+  
   <msg key="online-exam-select">Create Exam</msg>
   <msg key="online-exam-review">Review Exam</msg>
   <msg key="online-exam-submit">Final submission</msg>
@@ -82,6 +85,8 @@
   <msg key="inclass-quiz-waiting_for_next">Waiting for next question ...</msg>
   <msg key="inclass-quiz-not_available">The quiz is currently not available for answering</msg>
   <msg key="inclass-quiz-already_answered">You have already answered question %number%</msg>
+  <msg key="inclass-quiz-quiz_instances">Listing of Submitted Quizzes</msg>
+
   <msg key="short_text_question">Short Text Question</msg>
   <msg key="sc_question">Single Choice Question</msg>
   <msg key="mc_question">Multiple Choice Question</msg>

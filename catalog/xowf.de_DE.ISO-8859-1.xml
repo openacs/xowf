@@ -44,7 +44,9 @@
   <msg key="online-exam-republish">Schalte Prüfung nochmals frei</msg>
   <msg key="refresh">Aktualisieren</msg>
   <msg key="print">Drucken</msg>
-  
+
+  <msg key="online-exam-actual_signature">Aktuelle Signatur</msg>
+  <msg key="online-exam-submission_signature">Abgegebene Signatur</msg>    
   <msg key="online-exam-exam_instances">Liste der Bearbeitungen</msg>
   <msg key="online-exam-try_out">Wollen Sie einen Probelauf durchführen?</msg>
   <msg key="online-exam-can_answer">Studierende können die Fragen mit folgendem Link beantworten</msg>    

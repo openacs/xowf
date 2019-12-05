@@ -267,10 +267,10 @@ Action instproc unpublish_link {obj} {
           set answerAttributes [xowf::test_item::renaming_form_loader \
                                     answer_attributes [$i instance_attributes]]
           set sha256 [ns_md string -digest sha256 $answerAttributes]
-          set signatureString "<div class='signature'>Aktuelle Signatur: $sha256</div>\n"
+          set signatureString "<div class='signature'>online-exam-actual_signature: $sha256</div>\n"
           set submissionSignature [$i property signature ""]
           if {$submissionSignature ne ""} {
-            append signatureString "<div>Abgabe Signatur: $submissionSignature<div>\n"
+            append signatureString "<div>#xowf.online-exam-submission_signature#: $submissionSignature<div>\n"
           }
         } else {
           set signatureString ""

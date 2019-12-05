@@ -211,7 +211,7 @@ Action instproc unpublish_link {obj} {
     set pLink . ;# deactivated for the time being
     #util_user_message -html -message "$survey is available as <a target='_blank' href='$pLink'>$pLink</a>"
     set menu [subst {\[<a href='[ns_quotehtml [::xo::cc url]]'>#xowf.refresh#</a>,
-      <a href='[ns_quotehtml $lLink]'>#xowf.online-exam-exam_instances#</a>,
+      <a href='[ns_quotehtml $lLink]'>#xowf.inclass-quiz-quiz_instances#</a>,
       <a href='[ns_quotehtml $pLink]'>#xowf.print#</a>\]}]
   }
 
@@ -350,7 +350,7 @@ Action instproc unpublish_link {obj} {
         set pretty_date [clock format [clock scan $time] -format "%Y-%m-%d %T"]
         #
         # The call to "render_content" calls actually the
-        # "summary_form" of online-exam-answer.wf when the submit
+        # "summary_form" of the *-answer.wf when the submit
         # instance is in state "done". We set the __feedback_mode to
         # get the auto-correction included.
         #
