@@ -29,7 +29,11 @@ Action allocate -proc activate {obj} {
   # Called, when we try to create or use a workflow instance
   # via a workflow definition ($obj is a workflow definition)
   set parent_id [$obj parent_id]
-  set name [ns_md5 $parent_id-[::xo::cc set untrusted_user_id]]
+  #
+  # Use requestor instead of user_id to allow also participants, which
+  # are not authroized.
+  #
+  set name [ns_md5 $parent_id-[::xo::cc requestor]]
   set parent_obj [::xo::db::CrClass get_instance_from_db -item_id $parent_id]
   :payload [list title [$parent_obj title] name $name]
 }
