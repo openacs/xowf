@@ -1315,6 +1315,7 @@ namespace eval ::xowf::test_item {
     :object method question_info {
       {-numbers ""}
       {-with_title:switch false}
+      {-with_minutes:switch false}
       form_objs
     } {
       set full_form {}
@@ -1324,6 +1325,7 @@ namespace eval ::xowf::test_item {
       foreach form_obj $form_objs number $numbers {
         set form_obj [::xowf::test_item::renaming_form_loader rename_attributes $form_obj]
         set form_title [$form_obj title]
+        set minutes [:question_property $form_obj minutes]
         set title ""
         if {$number ne ""} {
           append title "#xowf.question# $number:"
@@ -1331,11 +1333,16 @@ namespace eval ::xowf::test_item {
         if {$with_title} {
           append title " $form_title"
         }
+        if {$with_minutes} {
+          append title " - [:minutes_string $form_obj]"
+        }
+
         append full_form "<h3>$title</h3>\n"
         append full_form [$form_obj property form] \n
         lappend title_infos \
+            full_title $title \
             title $form_title \
-            minutes [:question_property $form_obj minutes] \
+            minutes $minutes \
             number $number
         lappend full_fc [$form_obj property form_constraints]
         lappend full_disabled_fc [$form_obj property disabled_form_constraints]
@@ -1376,6 +1383,7 @@ namespace eval ::xowf::test_item {
     :public object method combined_question_form {
       {-with_numbers:switch false}
       {-with_title:switch false}
+      {-with_minutes:switch false}
       obj:object
     } {
       set form_objs [:question_objs $obj]
@@ -1384,10 +1392,15 @@ namespace eval ::xowf::test_item {
         for {set i 1} {$i <= [llength $form_objs]} {incr i} {
           lappend numbers $i
         }
-        return [:question_info -with_title=$with_title -numbers $numbers $form_objs]
+        set extra_flags [list -numbers $numbers]
       } else {
-        return [:question_info -with_title=$with_title $form_objs]
+        set extra_flags ""
       }
+      return [:question_info \
+                  -with_title=$with_title \
+                  -with_minutes=$with_minutes \
+                  {*}$extra_flags \
+                  $form_objs]
     }
 
     :public object method current_question_form {
@@ -1402,6 +1415,7 @@ namespace eval ::xowf::test_item {
       {-position:integer}
       {-with_numbers:switch false}
       {-with_title:switch false}
+      {-with_minutes:switch false}
       obj:object
     } {
       if {![info exists position]} {
@@ -1410,10 +1424,15 @@ namespace eval ::xowf::test_item {
       set form_objs [:nth_question_obj $obj $position]
       if {$with_numbers} {
         set number [expr {$position + 1}]
-        return [:question_info -with_title=$with_title -numbers $number $form_objs]
+        set extra_flags [list -numbers $number]
       } else {
-        return [:question_info -with_title=$with_title $form_objs]
+        set extra_flags ""
       }
+      return [:question_info \
+                  -with_title=$with_title \
+                  -with_minutes=$with_minutes \
+                  {*}$extra_flags \
+                  $form_objs]
     }
 
     :public object method current_question_number {obj:object} {

@@ -180,7 +180,7 @@ State done \
 proc working_form_loader {ctx form_name} {
   set obj [$ctx object]
   set position [$obj property position]
-  
+
   set parent_id [$obj parent_id]
   #:msg "waiting_form_loader $form_title [$obj instance_attributes]"
   set parent_obj [::xo::db::CrClass get_instance_from_db -item_id $parent_id]
@@ -189,7 +189,7 @@ proc working_form_loader {ctx form_name} {
   #
   # Load the form.
   #
-  set form_obj [::xowf::test_item::question_manager nth_question_obj $parent_obj $position]  
+  set form_obj [::xowf::test_item::question_manager nth_question_obj $parent_obj $position]
 
   #
   # Update IP address each time the form is loaded.
@@ -201,9 +201,7 @@ proc working_form_loader {ctx form_name} {
   #
   # Update the title of the page
   #
-  set minutes  [::xowf::test_item::question_manager minutes_string $form_obj]
-
-  :set_title $obj -question true -minutes $minutes
+  :set_title $obj -for_question -with_minutes
 
   return $form_obj
 }
@@ -211,16 +209,16 @@ proc working_form_loader {ctx form_name} {
 #
 # Set "title" with question/user/IP information.
 #
-:proc set_title {obj {-question:boolean true} {-minutes ""}} {
-  set parent_obj [::xo::db::CrClass  get_instance_from_db -item_id [$obj parent_id]]  
-  if {$question && [$obj state] eq "working"} {
+:proc set_title {obj {-for_question:switch false} {-with_minutes:switch false}} {
+  set parent_obj [::xo::db::CrClass  get_instance_from_db -item_id [$obj parent_id]]
+  if {$for_question && [$obj state] eq "working"} {
     set form_info [::xowf::test_item::question_manager nth_question_form \
                        -with_numbers \
+                       -with_title \
+                       -with_minutes=$with_minutes \
                        -position [$obj property position] \
                        $parent_obj]
-    set question_title [dict get $form_info title_infos title]
-    set number [dict get $form_info title_infos number]
-    set titleString "[_ xowf.question] $number: $question_title $minutes"
+    set titleString [dict get $form_info title_infos full_title]
     set title [list [string trim $titleString]]
   }
   lappend title \
@@ -244,13 +242,14 @@ proc working_form_loader {ctx form_name} {
   set form_info [::xowf::test_item::question_manager combined_question_form \
                      -with_numbers \
                      -with_title \
+                     -with_minutes \
                      $parent_obj]
 
   set summary_form [dict get $form_info form]
   set summary_fc [dict get $form_info disabled_form_constraints]
   regsub -all {</?form[^>]*>} $summary_form {} summary_form
 
-  :set_title $obj -question false
+  :set_title $obj
 
   return [::xowiki::Form new \
               -destroy_on_cleanup \

@@ -93,6 +93,7 @@ div.short_text_interaction div.incorrect input:disabled {
     background: #ffdddd;
 }
 div.text_interaction div.textarea,
+div.short_text_interaction div.textarea,
 div.short_text_interaction div.text {
     background: #eee;
     white-space: pre-wrap;
@@ -122,6 +123,7 @@ div.sc_interaction label.incorrect
     border-color: red;
 }
 div.text_interaction div.textarea span.match,
+div.short_text_interaction div.textarea span.match,
 div.short_text_interaction div.text span.match {
     background: #FFFF2F; /*#FFFFAA;*/
 }
