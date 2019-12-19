@@ -1015,7 +1015,7 @@ namespace eval ::xowf::test_item {
       # first delete workflow and data, when it exists
       if {[$parentObj property wfName] ne ""} {
         set wf [:delete_all_answer_data $parentObj]
-        if {$wf ne ""} {$wf www-delete}
+        if {$wf ne ""} {$wf delete}
       }
 
       #
@@ -1083,7 +1083,7 @@ namespace eval ::xowf::test_item {
       set wf [:get_answer_wf $obj]
       if {$wf ne ""} {
         set items [:get_wf_instances -initialize false $wf]
-        foreach i [$items children] { $i www-delete }
+        foreach i [$items children] { $i delete }
       }
       return $wf
     }
