@@ -1328,7 +1328,7 @@ namespace eval ::xowf::test_item {
         set minutes [:question_property $form_obj minutes]
         set title ""
         if {$number ne ""} {
-          append title "#xowf.question# $number:"
+          append title "[_ xowf.question] $number:"
         }
         if {$with_title} {
           append title " $form_title"
@@ -1440,7 +1440,7 @@ namespace eval ::xowf::test_item {
     }
     :public object method current_question_title {{-with_numbers:switch false} obj:object} {
       if {$with_numbers} {
-        return "#xowf.question# [:current_question_number $obj]"
+        return "[_ xowf.question] [:current_question_number $obj]"
       }
     }
 
