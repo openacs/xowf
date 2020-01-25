@@ -182,10 +182,17 @@ proc working_form_loader {ctx form_name} {
   set position [$obj property position]
 
   set parent_id [$obj parent_id]
-  #:msg "waiting_form_loader $form_title [$obj instance_attributes]"
+  #:msg "working_form_loader [$obj instance_attributes]"
   set parent_obj [::xo::db::CrClass get_instance_from_db -item_id $parent_id]
   set parent_state [$parent_obj state]
 
+  #
+  # In case shuffling is required, fetch via the shuffled position.
+  #
+  set shuffle_id [expr {[$parent_obj property shuffle_items 0] ? [$obj creation_user] : -1}]
+  set position [::xowf::test_item::question_manager shuffled_index \
+                    -shuffle_id $shuffle_id \
+                    $parent_obj $position]
   #
   # Load the form.
   #
@@ -201,7 +208,7 @@ proc working_form_loader {ctx form_name} {
   #
   # Update the title of the page
   #
-  :set_title $obj -for_question -with_minutes
+  :set_title $obj -position $position -for_question -with_minutes
 
   return $form_obj
 }
@@ -209,14 +216,19 @@ proc working_form_loader {ctx form_name} {
 #
 # Set "title" with question/user/IP information.
 #
-:proc set_title {obj {-for_question:switch false} {-with_minutes:switch false}} {
+:proc set_title {
+  obj
+  -position:integer
+  {-for_question:switch false}
+  {-with_minutes:switch false}
+} {
   set parent_obj [::xo::db::CrClass  get_instance_from_db -item_id [$obj parent_id]]
   if {$for_question && [$obj state] eq "working"} {
     set form_info [::xowf::test_item::question_manager nth_question_form \
                        -with_numbers \
                        -with_title \
                        -with_minutes=$with_minutes \
-                       -position [$obj property position] \
+                       -position $position \
                        $parent_obj]
     set titleString [dict get $form_info title_infos full_title]
     set title [list [string trim $titleString]]
@@ -236,13 +248,15 @@ proc working_form_loader {ctx form_name} {
 #
 :proc summary_form {ctx form_title} {
   set obj [$ctx object]
+  set parent_obj [::xo::db::CrClass  get_instance_from_db -item_id [$obj parent_id]]
   #:msg "summary_form_loader $form_title [$obj instance_attributes]"
 
-  set parent_obj [::xo::db::CrClass  get_instance_from_db -item_id [$obj parent_id]]
+  set shuffle_id [expr {[$parent_obj property shuffle_items 0] ? [$obj creation_user] : -1}]
   set form_info [::xowf::test_item::question_manager combined_question_form \
                      -with_numbers \
                      -with_title \
                      -with_minutes \
+                     -shuffle_id $shuffle_id \
                      $parent_obj]
 
   set summary_form [dict get $form_info form]

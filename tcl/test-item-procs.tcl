@@ -973,7 +973,7 @@ namespace eval ::xowf::test_item {
     }
 
     :public object method get_form_object {{-set_title:boolean true} ctx:object form_name} {
-      #:msg "renaming_form_loader for form_name <$form_name>"
+      #ns_log notice "renaming_form_loader get_form_object for form_name <$form_name>"
       set form_id [$ctx default_load_form_id $form_name]
       set obj [$ctx object]
       set form_obj [::xo::db::CrClass get_instance_from_db -item_id $form_id]
@@ -1288,6 +1288,7 @@ namespace eval ::xowf::test_item {
                              -package_id [$obj package_id] \
                              -default_lang [$obj lang] \
                              -forms $questionNames]
+      #ns_log notice "load_question_objs called with $obj $names -> $questionForms"      
       return $questionForms
     }
 
@@ -1300,16 +1301,46 @@ namespace eval ::xowf::test_item {
       return [:load_question_objs $obj [:current_question_name $obj]]
     }
 
-    :public object method question_objs {obj:object} {
-      return [:load_question_objs $obj [$obj property question]]
+
+    :public object method shuffled_question_objs {obj:object shuffle_id} {
+      set form_objs [:question_objs $obj]      
+      set result {}
+      foreach i [::xowiki::randomized_indices -seed $shuffle_id [llength $form_objs]] {
+        lappend result [lindex $form_objs $i]
+      }
+      return $result
     }
+
+    :public object method shuffled_index {{-shuffle_id:integer -1} obj:object position} {
+      if {$shuffle_id > -1} {
+        set form_objs [:question_objs $obj]
+        set shuffled [::xowiki::randomized_indices -seed $shuffle_id [llength $form_objs]]
+        set position [lindex $shuffled $position]
+      }
+      return $position
+    }
+
+    :public object method question_objs {{-shuffle_id:integer -1} obj:object} {
+      set form_objs [:load_question_objs $obj [$obj property question]]
+      if {$shuffle_id > -1} {
+        set result {}
+        foreach i [::xowiki::randomized_indices -seed $shuffle_id [llength $form_objs]] {
+          lappend result [lindex $form_objs $i]
+        }
+        set form_objs $result
+      }
+      return $form_objs
+    }
+    
     :public object method question_names {obj:object} {
       return [$obj property question]
     }
 
     :public object method nth_question_obj {obj:object position:integer} {
       set questions [dict get [$obj instance_attributes] question]
-      return [:load_question_objs $obj [lindex $questions $position]]
+      set result [:load_question_objs $obj [lindex $questions $position]]
+      #ns_log notice "nth_question_obj called with $position -> $result"
+      return $result
     }
 
     :object method question_info {
@@ -1384,9 +1415,10 @@ namespace eval ::xowf::test_item {
       {-with_numbers:switch false}
       {-with_title:switch false}
       {-with_minutes:switch false}
+      {-shuffle_id:integer -1}      
       obj:object
     } {
-      set form_objs [:question_objs $obj]
+      set form_objs [:question_objs -shuffle_id $shuffle_id $obj]
       if {$with_numbers} {
         set numbers ""
         for {set i 1} {$i <= [llength $form_objs]} {incr i} {
