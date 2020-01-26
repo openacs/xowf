@@ -302,11 +302,17 @@ proc working_form_loader {ctx form_name} {
     $ctx forward working_form_loader $container %proc $ctx
     $ctx forward summary_form $container %proc $ctx
   }
-set :policy ::xowf::test_item::test-item-policy1
+  set :policy ::xowf::test_item::test-item-policy1
 
   if {${:state} in {working done}} {
     set parent_obj [::xo::db::CrClass  get_instance_from_db -item_id [:parent_id]]
     set question_names [::xowf::test_item::question_manager question_names $parent_obj]
+
+    #
+    # Use the current_position in the sense of the nth question of the
+    # user, which is not necessarily the nth question in the list of
+    # questions due to shuffling.
+    #
     set current_position [:property position]
 
     set actions {}
