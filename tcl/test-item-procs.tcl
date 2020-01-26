@@ -165,12 +165,15 @@ namespace eval ::xowiki::formfield {
       }
     }
 
-    if {${:grading} ne "none"} {
-      if {${:grading} ni {exact partial}} {
-        error "invalid grading '$grading'; valid are 'exact' or 'partial'"
+    if {${:grading} ne "none" && [llength ${:grading}] >1} {
+      dict set grading_dict default [lindex ${:grading} 0]
+      dict set grading_dict options {}
+      foreach o ${:grading} {
+        dict lappend grading_dict options [list $o $o]
       }
-      set options "{exact exact} {partial partial}"
-      set gradingSpec [subst {grading {select,options=$options,default=${:grading},label=#xowf.Grading-Schema#}}]
+      dict set grading_dict form_item_wrapper_CSSclass form-inline
+      dict set grading_dict label #xowf.Grading-Schema#         
+      set gradingSpec [list [list grading [:dict_to_fc -type select $grading_dict]]]
     } else {
       set gradingSpec ""
     }
@@ -186,8 +189,8 @@ namespace eval ::xowiki::formfield {
     }
     :create_components  [subst {
       {minutes number,form_item_wrapper_CSSclass=form-inline,min=1,default=2,label=#xowf.Minutes#}
-      $gradingSpec
       $shuffleSpec
+      $gradingSpec
       {interaction {$interaction_class,$options,feedback_level=${:feedback_level},auto_correct=${:auto_correct},label=}}
       [:feed_back_definition]
     }]
@@ -642,6 +645,7 @@ namespace eval ::xowiki::formfield {
     dict set fc_dict answer $correct
     dict set fc_dict options $options
     dict set fc_dict shuffle_kind [${:parent_field} get_named_sub_component_value shuffle]
+    dict set fc_dict grading [${:parent_field} get_named_sub_component_value grading]
     dict set fc_dict show_max [${:parent_field} get_named_sub_component_value show_max]
 
     set interaction_class [expr {${:multiple} ? "mc_interaction" : "sc_interaction"}]
