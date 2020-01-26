@@ -22,10 +22,10 @@
 # An admin might with to add the following entries to the folder to ease
 # creation of exercises and exams
 #
-#   {entry -name New.App.TextInteraction -label "Text Interaction" -form en:TestItemText.form}
-#   {entry -name New.App.ShortTextInteraction -label "Short Text Interaction" -form en:TestItemShortText.form}
-#   {entry -name New.App.MCInteraction -label "MC Interaction" -form en:TestItemMC.form}
-#   {entry -name New.App.SCInteraction -label "SC Interaction" -form en:TestItemSC.form}
+#   {entry -name New.Item.TextInteraction -label "Text Interaction" -form en:TestItemText.form}
+#   {entry -name New.Item.ShortTextInteraction -label "Short Text Interaction" -form en:TestItemShortText.form}
+#   {entry -name New.Item.MCInteraction -label "MC Interaction" -form en:TestItemMC.form}
+#   {entry -name New.Item.SCInteraction -label "SC Interaction" -form en:TestItemSC.form}
 #   {entry -name New.App.Exam -label Exam -form en:online-exam.wf}
 #
 # The policy has to allow the following methods on FormPages:
