@@ -294,7 +294,7 @@ Action instproc unpublish_link {obj} {
     set actions {}
     foreach question $questions {
       incr count
-      ${container}::Action ${container}::$count \
+      ${container}::Action create ${container}::$count \
           -label "$count" \
           -extra_css_class [expr {$position == $count - 1 ? "current" : ""}] \
           -proc activate {obj} \
