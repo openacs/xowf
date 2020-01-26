@@ -316,7 +316,7 @@ set :policy ::xowf::test_item::test-item-policy1
     set count 0
     foreach question $question_names {
       incr count
-      ${container}::::Action ${container}::$count \
+      ${container}::Action ${container}::$count \
           -label "$count" \
           -next_state working \
           -extra_css_class [expr {$current_position == $count - 1 ? "current" : ""}] \
