@@ -5,7 +5,7 @@
 # to create the exam, to try it out and to publish it
 # (online-exam.wf).
 #
-# This workflow is based on the test-item infrastrstructure using
+# This workflow is based on the test-item infrastructure using
 # the "renaming_form_loader" and "question_manager".
 #
 
