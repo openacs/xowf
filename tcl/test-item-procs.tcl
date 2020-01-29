@@ -1108,13 +1108,18 @@ namespace eval ::xowf::test_item {
 
     ########################################################################
 
-    :public object method get_wf_instances {{-initialize false} wf:object} {
+    :public object method get_wf_instances {
+      {-initialize false}
+      {-orderby ""}
+      wf:object
+    } {
       # get_wf_instances: return the workflow instances
       return [::xowiki::FormPage get_form_entries \
                   -base_item_ids             [$wf item_id] \
                   -form_fields               "" \
                   -always_queried_attributes "*" \
                   -initialize                $initialize \
+                  -orderby                   $orderby \
                   -publish_status            all \
                   -package_id                [$wf package_id]]
     }
