@@ -121,7 +121,7 @@ Action instproc unpublish_link {obj} {
 ########################################################################
 # form loader: create dynamically a form containing the disabled
 # questions as a preview and the survey results (the results can be
-# refreshed). 
+# refreshed).
 #
 :proc load_form {ctx title} {
   set obj [$ctx object]
@@ -182,15 +182,15 @@ Action instproc unpublish_link {obj} {
                          -target_state done \
                          -wf $wf]
   } else {
-    set answerStats ""    
+    set answerStats ""
   }
 
-  append text "$menu $answerStats\n"  
+  append text "$menu $answerStats\n"
   append report "$menu $extraAction"
 
   # Remove wrapping forms
   regsub -all {</?form[^>]*>} $fullQuestionForm {} fullQuestionForm
-  
+
   set f [::xowiki::Form new \
              -destroy_on_cleanup \
              -set name en:question \
@@ -244,8 +244,13 @@ Action instproc unpublish_link {obj} {
                                : 0 }]
       set examTitle ${:title}
       foreach i [$items children] {
-        set uid [$i property _creation_user]
-        set userName [acs_user::get_element -user_id $uid -element username]
+        $i set _userName [acs_user::get_element -user_id [$i creation_user] -element username]
+        $i set _fullName [::xo::get_user_name [$i creation_user]]
+      }
+      $items orderby _userName
+      foreach i [$items children] {
+        set userName [$i set _userName]
+        set fullName [$i set _fullName]
 
         if {[$i state] ne "done"} {
           ns_log notice "online-exam: submission of $userName is not finished (state [$i state])"
@@ -262,7 +267,7 @@ Action instproc unpublish_link {obj} {
         #
         $i set __feedback_mode 2
         set question_form [$i render_content]
-        
+
         if {$withSignature} {
           set answerAttributes [xowf::test_item::renaming_form_loader \
                                     answer_attributes [$i instance_attributes]]
@@ -275,9 +280,9 @@ Action instproc unpublish_link {obj} {
         } else {
           set signatureString ""
         }
-        
+
         append HTML "\n<div class='single_exam'>" \
-            "<h2>$userName · [::xo::get_user_name $uid] · $pretty_date · IP [$i property ip]</h2>" \
+            "<h2>$userName · $fullName · $pretty_date · IP [$i property ip]</h2>" \
             $signatureString \
             $question_form \
             "</div>\n"
