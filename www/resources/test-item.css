@@ -16,6 +16,25 @@ div.single_exam div.incorrect input\[type="text"\]:disabled {
     color: black;
 }
 
+@media print{    
+    div {
+	font-size: 11px;
+    }
+    div.single_exam {
+	page-break-after: always;
+    }
+    div.single_exam h2 {
+	font-size: 12px;
+    }
+    div.single_exam h3 {
+	font-size: 12px;
+    }
+    div.single_exam div.form-label {
+	display: none;
+    }
+
+}
+
 /*
  * Exam preview
  */
