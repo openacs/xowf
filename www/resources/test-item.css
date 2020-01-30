@@ -145,6 +145,7 @@ div.text_interaction div.textarea span.match,
 div.short_text_interaction div.textarea span.match,
 div.short_text_interaction div.text span.match {
     background: #FFFF2F; /*#FFFFAA;*/
+    margin: 0px 2px;  /* otherwise two spans separated by space merge visually */
 }
 
 /*
