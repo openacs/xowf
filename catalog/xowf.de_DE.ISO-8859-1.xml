@@ -2,7 +2,7 @@
 <message_catalog package_key="xowf" locale="de_DE" charset="ISO-8859-1">
 
   <msg key="Exercise">Beispiel</msg>
-  <msg key="Grading-Schema">Bewertungsverfahren</msg>
+  <msg key="Grading-Schema">Bewertungsschema</msg>
   <msg key="Minutes">Minuten</msg>
   <msg key="alternative">Alternative</msg>
   <msg key="answer_correct">Richtig!</msg>
