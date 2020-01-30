@@ -179,7 +179,7 @@ State done \
 #
 proc working_form_loader {ctx form_name} {
   set obj [$ctx object]
-  set position [$obj property position]
+  set item_nr [$obj property position]
 
   set parent_id [$obj parent_id]
   #:msg "working_form_loader [$obj instance_attributes]"
@@ -192,7 +192,7 @@ proc working_form_loader {ctx form_name} {
   set shuffle_id [expr {[$parent_obj property shuffle_items 0] ? [$obj creation_user] : -1}]
   set position [::xowf::test_item::question_manager shuffled_index \
                     -shuffle_id $shuffle_id \
-                    $parent_obj $position]
+                    $parent_obj $item_nr]
   #
   # Load the form.
   #
@@ -208,7 +208,7 @@ proc working_form_loader {ctx form_name} {
   #
   # Update the title of the page
   #
-  :set_title $obj -position $position -for_question -with_minutes
+  :set_title $obj -position $position -item_nr $item_nr -for_question -with_minutes
 
   return $form_obj
 }
@@ -219,16 +219,18 @@ proc working_form_loader {ctx form_name} {
 :proc set_title {
   obj
   -position:integer
+  -item_nr:integer
   {-for_question:switch false}
   {-with_minutes:switch false}
 } {
-  set parent_obj [::xo::db::CrClass  get_instance_from_db -item_id [$obj parent_id]]
+  set parent_obj [::xo::db::CrClass get_instance_from_db -item_id [$obj parent_id]]
   if {$for_question && [$obj state] eq "working"} {
     set form_info [::xowf::test_item::question_manager nth_question_form \
                        -with_numbers \
                        -with_title \
                        -with_minutes=$with_minutes \
                        -position $position \
+                       -item_nr $item_nr \
                        $parent_obj]
     set titleString [dict get $form_info title_infos full_title]
     set title [list [string trim $titleString]]
@@ -339,6 +341,10 @@ proc working_form_loader {ctx form_name} {
       lappend actions save review
     } else {
       lappend actions logout
+    }
+    if {${:state} in {"working" "done"}} {
+      ::xo::cc set_parameter MenuBar 0
+      ::xo::cc set_parameter template_file view-plain-master
     }
     ${container}::${:state} actions $actions
   }

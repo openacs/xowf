@@ -172,7 +172,7 @@ namespace eval ::xowiki::formfield {
         dict lappend grading_dict options [list $o $o]
       }
       dict set grading_dict form_item_wrapper_CSSclass form-inline
-      dict set grading_dict label #xowf.Grading-Schema#         
+      dict set grading_dict label #xowf.Grading-Scheme#         
       set gradingSpec [list [list grading [:dict_to_fc -type select $grading_dict]]]
     } else {
       set gradingSpec ""
@@ -1454,6 +1454,7 @@ namespace eval ::xowf::test_item {
 
     :public object method nth_question_form {
       {-position:integer}
+      {-item_nr:integer}
       {-with_numbers:switch false}
       {-with_title:switch false}
       {-with_minutes:switch false}
@@ -1462,9 +1463,12 @@ namespace eval ::xowf::test_item {
       if {![info exists position]} {
         set position [$obj property position]
       }
+      if {![info exists item_nr]} {
+        set item_nr $position
+      }
       set form_objs [:nth_question_obj $obj $position]
       if {$with_numbers} {
-        set number [expr {$position + 1}]
+        set number [expr {$item_nr + 1}]
         set extra_flags [list -numbers $number]
       } else {
         set extra_flags ""

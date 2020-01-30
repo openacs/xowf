@@ -22,11 +22,13 @@
 # An admin might with to add the following entries to the folder to ease
 # creation of exercises and exams
 #
+#   {clear_menu -menu New}
+#
 #   {entry -name New.Item.TextInteraction -label "Text Interaction" -form en:TestItemText.form}
 #   {entry -name New.Item.ShortTextInteraction -label "Short Text Interaction" -form en:TestItemShortText.form}
 #   {entry -name New.Item.MCInteraction -label "MC Interaction" -form en:TestItemMC.form}
 #   {entry -name New.Item.SCInteraction -label "SC Interaction" -form en:TestItemSC.form}
-#   {entry -name New.App.Exam -label Exam -form en:online-exam.wf}
+#   {entry -name New.App.Exam -label "Online Exam" -form en:online-exam.wf}
 #
 # The policy has to allow the following methods on FormPages:
 #
@@ -41,7 +43,7 @@
 set :autoname 1   ;# to avoid editable name field
 set :policy ::xowf::test_item::test-item-policy-publish
 set :debug 0
-set :live_updates 0
+set :live_updates 1
 
 Action select -next_state created -label #xowf.online-exam-select# \
     -title #xowf.online-exam-title-select#
@@ -151,8 +153,8 @@ Action instproc unpublish_link {obj} {
     set aLink [$obj pretty_link -query m=answer]
     set pLink [$obj pretty_link -query m=print-answers]
     #util_user_message -html -message "$survey is available as <a target='_blank' href='$pLink'>$pLink</a>"
-    set menu "\[<a href='[ns_quotehtml [::xo::cc url]]'>#xowf.refresh#</a>,\
-         <a href='[ns_quotehtml $lLink]'>#xowf.online-exam-exam_instances#</a>,\
+    # [<a href='[ns_quotehtml [::xo::cc url]]'>#xowf.refresh#</a>,
+    set menu "\[<a href='[ns_quotehtml $lLink]'>#xowf.online-exam-exam_instances#</a>,\
          <a href='[ns_quotehtml $pLink]'>#xowf.online-exam-protocol#</a>\]"
   }
 
@@ -185,7 +187,7 @@ Action instproc unpublish_link {obj} {
     set answerStats ""
   }
 
-  append text "$menu $answerStats\n"
+  append text "$answerStats\n"
   append report "$menu $extraAction"
 
   # Remove wrapping forms
