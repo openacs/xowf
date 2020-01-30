@@ -17,11 +17,13 @@
 # An admin might with to add the following entries to the folder to
 # ease creation of exercises and exams
 #
+#   {clear_menu -menu New}
+#
 #   {entry -name New.Item.TextInteraction -label "Text Interaction" -form en:TestItemText.form}
 #   {entry -name New.Item.ShortTextInteraction -label "Short Text Interaction" -form en:TestItemShortText.form}
 #   {entry -name New.Item.MCInteraction -label "MC Interaction" -form en:TestItemMC.form}
 #   {entry -name New.Item.SCInteraction -label "SC Interaction" -form en:TestItemSC.form}
-#   {entry -name New.App.Quiz -label Quiz -form en:inclass-quiz.wf}
+#   {entry -name New.App.Quiz -label "Inclass Quiz" -form en:inclass-quiz.wf}
 #
 # The policy has to allow the following methods on FormPages:
 #
