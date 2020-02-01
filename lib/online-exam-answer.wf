@@ -240,6 +240,10 @@ proc working_form_loader {ctx form_name} {
       "IP: [$obj property ip]"
   #ns_log notice "SETTING $obj title [join $title { · }]"
   $obj title [join $title " · "]
+
+  #:msg set_title-set_parameter-MenuBar-[$obj state]
+  ::xo::cc set_parameter MenuBar 0
+  ::xo::cc set_parameter template_file view-plain-master
 }
 
 #
@@ -341,10 +345,6 @@ proc working_form_loader {ctx form_name} {
       lappend actions save review
     } else {
       lappend actions logout
-    }
-    if {${:state} in {"working" "done"}} {
-      ::xo::cc set_parameter MenuBar 0
-      ::xo::cc set_parameter template_file view-plain-master
     }
     ${container}::${:state} actions $actions
   }
