@@ -218,6 +218,11 @@ Action instproc unpublish_link {obj} {
   }
 
   ${container}::Property return_url -default "" -allow_query_parameter true
+  #
+  # Unset the actual query return_url, since we want to use it via
+  # property.  In some cases, we have to set it explicitly from the
+  # property, e.g. in www-delete.
+  # 
   ::xo::cc unset_query_parameter return_url
 
   ########################################################################
@@ -226,6 +231,7 @@ Action instproc unpublish_link {obj} {
   # Delete the workflow instance and all its associated data.
   #
   :proc www-delete {} {
+    ::xo::cc set_query_parameter return_url [:property return_url]
     xowf::test_item::answer_manager delete_all_answer_data [self]
     next
   }
