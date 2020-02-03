@@ -300,7 +300,9 @@ proc working_form_loader {ctx form_name} {
   #
   # Ensure default value is updated for each instance individually.
   #
-  Property ip -default [expr {[ns_conn isconnected] ? [ad_conn peeraddr] : "nowhere"}]
+  set ctx [:wf_context]
+  set container [$ctx wf_container]
+  ${container}::Property ip -default [expr {[ns_conn isconnected] ? [ad_conn peeraddr] : "nowhere"}]
 
   set ctx [:wf_context]
   set container [$ctx wf_container]
