@@ -172,7 +172,7 @@ namespace eval ::xowiki::formfield {
         dict lappend grading_dict options [list $o $o]
       }
       dict set grading_dict form_item_wrapper_CSSclass form-inline
-      dict set grading_dict label #xowf.Grading-Scheme#         
+      dict set grading_dict label #xowf.Grading-Scheme#
       set gradingSpec [list [list grading [:dict_to_fc -type select $grading_dict]]]
     } else {
       set gradingSpec ""
@@ -631,7 +631,7 @@ namespace eval ::xowiki::formfield {
       if {[lindex [split $fieldName .] end] eq 0} {
         continue
       }
-      ns_log notice ...fieldName=$fieldName->$value
+      #ns_log notice ...fieldName=$fieldName->$value
       #set af answer[incr count]
       set text [dict get $value $fieldName.text]
       # trim leading <p> since this causes a newline in the checkbox label
@@ -663,7 +663,7 @@ namespace eval ::xowiki::formfield {
         answer:[:dict_to_fc -type $widget $fc_dict] \
         @categories:off @cr_fields:hidden
 
-    ns_log notice "mc_interaction2 $form\n$fc"
+    #ns_log notice "mc_interaction2 $form\n$fc"
     ${:object} set_property -new 1 form $form
     ${:object} set_property -new 1 form_constraints $fc
     set anon_instances true ;# TODO make me configurable
@@ -916,7 +916,7 @@ namespace eval ::xowf::test_item {
       set result ""
       set stem [:form_name_based_attribute_stem $formName]
       set answerAttributes [:answer_attributes $instance_attributes]
-      ns_log notice "answer_for_form\ninstance_attributes $instance_attributes"
+      #ns_log notice "answer_for_form\ninstance_attributes $instance_attributes"
       if {[dict exists $answerAttributes $stem]} {
         set value [dict get $answerAttributes $stem]
         if {$value ne ""} {
@@ -1002,6 +1002,8 @@ namespace eval ::xowf::test_item {
     #
     #  - marked_results
     #  - answers_panel
+    #  - participant_result
+    #  - result_table
     #
     :public object method create_workflow {
       {-answer_workflow /packages/xowf/lib/online-exam-answer.wf}
@@ -1143,9 +1145,11 @@ namespace eval ::xowf::test_item {
     ########################################################################
 
     :object method participant_result {obj:object form_info} {
-      set form_fields [$obj create_form_fields_from_form_constraints \
-                           -lookup \
-                           [dict get $form_info disabled_form_constraints]]
+      #
+      # In case, the passed-in obj modifies during rendering the
+      # perconnection parameters, save and restore these.
+      #
+      set form_fields [:answer_form_field_objs -wf $obj]
       $obj form_field_index $form_fields
 
       set instance_attributes [$obj instance_attributes]
@@ -1177,6 +1181,119 @@ namespace eval ::xowf::test_item {
       return $answer
     }
 
+    :object method answer_form_field_objs {-clear:switch -wf:object} {
+      set key ::__test_item_answer_form_fields
+      if {$clear} {
+        #
+        # The -clear option is needed, when there are multiple
+        # assessments protocols/tables on the same page (currently
+        # not).
+        #
+        unset $key
+      } else {
+        if {![info exists $key]} {
+          set form_info [::xowf::test_item::question_manager combined_question_form -with_numbers $wf]
+          set pc_params [::xo::cc perconnection_parameter_get_all]
+          set $key [$wf create_form_fields_from_form_constraints \
+                        -lookup \
+                        [dict get $form_info disabled_form_constraints]]
+          ::xo::cc perconnection_parameter_set_all $pc_params
+        }
+        return [set $key]
+      }
+    }
+
+    :public object method result_table {
+      -package_id:integer
+      -items:object,required
+      {-view_all_method print-answers}
+      wf:object
+    } {
+      set answer_form_field_objs [:answer_form_field_objs -wf $wf]
+
+      set form_field_objs [$wf create_raw_form_field \
+                               -name _online-exam-userName \
+                               -spec text,label=#xowf.participant#]
+      #
+      # Create for every answer field a matching grading field
+      #
+      set ff_dict {}
+      foreach answer_field_obj $answer_form_field_objs {
+        #ns_log notice "LABEL [$answer_field_obj name] <[$answer_field_obj label]>"
+        $answer_field_obj label [string trimright [$answer_field_obj name] _]
+        $answer_field_obj mixin ::xowf::test_item::td_pretty_value
+
+        set grading_field_obj [$wf create_raw_form_field \
+                                   -name [$answer_field_obj name].score \
+                                   -spec number,label=#xowf.Grading-Score#]
+        lappend form_field_objs \
+            $answer_field_obj \
+            $grading_field_obj
+        dict set ff_dict [$answer_field_obj name] $answer_field_obj
+        dict set ff_dict [$grading_field_obj name] $grading_field_obj
+      }
+
+      lappend form_field_objs \
+          [$wf create_raw_form_field \
+               -name _creation_date \
+               -spec date,label=#xowiki.Page-last_modified#]
+
+      #
+      # Take "orderby" from the query parameter. If not set, order by
+      # the first field.
+      #
+      set orderby [::$package_id query_parameter orderby:token ""]
+      if {$orderby eq "" && [llength $form_field_objs] > 0} {
+        set orderby [[lindex $form_field_objs 0] name],asc
+      }
+
+      #
+      # Create table widget.
+      #
+      set table_widget [::xowiki::TableWidget create_from_form_fields \
+                            -package_id $package_id \
+                            -form_field_objs $form_field_objs \
+                            -orderby $orderby]
+      #
+      # Extend properties of every answer with corresponding ".score"
+      # values.
+      #
+      foreach p [$items children] {
+        foreach ff_obj $answer_form_field_objs {
+          $ff_obj object $p
+          set property [$ff_obj name]
+          $ff_obj value [$p property $property]
+
+          $ff_obj set_feedback 3
+          if {[$ff_obj exists grading_score]} {
+            set r [$ff_obj set grading_score]
+          } else {
+            set r [expr {[$ff_obj set evaluated_answer_result] eq "correct" ? 100.0 : 0.0}]
+            #ns_log notice [$ff_obj serialize]
+          }
+          $p set_property -new 1 $property.score $r
+        }
+      }
+
+      #
+      # Render table widget with extended properties.
+      #
+      set HTML [$table_widget render_page_items_as_table \
+                    -package_id $package_id \
+                    -items $items \
+                    -form_field_objs $form_field_objs \
+                    -csv true \
+                    -uc {tcl {[$p state] ne "done"}} \
+                    -view_field _online-exam-userName \
+                    -view_filter_link [$wf pretty_link -query m=$view_all_method] \
+                    {*}[expr {[info exists generate] ? [list -generate $generate] : ""}] \
+                    -return_url [ad_return_url] \
+                    -return_url_att local_return_url \
+                   ]
+      $table_widget destroy
+      return $HTML
+    }
+
     :public object method marked_results {wf:object form_info} {
       set items [:get_wf_instances $wf]
       set results ""
@@ -1197,6 +1314,7 @@ namespace eval ::xowf::test_item {
       {-current_question ""}
       {-extra_text ""}
     } {
+
       set answers [xowf::test_item::answer_manager get_answers $wf]
       set nrParticipants [llength $answers]
       if {$current_question ne ""} {
@@ -1250,6 +1368,21 @@ namespace eval ::xowf::test_item {
 }
 
 namespace eval ::xowf::test_item {
+  ::xotcl::Class create ::xowf::test_item::td_pretty_value \
+      -superclass ::xowiki::formfield::FormField
+
+  ::xowf::test_item::td_pretty_value instproc pretty_value {value} {
+    #ns_log notice "${:name} pretty_value [:info precedence]"
+    if {"::xowiki::formfield::checkbox" in [:info precedence]} {
+      set v ${value}
+    } else {
+      set v [next]
+    }
+    return $v
+  }
+}
+
+namespace eval ::xowf::test_item {
 
 
   nx::Object create question_manager {
@@ -1297,7 +1430,7 @@ namespace eval ::xowf::test_item {
                              -package_id [$obj package_id] \
                              -default_lang [$obj lang] \
                              -forms $questionNames]
-      #ns_log notice "load_question_objs called with $obj $names -> $questionForms"      
+      #ns_log notice "load_question_objs called with $obj $names -> $questionForms"
       return $questionForms
     }
 
@@ -1312,7 +1445,7 @@ namespace eval ::xowf::test_item {
 
 
     :public object method shuffled_question_objs {obj:object shuffle_id} {
-      set form_objs [:question_objs $obj]      
+      set form_objs [:question_objs $obj]
       set result {}
       foreach i [::xowiki::randomized_indices -seed $shuffle_id [llength $form_objs]] {
         lappend result [lindex $form_objs $i]
@@ -1340,7 +1473,7 @@ namespace eval ::xowf::test_item {
       }
       return $form_objs
     }
-    
+
     :public object method question_names {obj:object} {
       return [$obj property question]
     }
@@ -1424,7 +1557,7 @@ namespace eval ::xowf::test_item {
       {-with_numbers:switch false}
       {-with_title:switch false}
       {-with_minutes:switch false}
-      {-shuffle_id:integer -1}      
+      {-shuffle_id:integer -1}
       obj:object
     } {
       set form_objs [:question_objs -shuffle_id $shuffle_id $obj]
@@ -1527,6 +1660,7 @@ namespace eval ::xowf::test_item {
       poll           admin
       edit           admin
       print-answers  admin
+      print-answer-table admin
       delete         admin
       qrcode         admin
     }
