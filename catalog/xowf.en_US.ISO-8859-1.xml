@@ -3,6 +3,7 @@
 
   <msg key="Exercise">Exercise</msg>
   <msg key="Grading-Scheme">Grading Scheme</msg>
+  <msg key="Grading-Score">Score</msg>  
   <msg key="Shuffle">Shuffle</msg>  
   <msg key="Minutes">Minutes</msg>
   <msg key="alternative">Alternative</msg>
@@ -39,6 +40,7 @@
   <msg key="print">Print</msg>
   <msg key="testrun">Testrun</msg>
   <msg key="please_answer">Please answer</msg>
+  <msg key="participant">Participant</msg>  
   <msg key="participants_answered_question">participants answered this question</msg>
   <msg key="results">Results</msg>
   <msg key="show_results">Show Results</msg>  
@@ -68,6 +70,7 @@
   <msg key="online-exam-not-published">The Exam has not been published</msg>
   <msg key="online-exam-finished">The Exam is finished</msg>
   <msg key="online-exam-protocol">Exam Protocol</msg>
+  <msg key="online-exam-results-table">Results</msg>
   <msg key="online-exam-submitted_exams_heading">Submitted exams</msg>
   <msg key="online-exam-submitted_exams_msg">Persons have submitted exam</msg>  
 

@@ -3,6 +3,7 @@
 
   <msg key="Exercise">Beispiel</msg>
   <msg key="Grading-Schema">Bewertungsschema</msg>
+  <msg key="Grading-Score">Bewertung</msg>  
   <msg key="Minutes">Minuten</msg>
   <msg key="alternative">Alternative</msg>
   <msg key="answer_correct">Richtig!</msg>
@@ -54,9 +55,10 @@
   <msg key="online-exam-not-published">Die Prüfung ist von der Aufsicht nicht freigegeben!</msg>
   <msg key="online-exam-finished">Die Prüfungszeit ist beendet</msg>
   <msg key="online-exam-protocol">Prüfungsprotokoll</msg>
+  <msg key="online-exam-results-table">Ergebnisse</msg>
   <msg key="online-exam-submitted_exams_heading">Abgegebene Prüfungen</msg>
   <msg key="online-exam-submitted_exams_msg">Studierende haben eine Prüfung abgegeben</msg>
-
+  <msg key="participant">Teilnehmer</msg>  
   <msg key="participants_answered_question">Teilnehmer haben diese Frage beantwortet</msg>
   <msg key="please_answer">Bitte beantworten Sie</msg>
   <msg key="results">Ergebnisse</msg>
