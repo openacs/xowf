@@ -36,6 +36,7 @@
 #  - "edit" (for students),
 #  - "poll" (for teachers),
 #  - "print-answers" (for teachers),
+#  - "print-answer-table" (for teachers),
 #  - "delete" (for teachers),
 #
 # Gustaf Neumann, Feb 2012
@@ -151,11 +152,17 @@ Action instproc unpublish_link {obj} {
     }]
     set lLink "$wf_pretty_link?m=list"
     set aLink [$obj pretty_link -query m=answer]
-    set pLink [$obj pretty_link -query m=print-answers]
+    set pLink1 [$obj pretty_link -query m=print-answers]
+    set pLink2 [$obj pretty_link -query m=print-answer-table]
     #util_user_message -html -message "$survey is available as <a target='_blank' href='$pLink'>$pLink</a>"
     # [<a href='[ns_quotehtml [::xo::cc url]]'>#xowf.refresh#</a>,
-    set menu "\[<a href='[ns_quotehtml $lLink]'>#xowf.online-exam-exam_instances#</a>,\
-         <a href='[ns_quotehtml $pLink]'>#xowf.online-exam-protocol#</a>\]"
+    set menu "\["
+    if {[acs_user::site_wide_admin_p -user_id [::xo::cc user_id]]} {
+      append menu "<a href='[ns_quotehtml $lLink]'>#xowf.online-exam-exam_instances#</a>, "
+    }
+    append menu \
+        "<a href='[ns_quotehtml $pLink1]'>#xowf.online-exam-protocol#</a>, " \
+        "<a href='[ns_quotehtml $pLink2]'>#xowf.online-exam-results-table#</a>\]"
   }
 
   set extraAction ""
@@ -171,6 +178,7 @@ Action instproc unpublish_link {obj} {
           "<a href='$aLink'>$aLink</a>"
     }
   }
+
   if {$state in {published done}} {
     if {$state eq "done"} {
       [$ctx object] setCSSDefaults
@@ -222,7 +230,7 @@ Action instproc unpublish_link {obj} {
   # Unset the actual query return_url, since we want to use it via
   # property.  In some cases, we have to set it explicitly from the
   # property, e.g. in www-delete.
-  # 
+  #
   ::xo::cc unset_query_parameter return_url
 
   ########################################################################
@@ -234,6 +242,40 @@ Action instproc unpublish_link {obj} {
     ::xo::cc set_query_parameter return_url [:property return_url]
     xowf::test_item::answer_manager delete_all_answer_data [self]
     next
+  }
+
+  ########################################################################
+  # web-callable method "print-answer-table"
+  #
+  # Print the answers in a somewhat printer friendly way.
+  #
+  :proc www-print-answer-table {} {
+    set HTML ""
+    set ctx [::xowf::Context require [self]]
+    set wf [xowf::test_item::answer_manager get_answer_wf [self]]
+    if {$wf ne ""} {
+      set items [xowf::test_item::answer_manager get_wf_instances $wf]
+      set items2 [$items deep_copy]
+      foreach i [$items2 children] {
+        $i set online-exam-userName [acs_user::get_element -user_id [$i creation_user] -element username]
+        $i set online-exam-fullName [::xo::get_user_name [$i creation_user]]
+      }
+      set HTML [::xowf::test_item::answer_manager result_table \
+                    -package_id ${:package_id} \
+                    -items $items2 \
+                    [self]]
+      $items2 destroy
+    }
+    if {$HTML eq ""} {
+      set HTML "#xowiki.no_data#"
+    } else {
+      set HTML "<h1>#xowf.online-exam-results-table#</h1>$HTML"
+    }
+    set return_url [[$wf package_id] query_parameter local_return_url:localurl [:pretty_link]]
+    append HTML "<hr><p><a class='btn btn-default' href='$return_url'>#xowiki.back#</a></p>\n"
+
+    xo::Page requireCSS /resources/xowf/test-item.css
+    :www-view $HTML
   }
 
   ########################################################################
@@ -251,22 +293,25 @@ Action instproc unpublish_link {obj} {
                                ? [dict get ${:instance_attributes} signature]
                                : 0 }]
       set examTitle ${:title}
+      set filter_id [[$wf package_id] query_parameter id:integer ""]
+
       foreach i [$items children] {
-        $i set _userName [acs_user::get_element -user_id [$i creation_user] -element username]
-        $i set _fullName [::xo::get_user_name [$i creation_user]]
+        $i set online-exam-userName [acs_user::get_element -user_id [$i creation_user] -element username]
+        $i set online-exam-fullName [::xo::get_user_name [$i creation_user]]
       }
-      $items orderby _userName
+      $items orderby online-exam-userName
       foreach i [$items children] {
-        set userName [$i set _userName]
-        set fullName [$i set _fullName]
+        set userName [$i set online-exam-userName]
+        set fullName [$i set online-exam-fullName]
 
         if {[$i state] ne "done"} {
           ns_log notice "online-exam: submission of $userName is not finished (state [$i state])"
           continue
         }
+        if {$filter_id ne "" && [$i item_id] ne $filter_id} {
+          continue
+        }
 
-        set time [::xo::db::tcl_date [$i property _last_modified] tz_var]
-        set pretty_date [clock format [clock scan $time] -format "%Y-%m-%d %T"]
         #
         # The call to "render_content" calls actually the
         # "summary_form" of online-exam-answer.wf when the submit
@@ -289,6 +334,9 @@ Action instproc unpublish_link {obj} {
           set signatureString ""
         }
 
+        set time [::xo::db::tcl_date [$i property _last_modified] tz_var]
+        set pretty_date [clock format [clock scan $time] -format "%Y-%m-%d %T"]
+
         append HTML "\n<div class='single_exam'>" \
             "<h2>$userName · $fullName · $pretty_date · IP [$i property ip]</h2>" \
             $signatureString \
@@ -302,6 +350,8 @@ Action instproc unpublish_link {obj} {
     } else {
       set HTML "<h1>#xowf.online-exam-protocol#</h1>$HTML"
     }
+    set return_url [[$wf package_id] query_parameter local_return_url:localurl [:pretty_link]]
+    append HTML "<hr><p><a  class='btn btn-default' href='$return_url'>#xowiki.back#</a></p>\n"
     ::xo::cc set_parameter template_file view-plain-master
     ::xo::cc set_parameter MenuBar 0
     xo::Page requireCSS /resources/xowf/test-item.css
