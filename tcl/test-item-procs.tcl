@@ -1268,7 +1268,7 @@ namespace eval ::xowf::test_item {
           if {[$ff_obj exists grading_score]} {
             set r [$ff_obj set grading_score]
           } else {
-            set r [expr {[$ff_obj set evaluated_answer_result] eq "correct" ? 100.0 : 0.0}]
+            set r [expr {[$ff_obj set evaluated_answer_result] eq "correct" ? 100.0 : 0.0}]*
             #ns_log notice [$ff_obj serialize]
           }
           $p set_property -new 1 $property.score $r
