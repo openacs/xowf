@@ -24,10 +24,10 @@
 #
 #   {clear_menu -menu New}
 #
-#   {entry -name New.Item.TextInteraction -label "Text Interaction" -form en:TestItemText.form}
-#   {entry -name New.Item.ShortTextInteraction -label "Short Text Interaction" -form en:TestItemShortText.form}
-#   {entry -name New.Item.MCInteraction -label "MC Interaction" -form en:TestItemMC.form}
-#   {entry -name New.Item.SCInteraction -label "SC Interaction" -form en:TestItemSC.form}
+#   {entry -name New.Item.TextInteraction -form en:TestItemText.form}
+#   {entry -name New.Item.ShortTextInteraction -form en:TestItemShortText.form}
+#   {entry -name New.Item.MCInteraction -form en:TestItemMC.form}
+#   {entry -name New.Item.SCInteraction -form en:TestItemSC.form}
 #   {entry -name New.App.Exam -label "Online Exam" -form en:online-exam.wf}
 #
 # The policy has to allow the following methods on FormPages:

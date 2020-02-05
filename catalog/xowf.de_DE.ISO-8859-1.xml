@@ -78,11 +78,16 @@
   <msg key="shuffle_peruser">Pro Benutzer</msg>
   <msg key="shuffle_always">Immer</msg>  
 
-  <msg key="short_text_question">Kurztextfrage</msg>
+  <msg key="Short_text_question">Kurztextfrage</msg>
   <msg key="sc_question">Single-Choice-Frage</msg>
   <msg key="mc_question">Multiple-Choice-Frage</msg>
   <msg key="text_question">Textfrage</msg>    
   <msg key="sub_question">Teilfrage</msg>
   <msg key="show_max">Zeige maximal</msg>
+
+  <msg key="New.Item.TextInteraction">Textfrage</msg>
+  <msg key="New.Item.ShortTextInteraction">Kurztextfrage</msg>
+  <msg key="New.Item.MCInteraction">MC-Frage</msg>
+  <msg key="New.Item.SCInteraction">SC-Frage</msg>      
 
 </message_catalog>

@@ -99,5 +99,11 @@
 
   <msg key="shuffle_none">None</msg>
   <msg key="shuffle_peruser">Per user</msg>
-  <msg key="shuffle_always">Always</msg>  
+  <msg key="shuffle_always">Always</msg>
+
+  <msg key="New.Item.TextInteraction">Text Interaction</msg>
+  <msg key="New.Item.ShortTextInteraction">Short Text Interaction</msg>
+  <msg key="New.Item.MCInteraction">MC Interaction</msg>
+  <msg key="New.Item.SCInteraction">SC Interaction</msg>      
+
 </message_catalog>
