@@ -1330,6 +1330,7 @@ namespace eval ::xowf {
     post-process form in edit mode to provide feedback in feedback mode
   } {
     # In feedback mode, we set the CSS class to correct or incorrect
+
     if {[info exists :__feedback_mode]} {
       unset :__feedback_mode
       ::xo::Page requireCSS /resources/xowf/feedback.css
