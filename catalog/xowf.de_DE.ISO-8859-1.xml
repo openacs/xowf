@@ -81,7 +81,8 @@
   <msg key="Short_text_question">Kurztextfrage</msg>
   <msg key="sc_question">Single-Choice-Frage</msg>
   <msg key="mc_question">Multiple-Choice-Frage</msg>
-  <msg key="text_question">Textfrage</msg>    
+  <msg key="text_question">Textfrage</msg>
+  <msg key="ul_question">Dateiabgabefrage</msg>
   <msg key="sub_question">Teilfrage</msg>
   <msg key="show_max">Zeige maximal</msg>
 
@@ -89,5 +90,6 @@
   <msg key="New.Item.ShortTextInteraction">Kurztextfrage</msg>
   <msg key="New.Item.MCInteraction">MC-Frage</msg>
   <msg key="New.Item.SCInteraction">SC-Frage</msg>      
+  <msg key="New.Item.UploadInteraction">Dateiabgabefrage</msg>        
 
 </message_catalog>

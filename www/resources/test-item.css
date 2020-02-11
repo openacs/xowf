@@ -58,7 +58,8 @@ div.question_text {
 }
 div.mc_interaction div.form-label,
 div.sc_interaction div.form-label,
-div.text_interaction div.form-label
+div.text_interaction div.form-label,
+div.upload_interaction div.form-label
 {
     display: none;
 }

@@ -61,7 +61,7 @@ namespace eval ::xowiki::formfield {
     question.
 
     @param feedback_level "full", "single", or "none"
-    @param grading one of "exact", "partial", or "none"
+    @param grading one of "exact", "none", or one of the partial grading schemes
     @param nr_choices number of choices
     @param question_type "mc", "sc", "ot", or "st"
   }
@@ -149,6 +149,13 @@ namespace eval ::xowiki::formfield {
         set auto_correct ${:auto_correct}
         set can_shuffle true
       }
+      ul { # 
+        set interaction_class upload_interaction
+        set options ""
+        set auto_correct false
+        set can_shuffle false
+      }
+
       default {error "unknown question type: ${:question_type}"}
     }
     :log test_item-auto_correct=$auto_correct

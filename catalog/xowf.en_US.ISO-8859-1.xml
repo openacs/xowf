@@ -94,6 +94,7 @@
   <msg key="sc_question">Single Choice Question</msg>
   <msg key="mc_question">Multiple Choice Question</msg>
   <msg key="text_question">Text Question</msg>
+  <msg key="ul_question">File Upload Question</msg>
   <msg key="sub_question">Sub-Question</msg>  
   <msg key="show_max">Show Max</msg>
 
@@ -104,6 +105,7 @@
   <msg key="New.Item.TextInteraction">Text Interaction</msg>
   <msg key="New.Item.ShortTextInteraction">Short Text Interaction</msg>
   <msg key="New.Item.MCInteraction">MC Interaction</msg>
-  <msg key="New.Item.SCInteraction">SC Interaction</msg>      
+  <msg key="New.Item.SCInteraction">SC Interaction</msg>
+  <msg key="New.Item.UploadInteraction">Upload Interaction</msg>        
 
 </message_catalog>
