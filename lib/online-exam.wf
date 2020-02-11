@@ -192,7 +192,6 @@ Action instproc unpublish_link {obj} {
                          -manager_obj $obj \
                          -target_state done \
                          -wf $wf]
-    ns_log notice =============================STATE=$state
   } else {
     set answerStats ""
   }
