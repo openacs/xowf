@@ -28,6 +28,7 @@
 #   {entry -name New.Item.ShortTextInteraction -form en:TestItemShortText.form}
 #   {entry -name New.Item.MCInteraction -form en:TestItemMC.form}
 #   {entry -name New.Item.SCInteraction -form en:TestItemSC.form}
+#   {entry -name New.Item.UploadInteraction -form en:TestItemUpload.form}
 #   {entry -name New.App.Exam -label "Online Exam" -form en:online-exam.wf}
 #
 # The policy has to allow the following methods on FormPages:
@@ -187,10 +188,11 @@ Action instproc unpublish_link {obj} {
     set answerStats [xowf::test_item::answer_manager answers_panel \
                          -heading "#xowf.online-exam-submitted_exams_heading#" \
                          -submission_msg "#xowf.online-exam-submitted_exams_msg#" \
-                         -polling=[expr {${:live_updates} && $state ne "done"}] \
+                         -polling=[expr {${:live_updates} && $state ni {initial created done}}] \
                          -manager_obj $obj \
                          -target_state done \
                          -wf $wf]
+    ns_log notice =============================STATE=$state
   } else {
     set answerStats ""
   }
