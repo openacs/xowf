@@ -78,7 +78,7 @@
   <msg key="shuffle_peruser">Pro Benutzer</msg>
   <msg key="shuffle_always">Immer</msg>  
 
-  <msg key="Short_text_question">Kurztextfrage</msg>
+  <msg key="short_text_question">Kurztextfrage</msg>
   <msg key="sc_question">Single-Choice-Frage</msg>
   <msg key="mc_question">Multiple-Choice-Frage</msg>
   <msg key="text_question">Textfrage</msg>
