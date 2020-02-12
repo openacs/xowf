@@ -582,6 +582,7 @@ namespace eval ::xowiki::formfield {
       "{#xowiki.single_word# single_word}"
       "{#xowiki.multiple_words# multiple_words}"
       "{#xowiki.multiple_lines# multiple_lines}"
+      "{#xowiki.file_upload# file_upload}"
     } " "]
     set textEntryConfigSpec [subst {
         {options {radio,horizontal=true,form_item_wrapper_CSSclass=form-inline,options=$render_hints,default=single_word,label=#xowf.answer#}}
