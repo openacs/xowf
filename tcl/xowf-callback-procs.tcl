@@ -12,40 +12,14 @@ namespace eval ::xowf {
     Callback when this an xowf instance is created
   } {
     ns_log notice "++++ BEGIN ::xowf::after-instantiate -package_id $package_id"
-    # General setup
-    ::xo::Package initialize -package_id $package_id
-    set folder_id [::$package_id folder_id]
-    
+
     #
     # Create a parameter page for convenience
     #
-    set pform_id [::xowiki::Weblog instantiate_forms -forms en:Parameter.form \
-                      -package_id $package_id]
-
-    ::xo::db::sql::content_item set_live_revision \
-        -revision_id [::$pform_id revision_id] \
-        -publish_status production
-
-    set ia {
-      MenuBar t top_includelet none production_mode t with_user_tracking t with_general_comments f
-      with_digg f with_tags f
-      ExtraMenuEntries {{entry -name New.Extra.Workflow -label "#xowf.menu-New-Extra-Workflow#" -form /en:Workflow.form}}
-      with_delicious f with_notifications f security_policy ::xowiki::policy1
-    }
-    
-    set parameter_page_name en:xowf-default-parameter
-    set p [::$pform_id create_form_page_instance \
-               -name $parameter_page_name \
-               -nls_language en_US \
-               -default_variables [list title "XoWf Default Parameter" parent_id $folder_id \
-                                       package_id $package_id instance_attributes $ia]]
-    $p save_new
-
-    #
-    # Make the parameter page the default
-    #
-    parameter::set_value -package_id $package_id -parameter parameter_page -value $parameter_page_name
-    callback subsite::parameter_changed -package_id $package_id -parameter parameter_page -value $parameter_page_name
+    ::xowf::Package configure_fresh_instance \
+        -package_id $package_id \
+        -parameters [::xowf::Package default_package_parameters] \
+        -parameter_page_info [::xowf::Package default_package_parameter_page_info]
 
     ns_log notice "++++ END ::xowf::after-instantiate -package_id $package_id"
   }
