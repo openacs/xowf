@@ -86,10 +86,10 @@
   <msg key="sub_question">Teilfrage</msg>
   <msg key="show_max">Zeige maximal</msg>
 
-  <msg key="New.Item.TextInteraction">Textfrage</msg>
-  <msg key="New.Item.ShortTextInteraction">Kurztextfrage</msg>
-  <msg key="New.Item.MCInteraction">MC-Frage</msg>
-  <msg key="New.Item.SCInteraction">SC-Frage</msg>      
-  <msg key="New.Item.UploadInteraction">Dateiabgabefrage</msg>        
+  <msg key="menu-New-Item-TextInteraction">Textfrage</msg>
+  <msg key="menu-New-Item-ShortTextInteraction">Kurztextfrage</msg>
+  <msg key="menu-New-Item-MCInteraction">MC-Frage</msg>
+  <msg key="menu-New-Item-SCInteraction">SC-Frage</msg>      
+  <msg key="menu-New-Item-UploadInteraction">Dateiabgabefrage</msg>        
 
 </message_catalog>

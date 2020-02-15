@@ -102,10 +102,14 @@
   <msg key="shuffle_peruser">Per user</msg>
   <msg key="shuffle_always">Always</msg>
 
-  <msg key="New.Item.TextInteraction">Text Interaction</msg>
-  <msg key="New.Item.ShortTextInteraction">Short Text Interaction</msg>
-  <msg key="New.Item.MCInteraction">MC Interaction</msg>
-  <msg key="New.Item.SCInteraction">SC Interaction</msg>
-  <msg key="New.Item.UploadInteraction">Upload Interaction</msg>        
+  <msg key="menu-New-Item-TextInteraction">Text Interaction</msg>
+  <msg key="menu-New-Item-ShortTextInteraction">Short Text Interaction</msg>
+  <msg key="menu-New-Item-MCInteraction">MC Interaction</msg>
+  <msg key="menu-New-Item-SCInteraction">SC Interaction</msg>
+  <msg key="menu-New-Item-UploadInteraction">Upload Interaction</msg>        
+
+  <msg key="menu-New-App-OnlineExam">Online Exam</msg>
+  <msg key="menu-New-App-InclassQuiz">Inclass Quiz</msg>
+  <msg key="menu-New-App-InclassExam">Inclass Exam</msg>        
 
 </message_catalog>
