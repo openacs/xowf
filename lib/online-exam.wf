@@ -1,23 +1,24 @@
 # -*- Tcl -*-
 ########################################################################
-# Online-Exam workflow, designed similar to mobile-clicker
-# ========================================================
+# Online-Exam workflow
+# ====================
 #
-# This workflow lets a teacher choose from a predefined set of exam
-# questions, which are typically open text questions.  A teacher
-# selects one or several exam questions via drag and drop. The teacher
-# can test the exam by entering test answers. The results are provided
-# in form of a table.
+# Defining exams: This workflow lets a teacher choose from a
+# predefined set of exam questions, which are typically open text,
+# short text, single or multiple choice questions.  The teacher
+# selects test questions via drag and drop. The teacher can perform a
+# test run of the created exam, and can get the results via a result
+# table.
 #
-# When a teacher is satisfied with the exam, the exam can be
-# published. In this step, all answers of the testing phase are
-# deleted. In the process of publishing, the link to start the exam is
-# offered to the user.  When the exam is published, the teacher can
-# see the incoming answers in the report by refreshing the page. When
-# the exam is done, it is unpublished. The workflow offers the teacher
-# to see a summary of the results in form of a table (an to download
-# the results via csv), or the teacher can produce a printer friendly
-# version of the answers.
+# Publishing and closing exams: When a teacher is satisfied with the
+# exam, the exam can be published. In this step, all answers of the
+# testing phase are deleted. In the process of publishing, the link to
+# start the exam is offered to the user.  When the exam is published,
+# the teacher can see the incoming answers in the report by refreshing
+# the page. When the exam is done, it is unpublished. The workflow
+# offers the teacher to see a summary of the results in form of a
+# table (an to download the results via csv), or the teacher can
+# produce a printer friendly version of the answers.
 #
 # An admin might with to add the following entries to the folder to ease
 # creation of exercises and exams
