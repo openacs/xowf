@@ -1,12 +1,16 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 <message_catalog package_key="xowf" locale="es_ES" charset="ISO-8859-1">
 
+  <msg key="Exercise">Ejercicio</msg>
+  <msg key="Grading-Scheme">Sistema de calificación</msg>
+  <msg key="Grading-Score">Puntuación</msg>
+  <msg key="Shuffle">Mezclar</msg>
+  <msg key="Minutes">Minutos</msg>
   <msg key="alternative">Alternativa</msg>
   <msg key="answer_correct">¡Correcto!</msg>
   <msg key="answer_incorrect">Lo siento, es incorrecto.</msg>
   <msg key="columns">Columnas</msg>
   <msg key="correct">¿Correcto?</msg>
-  <msg key="Exercise">Ejercicio</msg>
   <msg key="exercise-text">Ejercicio de texto</msg>
   <msg key="exercise_mc">Ejercicio de respuesta múltiple</msg>
   <msg key="exercise_ot">Ejercicio de texto abierto</msg>
@@ -14,8 +18,97 @@
   <msg key="feedback">Retroalimentación</msg>
   <msg key="feedback_correct">Retroalimentación correcta</msg>
   <msg key="feedback_incorrect">Retroalimentación incorrecta</msg>
-  <msg key="Grading-Schema">Esquema de calificación</msg>
   <msg key="lines">Líneas</msg>
   <msg key="menu-New-Extra-Workflow">Nuevo Workflow</msg>
-  <msg key="Minutes">Minutos</msg>
+  <msg key="answer">Respuesta</msg>
+  <msg key="answers">Respuestas</msg>
+  <msg key="submitted_answers">Respuestas enviadas</msg>
+  <msg key="answer_lines">Líneas de respuestas</msg>
+  <msg key="answer_columns">Columnas de respuestas</msg>
+  <msg key="correct_when">Correcto cuando</msg>
+  <msg key="online-exam-draft_exam">Borrador de exámen (sin publicar)</msg>
+  <msg key="online-exam-open">Exámen abierto (publicado)</msg>
+  <msg key="online-exam-closed">Exámen cerrado</msg>
+  <msg key="question">Pregunta</msg>
+  <msg key="questions">Preguntas</msg>
+  <msg key="first_question">Primera pregunta</msg>
+  <msg key="next_question">Siguiente pregunta</msg>
+  <msg key="previous_question">Anterior pregunta</msg>
+  <msg key="restart">Reiniciar</msg>
+  <msg key="refresh">Refrescar</msg>
+  <msg key="print">Imprimir</msg>
+  <msg key="testrun">Prueba de funcionamiento</msg>
+  <msg key="please_answer">Conteste, por favor</msg>
+  <msg key="participant">Participante</msg>
+  <msg key="participants_answered_question">participantes contestaron esta pregunta</msg>
+  <msg key="results">Resultados</msg>
+  <msg key="show_results">Mostrar resultados</msg>
+  <msg key="results_of">Resultados de</msg>
+
+  <msg key="online-exam-actual_signature">Firma actual</msg>
+  <msg key="online-exam-submission_signature">Firma de entrega</msg>
+
+  <msg key="online-exam-select">Crear Exámen</msg>
+  <msg key="online-exam-review">Revisar Exámen</msg>
+  <msg key="online-exam-submit">Entrega final</msg>
+  <msg key="online-exam-save">Salvar respuesta</msg>
+  <msg key="online-exam-start">Comenzar exámen</msg>
+  <msg key="online-exam-end">Abandonar exámen</msg>
+  <msg key="online-exam-publish">Publicar Exámen</msg>
+  <msg key="online-exam-unpublish">Cerrar Exámen</msg>
+  <msg key="online-exam-republish">Publicar exámen de nuevo</msg>
+  <msg key="online-exam-title-republish">Publicar exámen de nuevo, las respuestas existentes NO serán eliminadas.</msg>
+  <msg key="online-exam-title-publish">Publicar exámen (las respuestas existentes serán eliminadas)</msg>
+  <msg key="online-exam-title-restart">Vovler al principio, donde las preguntas pueden ser seleccionadas (las respuestas existentes serán eliminadas).</msg>
+  <msg key="online-exam-title-select">Crear un exámen totalmente nuevo (todas las respuestas a éste exámen serán eliminadas)</msg>
+
+  <msg key="online-exam-exam_instances">Listado de todos los exámenes rellenados</msg>
+  <msg key="online-exam-try_out">¿Quiere probar el exámen?</msg>
+  <msg key="online-exam-can_answer">Los estudiantes pueden ahora responder vía</msg>
+
+  <msg key="online-exam-not-published">El exámen no ha sido publicado</msg>
+  <msg key="online-exam-finished">El exámen está terminado</msg>
+  <msg key="online-exam-protocol">Informe del exámen</msg>
+  <msg key="online-exam-results-table">Resultados</msg>
+  <msg key="online-exam-submitted_exams_heading">Exámenes enviados</msg>
+  <msg key="online-exam-submitted_exams_msg">Personas han enviado el exámen</msg>
+
+  <msg key="inclass-quiz-not-published">El cuestionario no ha sido publicado</msg>
+  <msg key="inclass-quiz-open">El cuestionario está abierto</msg>
+  <msg key="inclass-quiz-closed">El cuestionario está cerrado</msg>
+  <msg key="inclass-quiz-draft">Borrador (cuestionario no publicado)</msg>
+  <msg key="inclass-quiz-create">Crear cuestionario</msg>
+  <msg key="inclass-quiz-publish">Publicar cuestionario</msg>
+  <msg key="inclass-quiz-publish_question">Adquirir respuestas a esta pregunta</msg>
+  <msg key="inclass-quiz-unpublish">Cerrar cuestionario</msg>
+  <msg key="inclass-quiz-republish">Publicar cuestionario de nuevo</msg>
+  <msg key="inclass-quiz-save">Salvar respuesta</msg>
+  <msg key="inclass-quiz-submit">Enviar</msg>
+  <msg key="inclass-quiz-waiting_for_next">Esperando a la siguiente pregunta...</msg>
+  <msg key="inclass-quiz-not_available">El cuestionario no está disponible actualmente para ser contestado</msg>
+  <msg key="inclass-quiz-already_answered">Ya ha contestado la pregunta %number%</msg>
+  <msg key="inclass-quiz-quiz_instances">Lista de cuestionarios ya enviados</msg>
+
+  <msg key="short_text_question">Pregunta de texto corto</msg>
+  <msg key="sc_question">Pregunta de elección única</msg>
+  <msg key="mc_question">Pregunta de elección múltiple</msg>
+  <msg key="text_question">Pregunta de texto</msg>
+  <msg key="ul_question">Pregunta de subida de archivo</msg>
+  <msg key="sub_question">Sub-pregunta</msg>
+  <msg key="show_max">Mostrar máximo</msg>
+
+  <msg key="shuffle_none">No</msg>
+  <msg key="shuffle_peruser">Por usuario</msg>
+  <msg key="shuffle_always">Siempre</msg>
+
+  <msg key="menu-New-Item-TextInteraction">Interacción de texto</msg>
+  <msg key="menu-New-Item-ShortTextInteraction">Integración de texto corto</msg>
+  <msg key="menu-New-Item-MCInteraction">Interacción MC</msg>
+  <msg key="menu-New-Item-SCInteraction">Interacción SC</msg>
+  <msg key="menu-New-Item-UploadInteraction">Interacción de subida</msg>
+
+  <msg key="menu-New-App-OnlineExam">Exámen en línea</msg>
+  <msg key="menu-New-App-InclassQuiz">Cuestionario en clase</msg>
+  <msg key="menu-New-App-InclassExam">Exámen en clase</msg>
+
 </message_catalog>
