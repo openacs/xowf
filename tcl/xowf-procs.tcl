@@ -16,6 +16,7 @@
 
 ::xo::db::require package xowiki
 ::xo::library require -package xowiki xowiki-procs
+::xo::library require -package xotcl-core 06-package-procs
 
 namespace eval ::xowf {
   #
@@ -44,6 +45,23 @@ namespace eval ::xowf {
     parameter_page en:xowf-site-wide-parameter
   }
 
+  Package site_wide_pages {
+    Workflow.form
+
+    TestItemText.form
+    TestItemShortText.form
+    TestItemMC.form
+    TestItemSC.form
+    TestItemUpload.form
+
+    online-exam.wf
+    inclass-quiz.wf
+    inclass-exam.wf
+
+    quiz-select_question.form
+    select_question.form
+  }
+
   Package default_package_parameters {
     parameter_page en:xowf-default-parameter
   }
@@ -54,10 +72,45 @@ namespace eval ::xowf {
     instance_attributes {
       MenuBar t top_includelet none production_mode t with_user_tracking t with_general_comments f
       with_digg f with_tags f
-      ExtraMenuEntries {{entry -name New.Extra.Workflow -form /en:Workflow.form}}
+      ExtraMenuEntries {{entry -name New.Extra.Workflow -form en:Workflow.form}}
       with_delicious f with_notifications f security_policy ::xowiki::policy1
     }
   }
+
+  Package ad_proc create_new_workflow_page {
+    -package_id:required
+    -parent_id:required
+    -name:required
+    -title:required
+    {-instance_attributes ""}
+  } {
+    Helper proc for loading workflow prototype page with less effort.
+  } {
+    #
+    # Load Workflow.form
+    #
+    xo::Package require $package_id
+    set item_ref_info [$package_id item_ref -use_site_wide_pages true -default_lang en \
+                           -parent_id $parent_id \
+                           en:Workflow.form]
+    set page_template [dict get $item_ref_info item_id]
+    if {$page_template != 0} {
+      #
+      # Create FormPage
+      #
+      set p [::xowiki::FormPage new \
+                 -name $name \
+                 -title $title \
+                 -set text {} \
+                 -instance_attributes $instance_attributes \
+                 -page_template $page_template]
+    } else {
+      ns_log error "could not load Workflow form, therefore creation of workflow $name failed as well"
+      set p ""
+    }
+    return $p
+  }
+
 
   Package ad_instproc initialize {} {
     Add mixin ::xowf::WorkflowPage to every FormPage.
@@ -98,6 +151,8 @@ namespace eval ::xowf {
     }
     next
   }
+
+
 
   #   Package instproc delete {-item_id -name} {
   #     # Provide a method to delete the foreign key references, when

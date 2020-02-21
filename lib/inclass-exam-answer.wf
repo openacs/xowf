@@ -1,6 +1,6 @@
 # -*- Tcl -*-
 #
-# Workflow template for answering online exams. The workflow is
+# Workflow template for answering inclass exams. The workflow is
 # typically controlled from a parent workflow that a teacher can use
 # to create the exam, to try it out and to publish it
 # (online-exam.wf).
@@ -67,9 +67,6 @@ Action initialize -proc activate {obj} {
     # handle this in the provide a different form or push the user to some other state.
     #
     [:wf_context] set_current_state $locking_state
-
-  } else {
-    #:msg "not LOCKED"
   }
 }
 
@@ -110,18 +107,17 @@ Action save \
     -label #xowf.online-exam-save#
 
 Action logout \
-    -label #xowf.online-exam-submit# \
+    -next_state done \
+    -label #xowf.inclass-exam-submit# \
     -proc activate {obj} {
       [[$obj wf_context ] wf_container] addSignature $obj
-      set try_out_mode [$obj property try_out_mode 0]
+      #set pid [$obj package_id]
+      #set try_out_mode [$obj property try_out_mode 0]
       set return_url [$obj property return_url .]
       #:msg "tryout $try_out_mode return_url $return_url"
-      if {$try_out_mode} {
-        ad_returnredirect $return_url
-        ad_script_abort
-      } else {
-        ::xo::cc set_parameter return_url /register/logout?return_url=$return_url
-      }
+
+      #ad_returnredirect $return_url
+      #ad_script_abort
     }
 
 Action start \
@@ -158,12 +154,12 @@ State working \
     -form_loader working_form_loader
 
 State initial \
-    -actions {start logout} \
-    -form "../en:exam-start"
+    -form_loader working_form_loader
 
 State done \
-    -form "../en:exam-done" \
-    -form_loader summary_form
+    -form_loader done_form_loader    
+
+#-form_loader summary_form
 
 
 ########################################################################
@@ -176,6 +172,7 @@ State done \
 # Field-renaming form loader
 #
 proc working_form_loader {ctx form_name} {
+  ns_log notice "============ working_form_loader"
   set obj [$ctx object]
   set item_nr [$obj property position]
 
@@ -191,6 +188,7 @@ proc working_form_loader {ctx form_name} {
   set position [::xowf::test_item::question_manager shuffled_index \
                     -shuffle_id $shuffle_id \
                     $parent_obj $item_nr]
+  ns_log notice "============ working_form_loader load form on pos $position"
   #
   # Load the form.
   #
@@ -212,7 +210,35 @@ proc working_form_loader {ctx form_name} {
 }
 
 #
-# Set "title" with question/user/IP information. Note that the
+# Done form loader
+#
+proc done_form_loader {ctx form_name} {
+  set obj [$ctx object]
+  #
+  # 
+  #
+  if {[$obj exists __feedback_mode] && [$obj set __feedback_mode] > 0} {
+    set container [$ctx wf_container]
+    set result [$container summary_form $ctx $form_name]
+  } else {
+    set result [::xowiki::Form new \
+                    -destroy_on_cleanup \
+                    -set name en:finished \
+                    -form {{<form>
+                      <div class='container-fluid'><div class='row'>
+                      <div class="col-sm-6"><p><p>#xowf.inclass-exam-already_answered#</div>    
+                      </div></div>
+                      </form>} text/html} \
+                    -text {} \
+                    -anon_instances t \
+                   ]
+  }
+  return $result
+}
+
+
+#
+# Set "title" with question/user/IP information.  Note that the
 # "set_title" method is as well responsible for calling the rename
 # function via question_manager.
 #
@@ -224,7 +250,7 @@ proc working_form_loader {ctx form_name} {
   {-with_minutes:switch false}
 } {
   set parent_obj [::xo::db::CrClass get_instance_from_db -item_id [$obj parent_id]]
-  if {$for_question && [$obj state] eq "working"} {
+  if {$for_question && [$obj state] in {initial working}} {
     set form_info [::xowf::test_item::question_manager nth_question_form \
                        -with_numbers \
                        -with_title \
@@ -305,15 +331,17 @@ proc working_form_loader {ctx form_name} {
   set container [$ctx wf_container]
   ${container}::Property ip -default [expr {[ns_conn isconnected] ? [ad_conn peeraddr] : "nowhere"}]
 
+  :log "INCLASS state ${:state}"
   set ctx [:wf_context]
   set container [$ctx wf_container]
   if {$ctx ne $container} {
     $ctx forward working_form_loader $container %proc $ctx
+    $ctx forward done_form_loader $container %proc $ctx    
     $ctx forward summary_form $container %proc $ctx
   }
   set :policy ::xowf::test_item::test-item-policy1
 
-  if {${:state} in {working done}} {
+  if {${:state} in {initial working done}} {
     set parent_obj [::xo::db::CrClass  get_instance_from_db -item_id [:parent_id]]
     set question_names [::xowf::test_item::question_manager question_names $parent_obj]
 
@@ -325,30 +353,32 @@ proc working_form_loader {ctx form_name} {
     set current_position [:property position]
 
     set actions {}
-    if {$current_position > 0 && ${:state} eq "working"} {
-      lappend actions prevQuestion
-    }
-    set count 0
-    foreach question $question_names {
-      incr count
-      ${container}::Action create ${container}::$count \
-          -label "$count" \
-          -next_state working \
-          -extra_css_class [expr {$current_position == $count - 1 ? "current" : ""}] \
-          -proc activate {obj} \
-          [list :goto_page [expr {$count -1}]]
-      lappend actions $count
-    }
-    if { ${:state} eq "working"
-         && [::xowf::test_item::question_manager more_ahead -position $current_position $parent_obj]
-       } {
-      lappend actions nextQuestion
-    }
-    if {${:state} eq "working" } {
-      lappend actions save review
-    } else {
+    #if {$current_position > 0 && ${:state} eq "working"} {
+    #  lappend actions prevQuestion
+    #}
+    if {${:state} ne "done"} {
+      set count 0
+      foreach question $question_names {
+        incr count
+        ${container}::Action create ${container}::$count \
+            -label "$count" \
+            -next_state working \
+            -extra_css_class [expr {$current_position == $count - 1 ? "current" : ""}] \
+            -proc activate {obj} \
+            [list :goto_page [expr {$count -1}]]
+        lappend actions $count
+      }
+      if { ${:state} in {initial working}
+           && [::xowf::test_item::question_manager more_ahead -position $current_position $parent_obj]
+         } {
+        lappend actions nextQuestion
+      }
+      if {${:state} in {initial working} } {
+        lappend actions save
+      }
       lappend actions logout
     }
+
     ${container}::${:state} actions $actions
   }
 }

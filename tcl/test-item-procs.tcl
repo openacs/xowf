@@ -149,7 +149,7 @@ namespace eval ::xowiki::formfield {
         set auto_correct ${:auto_correct}
         set can_shuffle true
       }
-      ul { # 
+      ul { #
         set interaction_class upload_interaction
         set options ""
         set auto_correct false
@@ -854,10 +854,54 @@ namespace eval ::xowiki::formfield {
     #:msg "fc=$fc"
   }
 }
+############################################################################
+# Generic Assement interface
+############################################################################
 
 namespace eval ::xowf::test_item {
 
-  nx::Object create renaming_form_loader {
+  nx::Class create AssessmentInterface {
+    #
+    # Abstract class for common functionality
+    #
+    :method assert_assessment_container {o:object} {
+      set ok [expr {[$o is_wf_instance] == 0 && [$o is_wf] == 1}]
+      if {!$ok} {
+        ns_log notice "NO ASSESSMENT CONTAINER [$o title]"
+        ns_log notice "NO ASSESSMENT CONTAINER page_template [[$o page_template] title]"
+        ns_log notice "NO ASSESSMENT CONTAINER iswfi [$o is_wf_instance] iswf [$o is_wf]"
+        ns_log notice "[$o serialize]"
+        error "'[lindex [info level -1] 0]': not an assessment container"
+      }
+    }
+
+    :method assert_assessment {o:object} {
+      if {[llength [$o property question]] == 0} {
+        ns_log notice "NO ASSESSMENT [$o title]"
+        ns_log notice "NO ASSESSMENT page_template [[$o page_template] title]"
+        ns_log notice "NO ASSESSMENT iswfi [$o is_wf_instance] iswf [$o is_wf]"
+        ns_log notice "[$o serialize]"
+        error "'[lindex [info level -1] 0]': object has no questions"
+      }
+    }
+
+    :method assert_answer_instance {o:object} {
+      # we could include as well {[$o property answer] ne ""} in case we initialize it
+      set ok [expr {[$o is_wf_instance] == 1 && [$o is_wf] == 0}]
+      if {!$ok} {
+        ns_log notice "NO ANSWER [$o title]"
+        ns_log notice "NO ANSWER page_template [[$o page_template] title]"
+        ns_log notice "NO ANSWER iswfi [$o is_wf_instance] iswf [$o is_wf]"
+        ns_log notice "[$o serialize]"
+        error "'[lindex [info level -1] 0]': not an answer instance"
+      }
+    }
+
+  }
+}
+namespace eval ::xowf::test_item {
+
+  nx::Class create Renaming_form_loader -superclass AssessmentInterface {
     #
     # Form loader that renames "generic" form-field-names as provided
     # by the test-item form-field classes (@answer@) into names based
@@ -873,7 +917,7 @@ namespace eval ::xowf::test_item {
     # - rename_attributes
     #
 
-    :object method map_form_constraints {form_constraints oldName newName} {
+    :method map_form_constraints {form_constraints oldName newName} {
       #
       # Rename form constraints starting with $oldName into $newName.
       # Handle as well "answer=$oldName" form constraint properties.
@@ -891,7 +935,7 @@ namespace eval ::xowf::test_item {
       }]
     }
 
-    :public object method form_name_based_attribute_stem {formName} {
+    :public method form_name_based_attribute_stem {formName} {
       #
       # Produce from the provided 'formName' an attribute stem for the
       # input fields of this form.
@@ -902,7 +946,7 @@ namespace eval ::xowf::test_item {
     }
 
 
-    :public object method answer_attributes {instance_attributes} {
+    :public method answer_attributes {instance_attributes} {
       #
       # Return all form-loader specific attributes from
       # instance_attributes.
@@ -916,7 +960,7 @@ namespace eval ::xowf::test_item {
       return $result
     }
 
-    :public object method answer_for_form {formName instance_attributes} {
+    :public method answer_for_form {formName instance_attributes} {
       #
       # Return answer for the provided formName from
       # instance_attributes of a single object.
@@ -934,7 +978,7 @@ namespace eval ::xowf::test_item {
       return $result
     }
 
-    :public object method answers_for_form {formName answers} {
+    :public method answers_for_form {formName answers} {
       #
       # Return a list of dicts for the provided formName from the
       # answers (as returned from [answer_manager get_answers ...]).
@@ -954,7 +998,7 @@ namespace eval ::xowf::test_item {
       return $result
     }
 
-    :public object method rename_attributes {form_obj:object} {
+    :public method rename_attributes {form_obj:object} {
 
       set form [$form_obj get_property -name form]
       set fc   [$form_obj get_property -name form_constraints]
@@ -984,8 +1028,7 @@ namespace eval ::xowf::test_item {
       return $form_obj
     }
 
-    :public object method get_form_object {{-set_title:boolean true} ctx:object form_name} {
-      #ns_log notice "renaming_form_loader get_form_object for form_name <$form_name>"
+    :public method get_form_object {{-set_title:boolean true} ctx:object form_name} {
       set form_id [$ctx default_load_form_id $form_name]
       set obj [$ctx object]
       set form_obj [::xo::db::CrClass get_instance_from_db -item_id $form_id]
@@ -993,11 +1036,14 @@ namespace eval ::xowf::test_item {
     }
 
   }
+
+  Renaming_form_loader create renaming_form_loader
 }
+
 
 namespace eval ::xowf::test_item {
 
-  nx::Object create answer_manager {
+  nx::Class create Answer_manager -superclass AssessmentInterface {
 
     #
     # Public API:
@@ -1010,10 +1056,10 @@ namespace eval ::xowf::test_item {
     #
     #  - marked_results
     #  - answers_panel
-    #  - participant_result
     #  - result_table
     #
-    :public object method create_workflow {
+
+    :public method create_workflow {
       {-answer_workflow /packages/xowf/lib/online-exam-answer.wf}
       {-master_workflow en:Workflow.form}
       parentObj:object
@@ -1090,7 +1136,7 @@ namespace eval ::xowf::test_item {
 
     ########################################################################
 
-    :public object method delete_all_answer_data {obj:object} {
+    :public method delete_all_answer_data {obj:object} {
       #
       # Delete all instances of the answer workflow
       #
@@ -1105,7 +1151,7 @@ namespace eval ::xowf::test_item {
 
     ########################################################################
 
-    :public object method get_answer_wf {obj:object} {
+    :public method get_answer_wf {obj:object} {
       #
       # return the workflow denoted by the property wfName in obj
       #
@@ -1118,12 +1164,14 @@ namespace eval ::xowf::test_item {
 
     ########################################################################
 
-    :public object method get_wf_instances {
+    :public method get_wf_instances {
       {-initialize false}
       {-orderby ""}
       wf:object
     } {
       # get_wf_instances: return the workflow instances
+      :assert_assessment_container $wf
+
       return [::xowiki::FormPage get_form_entries \
                   -base_item_ids             [$wf item_id] \
                   -form_fields               "" \
@@ -1136,7 +1184,7 @@ namespace eval ::xowf::test_item {
 
     ########################################################################
 
-    :public object method get_answers {{-state ""} wf:object} {
+    :public method get_answers {{-state ""} wf:object} {
       set results {}
       set items [:get_wf_instances $wf]
       foreach i [$items children] {
@@ -1152,24 +1200,26 @@ namespace eval ::xowf::test_item {
 
     ########################################################################
 
-    :object method participant_result {obj:object form_info} {
-      #
-      # In case, the passed-in obj modifies during rendering the
-      # perconnection parameters, save and restore these.
-      #
-      set form_fields [:answer_form_field_objs -wf $obj]
-      $obj form_field_index $form_fields
+    :method participant_result {
+      -obj:object
+      answerObj:object
+      form_info
+      form_field_objs
+    } {
 
-      set instance_attributes [$obj instance_attributes]
-      set answer [list item $obj]
+      :assert_answer_instance $answerObj
+      :assert_assessment $obj
 
-      foreach f $form_fields {
+      set instance_attributes [$answerObj instance_attributes]
+      set answer [list item $answerObj]
+
+      foreach f $form_field_objs {
         set att [$f name]
 
         if {[dict exists $instance_attributes $att]} {
           set value [dict get $instance_attributes $att]
           #ns_log notice "### '$att' value '$value'"
-          $obj combine_data_and_form_field_default 1 $f $value
+          $answerObj combine_data_and_form_field_default 1 $f $value
           $f set_feedback 1
           $f add_statistics -options {word_statistics word_cloud}
           #
@@ -1189,7 +1239,7 @@ namespace eval ::xowf::test_item {
       return $answer
     }
 
-    :object method answer_form_field_objs {-clear:switch -wf:object} {
+    :method answer_form_field_objs {-clear:switch -wf:object form_info} {
       set key ::__test_item_answer_form_fields
       if {$clear} {
         #
@@ -1199,25 +1249,32 @@ namespace eval ::xowf::test_item {
         #
         unset $key
       } else {
+        #ns_log notice "### key exists [info exists $key]"
         if {![info exists $key]} {
-          set form_info [::xowf::test_item::question_manager combined_question_form -with_numbers $wf]
+          #ns_log notice "form_info: $form_info"
+          set fc [dict get $form_info disabled_form_constraints]
           set pc_params [::xo::cc perconnection_parameter_get_all]
+          #ns_log notice "### create_form_fields_from_form_constraints <$fc>"
           set $key [$wf create_form_fields_from_form_constraints \
                         -lookup \
-                        [dict get $form_info disabled_form_constraints]]
+                        [lsort -unique $fc]]
           ::xo::cc perconnection_parameter_set_all $pc_params
+          $wf form_field_index  [set $key]
         }
         return [set $key]
       }
     }
 
-    :public object method result_table {
+
+    :public method result_table {
       -package_id:integer
       -items:object,required
       {-view_all_method print-answers}
       wf:object
     } {
-      set answer_form_field_objs [:answer_form_field_objs -wf $wf]
+      #set form_info [:combined_question_form -with_numbers $wf]
+      set form_info [::xowf::test_item::question_manager combined_question_form $wf]
+      set answer_form_field_objs [:answer_form_field_objs -wf $wf $form_info]
 
       set form_field_objs [$wf create_raw_form_field \
                                -name _online-exam-userName \
@@ -1302,17 +1359,21 @@ namespace eval ::xowf::test_item {
       return $HTML
     }
 
-    :public object method marked_results {wf:object form_info} {
+    :public method marked_results {-obj:object -wf:object form_info} {
+      set form_field_objs [:answer_form_field_objs -wf $wf $form_info]
+
       set items [:get_wf_instances $wf]
       set results ""
       foreach i [$items children] {
-        set participantResult [:participant_result $i $form_info]
+        set participantResult [:participant_result -obj $obj $i $form_info $form_field_objs]
         append results $participantResult \n
       }
+
+      #ns_log notice "=== marked_results of [llength [$items children]] items => $results"
       return $results
     }
 
-    :public object method answers_panel {
+    :public method answers_panel {
       {-polling:switch false}
       {-heading #xowf.submitted_answers#}
       {-submission_msg #xowf.participants_answered_question#}
@@ -1372,28 +1433,60 @@ namespace eval ::xowf::test_item {
 
       return $answerStatus
     }
-  }
-}
 
-namespace eval ::xowf::test_item {
-  ::xotcl::Class create ::xowf::test_item::td_pretty_value \
-      -superclass ::xowiki::formfield::FormField
+    :public method countdown_timer {
+      {-target_time:required}
+      {-id:required}
+    } {
+      # new Date('1995-12-17T03:24:00')
+      template::add_body_script -script [subst {
+        var countdown_target_date = new Date('$target_time').getTime();
+        var countdown_days, countdown_hours, countdown_minutes, countdown_seconds;
+        var countdown = document.getElementById('$id');
 
-  ::xowf::test_item::td_pretty_value instproc pretty_value {value} {
-    #ns_log notice "${:name} pretty_value [:info precedence]"
-    if {"::xowiki::formfield::checkbox" in [:info precedence]} {
-      set v ${value}
-    } else {
-      set v [next]
+        setInterval(function () {
+          var current_date = new Date().getTime();
+          var seconds_left = (countdown_target_date - current_date) / 1000;
+          var HTML = '';
+
+          countdown_days = parseInt(seconds_left / 86400);
+          seconds_left = seconds_left % 86400;
+          countdown_hours = parseInt(seconds_left / 3600);
+          seconds_left = seconds_left % 3600;
+          countdown_minutes = parseInt(seconds_left / 60);
+          countdown_seconds = parseInt(seconds_left % 60);
+
+          if (countdown_days != 0) {
+            HTML += '<span class="days">' + countdown_days + ' <b> '
+                 + (countdown_days != 1 ? '[_ xowf.Days]' : '[_ xowf.Day]')
+                 + '</b></span> ';
+          }
+          if (countdown_hours != 0 || countdown_days != 0) {
+            HTML += '<span class="hours">' + countdown_hours + ' <b> '
+                 + (countdown_hours != 1 ? '[_ xowf.Hours]' : '[_ xowf.Hour]')
+                 + '</b></span> ';
+          }
+          HTML += '<span class="minutes">' + countdown_minutes + ' <b> '
+               + (countdown_minutes != 1 ? '[_ xowf.Minutes]' : '[_ xowf.Minute]')
+               + '</b></span> '
+               + '<span class="seconds">' + countdown_seconds + ' <b> '
+               + (countdown_seconds != 1 ? '[_ xowf.Seconds]' : '[_ xowf.Second]')
+               + '</b></span> [_ xowf.remaining]' ;
+
+          countdown.innerHTML = HTML;
+        }, 1000);
+      }]
+      return "<div id='$id'></div>"
     }
-    return $v
   }
+
+  Answer_manager create answer_manager
 }
+
 
 namespace eval ::xowf::test_item {
 
-
-  nx::Object create question_manager {
+  nx::Class create Question_manager -superclass AssessmentInterface {
     #
     # This code manages questions and the information related to a
     # current (selected) question via qthe "position" instance
@@ -1413,12 +1506,13 @@ namespace eval ::xowf::test_item {
     #   - question_objs
     #   - question_names
     #   - question_property
+    #   - total_minutes
     #
-    :public object method goto_page {obj:object position} {
+    :public method goto_page {obj:object position} {
       $obj set_property position $position
     }
 
-    :public object method more_ahead {{-position ""} obj:object} {
+    :public method more_ahead {{-position ""} obj:object} {
       if {$position eq ""} {
         set position [$obj property position]
       }
@@ -1426,7 +1520,7 @@ namespace eval ::xowf::test_item {
       return [expr {$position + 1 < [llength $questions]}]
     }
 
-    :object method load_question_objs {obj names} {
+    :method load_question_objs {obj:object names} {
       set questions [lmap ref $names {
         if {![string match "*/*" $ref]} {
           set ref [[$obj parent_id] name]/$ref
@@ -1438,21 +1532,22 @@ namespace eval ::xowf::test_item {
                              -package_id [$obj package_id] \
                              -default_lang [$obj lang] \
                              -forms $questionNames]
+
       #ns_log notice "load_question_objs called with $obj $names -> $questionForms"
       return $questionForms
     }
 
-    :public object method current_question_name {obj:object} {
+    :public method current_question_name {obj:object} {
       set questions [dict get [$obj instance_attributes] question]
       return [lindex [dict get [$obj instance_attributes] question] [$obj property position]]
     }
 
-    :public object method current_question_obj {obj:object} {
+    :public method current_question_obj {obj:object} {
       return [:load_question_objs $obj [:current_question_name $obj]]
     }
 
 
-    :public object method shuffled_question_objs {obj:object shuffle_id} {
+    :public method shuffled_question_objs {obj:object shuffle_id} {
       set form_objs [:question_objs $obj]
       set result {}
       foreach i [::xowiki::randomized_indices -seed $shuffle_id [llength $form_objs]] {
@@ -1461,7 +1556,7 @@ namespace eval ::xowf::test_item {
       return $result
     }
 
-    :public object method shuffled_index {{-shuffle_id:integer -1} obj:object position} {
+    :public method shuffled_index {{-shuffle_id:integer -1} obj:object position} {
       if {$shuffle_id > -1} {
         set form_objs [:question_objs $obj]
         set shuffled [::xowiki::randomized_indices -seed $shuffle_id [llength $form_objs]]
@@ -1470,7 +1565,8 @@ namespace eval ::xowf::test_item {
       return $position
     }
 
-    :public object method question_objs {{-shuffle_id:integer -1} obj:object} {
+    :public method question_objs {{-shuffle_id:integer -1} obj:object} {
+      :assert_assessment $obj
       set form_objs [:load_question_objs $obj [$obj property question]]
       if {$shuffle_id > -1} {
         set result {}
@@ -1482,18 +1578,18 @@ namespace eval ::xowf::test_item {
       return $form_objs
     }
 
-    :public object method question_names {obj:object} {
+    :public method question_names {obj:object} {
       return [$obj property question]
     }
 
-    :public object method nth_question_obj {obj:object position:integer} {
+    :public method nth_question_obj {obj:object position:integer} {
+      :assert_assessment $obj
       set questions [dict get [$obj instance_attributes] question]
       set result [:load_question_objs $obj [lindex $questions $position]]
-      #ns_log notice "nth_question_obj called with $position -> $result"
       return $result
     }
 
-    :object method question_info {
+    :method question_info {
       {-numbers ""}
       {-with_title:switch false}
       {-with_minutes:switch false}
@@ -1503,6 +1599,7 @@ namespace eval ::xowf::test_item {
       set full_fc {}
       set full_disabled_fc {}
       set title_infos {}
+
       foreach form_obj $form_objs number $numbers {
         set form_obj [::xowf::test_item::renaming_form_loader rename_attributes $form_obj]
         set form_title [$form_obj title]
@@ -1520,11 +1617,10 @@ namespace eval ::xowf::test_item {
 
         append full_form "<h3>$title</h3>\n"
         append full_form [$form_obj property form] \n
-        lappend title_infos \
-            full_title $title \
-            title $form_title \
-            minutes $minutes \
-            number $number
+        lappend title_infos [list full_title $title \
+                                 title $form_title \
+                                 minutes $minutes \
+                                 number $number]
         lappend full_fc [$form_obj property form_constraints]
         lappend full_disabled_fc [$form_obj property disabled_form_constraints]
       }
@@ -1536,7 +1632,7 @@ namespace eval ::xowf::test_item {
     }
 
 
-    :public object method question_property {form_obj:object attribute {default ""}} {
+    :public method question_property {form_obj:object attribute {default ""}} {
       #
       # Get an attribute of the original question
       #
@@ -1550,7 +1646,7 @@ namespace eval ::xowf::test_item {
       return $value
     }
 
-    :public object method minutes_string {form_obj:object} {
+    :public method minutes_string {form_obj:object} {
       #
       # Get an attribute of the original question
       #
@@ -1561,7 +1657,7 @@ namespace eval ::xowf::test_item {
       }
     }
 
-    :public object method combined_question_form {
+    :public method combined_question_form {
       {-with_numbers:switch false}
       {-with_title:switch false}
       {-with_minutes:switch false}
@@ -1585,7 +1681,17 @@ namespace eval ::xowf::test_item {
                   $form_objs]
     }
 
-    :public object method current_question_form {
+    :public method total_minutes {form_info} {
+      set minutes 0
+      foreach title_info [dict get $form_info title_infos] {
+        if {[dict exists $title_info minutes]} {
+          set minutes [expr {$minutes + [dict get $title_info minutes]}]
+        }
+      }
+      return $minutes
+    }
+
+    :public method current_question_form {
       {-with_numbers:switch false}
       {-with_title:switch false}
       obj:object
@@ -1593,7 +1699,7 @@ namespace eval ::xowf::test_item {
       return [:nth_question_form -with_numbers=$with_numbers -with_title=$with_title $obj]
     }
 
-    :public object method nth_question_form {
+    :public method nth_question_form {
       {-position:integer}
       {-item_nr:integer}
       {-with_numbers:switch false}
@@ -1621,33 +1727,40 @@ namespace eval ::xowf::test_item {
                   $form_objs]
     }
 
-    :public object method current_question_number {obj:object} {
+    :public method current_question_number {obj:object} {
       return [expr {[$obj property position] + 1}]
     }
-    :public object method current_question_title {{-with_numbers:switch false} obj:object} {
+    :public method current_question_title {{-with_numbers:switch false} obj:object} {
       if {$with_numbers} {
         return "#xowf.question# [:current_question_number $obj]"
       }
     }
-
-
-    # :public object method set_page {obj increment} {
-    #   #set pages [$obj property pages]
-    #   set position [$obj property position 0]
-    #   incr position $increment
-    #   if {$position < 0} {
-    #     set position 0
-    #   } elseif {$position >= [llength $pages]} {
-    #     set position [expr {[llength $pages] - 1}]
-    #   }
-    #   $obj set_property position $position
-    #   #$obj set_property -new 1 current_form [lindex $pages $position]
-    # }
   }
+
+  Question_manager create question_manager
+
 }
 
 namespace eval ::xowf::test_item {
+  #
+  # Define handling of form-field "td_pretty_value"
+  #
+  ::xotcl::Class create ::xowf::test_item::td_pretty_value \
+      -superclass ::xowiki::formfield::FormField
 
+  ::xowf::test_item::td_pretty_value instproc pretty_value {value} {
+    #ns_log notice "${:name} pretty_value [:info precedence]"
+    if {"::xowiki::formfield::checkbox" in [:info precedence]} {
+      set v ${value}
+    } else {
+      set v [next]
+    }
+    return $v
+  }
+}
+
+
+namespace eval ::xowf::test_item {
   #
   # Copy the default policy (policy1) from xowiki and add elements for
   # FormPages as needed by the demo workflows:

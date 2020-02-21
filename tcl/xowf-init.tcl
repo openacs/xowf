@@ -4,6 +4,11 @@
 ::xowf::dav-todo register
 
 #
+# Make sure, the site-wide pages are loaded
+#
+::xowf::Package require_site_wide_pages
+
+#
 # Run the checker for the scheduled at-jobs.
 #
 # As we are trying to run as close as possible to the minute change,

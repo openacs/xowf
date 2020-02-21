@@ -88,11 +88,6 @@ State initial \
   set more_ahead 1
   set quiz_available 1
 
-  #if {$parent_state eq "created" && [$obj property try_out_mode]} {
-  #  ns_log notice "FAKE state as published"
-  #  set parent_state "published"
-  #}
-  
   switch $parent_state {
     "published" {
       #
@@ -105,7 +100,7 @@ State initial \
       set form_answer [xowf::test_item::renaming_form_loader answer_for_form \
                            $form_name \
                            [$obj instance_attributes]]
-      ns_log notice "CURRENT answer '$form_answer' form_name $form_name"
+      #ns_log notice "CURRENT answer '$form_answer' form_name $form_name"
       if {$form_answer eq ""} {
         #
         # It was not answered yet, show the question as 'waiting_form'

@@ -192,3 +192,8 @@ div.text_interaction .modal.fade.in
   height: auto;         /* let the content decide it  */ 
 }
 
+
+div.xowiki-content h1 {
+    font-size: 24px;
+}
+

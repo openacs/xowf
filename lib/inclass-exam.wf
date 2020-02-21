@@ -1,7 +1,7 @@
 # -*- Tcl -*-
 ########################################################################
-# Online-Exam workflow
-# ====================
+# Inclass-Exam workflow, designed similar to online-exam
+# ========================================================
 #
 # Defining exams: This workflow lets a teacher choose from a
 # predefined set of exam questions, which are typically open text,
@@ -40,13 +40,14 @@
 #  - "print-answers" (for teachers),
 #  - "print-answer-table" (for teachers),
 #  - "delete" (for teachers),
+#  - "qrcode" (for teachers)
 #
 # Gustaf Neumann, Feb 2012
 ########################################################################
 set :autoname 1   ;# to avoid editable name field
 set :policy ::xowf::test_item::test-item-policy-publish
 set :debug 0
-set :live_updates 1
+set :live_updates 0
 
 Action select -next_state created -label #xowf.online-exam-select# \
     -title #xowf.online-exam-title-select#
@@ -63,11 +64,11 @@ State parameter {
 }
 State initial -actions {select} -form en:select_question.form -view_method edit
 State created -actions {publish restart} -form_loader load_form -view_method edit \
-    -form "#xowf.online-exam-draft_exam#"
+    -form "#xowf.inclass-exam-draft_exam#"
 State published -actions {unpublish} -form_loader load_form -view_method edit \
-    -form "#xowf.online-exam-open#"
+    -form "#xowf.inclass-exam-open#"
 State done -actions {republish restart} -form_loader load_form -view_method edit \
-    -form "#xowf.online-exam-closed#"
+    -form "#xowf.inclass-exam-closed#"
 
 ########################################################################
 # Activate action select: After the teacher has selected the
@@ -75,7 +76,7 @@ State done -actions {republish restart} -form_loader load_form -view_method edit
 #
 select proc activate {obj} {
   xowf::test_item::answer_manager create_workflow \
-      -answer_workflow /packages/xowf/lib/online-exam-answer.wf \
+      -answer_workflow /packages/xowf/lib/inclass-exam-answer.wf \
       $obj
 }
 
@@ -138,7 +139,8 @@ Action instproc unpublish_link {obj} {
 
   #:log  fullQuestionForm=$fullQuestionForm
   set text "<h2>$title</h2>"
-
+  set menu ""
+  
   set wf [xowf::test_item::answer_manager get_answer_wf $obj]
   if {$wf eq ""} {
     :msg "cannot get current workflow for [$obj name]"
@@ -146,7 +148,6 @@ Action instproc unpublish_link {obj} {
     set tLink "."
     set aLink "."
     set pLink "."
-    set menu ""
   } else {
     #
     # Always compute the testrun and answer link.
@@ -156,6 +157,7 @@ Action instproc unpublish_link {obj} {
       {m create-new} {p.return_url "[::xo::cc url]"} {p.try_out_mode 1} {title "[$obj title]"}
     }]
     set aLink [$obj pretty_link -query m=answer]
+
     #
     # If there are answers, include the full menu.
     #
@@ -176,6 +178,24 @@ Action instproc unpublish_link {obj} {
     }
   }
 
+  switch $state {
+    "created" -
+    "done" -
+    "published" {
+      #
+      # In inclass cases, never show all questions on screen, since
+      # the teacher might have the screen on the projector.
+      #
+      template::add_body_script -script urn:ad:js:bootstrap3
+      set fullQuestionForm [subst {
+        <span class="glyphicon glyphicon-chevron-down"><button type="button" class="btn btn-small" data-toggle="collapse" data-target="#questions">#xowf.questions#</button></span>
+        <div id="questions" class="collapse">
+        $fullQuestionForm
+        </div>
+      }]
+    }
+  }
+  
   set extraAction ""
   switch $state {
     "created"   {
@@ -190,32 +210,54 @@ Action instproc unpublish_link {obj} {
     }
   }
 
+  set answerStatus ""
+  set marked ""
   if {$state in {published done}} {
     if {$state eq "done"} {
       [$ctx object] setCSSDefaults
       set marked [xowf::test_item::answer_manager marked_results -obj $obj -wf $wf $combined_form_info]
     }
-    set answerStats [xowf::test_item::answer_manager answers_panel \
-                         -heading "#xowf.online-exam-submitted_exams_heading#" \
-                         -submission_msg "#xowf.online-exam-submitted_exams_msg#" \
-                         -polling=[expr {${:live_updates} && $state ni {initial created done}}] \
-                         -manager_obj $obj \
-                         -target_state done \
-                         -wf $wf]
-  } else {
-    set answerStats ""
+    set answerStatus [xowf::test_item::answer_manager answers_panel  \
+                          -heading "#xowf.online-exam-submitted_exams_heading#" \
+                          -submission_msg "#xowf.online-exam-submitted_exams_msg#" \
+                          -polling=[expr {${:live_updates} && $state ni {initial created done}}] \
+                          -manager_obj $obj \
+                          -target_state done \
+                          -wf $wf]
   }
-
-  append text "$answerStats\n"
-  append report "$menu $extraAction"
+  
+  set qrCode ""
+  set countdownHTML ""
+  if {$state eq "published"} {
+    set src [$obj pretty_link -query m=qrcode]
+    set qrCode [subst {<div><img class='img-thumbnail qrcode' src="[ns_quotehtml $src]" ></div>}]
+    set total_minutes [::xowf::test_item::question_manager total_minutes $combined_form_info]
+    set publish_time [::xo::db::tcl_date [$obj last_modified] tz]
+    set target_time [clock format [expr {[clock scan $publish_time] + $total_minutes*60}] \
+                         -format %Y-%m-%dT%H:%M:%S]
+    set countdownHTML [xowf::test_item::answer_manager countdown_timer \
+                           -target_time $target_time -id "countdown"]
+  }
 
   # Remove wrapping forms
   regsub -all {</?form[^>]*>} $fullQuestionForm {} fullQuestionForm
 
+  append text [subst {
+    <div class='container-fluid'><div class='row'>
+    <div class="col-sm-12">$answerStatus</div>
+    <div class="col-sm-9 quiz-preview">$fullQuestionForm</div>
+    <div class="col-sm-3">$qrCode</div>
+    <div class="col-sm-6">$countdownHTML</div>    
+    </div></div>
+  }]
+
+  set footer "$menu $extraAction"
+  
+  #-form [subst {<form>$text<div class='exam-preview'>$fullQuestionForm</div>$report</form> text/html}]
   set f [::xowiki::Form new \
              -destroy_on_cleanup \
              -set name en:question \
-             -form [subst {<form>$text<div class='exam-preview'>$fullQuestionForm</div>$report</form> text/html}] \
+             -form [subst {<form>$text$marked$footer</form> text/html}] \
              -text {} \
              -anon_instances t \
              -form_constraints $full_fc \
@@ -265,6 +307,8 @@ Action instproc unpublish_link {obj} {
     set ctx [::xowf::Context require [self]]
     set wf [xowf::test_item::answer_manager get_answer_wf [self]]
     if {$wf ne ""} {
+      #set form_info [::xowf::test_item::question_manager combined_question_form -with_numbers [self]]
+
       set items [xowf::test_item::answer_manager get_wf_instances $wf]
       set items2 [$items deep_copy]
       foreach i [$items2 children] {
@@ -388,6 +432,14 @@ Action instproc unpublish_link {obj} {
     }
   }
 
+  :proc www-qrcode {} {
+    set aLink [:pretty_link -absolute true -query m=answer]
+    set fn /tmp/qr-${:item_id}.png
+    exec qrencode -o $fn -l h $aLink
+    ns_returnfile 200 image/png $fn
+    ad_script_abort
+  }
+  
   ########################################################################
   # AJAX call "poll"
   #

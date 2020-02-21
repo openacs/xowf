@@ -138,10 +138,11 @@ Action instproc unpublish_link {obj} {
 :proc load_form {ctx title} {
   set obj [$ctx object]
   set state [$obj property _state]
+  set wf [xowf::test_item::answer_manager get_answer_wf $obj]
 
   switch $state {
     "created" {
-      set current_form_info [::xowf::test_item::question_manager combined_question_form \
+      set combined_form_info [::xowf::test_item::question_manager combined_question_form \
                                  -with_numbers $obj]
     }
     default {
@@ -151,13 +152,12 @@ Action instproc unpublish_link {obj} {
         "results" {set title "#xowf.results_of#: $title"}
       }
       set current_question [xowf::test_item::question_manager current_question_obj $obj]
-      set current_form_info [::xowf::test_item::question_manager current_question_form $obj]
+      set combined_form_info [::xowf::test_item::question_manager current_question_form $obj]
     }
   }
 
-  set fullQuestionForm [dict get $current_form_info form]
-  set full_fc [dict get $current_form_info disabled_form_constraints]
-  set wf [xowf::test_item::answer_manager get_answer_wf $obj]
+  set fullQuestionForm [dict get $combined_form_info form]
+  set full_fc [dict get $combined_form_info disabled_form_constraints]
 
   set qrCode ""
   set answerStatus ""
@@ -174,7 +174,7 @@ Action instproc unpublish_link {obj} {
 
     "published" {
       set src [$obj pretty_link -query m=qrcode]
-      set qrCode [subst {<div><img class='img-thumbnail qrcode' src="$src" ></div>}]
+      set qrCode [subst {<div><img class='img-thumbnail qrcode' src="[ns_quotehtml $src]" ></div>}]
       set answerStatus [xowf::test_item::answer_manager answers_panel \
                             -polling=${:live_updates} \
                             -manager_ob $obj \
@@ -185,12 +185,13 @@ Action instproc unpublish_link {obj} {
     "done" -
     "results" {
       [$ctx object] setCSSDefaults
-      set marked [xowf::test_item::answer_manager marked_results $wf $current_form_info]
+      set marked [xowf::test_item::answer_manager marked_results -obj $obj -wf $wf $combined_form_info]
       set answerStatus [xowf::test_item::answer_manager answers_panel \
                             -manager_ob $obj \
                             -wf $wf \
                             -current_question $current_question]
     }
+    
     default {
       :msg "not handled: state=$state"
     }

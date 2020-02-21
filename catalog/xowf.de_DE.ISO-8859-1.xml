@@ -3,8 +3,17 @@
 
   <msg key="Exercise">Beispiel</msg>
   <msg key="Grading-Schema">Bewertungsschema</msg>
-  <msg key="Grading-Score">Bewertung</msg>  
+  <msg key="Grading-Score">Bewertung</msg>
+  <msg key="Shuffle">Zufällige Reihenfolge</msg>
+  <msg key="Days">Tage</msg>
+  <msg key="Day">Tag</msg>
   <msg key="Minutes">Minuten</msg>
+  <msg key="Minute">Minute</msg>
+  <msg key="Hours">Stunden</msg>
+  <msg key="Hour">Stunde</msg>
+  <msg key="Seconds">Sekunden</msg>
+  <msg key="Second">Sekunde</msg>
+  <msg key="remaining">verbleibend</msg>
   <msg key="alternative">Alternative</msg>
   <msg key="answer_correct">Richtig!</msg>
   <msg key="answer_incorrect">Falsch.</msg>
@@ -29,28 +38,31 @@
   <msg key="online-exam-open">Prüfung ist freigeschaltet</msg>
   <msg key="online-exam-closed">Prüfung ist geschlossen</msg>
   <msg key="question">Frage</msg>
-  <msg key="questions">Fragen</msg>  
-  <msg key="first_question">Erste Frage</msg>  
+  <msg key="questions">Fragen</msg>
+  <msg key="first_question">Erste Frage</msg>
   <msg key="next_question">Nächste Frage</msg>
-  <msg key="previous_question">Vorherige Frage</msg>  
+  <msg key="previous_question">Vorherige Frage</msg>
   <msg key="restart">Zurück zum Start</msg>
   <msg key="online-exam-submit">Finale Abgabe</msg>
   <msg key="online-exam-save">Antwort zwischenspeichern</msg>
   <msg key="online-exam-start">Prüfung beginnen</msg>
   <msg key="online-exam-review">Zusammenfassung der Antworten</msg>
-  <msg key="online-exam-end">Prüfung verlassen</msg>  
-  <msg key="online-exam-select">Erstelle Prüfung</msg>  
+  <msg key="online-exam-end">Prüfung verlassen</msg>
+  <msg key="online-exam-select">Erstelle Prüfung</msg>
   <msg key="online-exam-publish">Schalte Prüfung frei</msg>
   <msg key="online-exam-unpublish">Schließe Prüfung</msg>
   <msg key="online-exam-republish">Schalte Prüfung nochmals frei</msg>
   <msg key="refresh">Aktualisieren</msg>
   <msg key="print">Drucken</msg>
 
+  <msg key="signature">Signatur</msg>
+  <msg key="signature_help_text">Erzeuge einen digitalen Fingerabdruck bei Prüfungsabgabe als Beleg der unveränderten Abgabe</msg>
+
   <msg key="online-exam-actual_signature">Aktuelle Signatur</msg>
-  <msg key="online-exam-submission_signature">Abgegebene Signatur</msg>    
+  <msg key="online-exam-submission_signature">Abgegebene Signatur</msg>
   <msg key="online-exam-exam_instances">Liste der Bearbeitungen</msg>
   <msg key="online-exam-try_out">Wollen Sie einen Probelauf durchführen?</msg>
-  <msg key="online-exam-can_answer">Studierende können die Fragen mit folgendem Link beantworten</msg>    
+  <msg key="online-exam-can_answer">Studierende können die Fragen mit folgendem Link beantworten</msg>
   <msg key="testrun">Probelauf</msg>
   <msg key="online-exam-not-published">Die Prüfung ist von der Aufsicht nicht freigegeben!</msg>
   <msg key="online-exam-finished">Die Prüfungszeit ist beendet</msg>
@@ -58,11 +70,14 @@
   <msg key="online-exam-results-table">Ergebnisse</msg>
   <msg key="online-exam-submitted_exams_heading">Abgegebene Prüfungen</msg>
   <msg key="online-exam-submitted_exams_msg">Studierende haben eine Prüfung abgegeben</msg>
-  <msg key="participant">Teilnehmer</msg>  
+  <msg key="online-exam-name">Bezeichung der Prüfung</msg>
+  <msg key="online-exam-default_name">Prüfung aus ...</msg>
+
+  <msg key="participant">Teilnehmer</msg>
   <msg key="participants_answered_question">Teilnehmer haben diese Frage beantwortet</msg>
   <msg key="please_answer">Bitte beantworten Sie</msg>
   <msg key="results">Ergebnisse</msg>
-  <msg key="show_results">Zeige Antwortstatisktik</msg>  
+  <msg key="show_results">Zeige Antwortstatisktik</msg>
   <msg key="results_of">Ergebnisse von</msg>
   <msg key="inclass-quiz-unpublish">Quiz beenden</msg>
   <msg key="inclass-quiz-save">Antwort speichern</msg>
@@ -73,10 +88,21 @@
   <msg key="inclass-quiz-waiting_for_next">Warte auf nächste Frage ...</msg>
   <msg key="inclass-quiz-not_available">Der Quiz kann derzeit nicht beantwortet werden</msg>
   <msg key="inclass-quiz-already_answered">Sie haben Frage %number% beantwortet</msg>
-  <msg key="Shuffle">Zufallsauswahl</msg>  
+  <msg key="inclass-quiz-name">Bezeichung des Quiz</msg>
+  <msg key="inclass-quiz-default_name">Quiz ...</msg>
+
+  <msg key="inclass-exam-submit">Abgabe def Prüfung</msg>
+  <msg key="inclass-exam-already_answered">Prüfung ist abgegeben</msg>
+
+  <msg key="select_question_help_text">Wählen Sie Fragen mittels Drag&Drop aus</msg>
+
+  <msg key="randomized_items">Randomisierte Fragenfolge</msg>
+  <msg key="randomized_items_help_text">Zeige die Fragen der Prüfung für jeden Studierenden in einer anderen Reihenfolge</msg>
+
+  <msg key="Shuffle">Zufallsauswahl</msg>
   <msg key="shuffle_none">Nie</msg>
   <msg key="shuffle_peruser">Pro Benutzer</msg>
-  <msg key="shuffle_always">Immer</msg>  
+  <msg key="shuffle_always">Immer</msg>
 
   <msg key="short_text_question">Kurztextfrage</msg>
   <msg key="sc_question">Single-Choice-Frage</msg>
@@ -89,7 +115,11 @@
   <msg key="menu-New-Item-TextInteraction">Textfrage</msg>
   <msg key="menu-New-Item-ShortTextInteraction">Kurztextfrage</msg>
   <msg key="menu-New-Item-MCInteraction">MC-Frage</msg>
-  <msg key="menu-New-Item-SCInteraction">SC-Frage</msg>      
-  <msg key="menu-New-Item-UploadInteraction">Dateiabgabefrage</msg>        
+  <msg key="menu-New-Item-SCInteraction">SC-Frage</msg>
+  <msg key="menu-New-Item-UploadInteraction">Dateiabgabefrage</msg>
 
+
+  <msg key="inclass-exam-draft_exam">Entwurf des Inclass-Exams (nicht freigegeben)</msg>
+  <msg key="inclass-exam-open">Inclass-Exam geöffnet (Zur Bearbeitung freigegeben)</msg>
+  <msg key="inclass-exam-closed">Inclass-Exam geschlossen</msg>
 </message_catalog>
