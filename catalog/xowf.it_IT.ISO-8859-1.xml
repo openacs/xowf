@@ -20,7 +20,8 @@
   <msg key="feedback_correct">Feedback Corretto</msg>
   <msg key="feedback_incorrect">Feedback Scorretto</msg>
   <msg key="first_question">Prima Domanda</msg>
-  <msg key="Grading-Schema">Schema di Valutazione</msg>
+  <msg key="Grading-Scheme">Criterio di valutazione</msg>
+  <msg key="Grading-Score">Punteggio</msg>
   <msg key="inclass-quiz-already_answered">Hai già risposta alla domanda %number%</msg>
   <msg key="inclass-quiz-closed">Il quiz è chiuso</msg>
   <msg key="inclass-quiz-create">Crea quiz</msg>
@@ -40,6 +41,11 @@
   <msg key="mc_question">Domanda a Risposta Multipla</msg>
   <msg key="menu-New-Extra-Workflow">Nuovo Workflow</msg>
   <msg key="Minutes">Minuti</msg>
+  <msg key="New.Item.MCInteraction">Interazione a Scelta Multipla</msg>
+  <msg key="New.Item.SCInteraction">Interazione a Scelta Singola</msg>
+  <msg key="New.Item.ShortTextInteraction">Interazione di Testo Breve</msg>
+  <msg key="New.Item.TextInteraction">Interazione di Testo</msg>
+  <msg key="New.Item.UploadInteraction">Interazione di Upload</msg>
   <msg key="next_question">Prossima Domanda</msg>
   <msg key="online-exam-actual_signature">Firma Effettiva</msg>
   <msg key="online-exam-can_answer">Gli studenti possono ora rispondere via</msg>
@@ -53,6 +59,7 @@
   <msg key="online-exam-protocol">Protocollo Esame</msg>
   <msg key="online-exam-publish">Pubblica Esame</msg>
   <msg key="online-exam-republish">Pubblica nuovamente l&#39;Esame</msg>
+  <msg key="online-exam-results-table">Risultati</msg>
   <msg key="online-exam-review">Revisiona Esame</msg>
   <msg key="online-exam-save">Salva Risposta</msg>
   <msg key="online-exam-select">Crea Esame</msg>
@@ -67,6 +74,7 @@
   <msg key="online-exam-title-select">Crea un nuovo Esame (cancellerà tutte le risposte a questo esame)</msg>
   <msg key="online-exam-try_out">Vuoi testare l&#39;esame?</msg>
   <msg key="online-exam-unpublish">Chiudi Esame</msg>
+  <msg key="participant">Partecipante</msg>
   <msg key="participants_answered_question">i partecipanti hanno risposto a questa domanda</msg>
   <msg key="please_answer">Prego rispondere</msg>
   <msg key="previous_question">Domanda Precedente</msg>
@@ -89,4 +97,5 @@
   <msg key="submitted_answers">Risposte Consegnate</msg>
   <msg key="testrun">Giro di prova</msg>
   <msg key="text_question">Risposta Aperta</msg>
+  <msg key="ul_question">Domanda Caricamento File</msg>
 </message_catalog>
