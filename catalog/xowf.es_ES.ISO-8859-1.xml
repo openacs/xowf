@@ -102,7 +102,7 @@
   <msg key="shuffle_always">Siempre</msg>
 
   <msg key="menu-New-Item-TextInteraction">Interacción de texto</msg>
-  <msg key="menu-New-Item-ShortTextInteraction">Integración de texto corto</msg>
+  <msg key="menu-New-Item-ShortTextInteraction">Interacción de texto corto</msg>
   <msg key="menu-New-Item-MCInteraction">Interacción MC</msg>
   <msg key="menu-New-Item-SCInteraction">Interacción SC</msg>
   <msg key="menu-New-Item-UploadInteraction">Interacción de subida</msg>
