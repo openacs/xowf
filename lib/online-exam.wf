@@ -138,6 +138,7 @@ Action instproc unpublish_link {obj} {
 
   #:log  fullQuestionForm=$fullQuestionForm
   set text "<h2>$title</h2>"
+  set menu ""
 
   set wf [xowf::test_item::answer_manager get_answer_wf $obj]
   if {$wf eq ""} {
@@ -146,7 +147,6 @@ Action instproc unpublish_link {obj} {
     set tLink "."
     set aLink "."
     set pLink "."
-    set menu ""
   } else {
     #
     # Always compute the testrun and answer link.
