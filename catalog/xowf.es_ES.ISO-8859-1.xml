@@ -5,7 +5,15 @@
   <msg key="Grading-Scheme">Sistema de calificación</msg>
   <msg key="Grading-Score">Puntuación</msg>
   <msg key="Shuffle">Mezclar</msg>
+  <msg key="Days">Días</msg>
+  <msg key="Day">Día</msg>
   <msg key="Minutes">Minutos</msg>
+  <msg key="Minute">Minuto</msg>
+  <msg key="Hours">Horas</msg>
+  <msg key="Hour">Hora</msg>
+  <msg key="Seconds">Segundos</msg>
+  <msg key="Second">Segundo</msg>
+  <msg key="remaining">restantes</msg>
   <msg key="alternative">Alternativa</msg>
   <msg key="answer_correct">¡Correcto!</msg>
   <msg key="answer_incorrect">Lo siento, es incorrecto.</msg>
@@ -26,9 +34,9 @@
   <msg key="answer_lines">Líneas de respuestas</msg>
   <msg key="answer_columns">Columnas de respuestas</msg>
   <msg key="correct_when">Correcto cuando</msg>
-  <msg key="online-exam-draft_exam">Borrador de exámen (sin publicar)</msg>
-  <msg key="online-exam-open">Exámen abierto (publicado)</msg>
-  <msg key="online-exam-closed">Exámen cerrado</msg>
+  <msg key="online-exam-draft_exam">Borrador de examen (sin publicar)</msg>
+  <msg key="online-exam-open">Examen abierto (publicado)</msg>
+  <msg key="online-exam-closed">Examen cerrado</msg>
   <msg key="question">Pregunta</msg>
   <msg key="questions">Preguntas</msg>
   <msg key="first_question">Primera pregunta</msg>
@@ -48,30 +56,35 @@
   <msg key="online-exam-actual_signature">Firma actual</msg>
   <msg key="online-exam-submission_signature">Firma de entrega</msg>
 
-  <msg key="online-exam-select">Crear Exámen</msg>
-  <msg key="online-exam-review">Revisar Exámen</msg>
+  <msg key="signature">Firma</msg>
+  <msg key="signature_help_text">Proporcionar una huella digital de las respuestas ya enviadas como prueba del contenido enviado</msg>
+
+  <msg key="online-exam-select">Crear Examen</msg>
+  <msg key="online-exam-review">Revisar Examen</msg>
   <msg key="online-exam-submit">Entrega final</msg>
   <msg key="online-exam-save">Salvar respuesta</msg>
-  <msg key="online-exam-start">Comenzar exámen</msg>
-  <msg key="online-exam-end">Abandonar exámen</msg>
-  <msg key="online-exam-publish">Publicar Exámen</msg>
-  <msg key="online-exam-unpublish">Cerrar Exámen</msg>
-  <msg key="online-exam-republish">Publicar exámen de nuevo</msg>
-  <msg key="online-exam-title-republish">Publicar exámen de nuevo, las respuestas existentes NO serán eliminadas.</msg>
-  <msg key="online-exam-title-publish">Publicar exámen (las respuestas existentes serán eliminadas)</msg>
+  <msg key="online-exam-start">Comenzar examen</msg>
+  <msg key="online-exam-end">Abandonar examen</msg>
+  <msg key="online-exam-publish">Publicar examen</msg>
+  <msg key="online-exam-unpublish">Cerrar examen</msg>
+  <msg key="online-exam-republish">Publicar examen de nuevo</msg>
+  <msg key="online-exam-title-republish">Publicar examen de nuevo, las respuestas existentes NO serán eliminadas.</msg>
+  <msg key="online-exam-title-publish">Publicar examen (las respuestas existentes serán eliminadas)</msg>
   <msg key="online-exam-title-restart">Vovler al principio, donde las preguntas pueden ser seleccionadas (las respuestas existentes serán eliminadas).</msg>
-  <msg key="online-exam-title-select">Crear un exámen totalmente nuevo (todas las respuestas a éste exámen serán eliminadas)</msg>
+  <msg key="online-exam-title-select">Crear un examen totalmente nuevo (todas las respuestas a éste examen serán eliminadas)</msg>
 
-  <msg key="online-exam-exam_instances">Listado de todos los exámenes rellenados</msg>
-  <msg key="online-exam-try_out">¿Quiere probar el exámen?</msg>
+  <msg key="online-exam-exam_instances">Listado de todos los examenes rellenados</msg>
+  <msg key="online-exam-try_out">¿Quiere probar el examen?</msg>
   <msg key="online-exam-can_answer">Los estudiantes pueden ahora responder vía</msg>
 
-  <msg key="online-exam-not-published">El exámen no ha sido publicado</msg>
-  <msg key="online-exam-finished">El exámen está terminado</msg>
-  <msg key="online-exam-protocol">Informe del exámen</msg>
+  <msg key="online-exam-not-published">El examen no ha sido publicado</msg>
+  <msg key="online-exam-finished">El examen está terminado</msg>
+  <msg key="online-exam-protocol">Informe del examen</msg>
   <msg key="online-exam-results-table">Resultados</msg>
   <msg key="online-exam-submitted_exams_heading">Exámenes enviados</msg>
-  <msg key="online-exam-submitted_exams_msg">Personas han enviado el exámen</msg>
+  <msg key="online-exam-submitted_exams_msg">Personas han enviado el examen</msg>
+  <msg key="online-exam-name">Nombre del examen</msg>
+  <msg key="online-exam-default_name">Examen ...</msg>
 
   <msg key="inclass-quiz-not-published">El cuestionario no ha sido publicado</msg>
   <msg key="inclass-quiz-open">El cuestionario está abierto</msg>
@@ -88,6 +101,16 @@
   <msg key="inclass-quiz-not_available">El cuestionario no está disponible actualmente para ser contestado</msg>
   <msg key="inclass-quiz-already_answered">Ya ha contestado la pregunta %number%</msg>
   <msg key="inclass-quiz-quiz_instances">Lista de cuestionarios ya enviados</msg>
+  <msg key="inclass-quiz-name">Nombre del cuestionario</msg>
+  <msg key="inclass-quiz-default_name">Cuestionario ...</msg>
+
+  <msg key="select_question_help_text">Preguntas de arrastrar y soltar ...</msg>
+
+  <msg key="randomized_items">Orden aleatorio</msg>
+  <msg key="randomized_items_help_text">Mostrar preguntas en distinto orden a cada estudiante</msg>
+
+  <msg key="inclass-exam-submit">Enviar y terminar examen</msg>
+  <msg key="inclass-exam-already_answered">Ya ha terminado este examen.</msg>
 
   <msg key="short_text_question">Pregunta de texto corto</msg>
   <msg key="sc_question">Pregunta de elección única</msg>
@@ -107,8 +130,14 @@
   <msg key="menu-New-Item-SCInteraction">Interacción SC</msg>
   <msg key="menu-New-Item-UploadInteraction">Interacción de subida</msg>
 
-  <msg key="menu-New-App-OnlineExam">Exámen en línea</msg>
+  <msg key="menu-New-App-OnlineExam">Examen en línea</msg>
   <msg key="menu-New-App-InclassQuiz">Cuestionario en clase</msg>
-  <msg key="menu-New-App-InclassExam">Exámen en clase</msg>
+  <msg key="menu-New-App-InclassExam">Examen en clase</msg>
 
+  <msg key="inclass-exam-draft_exam">Borrador de examen en clase (no publicado)</msg>
+  <msg key="inclass-exam-open">Exame en clase abierto (publicado)</msg>
+  <msg key="inclass-exam-closed">Examen en clase cerrado</msg>
+
+  <msg key="Created_Questions">Preguntas creadas</msg>
+  <msg key="Created_Assessments">Evaluaciones creadas</msg>
 </message_catalog>
