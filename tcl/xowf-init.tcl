@@ -4,9 +4,10 @@
 ::xowf::dav-todo register
 
 #
-# Make sure, the site-wide pages are loaded
+# Make sure, the site-wide pages are loaded, and refetch pages, when
+# the source code in the prototype pages changes.
 #
-::xowf::Package require_site_wide_pages
+::xowf::Package require_site_wide_pages -refetch_if_modified
 
 #
 # Run the checker for the scheduled at-jobs.
@@ -26,7 +27,7 @@ ns_after $secs_to_the_minute {
 
   # the following job is executed after 60 seconds
   ad_schedule_proc -thread t 60 ::xowf::atjob check
-  
+
 }
 
 

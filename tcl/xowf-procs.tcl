@@ -52,6 +52,7 @@ namespace eval ::xowf {
     TestItemShortText.form
     TestItemMC.form
     TestItemSC.form
+    TestItemReorder.form
     TestItemUpload.form
 
     online-exam.wf
@@ -105,7 +106,7 @@ namespace eval ::xowf {
                  -instance_attributes $instance_attributes \
                  -page_template $page_template]
     } else {
-      ns_log error "could not load Workflow form, therefore creation of workflow $name failed as well"
+      ns_log error "could not load Workflow form, therefore, creation of workflow $name failed as well"
       set p ""
     }
     return $p
@@ -2277,7 +2278,7 @@ namespace eval ::xowf {
 #            ::xowf::dav create ::xowf::baHandler -url /handler -package ::xowf::Package
 #
 #  2) Make sure, the basic authentication handler is initialized during
-#     startup. Write an -init.tcl file containing a call to the
+#     startup. Write a *-init.tcl file containing a call to the
 #     created handler.
 #     Example:
 #            ::xowf::baHandler register

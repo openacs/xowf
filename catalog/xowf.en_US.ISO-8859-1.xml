@@ -120,6 +120,9 @@
   <msg key="text_question">Text Question</msg>
   <msg key="ul_question">File Upload Question</msg>
   <msg key="sub_question">Sub-Question</msg>
+  <msg key="reorder_question">Ordering Question</msg>
+  <msg key="reorder_question_elements">Ordering Elements</msg>
+
   <msg key="show_max">Show Max</msg>
 
   <msg key="shuffle_none">None</msg>
@@ -131,6 +134,7 @@
   <msg key="menu-New-Item-MCInteraction">MC Interaction</msg>
   <msg key="menu-New-Item-SCInteraction">SC Interaction</msg>
   <msg key="menu-New-Item-UploadInteraction">Upload Interaction</msg>
+  <msg key="menu-New-Item-ReorderInteraction">Ordering Interaction</msg>  
 
   <msg key="menu-New-App-OnlineExam">Online Exam</msg>
   <msg key="menu-New-App-InclassQuiz">Inclass Quiz</msg>

@@ -142,6 +142,11 @@ namespace eval ::xowiki::formfield {
         set auto_correct ${:auto_correct}
         set can_shuffle false
       }
+      ro {
+        set interaction_class reorder_interaction
+        set auto_correct ${:auto_correct}
+        set can_shuffle false
+      }
       te -
       st {
         set interaction_class short_text_interaction
@@ -242,10 +247,10 @@ namespace eval ::xowiki::formfield {
   mc_interaction instproc initialize {} {
 
     if {${:__state} ne "after_specs"} return
+
     #
     # build choices
     #
-
     if {!${:multiple}} {
       append choices "{correct radio,omit}\n"
     }
@@ -272,7 +277,7 @@ namespace eval ::xowiki::formfield {
     append form "<tr><td class='text' colspan='2'><div class='question_text'>$intro_text</div></td></tr>\n"
 
     #:msg " input_field_names=${:input_field_names}"
-    set mc [:get_named_sub_component_value mc]
+    set mc [:get_named_sub_component_value -from_repeat mc]
     #ns_log notice "MC <$mc>"
 
     if {!${:multiple}} {
@@ -283,8 +288,7 @@ namespace eval ::xowiki::formfield {
     set input_field_names {}
     foreach {name .} $mc {lappend input_field_names $name}
 
-    # don't iterate over the template field
-    foreach {input_field_name data} [lrange $mc 2 end] {
+    foreach {input_field_name data} $mc {
       foreach f {text correct feedback_correct feedback_incorrect} {
         if {[dict exists $data $input_field_name.$f]} {
           set value($f) [dict get $data $input_field_name.$f]
@@ -491,7 +495,7 @@ namespace eval ::xowiki::formfield {
   short_text_interaction instproc convert_to_internal {} {
 
     set intro_text   [:get_named_sub_component_value text]
-    set answerFields [:get_named_sub_component_value answer]
+    set answerFields [:get_named_sub_component_value -from_repeat answer]
 
     set options {}
     set render_hints {}
@@ -499,10 +503,6 @@ namespace eval ::xowiki::formfield {
     set count 0
 
     foreach {fieldName value} $answerFields {
-      # skip template entry
-      if {[lindex [split $fieldName .] end] eq 0} {
-        continue
-      }
       #ns_log notice ...fieldName=$fieldName->$value
       set af answer[incr count]
       lappend options [list [dict get $value $fieldName.text] $af]
@@ -602,6 +602,79 @@ namespace eval ::xowiki::formfield {
 namespace eval ::xowiki::formfield {
   ###########################################################
   #
+  # ::xowiki::formfield::reorder_interaction
+  #
+  ###########################################################
+
+  Class create reorder_interaction -superclass TestItemField -parameter {
+  }
+
+  reorder_interaction instproc initialize {} {
+    if {${:__state} ne "after_specs"} return
+    #
+    # Create component structure.
+    #
+    set widget [test_item set richtextWidget]
+    ns_log notice "[self] [:info class] auto_correct=${:auto_correct}"
+
+    :create_components [subst {
+      {text  {$widget,height=100px,label=#xowf.exercise-text#,plugins=OacsFs}}
+      {answer {text,repeat=1..10,label=#xowf.reorder_question_elements#}}
+    }]
+    set :__initialized 1
+  }
+
+  reorder_interaction instproc convert_to_internal {} {
+
+    set intro_text   [:get_named_sub_component_value text]
+    set answerFields [:get_named_sub_component_value -from_repeat answer]
+
+    set options {}
+    set answer {}
+    set count 0
+
+    foreach {fieldName value} $answerFields {
+      #ns_log notice ...fieldName=$fieldName->$value
+      lappend options [list $value $count]
+      lappend answer $count
+      incr count
+    }
+
+    #dict set fc_dict shuffle_kind [${:parent_field} get_named_sub_component_value shuffle]
+    #dict set fc_dict show_max [${:parent_field} get_named_sub_component_value show_max]
+    dict set fc_dict disabled_as_div 1
+    dict set fc_dict label ""
+    dict set fc_dict options $options
+    dict set fc_dict answer $answer
+
+    append form \
+        "<form>\n" \
+        "<div class='reorder_interaction'>\n" \
+        "<div class='question_text'>$intro_text</div>\n" \
+        "@answer@" \n \
+        "</div>\n" \
+        "</form>\n"
+
+    set fc {}
+    lappend fc \
+        answer:[:dict_to_fc -type reorder_box $fc_dict] \
+        @categories:off @cr_fields:hidden
+
+    ns_log notice "reorder_interaction $form\n$fc"
+    ${:object} set_property -new 1 form $form
+    ${:object} set_property -new 1 form_constraints $fc
+    set anon_instances true ;# TODO make me configurable
+    ${:object} set_property -new 1 anon_instances $anon_instances
+    ${:object} set_property -new 1 auto_correct ${:auto_correct}
+    ${:object} set_property -new 1 has_solution false
+  }
+}
+
+
+
+namespace eval ::xowiki::formfield {
+  ###########################################################
+  #
   # ::xowiki::formfield::mc_interaction2
   #
   ###########################################################
@@ -629,16 +702,12 @@ namespace eval ::xowiki::formfield {
   mc_interaction2 instproc convert_to_internal {} {
 
     set intro_text   [:get_named_sub_component_value text]
-    set answerFields [:get_named_sub_component_value answer]
+    set answerFields [:get_named_sub_component_value -from_repeat answer]
     set count 0
     set options {}
     set correct {}
 
     foreach {fieldName value} $answerFields {
-      # skip template entry
-      if {[lindex [split $fieldName .] end] eq 0} {
-        continue
-      }
       #ns_log notice ...fieldName=$fieldName->$value
       #set af answer[incr count]
       set text [dict get $value $fieldName.text]
@@ -774,7 +843,7 @@ namespace eval ::xowiki::formfield {
     # Build a complex form composed of the specified form pages names
     # contained in the value of this field.  The form-fields have to
     # be renamed. This affects the input field names in the form and
-    # the form constraints. We use the item-id contained pages as a the
+    # the form constraints. We use the item_id contained pages as the
     # prefix for the form-fields. This method must be most likely
     # extended for other question types.
     #

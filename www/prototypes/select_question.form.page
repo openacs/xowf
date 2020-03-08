@@ -8,7 +8,7 @@
     -form_constraints {
 	@cr_fields:hidden
 	{_title:text,label=#xowf.online-exam-name#,default=#xowf.online-exam-default_name#}
-	{question:form_page,multiple=true,form=en:TestItemText.form|en:TestItemShortText.form|en:TestItemMC.form|en:TestItemSC.form|en:TestItemUpload.form,required,help_text=#xowf.select_question_help_text#,label=#xowiki.questions#}
+	{question:form_page,multiple=true,form=en:TestItemText.form|en:TestItemShortText.form|en:TestItemMC.form|en:TestItemSC.form|en:TestItemUpload.form|en:TestItemReorder.form,required,help_text=#xowf.select_question_help_text#,label=#xowiki.questions#}
 	{shuffle_items:boolean,horizontal=true,label=#xowf.randomized_items#,help_text=#xowf.randomized_items_help_text#}
 	{signature:boolean,horizontal=true,default=f,label=#xowf.signature#,help_text=#xowf.signature-help_text#}
 	_description:omit _page_order:omit

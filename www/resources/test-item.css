@@ -67,7 +67,8 @@ div.upload_interaction div.form-label
 div.mc_interaction,
 div.sc_interaction,
 div.short_text_interaction,
-div.text_interaction {
+div.text_interaction,
+div.reorder_interaction {
     padding: 15px 0px 0px 15px;
 }
 div.mc_interaction label,
@@ -127,16 +128,19 @@ div.short_text_interaction div.text {
 div.text_interaction div.correct,
 div.short_text_interaction div.correct,
 div.mc_interaction label.correct,
-div.sc_interaction label.correct
+div.sc_interaction label.correct,
+div.reorder_interaction li.correct
 {
     border-width: 0px 0px 0px 4px;
     border-style: solid;
     border-color: green;
 }
+
 div.text_interaction div.incorrect,
 div.short_text_interaction div.incorrect,
 div.mc_interaction label.incorrect,
-div.sc_interaction label.incorrect
+div.sc_interaction label.incorrect,
+div.reorder_interaction li.incorrect
 {
     border-width: 0px 0px 0px 4px;
     border-style: solid;

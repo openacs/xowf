@@ -108,6 +108,9 @@
   <msg key="sc_question">Single-Choice-Frage</msg>
   <msg key="mc_question">Multiple-Choice-Frage</msg>
   <msg key="text_question">Textfrage</msg>
+  <msg key="reorder_question">Anordnungsfrage</msg>
+  <msg key="reorder_question_elements">Zu ordnende Elemente</msg>
+
   <msg key="ul_question">Dateiabgabefrage</msg>
   <msg key="sub_question">Teilfrage</msg>
   <msg key="show_max">Zeige maximal</msg>
@@ -117,6 +120,7 @@
   <msg key="menu-New-Item-MCInteraction">MC-Frage</msg>
   <msg key="menu-New-Item-SCInteraction">SC-Frage</msg>
   <msg key="menu-New-Item-UploadInteraction">Dateiabgabefrage</msg>
+  <msg key="menu-New-Item-ReorderInteraction">Anordnungsfrage</msg>  
 
 
   <msg key="inclass-exam-draft_exam">Entwurf des Inclass-Exams (nicht freigegeben)</msg>

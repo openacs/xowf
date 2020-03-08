@@ -29,6 +29,7 @@
 #   {entry -name New.Item.ShortTextInteraction -form en:TestItemShortText.form}
 #   {entry -name New.Item.MCInteraction -form en:TestItemMC.form}
 #   {entry -name New.Item.SCInteraction -form en:TestItemSC.form}
+#   {entry -name New.Item.ReorderInteraction -form en:TestItemReorder.form}
 #   {entry -name New.Item.UploadInteraction -form en:TestItemUpload.form}
 #   {entry -name New.App.Exam -label "Online Exam" -form en:online-exam.wf}
 #
