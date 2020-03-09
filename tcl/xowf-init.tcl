@@ -7,7 +7,7 @@
 # Make sure, the site-wide pages are loaded, and refetch pages, when
 # the source code in the prototype pages changes.
 #
-::xowf::Package require_site_wide_pages -refetch_if_modified
+::xowf::Package require_site_wide_pages -refetch_if_modified true
 
 #
 # Run the checker for the scheduled at-jobs.
