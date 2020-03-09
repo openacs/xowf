@@ -118,6 +118,9 @@
   <msg key="text_question">Pregunta de texto</msg>
   <msg key="ul_question">Pregunta de subida de archivo</msg>
   <msg key="sub_question">Sub-pregunta</msg>
++  <msg key="reorder_question">Pregunta de ordenación</msg>
++  <msg key="reorder_question_elements">Elementos a ordenar</msg>
+
   <msg key="show_max">Mostrar máximo</msg>
 
   <msg key="shuffle_none">No</msg>
@@ -129,6 +132,7 @@
   <msg key="menu-New-Item-MCInteraction">Interacción MC</msg>
   <msg key="menu-New-Item-SCInteraction">Interacción SC</msg>
   <msg key="menu-New-Item-UploadInteraction">Interacción de subida</msg>
+  <msg key="menu-New-Item-ReorderInteraction">Interacción de ordenación</msg>
 
   <msg key="menu-New-App-OnlineExam">Examen en línea</msg>
   <msg key="menu-New-App-InclassQuiz">Cuestionario en clase</msg>
