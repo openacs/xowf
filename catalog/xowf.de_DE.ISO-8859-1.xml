@@ -94,7 +94,7 @@
   <msg key="inclass-exam-submit">Abgabe def Prüfung</msg>
   <msg key="inclass-exam-already_answered">Prüfung ist abgegeben</msg>
 
-  <msg key="select_question_help_text">Wählen Sie Fragen mittels Drag&Drop aus</msg>
+  <msg key="select_question_help_text">Wählen Sie Fragen mittels Drag &amp; Drop aus</msg>
 
   <msg key="randomized_items">Randomisierte Fragenfolge</msg>
   <msg key="randomized_items_help_text">Zeige die Fragen der Prüfung für jeden Studierenden in einer anderen Reihenfolge</msg>
