@@ -253,7 +253,7 @@ proc done_form_loader {ctx form_name} {
   if {$for_question && [$obj state] in {initial working}} {
     set form_info [::xowf::test_item::question_manager nth_question_form \
                        -with_numbers \
-                       -with_title \
+                       -with_title=false \
                        -with_minutes=$with_minutes \
                        -position $position \
                        -item_nr $item_nr \
