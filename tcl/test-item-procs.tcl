@@ -475,6 +475,7 @@ namespace eval ::xowiki::formfield {
   ###########################################################
 
   Class create short_text_interaction -superclass TestItemField -parameter {
+    {nr 15}
   }
 
   short_text_interaction instproc initialize {} {
@@ -487,7 +488,7 @@ namespace eval ::xowiki::formfield {
 
     :create_components [subst {
       {text  {$widget,height=100px,label=#xowf.exercise-text#,plugins=OacsFs}}
-      {answer {short_text_field,repeat=1..5,label=}}
+      {answer {short_text_field,repeat=1..${:nr},label=}}
     }]
     set :__initialized 1
   }
@@ -607,6 +608,7 @@ namespace eval ::xowiki::formfield {
   ###########################################################
 
   Class create reorder_interaction -superclass TestItemField -parameter {
+    {nr 15}
   }
 
   reorder_interaction instproc initialize {} {
@@ -619,7 +621,7 @@ namespace eval ::xowiki::formfield {
 
     :create_components [subst {
       {text  {$widget,height=100px,label=#xowf.exercise-text#,plugins=OacsFs}}
-      {answer {text,repeat=1..10,label=#xowf.reorder_question_elements#}}
+      {answer {text,repeat=1..${:nr},label=#xowf.reorder_question_elements#}}
     }]
     set :__initialized 1
   }
@@ -680,6 +682,7 @@ namespace eval ::xowiki::formfield {
   ###########################################################
 
   Class create mc_interaction2 -superclass TestItemField -parameter {
+    {nr 15}
     {multiple true}
   }
 
@@ -694,7 +697,7 @@ namespace eval ::xowiki::formfield {
 
     :create_components  [subst {
       {text  {$widget,height=100px,label=#xowf.exercise-text#,plugins=OacsFs}}
-      {answer {mc_field,repeat=1..10,label=}}
+      {answer {mc_field,repeat=1..${:nr},label=}}
     }]
     set :__initialized 1
   }
@@ -1297,11 +1300,16 @@ namespace eval ::xowf::test_item {
           #
           $f make_correct
           #ns_log notice "FIELD $f [$f name] [$f info class] -> VALUE [$f set value]"
-
+          if {[$f exists correction]} {
+             set correction [$f set correction]
+          } else {
+             set correction ""
+             ns_log warning "form-field [$f name] of type [$f info class] does not provide variable correction via 'make_correct'"
+          }
           lappend answer \
               [list name $att \
                    value $value \
-                   correction [$f set correction] \
+                   correction $correction \
                    evaluated_answer_result [$f set evaluated_answer_result]]
         }
       }
@@ -1452,6 +1460,16 @@ namespace eval ::xowf::test_item {
       {-current_question ""}
       {-extra_text ""}
     } {
+      #
+      # Produce HTML code for an answers panel, containing the number
+      # of participants of an e-assessment and the number of
+      # participants, who have already answered. 
+      #
+      # @param polling when specified, provide live updates
+      #        of the numbers via AJAX calls
+      # @param extra_text optional extra text for the panel,
+      #        has to be provided with valid HTML markup.
+      #
 
       set answers [xowf::test_item::answer_manager get_answers $wf]
       set nrParticipants [llength $answers]
