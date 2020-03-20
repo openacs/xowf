@@ -1463,7 +1463,7 @@ namespace eval ::xowf::test_item {
       #
       # Produce HTML code for an answers panel, containing the number
       # of participants of an e-assessment and the number of
-      # participants, who have already answered. 
+      # participants, who have already answered.
       #
       # @param polling when specified, provide live updates
       #        of the numbers via AJAX calls
@@ -1836,9 +1836,16 @@ namespace eval ::xowf::test_item {
       -superclass ::xowiki::formfield::FormField
 
   ::xowf::test_item::td_pretty_value instproc pretty_value {value} {
-    #ns_log notice "${:name} pretty_value [:info precedence]"
-    if {"::xowiki::formfield::checkbox" in [:info precedence]} {
-      set v ${value}
+    #
+    # In case the form_field_class has a "td_pretty_value" defined,
+    # return its value. This is e.g. useful, when we have shuffled
+    # fields, which are different per user. When we initiate the field
+    # we would see just see the subset of fields for this user, but in
+    # the tabular view, it is required to see in one columns all fields.
+    #
+    #ns_log notice "${:name} pretty_value [:info precedence] // [:istype ::xowiki::formfield::text_fields]"
+    if {[:procsearch td_pretty_value] ne ""} {
+      set v [:td_pretty_value $value]
     } else {
       set v [next]
     }
