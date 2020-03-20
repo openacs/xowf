@@ -141,7 +141,7 @@ Action instproc unpublish_link {obj} {
   #:log  fullQuestionForm=$fullQuestionForm
   set text "<h2>$title</h2>"
   set menu ""
-  
+
   set wf [xowf::test_item::answer_manager get_answer_wf $obj]
   if {$wf eq ""} {
     :msg "cannot get current workflow for [$obj name]"
@@ -196,7 +196,7 @@ Action instproc unpublish_link {obj} {
       }]
     }
   }
-  
+
   set extraAction ""
   switch $state {
     "created"   {
@@ -226,7 +226,7 @@ Action instproc unpublish_link {obj} {
                           -target_state done \
                           -wf $wf]
   }
-  
+
   set qrCode ""
   set countdownHTML ""
   if {$state eq "published"} {
@@ -248,12 +248,12 @@ Action instproc unpublish_link {obj} {
     <div class="col-sm-12">$answerStatus</div>
     <div class="col-sm-9 quiz-preview">$fullQuestionForm</div>
     <div class="col-sm-3">$qrCode</div>
-    <div class="col-sm-6">$countdownHTML</div>    
+    <div class="col-sm-6">$countdownHTML</div>
     </div></div>
   }]
 
   set footer "$menu $extraAction"
-  
+
   #-form [subst {<form>$text<div class='exam-preview'>$fullQuestionForm</div>$report</form> text/html}]
   set f [::xowiki::Form new \
              -destroy_on_cleanup \
@@ -373,9 +373,11 @@ Action instproc unpublish_link {obj} {
         # "summary_form" of online-exam-answer.wf when the submit
         # instance is in state "done". We set the __feedback_mode to
         # get the auto-correction included.
-        #
+        set current_user [xo::cc user_id]
+        xo::cc user_id [$i creation_user]
         $i set __feedback_mode 2
         set question_form [$i render_content]
+        xo::cc user_id $current_user
 
         if {$withSignature} {
           set answerAttributes [xowf::test_item::renaming_form_loader \
@@ -440,7 +442,7 @@ Action instproc unpublish_link {obj} {
     ns_returnfile 200 image/png $fn
     ad_script_abort
   }
-  
+
   ########################################################################
   # AJAX call "poll"
   #
