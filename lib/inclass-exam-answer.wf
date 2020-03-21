@@ -331,7 +331,7 @@ proc done_form_loader {ctx form_name} {
   set container [$ctx wf_container]
   ${container}::Property ip -default [expr {[ns_conn isconnected] ? [ad_conn peeraddr] : "nowhere"}]
 
-  :log "INCLASS state ${:state}"
+  #:log "inclass-exam-answer state ${:state}"
   set ctx [:wf_context]
   set container [$ctx wf_container]
   if {$ctx ne $container} {
