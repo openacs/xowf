@@ -1300,6 +1300,7 @@ namespace eval ::xowf::test_item {
       # Get the IP addresses for the given revision set. Should be
       # actually only one. The revision_set must not be empty.
       #
+      set IPs ""
       foreach revision_set $revision_sets {
         set ip [ns_set get $revision_set creation_ip]
         if {$ip ne ""} {
