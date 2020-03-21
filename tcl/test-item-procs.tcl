@@ -1286,6 +1286,8 @@ namespace eval ::xowf::test_item {
       set last [lindex $revision_sets end]
       set fromClock [clock scan [::xo::db::tcl_date [ns_set get $first creation_date] tz]]
       set toClock [clock scan [::xo::db::tcl_date [ns_set get $last creation_date] tz]]
+      dict set r fromClock $fromClock
+      dict set r toClock $toClock
       dict set r from [clock format $fromClock -format "%H:%M:%S"]
       dict set r to [clock format $toClock -format "%H:%M:%S"]
       set timeDiff [expr {$toClock - $fromClock}]
@@ -1394,9 +1396,12 @@ namespace eval ::xowf::test_item {
       set form_info [::xowf::test_item::question_manager combined_question_form $wf]
       set answer_form_field_objs [:answer_form_field_objs -wf $wf $form_info]
 
-      set form_field_objs [$wf create_raw_form_field \
-                               -name _online-exam-userName \
-                               -spec text,label=#xowf.participant#]
+      set form_field_objs {}
+      lappend form_field_objs \
+          [$wf create_raw_form_field \
+               -name _online-exam-userName \
+               -spec text,label=#xowf.participant#]
+
       #
       # Create for every answer field a matching grading field
       #
@@ -1418,8 +1423,23 @@ namespace eval ::xowf::test_item {
 
       lappend form_field_objs \
           [$wf create_raw_form_field \
+               -name _online-exam-seconds \
+               -spec number,label=#xowf.Seconds#] \
+          [$wf create_raw_form_field \
                -name _creation_date \
                -spec date,label=#xowiki.Page-last_modified#]
+
+      #
+      # Check, if any of the answer form field objects is
+      # randomized. If so, it is necessary to recreate these eagerly,
+      # since the full object structure might be personalized.
+      #
+      set randomized_fields {}
+      foreach ff_obj $answer_form_field_objs {
+        if {[$ff_obj exists shuffle_kind] && [$ff_obj shuffle_kind] ne "none"} {
+          lappend randomized_fields $ff_obj
+        }
+      }
 
       #
       # Take "orderby" from the query parameter. If not set, order by
@@ -1442,12 +1462,29 @@ namespace eval ::xowf::test_item {
       # values.
       #
       foreach p [$items children] {
+        #
+        # If we have randomized fields, we have to
+        # recreate/reinitialize these to get proper correction
+        # markings for this user. It might be possible to optimize
+        # this, when only a few fields are randomized.
+        #
+        if {[llength $randomized_fields] > 0} {
+          #ns_log notice "WORK ON [$p creation_user] "
+          :answer_form_field_objs -clear -wf $wf $form_info
+          $wf form_field_flush_cache
+          xo::cc eval_as_user -user_id [$p creation_user] {
+            set answer_form_field_objs [:answer_form_field_objs -wf $wf $form_info]
+          }
+        }
+
         foreach ff_obj $answer_form_field_objs {
           $ff_obj object $p
           set property [$ff_obj name]
           $ff_obj value [$p property $property]
 
           $ff_obj set_feedback 3
+
+          #ns_log notice "[$p creation_user] [$ff_obj name] [$p property $property] -> [$ff_obj set evaluated_answer_result]"
           if {[$ff_obj exists grading_score]} {
             set r [$ff_obj set grading_score]
           } else {
@@ -1456,6 +1493,10 @@ namespace eval ::xowf::test_item {
           }
           $p set_property -new 1 $property.score $r
         }
+
+        set duration [:get_duration [$p get_revision_sets]]
+        $p set_property -new 1 _online-exam-seconds \
+            [expr {[dict get $duration toClock] - [dict get $duration fromClock]}]
       }
 
       if {$state eq "done"} {
@@ -1489,7 +1530,9 @@ namespace eval ::xowf::test_item {
       set items [:get_wf_instances $wf]
       set results ""
       foreach i [$items children] {
-        set participantResult [:participant_result -obj $obj $i $form_info $form_field_objs]
+        xo::cc eval_as_user -user_id [$i creation_user] {
+          set participantResult [:participant_result -obj $obj $i $form_info $form_field_objs]
+        }
         append results $participantResult \n
       }
 

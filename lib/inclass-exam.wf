@@ -319,6 +319,7 @@ Action instproc unpublish_link {obj} {
       set HTML [::xowf::test_item::answer_manager result_table \
                     -package_id ${:package_id} \
                     -items $items2 \
+                    -state * \
                     [self]]
       $items2 destroy
     }
@@ -359,15 +360,22 @@ Action instproc unpublish_link {obj} {
       foreach i [$items children] {
         set userName [$i set online-exam-userName]
         set fullName [$i set online-exam-fullName]
+        set state [$i state]
 
-        if {[$i state] ne "done"} {
-          ns_log notice "online-exam: submission of $userName is not finished (state [$i state])"
-          continue
+        if {$state ne "done"} {
+          ns_log notice "online-exam: submission of $userName is not finished (state $state)"
+          #continue
         }
         if {$filter_id ne "" && [$i item_id] ne $filter_id} {
           continue
         }
-
+        set revisions [$i get_revision_sets]
+        if {[llength $revisions] <=1 } {
+          # just an initial revision
+          ns_log notice "online-exam: submission of $userName is empty. Ignoring."
+          continue
+        }
+        
         #
         # The call to "render_content" calls actually the
         # "summary_form" of online-exam-answer.wf when the submit
@@ -394,15 +402,16 @@ Action instproc unpublish_link {obj} {
 
         set time [::xo::db::tcl_date [$i property _last_modified] tz_var]
         set pretty_date [clock format [clock scan $time] -format "%Y-%m-%d %T"]
-        set revisions [$i get_revision_sets]
         set duration [xowf::test_item::answer_manager get_duration $revisions]
         set IPs [xowf::test_item::answer_manager get_IPs $revisions]
+        set submissionState [expr {$state ne "done" ? "- #xowf.not_submitted#" : ""}]
         append HTML [subst {
           <div class='single_exam'>
           <div class='runtime-data'>
           <h2>$userName · $fullName · $pretty_date</h2>
           #xowf.nr_changes#: [llength $revisions]<br>
-          #xowf.duration#: [dict get $duration from] - [dict get $duration to] ([dict get $duration duration])<br>
+          #xowf.duration#: [dict get $duration from] - [dict get $duration to]
+          ([dict get $duration duration]) $submissionState<br>
           IP: $IPs
           </div>
           $signatureString 
