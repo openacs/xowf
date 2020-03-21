@@ -399,8 +399,8 @@ Action instproc unpublish_link {obj} {
         set IPs [xowf::test_item::answer_manager get_IPs $revisions]
         append HTML [subst {
           <div class='single_exam'>
-          <h2>$userName · $fullName · $pretty_date</h2>
           <div class='runtime-data'>
+          <h2>$userName · $fullName · $pretty_date</h2>
           #xowf.nr_changes#: [llength $revisions]<br>
           #xowf.duration#: [dict get $duration from] - [dict get $duration to] ([dict get $duration duration])<br>
           IP: $IPs
