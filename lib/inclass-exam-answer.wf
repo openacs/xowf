@@ -174,12 +174,21 @@ State done \
 proc working_form_loader {ctx form_name} {
   ns_log notice "============ working_form_loader"
   set obj [$ctx object]
+
+  #
+  # When we are in the reporting modes return the results from the
+  # "done_form_loader". We could check as well the state oft the
+  # parent workflow, but maybe we want this in more situations.
+  #
+  if {[$obj exists online-exam-userName]} {
+    return [done_form_loader $ctx $form_name]
+  }
   set item_nr [$obj property position]
 
   set parent_id [$obj parent_id]
   #:msg "working_form_loader [$obj instance_attributes]"
   set parent_obj [::xo::db::CrClass get_instance_from_db -item_id $parent_id]
-  set parent_state [$parent_obj state]
+  set  parent_state [$parent_obj state]
 
   #
   # In case shuffling is required, fetch via the shuffled position.
