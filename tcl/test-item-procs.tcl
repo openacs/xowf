@@ -1127,7 +1127,7 @@ namespace eval ::xowf::test_item {
     #  - get_answers
     #
     #  - get_duration
-    #  - get_IPs    
+    #  - get_IPs
     #
     #  - marked_results
     #  - answers_panel
@@ -1387,6 +1387,7 @@ namespace eval ::xowf::test_item {
       -package_id:integer
       -items:object,required
       {-view_all_method print-answers}
+      {-state done}
       wf:object
     } {
       #set form_info [:combined_question_form -with_numbers $wf]
@@ -1457,6 +1458,12 @@ namespace eval ::xowf::test_item {
         }
       }
 
+      if {$state eq "done"} {
+        set uc {tcl {[$p state] ne "done"}}
+      } else {
+        set uc {tcl {false}}
+      }
+
       #
       # Render table widget with extended properties.
       #
@@ -1465,7 +1472,7 @@ namespace eval ::xowf::test_item {
                     -items $items \
                     -form_field_objs $form_field_objs \
                     -csv true \
-                    -uc {tcl {[$p state] ne "done"}} \
+                    -uc $uc \
                     -view_field _online-exam-userName \
                     -view_filter_link [$wf pretty_link -query m=$view_all_method] \
                     {*}[expr {[info exists generate] ? [list -generate $generate] : ""}] \
