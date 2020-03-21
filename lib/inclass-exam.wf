@@ -373,11 +373,11 @@ Action instproc unpublish_link {obj} {
         # "summary_form" of online-exam-answer.wf when the submit
         # instance is in state "done". We set the __feedback_mode to
         # get the auto-correction included.
-        set current_user [xo::cc user_id]
-        xo::cc user_id [$i creation_user]
-        $i set __feedback_mode 2
-        set question_form [$i render_content]
-        xo::cc user_id $current_user
+        #
+        xo::cc eval_as_user -user_id [$i creation_user] {
+          $i set __feedback_mode 2
+          set question_form [$i render_content]
+        }
 
         if {$withSignature} {
           set answerAttributes [xowf::test_item::renaming_form_loader \
@@ -394,12 +394,21 @@ Action instproc unpublish_link {obj} {
 
         set time [::xo::db::tcl_date [$i property _last_modified] tz_var]
         set pretty_date [clock format [clock scan $time] -format "%Y-%m-%d %T"]
-
-        append HTML "\n<div class='single_exam'>" \
-            "<h2>$userName · $fullName · $pretty_date · IP [$i property ip]</h2>" \
-            $signatureString \
-            $question_form \
-            "</div>\n"
+        set revisions [$i get_revision_sets]
+        set duration [xowf::test_item::answer_manager get_duration $revisions]
+        set IPs [xowf::test_item::answer_manager get_IPs $revisions]
+        append HTML [subst {
+          <div class='single_exam'>
+          <h2>$userName · $fullName · $pretty_date</h2>
+          <div class='runtime-data'>
+          #xowf.nr_changes#: [llength $revisions]<br>
+          #xowf.duration#: [dict get $duration from] - [dict get $duration to] ([dict get $duration duration])<br>
+          IP: $IPs
+          </div>
+          $signatureString 
+          $question_form 
+          </div>
+        }]
       }
     }
 

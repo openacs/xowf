@@ -146,4 +146,6 @@
 
   <msg key="Created_Questions">Created Questions</msg>
   <msg key="Created_Assessments">Created Assessments</msg>
+  <msg key="nr_changes">Number of changes</msg>
+  <msg key="duration">Duration</msg>  
 </message_catalog>

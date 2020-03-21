@@ -126,4 +126,6 @@
   <msg key="inclass-exam-draft_exam">Entwurf des Inclass-Exams (nicht freigegeben)</msg>
   <msg key="inclass-exam-open">Inclass-Exam geöffnet (Zur Bearbeitung freigegeben)</msg>
   <msg key="inclass-exam-closed">Inclass-Exam geschlossen</msg>
+  <msg key="nr_changes">Anzahl der Änderungen</msg>
+  <msg key="duration">Dauer</msg>    
 </message_catalog>

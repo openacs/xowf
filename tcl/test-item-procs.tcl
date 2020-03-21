@@ -1126,6 +1126,9 @@ namespace eval ::xowf::test_item {
     #  - get_wf_instances
     #  - get_answers
     #
+    #  - get_duration
+    #  - get_IPs    
+    #
     #  - marked_results
     #  - answers_panel
     #  - result_table
@@ -1242,6 +1245,7 @@ namespace eval ::xowf::test_item {
       wf:object
     } {
       # get_wf_instances: return the workflow instances
+
       :assert_assessment_container $wf
 
       return [::xowiki::FormPage get_form_entries \
@@ -1268,6 +1272,41 @@ namespace eval ::xowf::test_item {
         lappend results [list item $i answerAttributes $answerAttributes state [$i state]]
       }
       return $results
+    }
+
+    ########################################################################
+
+    :public method get_duration {revision_sets} {
+      #
+      # Get the duration from a set of revisions and return a dict
+      # containing at least "from", "to" and "duration"
+      #
+
+      set first [lindex $revision_sets 0]
+      set last [lindex $revision_sets end]
+      set fromClock [clock scan [::xo::db::tcl_date [ns_set get $first creation_date] tz]]
+      set toClock [clock scan [::xo::db::tcl_date [ns_set get $last creation_date] tz]]
+      dict set r from [clock format $fromClock -format "%H:%M:%S"]
+      dict set r to [clock format $toClock -format "%H:%M:%S"]
+      set timeDiff [expr {$toClock - $fromClock}]
+      dict set r duration "[expr {$timeDiff/60}]m [expr {$timeDiff%60}]s"
+      return $r
+    }
+
+    ########################################################################
+
+    :public method get_IPs {revision_sets} {
+      #
+      # Get the IP addresses for the given revision set. Should be
+      # actually only one. The revision_set must not be empty.
+      #
+      foreach revision_set $revision_sets {
+        set ip [ns_set get $revision_set creation_ip]
+        if {$ip ne ""} {
+          dict set IPs [ns_set get $revision_set creation_ip] 1
+        }
+      }
+      return [dict keys $IPs]
     }
 
     ########################################################################
