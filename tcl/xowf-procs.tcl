@@ -2060,6 +2060,26 @@ namespace eval ::xowf {
     return [array names visited]
   }
 
+  WorkflowPage ad_instproc get_revision_sets {} {
+
+    Return a list of ns_sets containing revision_id, creation_date,
+    creation_user, creation_ip, and state for the current workflow
+    instance.
+
+  } {
+    set item_id ${:item_id}
+    set revision_sets [::xo::dc sets -prepare integer wf_revisions {
+      SELECT revision_id, creation_date, creation_user, creation_ip, state, assignee
+      FROM cr_revisions cr, acs_objects o, xowiki_form_page x
+      WHERE cr.item_id = :item_id
+      AND   o.object_id = cr.revision_id
+      AND   x.xowiki_form_page_id = cr.revision_id
+      ORDER BY cr.revision_id ASC
+    }]
+    return $revision_sets
+  }
+
+
   WorkflowPage ad_instproc footer {} {
     Provide a tailored footer for workflow definition pages and
     workflow instance pages containing controls for instantiating
