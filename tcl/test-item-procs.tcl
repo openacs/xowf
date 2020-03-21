@@ -1891,6 +1891,7 @@ namespace eval ::xowf::test_item {
   #ns_log notice ===================================
 
 }
+::xo::library source_dependent
 
 
 #
