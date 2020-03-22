@@ -355,14 +355,14 @@ Action instproc unpublish_link {obj} {
 
       if {$revision_id ne ""} {
         set r [::xowiki::FormPage get_instance_from_db -revision_id $revision_id]
-        if {[[lindex [$items children] 0] item_id] ne [$r item_id]} {
+        if {[$r item_id] ni [lmap i [$items children] {$i item_id}]} {
           error "invalid revision id '$revision_id' provided"
         }
         $items destroy
         set items [::xo::OrderedComposite new -destroy_on_cleanup]
         $items add $r
       }
-      
+
       foreach i [$items children] {
         $i set online-exam-userName [acs_user::get_element -user_id [$i creation_user] -element username]
         $i set online-exam-fullName [::xo::get_user_name [$i creation_user]]
@@ -387,7 +387,7 @@ Action instproc unpublish_link {obj} {
           ns_log notice "online-exam: submission of $userName is empty. Ignoring."
           continue
         }
-        
+
         #
         # The call to "render_content" calls actually the
         # "summary_form" of online-exam-answer.wf when the submit
@@ -420,8 +420,8 @@ Action instproc unpublish_link {obj} {
           <h2>$userName · $fullName · $pretty_date</h2>
           [xowf::test_item::answer_manager runtime_panel -revision_id $revision_id -filter_id $filter_id $i]
           </div>
-          $signatureString 
-          $question_form 
+          $signatureString
+          $question_form
           </div>
         }]
       }

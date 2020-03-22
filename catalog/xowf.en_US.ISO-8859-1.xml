@@ -147,6 +147,8 @@
   <msg key="Created_Questions">Created Questions</msg>
   <msg key="Created_Assessments">Created Assessments</msg>
   <msg key="nr_changes">Number of changes</msg>
-  <msg key="duration">Duration</msg>
-  <msg key="not_submitted">Not Submitted</msg>
+  <msg key="Duration">Duration</msg>
+  <msg key="not_submitted">not submitted</msg>
+  <msg key="submitted">submitted</msg>
+  <msg key="Status">State</msg>    
 </message_catalog>

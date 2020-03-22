@@ -1339,6 +1339,7 @@ namespace eval ::xowf::test_item {
       # - per-revision statistics: when revision_id is provided
       #
       set revision_sets [$answerObj get_revision_sets]
+      set page_info ""
 
       if {$filter_id ne ""} {
         set baseUrl [ns_conn url]
@@ -1350,9 +1351,11 @@ namespace eval ::xowf::test_item {
           if {$rid == [$answerObj revision_id]} {
             set suffix "*"
             set CSSclass "current"
+            set current_item [expr {[dict get [$answerObj instance_attributes] position] + 1}]
+            set page_info "#xowf.question#: $current_item"
           } else {
             set suffix ""
-            set CSSclass "othter"
+            set CSSclass "other"
           }
           lappend revision_list [subst {<a class="$CSSclass" href="$revision_url">[incr c]$suffix</a>}]
         }
@@ -1364,12 +1367,17 @@ namespace eval ::xowf::test_item {
       set duration [xowf::test_item::answer_manager get_duration $revision_sets]
       set IPs [xowf::test_item::answer_manager get_IPs $revision_sets]
       set state [$answerObj state]
-      set submissionState [expr {$state ne "done" ? "- #xowf.not_submitted#" : ""}]
+      if {$state eq "done"} {
+        set submission_info "#xowf.submitted#"
+      } else {
+        set submission_info "#xowf.not_submitted# ($page_info)"
+      }
       set HTML [subst {
         $revisionDetails<br>
-        #xowf.duration#: [dict get $duration from] - [dict get $duration to]
-        ([dict get $duration duration]) $submissionState<br>
-        IP: $IPs
+        #xowf.Status#: <span class="data">$submission_info</span><br>
+        #xowf.Duration#: <span class="data">[dict get $duration from] - [dict get $duration to]
+        ([dict get $duration duration])</span><br>
+        IP: <span class="data">$IPs</span>
       }]
 
       return $HTML

@@ -127,7 +127,9 @@
   <msg key="inclass-exam-open">Inclass-Exam geöffnet (Zur Bearbeitung freigegeben)</msg>
   <msg key="inclass-exam-closed">Inclass-Exam geschlossen</msg>
   <msg key="nr_changes">Anzahl der Änderungen</msg>
-  <msg key="duration">Dauer</msg>
-  <msg key="not_submitted">Nicht Abgegeben</msg>
+  <msg key="Duration">Dauer</msg>
+  <msg key="not_submitted">nicht abgegeben</msg>
+  <msg key="submitted">abgegeben</msg>
+  <msg key="Status">Status</msg>    
 
 </message_catalog>
