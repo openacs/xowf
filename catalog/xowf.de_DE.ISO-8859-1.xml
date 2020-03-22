@@ -130,6 +130,9 @@
   <msg key="Duration">Dauer</msg>
   <msg key="not_submitted">nicht abgegeben</msg>
   <msg key="submitted">abgegeben</msg>
-  <msg key="Status">Status</msg>    
-
+  <msg key="Status">Status</msg>
+  <msg key="Make_live_revision">Verwende angezeigte Version als Abgabe</msg>
+  <msg key="Goto_this_revision">Gehe zu dieser Version</msg>
+  <msg key="Displayed_revision">Angezeigte Version</msg>
+  <msg key="Live_revision">Abgabeversion</msg>
 </message_catalog>

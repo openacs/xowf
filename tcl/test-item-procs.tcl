@@ -1339,33 +1339,67 @@ namespace eval ::xowf::test_item {
       # - per-revision statistics: when revision_id is provided
       #
       set revision_sets [$answerObj get_revision_sets]
-      set page_info ""
 
       if {$filter_id ne ""} {
+        set displayed_revision_info ""
+        set live_revision_info ""
+        set make_live_info ""
+        set page_info ""
+
         set baseUrl [ns_conn url]
         set filtered_revision_sets [:revisions_up_to $revision_sets $revision_id]
         set c 0
+        set item_id [$answerObj item_id]
+        set live_revision_id [xo::dc get_value -prepare integer live_revision_id {
+          select live_revision from cr_items where item_id = :item_id
+        }]
+
         foreach s $revision_sets {
           set rid [ns_set get $s revision_id]
+          incr c
+          if {$rid == $live_revision_id} {
+            set liveCSSclass "live"
+            set live_revision_info "#xowf.Live_revision#: $c"
+          } else {
+            set liveCSSclass "other"
+          }
           set revision_url $baseUrl?[::xo::update_query [ns_conn query] rid $rid]
           if {$rid == [$answerObj revision_id]} {
             set suffix "*"
-            set CSSclass "current"
-            set current_item [expr {[dict get [$answerObj instance_attributes] position] + 1}]
-            set page_info "#xowf.question#: $current_item"
+            set current_question [expr {[dict get [$answerObj instance_attributes] position] + 1}]
+            set page_info "#xowf.question#: $current_question"
+            set displayed_revision_info "#xowf.Displayed_revision#: $c"
+
+            if {$rid ne $live_revision_id} {
+              set query [::xo::update_query [ns_conn query] m make-live-revision]
+              set query [::xo::update_query $query revision_id $rid]
+              set query [::xo::update_query $query local_return_url [ad_return_url]]
+              set live_revision_link $baseUrl?$query
+              set make_live_info [subst {
+                <a class="button" href="$live_revision_link">#xowf.Make_live_revision#</a>
+              }]
+              lappend revision_list "<span class='current'>$c</span>"
+            } else {
+              lappend revision_list "<span class='$liveCSSclass'>$c</span>"
+            }
           } else {
-            set suffix ""
-            set CSSclass "other"
+            lappend revision_list [subst {
+              <a class="$liveCSSclass" title="#xowf.Goto_this_revision#" href="$revision_url">$c</a>
+            }]
           }
-          lappend revision_list [subst {<a class="$CSSclass" href="$revision_url">[incr c]$suffix</a>}]
         }
         set revision_sets $filtered_revision_sets
-        set revisionDetails "#xowiki.revisions#: [join $revision_list {, }]"
+        set revisionDetails [subst {#xowiki.revisions#: [join $revision_list {, }]
+          <div class="revision-details right">$displayed_revision_info<br>$live_revision_info<br>
+          $make_live_info
+          </div>
+        }]
       } else {
         set revisionDetails "#xowf.nr_changes#: [llength $revision_sets]"
       }
       set duration [xowf::test_item::answer_manager get_duration $revision_sets]
       set IPs [xowf::test_item::answer_manager get_IPs $revision_sets]
+
       set state [$answerObj state]
       if {$state eq "done"} {
         set submission_info "#xowf.submitted#"
@@ -1379,10 +1413,8 @@ namespace eval ::xowf::test_item {
         ([dict get $duration duration])</span><br>
         IP: <span class="data">$IPs</span>
       }]
-
       return $HTML
     }
-
     ########################################################################
 
     :method participant_result {
@@ -2039,6 +2071,7 @@ namespace eval ::xowf::test_item {
       print-answer-table admin
       delete         admin
       qrcode         admin
+      make-live-revision admin
     }
   }
   test-item-policy-answer contains {

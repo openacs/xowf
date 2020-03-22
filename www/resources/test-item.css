@@ -23,8 +23,15 @@ div.single_exam div.runtime-data {
 div.single_exam div.runtime-data .data {
     color: #888;
 }
-div.single_exam div.runtime-data a {
+div.single_exam div.runtime-data a.other,
+div.single_exam div.runtime-data a.live {
     color: #66f;
+}
+div.single_exam div.runtime-data .right {
+    float: right;
+}
+div.single_exam div.runtime-data .revision-details {
+    text-align: right;
 }
 
 @media print{    
