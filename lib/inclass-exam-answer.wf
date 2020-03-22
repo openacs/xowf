@@ -157,7 +157,7 @@ State initial \
     -form_loader working_form_loader
 
 State done \
-    -form_loader done_form_loader    
+    -form_loader done_form_loader
 
 #-form_loader summary_form
 
@@ -224,7 +224,7 @@ proc working_form_loader {ctx form_name} {
 proc done_form_loader {ctx form_name} {
   set obj [$ctx object]
   #
-  # 
+  #
   #
   if {[$obj exists __feedback_mode] && [$obj set __feedback_mode] > 0} {
     set container [$ctx wf_container]
@@ -235,7 +235,7 @@ proc done_form_loader {ctx form_name} {
                     -set name en:finished \
                     -form {{<form>
                       <div class='container-fluid'><div class='row'>
-                      <div class="col-sm-6"><p><p>#xowf.inclass-exam-already_answered#</div>    
+                      <div class="col-sm-6"><p><p>#xowf.inclass-exam-already_answered#</div>
                       </div></div>
                       </form>} text/html} \
                     -text {} \
@@ -345,7 +345,7 @@ proc done_form_loader {ctx form_name} {
   set container [$ctx wf_container]
   if {$ctx ne $container} {
     $ctx forward working_form_loader $container %proc $ctx
-    $ctx forward done_form_loader $container %proc $ctx    
+    $ctx forward done_form_loader $container %proc $ctx
     $ctx forward summary_form $container %proc $ctx
   }
   set :policy ::xowf::test_item::test-item-policy1
