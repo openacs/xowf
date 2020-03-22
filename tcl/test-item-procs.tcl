@@ -1339,20 +1339,21 @@ namespace eval ::xowf::test_item {
       # - per-revision statistics: when revision_id is provided
       #
       set revision_sets [$answerObj get_revision_sets]
+      set item_id [$answerObj item_id]
+      set live_revision_id [xo::dc get_value -prepare integer live_revision_id {
+        select live_revision from cr_items where item_id = :item_id
+      }]
+      set current_question [expr {[dict get [$answerObj instance_attributes] position] + 1}]
+      set page_info "#xowf.question#: $current_question"
 
       if {$filter_id ne ""} {
         set displayed_revision_info ""
         set live_revision_info ""
         set make_live_info ""
-        set page_info ""
 
         set baseUrl [ns_conn url]
         set filtered_revision_sets [:revisions_up_to $revision_sets $revision_id]
         set c 0
-        set item_id [$answerObj item_id]
-        set live_revision_id [xo::dc get_value -prepare integer live_revision_id {
-          select live_revision from cr_items where item_id = :item_id
-        }]
 
         foreach s $revision_sets {
           set rid [ns_set get $s revision_id]
@@ -1366,8 +1367,6 @@ namespace eval ::xowf::test_item {
           set revision_url $baseUrl?[::xo::update_query [ns_conn query] rid $rid]
           if {$rid == [$answerObj revision_id]} {
             set suffix "*"
-            set current_question [expr {[dict get [$answerObj instance_attributes] position] + 1}]
-            set page_info "#xowf.question#: $current_question"
             set displayed_revision_info "#xowf.Displayed_revision#: $c"
 
             if {$rid ne $live_revision_id} {
@@ -1395,7 +1394,11 @@ namespace eval ::xowf::test_item {
           </div>
         }]
       } else {
-        set revisionDetails "#xowf.nr_changes#: [llength $revision_sets]"
+        set url [ad_return_url]&id=$item_id
+        set revisionDetails "#xowf.nr_changes#: <a href='$url'>[llength $revision_sets]</a>"
+      }
+      if {$revision_id eq ""} {
+        set revision_sets [:revisions_up_to $revision_sets $live_revision_id]
       }
       set duration [xowf::test_item::answer_manager get_duration $revision_sets]
       set IPs [xowf::test_item::answer_manager get_IPs $revision_sets]
