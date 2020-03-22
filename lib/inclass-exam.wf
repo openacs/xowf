@@ -351,11 +351,23 @@ Action instproc unpublish_link {obj} {
                                : 0 }]
       set examTitle ${:title}
       set filter_id [[$wf package_id] query_parameter id:integer ""]
+      set revision_id [[$wf package_id] query_parameter rid:integer ""]
 
+      if {$revision_id ne ""} {
+        set r [::xowiki::FormPage get_instance_from_db -revision_id $revision_id]
+        if {[[lindex [$items children] 0] item_id] ne [$r item_id]} {
+          error "invalid revision id '$revision_id' provided"
+        }
+        $items destroy
+        set items [::xo::OrderedComposite new -destroy_on_cleanup]
+        $items add $r
+      }
+      
       foreach i [$items children] {
         $i set online-exam-userName [acs_user::get_element -user_id [$i creation_user] -element username]
         $i set online-exam-fullName [::xo::get_user_name [$i creation_user]]
       }
+
       $items orderby online-exam-userName
       foreach i [$items children] {
         set userName [$i set online-exam-userName]
@@ -402,17 +414,11 @@ Action instproc unpublish_link {obj} {
 
         set time [::xo::db::tcl_date [$i property _last_modified] tz_var]
         set pretty_date [clock format [clock scan $time] -format "%Y-%m-%d %T"]
-        set duration [xowf::test_item::answer_manager get_duration $revisions]
-        set IPs [xowf::test_item::answer_manager get_IPs $revisions]
-        set submissionState [expr {$state ne "done" ? "- #xowf.not_submitted#" : ""}]
         append HTML [subst {
           <div class='single_exam'>
           <div class='runtime-data'>
           <h2>$userName · $fullName · $pretty_date</h2>
-          #xowf.nr_changes#: [llength $revisions]<br>
-          #xowf.duration#: [dict get $duration from] - [dict get $duration to]
-          ([dict get $duration duration]) $submissionState<br>
-          IP: $IPs
+          [xowf::test_item::answer_manager runtime_panel -revision_id $revision_id -filter_id $filter_id $i]
           </div>
           $signatureString 
           $question_form 

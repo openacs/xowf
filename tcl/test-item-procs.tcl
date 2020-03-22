@@ -1128,6 +1128,7 @@ namespace eval ::xowf::test_item {
     #
     #  - get_duration
     #  - get_IPs
+    #  - runtime_panel
     #
     #  - marked_results
     #  - answers_panel
@@ -1279,7 +1280,7 @@ namespace eval ::xowf::test_item {
     :public method get_duration {revision_sets} {
       #
       # Get the duration from a set of revisions and return a dict
-      # containing at least "from", "to" and "duration"
+      # containing "from", "fromClock","to", "toClock", and "duration"
       #
 
       set first [lindex $revision_sets 0]
@@ -1310,6 +1311,68 @@ namespace eval ::xowf::test_item {
         }
       }
       return [dict keys $IPs]
+    }
+
+    ########################################################################
+
+    :method revisions_up_to {revision_sets revision_id} {
+      set result ""
+      set stop 0
+      return [lmap s $revision_sets {
+        if {$stop} break
+        set stop [expr {[ns_set get $s revision_id] eq $revision_id}]
+        set s
+      }]
+    }
+
+    ########################################################################
+
+    :public method runtime_panel {
+      {-revision_id ""}
+      {-filter_id ""}
+      answerObj:object
+    } {
+      #
+      # Return statistics for the provided object:
+      # - minimal statistics: when 'filter_id' is empty
+      # - statistics with clickable revisions: when 'filter_id' is non empty
+      # - per-revision statistics: when revision_id is provided
+      #
+      set revision_sets [$answerObj get_revision_sets]
+
+      if {$filter_id ne ""} {
+        set baseUrl [ns_conn url]
+        set filtered_revision_sets [:revisions_up_to $revision_sets $revision_id]
+        set c 0
+        foreach s $revision_sets {
+          set rid [ns_set get $s revision_id]
+          set revision_url $baseUrl?[::xo::update_query [ns_conn query] rid $rid]
+          if {$rid == [$answerObj revision_id]} {
+            set suffix "*"
+            set CSSclass "current"
+          } else {
+            set suffix ""
+            set CSSclass "othter"
+          }
+          lappend revision_list [subst {<a class="$CSSclass" href="$revision_url">[incr c]$suffix</a>}]
+        }
+        set revision_sets $filtered_revision_sets
+        set revisionDetails "#xowiki.revisions#: [join $revision_list {, }]"
+      } else {
+        set revisionDetails "#xowf.nr_changes#: [llength $revision_sets]"
+      }
+      set duration [xowf::test_item::answer_manager get_duration $revision_sets]
+      set IPs [xowf::test_item::answer_manager get_IPs $revision_sets]
+      set state [$answerObj state]
+      set submissionState [expr {$state ne "done" ? "- #xowf.not_submitted#" : ""}]
+      set HTML [subst {
+        $revisionDetails<br>
+        #xowf.duration#: [dict get $duration from] - [dict get $duration to]
+        ([dict get $duration duration]) $submissionState<br>
+        IP: $IPs
+      }]
+
+      return $HTML
     }
 
     ########################################################################
