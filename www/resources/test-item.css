@@ -219,3 +219,11 @@ div.xowiki-content h1 {
     font-size: 24px;
 }
 
+/*
+ * user count-down timer styling
+ */
+div.xowiki-content div.countdown-timer {
+    float: right;
+}
+
+

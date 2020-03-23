@@ -1790,6 +1790,7 @@ namespace eval ::xowf::test_item {
     #   - question_names
     #   - question_property
     #   - total_minutes
+    #   - exam_target_time
     #
     :public method goto_page {obj:object position} {
       $obj set_property position $position
@@ -1972,6 +1973,15 @@ namespace eval ::xowf::test_item {
         }
       }
       return $minutes
+    }
+
+    :public method exam_target_time {-manager:object -instance:object} {
+      set combined_form_info [:combined_question_form $manager]
+      set total_minutes [::xowf::test_item::question_manager total_minutes $combined_form_info]
+      set creation_time [::xo::db::tcl_date [$instance creation_date] tz]
+      set target_time [clock format [expr {[clock scan $creation_time] + $total_minutes*60}] \
+                           -format %Y-%m-%dT%H:%M:%S]
+      return $target_time
     }
 
     :public method current_question_form {

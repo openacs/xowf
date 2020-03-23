@@ -18,7 +18,7 @@ namespace eval ::xowiki::includelet {
   }
 
   #
-  # Create an includelet called wf-todo, which lists the todo items 
+  # Create an includelet called wf-todo, which lists the todo items
   # for a user_id from a single or multiple worflows)
   #
   ::xowiki::IncludeletClass create wf-todo \
@@ -41,10 +41,10 @@ namespace eval ::xowiki::includelet {
       select assignee,xowiki_form_page_id,state,i.publish_status,page_template,
       p.creation_date, p.last_modified, p,description,
       i2.name as wf_name,p.title,i.name,i.parent_id,o.package_id as pid
-      from xowiki_form_pagei p,cr_items i, cr_items i2, acs_objects o 
+      from xowiki_form_pagei p,cr_items i, cr_items i2, acs_objects o
       where (assignee = :user_id or acs_group__member_p(:user_id,assignee, 'f'))
-      and i.live_revision = xowiki_form_page_id 
-      and p.page_template = i2.item_id 
+      and i.live_revision = xowiki_form_page_id
+      and p.page_template = i2.item_id
       and o.object_id = xowiki_form_page_id
     }
     if {$workflow ne ""} {
@@ -101,7 +101,7 @@ namespace eval ::xowiki::includelet {
           -description "Workflow instance of workflow $wf_name $description"
     }
     ${:items} mixin ::xo::ical::VCALENDAR
-    ${:items} configure -prodid "-//WU Wien//NONSGML XoWiki Content Flow//EN" 
+    ${:items} configure -prodid "-//WU Wien//NONSGML XoWiki Content Flow//EN"
     set text [${:items} as_ical]
     #:log "--ical sending $text"
     #ns_return 200 text/calendar $text
@@ -136,6 +136,29 @@ namespace eval ::xowiki::includelet {
 
 }
 
+namespace eval ::xowiki::includelet {
+  #
+  # countdown-timer based on answer_manager.countdown_timer
+  #
+  Class create countdown-timer -superclass ::xowiki::Includelet \
+      -parameter {
+        {__decoration plain}
+        {parameter_declaration {
+          {-target_time ""}
+        }}
+      } -ad_doc {
+        Countdown timer
+
+        @param target_time
+      }
+
+  countdown-timer instproc render {} {
+    :get_parameters
+    return [xowf::test_item::answer_manager countdown_timer \
+                -target_time $target_time -id [::xowiki::Includelet html_id [self]]]
+  }
+
+}
 #
 # Local variables:
 #    mode: tcl

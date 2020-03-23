@@ -172,7 +172,7 @@ State done \
 # Field-renaming form loader
 #
 proc working_form_loader {ctx form_name} {
-  ns_log notice "============ working_form_loader"
+  #ns_log notice "============ working_form_loader"
   set obj [$ctx object]
 
   #
@@ -183,6 +183,7 @@ proc working_form_loader {ctx form_name} {
   if {[$obj exists online-exam-userName]} {
     return [done_form_loader $ctx $form_name]
   }
+  
   set item_nr [$obj property position]
 
   set parent_id [$obj parent_id]
@@ -197,7 +198,7 @@ proc working_form_loader {ctx form_name} {
   set position [::xowf::test_item::question_manager shuffled_index \
                     -shuffle_id $shuffle_id \
                     $parent_obj $item_nr]
-  ns_log notice "============ working_form_loader load form on pos $position"
+  #ns_log notice "============ working_form_loader load form on pos $position"
   #
   # Load the form.
   #
@@ -277,8 +278,11 @@ proc done_form_loader {ctx form_name} {
   #ns_log notice "SETTING $obj title [join $title { · }]"
   $obj title [join $title " · "]
 
+  set target_time [::xowf::test_item::question_manager exam_target_time -manager $parent_obj -instance $obj]
+  
   #:msg set_title-set_parameter-MenuBar-[$obj state]
   ::xo::cc set_parameter MenuBar 0
+  ::xo::cc set_parameter top_includelet [list countdown-timer -target_time $target_time]
   ::xo::cc set_parameter template_file view-plain-master
 }
 
