@@ -231,7 +231,7 @@ Action instproc unpublish_link {obj} {
   set countdownHTML ""
   if {$state eq "published"} {
     set src [$obj pretty_link -query m=qrcode]
-    set qrCode [subst {<div><img class='img-thumbnail qrcode' src="[ns_quotehtml $src]" ></div>}]
+    set qrCode [subst {<div><img class="img-thumbnail qrcode" src="[ns_quotehtml $src]" ></div>}]
     set total_minutes [::xowf::test_item::question_manager total_minutes $combined_form_info]
     set publish_time [::xo::db::tcl_date [$obj last_modified] tz]
     set target_time [clock format [expr {[clock scan $publish_time] + $total_minutes*60}] \
@@ -413,7 +413,7 @@ Action instproc unpublish_link {obj} {
         }
 
         set time [::xo::db::tcl_date [$i property _last_modified] tz_var]
-        set pretty_date [clock format [clock scan $time] -format "%Y-%m-%d %T"]
+        set pretty_date [clock format [clock scan $time] -format "%Y-%m-%d"]
         append HTML [subst {
           <div class='single_exam'>
           <div class='runtime-data'>
