@@ -194,7 +194,7 @@ namespace eval ::xowiki::formfield {
       set shuffle_options "{#xowf.shuffle_none# none} {#xowf.shuffle_peruser# peruser} {#xowf.shuffle_always# always}"
       set shuffleSpec [subst {
         {shuffle {radio,horizontal=true,form_item_wrapper_CSSclass=form-inline,options=$shuffle_options,default=none,label=#xowf.Shuffle#}}
-        {show_max {number,form_item_wrapper_CSSclass=form-inline,min=2,label=#xowf.show_max#}}
+        {show_max {number,form_item_wrapper_CSSclass=form-inline,min=1,label=#xowf.show_max#}}
       }]
     } else {
       set shuffleSpec ""
