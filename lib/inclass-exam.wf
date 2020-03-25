@@ -217,6 +217,7 @@ Action instproc unpublish_link {obj} {
     if {$state eq "done"} {
       [$ctx object] setCSSDefaults
       set marked [xowf::test_item::answer_manager marked_results -obj $obj -wf $wf $combined_form_info]
+      set marked ""  ;# not needed right now
     }
     set answerStatus [xowf::test_item::answer_manager answers_panel  \
                           -heading "#xowf.online-exam-submitted_exams_heading#" \
