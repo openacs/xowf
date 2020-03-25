@@ -183,7 +183,7 @@ proc working_form_loader {ctx form_name} {
   if {[$obj exists online-exam-userName]} {
     return [done_form_loader $ctx $form_name]
   }
-  
+
   set item_nr [$obj property position]
 
   set parent_id [$obj parent_id]
@@ -278,12 +278,16 @@ proc done_form_loader {ctx form_name} {
   #ns_log notice "SETTING $obj title [join $title { · }]"
   $obj title [join $title " · "]
 
-  set target_time [::xowf::test_item::question_manager exam_target_time -manager $parent_obj -instance $obj]
-  
   #:msg set_title-set_parameter-MenuBar-[$obj state]
   ::xo::cc set_parameter MenuBar 0
-  ::xo::cc set_parameter top_includelet [list countdown-timer -target_time $target_time]
   ::xo::cc set_parameter template_file view-plain-master
+
+  if {[$parent_obj state] eq "published" && [$obj state] ne "done"} {
+    set target_time [::xowf::test_item::question_manager exam_target_time \
+                         -manager $parent_obj \
+                         -instance $obj]
+    ::xo::cc set_parameter top_includelet [list countdown-timer -target_time $target_time]
+  }
 }
 
 #
