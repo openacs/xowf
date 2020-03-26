@@ -135,4 +135,5 @@
   <msg key="Goto_this_revision">Gehe zu dieser Version</msg>
   <msg key="Displayed_revision">Angezeigte Version</msg>
   <msg key="Live_revision">Abgabeversion</msg>
+  <msg key="Solution">Lösung</msg>
 </message_catalog>

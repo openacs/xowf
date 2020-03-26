@@ -171,6 +171,11 @@ div.short_text_interaction div.text span.match {
     margin: 0px 2px;  /* otherwise two spans separated by space merge visually */
 }
 
+div.short_text_interaction div.description {
+    white-space: pre-wrap;
+}
+
+
 /*
  * Selection form styling
  */
@@ -220,7 +225,7 @@ div.xowiki-content h1 {
 }
 
 /*
- * user count-down timer styling
+ * user countdown-timer styling
  */
 div.xowiki-content div.countdown-timer {
     float: right;

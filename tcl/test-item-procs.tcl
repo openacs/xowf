@@ -501,6 +501,7 @@ namespace eval ::xowiki::formfield {
     set options {}
     set render_hints {}
     set answer {}
+    set solution {}
     set count 0
 
     foreach {fieldName value} $answerFields {
@@ -508,6 +509,7 @@ namespace eval ::xowiki::formfield {
       set af answer[incr count]
       lappend options [list [dict get $value $fieldName.text] $af]
       lappend answer [dict get $value $fieldName.correct_when]
+      lappend solution [dict get $value $fieldName.solution]
       lappend render_hints [list \
                                   words [dict get $value $fieldName.options] \
                                   lines [dict get $value $fieldName.lines]]
@@ -519,6 +521,7 @@ namespace eval ::xowiki::formfield {
     dict set fc_dict label ""
     dict set fc_dict options $options
     dict set fc_dict answer $answer
+    dict set fc_dict descriptions $solution
     dict set fc_dict render_hints $render_hints
 
     append form \
@@ -594,6 +597,7 @@ namespace eval ::xowiki::formfield {
     :create_components  [subst {
       {text  {$widget,height=100px,label=#xowf.sub_question#,plugins=OacsFs}}
       $textEntryConfigSpec $autoCorrectSpec
+      {solution {textarea,rows=2,label=#xowf.Solution#}}
     }]
     set :__initialized 1
   }
