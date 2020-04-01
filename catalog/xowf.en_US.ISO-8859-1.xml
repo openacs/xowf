@@ -156,4 +156,6 @@
   <msg key="Displayed_revision">Displayed revision</msg>
   <msg key="Live_revision">Submission revision</msg>
   <msg key="Solution">Solution</msg>
+  <msg key="Proctoring">Proctoring</msg>
+  <msg key="Proctoring_help_text">Use E-Proctoring for this exam</msg>
 </message_catalog>

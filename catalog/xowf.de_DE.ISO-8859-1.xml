@@ -136,4 +136,7 @@
   <msg key="Displayed_revision">Angezeigte Version</msg>
   <msg key="Live_revision">Abgabeversion</msg>
   <msg key="Solution">Lösung</msg>
+  <msg key="Proctoring">Online-Beaufsichtigung</msg>
+  <msg key="Proctoring_help_text">Verwende für diese Prüfung eine Online-Beaufsichtigung</msg>
+
 </message_catalog>

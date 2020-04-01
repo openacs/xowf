@@ -36,6 +36,7 @@
 # The policy has to allow the following methods on FormPages:
 #
 #  - "answer" (for students),
+#  - "proctor" (for students),
 #  - "edit" (for students),
 #  - "poll" (for teachers),
 #  - "print-answers" (for teachers),
@@ -141,6 +142,8 @@ Action instproc unpublish_link {obj} {
   #:log  fullQuestionForm=$fullQuestionForm
   set text "<h2>$title</h2>"
   set menu ""
+  set proctoring [$obj property proctoring]
+  if {$proctoring eq ""} {set proctoring 0}
 
   set wf [xowf::test_item::answer_manager get_answer_wf $obj]
   if {$wf eq ""} {
@@ -158,6 +161,20 @@ Action instproc unpublish_link {obj} {
       {m create-new} {p.return_url "[::xo::cc url]"} {p.try_out_mode 1} {title "[$obj title]"}
     }]
     set aLink [$obj pretty_link -query m=answer]
+
+    if {$proctoring} {
+      #
+      # send link via "m=proctor"
+      #
+      set tLink [export_vars -base [$obj pretty_link] {
+        {m proctor} {link "$tLink&p.proctor=1"}
+      }]
+      #
+      # We could send answer link ("aLink") as well this way, but we
+      # want to keep the link short, therefore we handle the proctor
+      # link inside the www-answer method.
+      #
+    }
 
     #
     # If there are answers, include the full menu.
@@ -456,7 +473,15 @@ Action instproc unpublish_link {obj} {
       util_user_message -html -message "Cannot start answer workflow in this state"
     } else {
       set wf [xowf::test_item::answer_manager get_answer_wf [self]]
-      $wf www-create-or-use -parent_id [:item_id]
+      set proctoring [:property proctoring]
+      if {$proctoring ne "" & $proctoring} {
+        set cLink [export_vars -base [:pretty_link] {
+          {m proctor} {link "[$wf pretty_link -query m=create-or-use&p.proctor=1]"}
+        }]
+        ::${:package_id} returnredirect $cLink
+      } else {
+        $wf www-create-or-use -parent_id [:item_id]
+      }
     }
   }
 
@@ -466,6 +491,25 @@ Action instproc unpublish_link {obj} {
     exec qrencode -o $fn -l h $aLink
     ns_returnfile 200 image/png $fn
     ad_script_abort
+  }
+
+  :proc www-proctor {} {
+    #
+    # Redirect the exam to an iframe for implementing proctoring.  The
+    # basic idea is that the web application turns on the camera and
+    # keeps the iframe while the user is iterating throught the exam.
+    # The line "<h1>You are being proctored!</h1>" is just a
+    # placeholder and has to be replaced with real code.
+    #
+    set link [${:package_id} query_parameter link:localurl ""]
+
+    ::xo::cc set_parameter template_file view-plain-master
+    ::xo::cc set_parameter MenuBar 0
+
+    return [:www-view [subst {
+      <h1>You are being proctored!</h1>
+      <iframe src="$link" width="100%" height="600"></iframe>
+    }]]
   }
 
   ########################################################################

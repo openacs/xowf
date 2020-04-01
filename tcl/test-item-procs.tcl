@@ -2082,6 +2082,7 @@ namespace eval ::xowf::test_item {
   test-item-policy-publish contains {
     Class create FormPage -array set require_permission {
       answer         {{item_id read}}
+      proctor        {{item_id read}}
       poll           admin
       edit           admin
       print-answers  admin
