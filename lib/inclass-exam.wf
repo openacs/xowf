@@ -474,7 +474,7 @@ Action instproc unpublish_link {obj} {
     } else {
       set wf [xowf::test_item::answer_manager get_answer_wf [self]]
       set proctoring [:property proctoring]
-      if {$proctoring ne "" & $proctoring} {
+      if {$proctoring ne "" && $proctoring} {
         set cLink [export_vars -base [:pretty_link] {
           {m proctor} {link "[$wf pretty_link -query m=create-or-use&p.proctor=1]"}
         }]
@@ -507,6 +507,7 @@ Action instproc unpublish_link {obj} {
     ::xo::cc set_parameter MenuBar 0
 
     return [:www-view [subst {
+      [real-proctering-code]
       <h1>You are being proctored!</h1>
       <iframe src="$link" width="100%" height="600"></iframe>
     }]]
