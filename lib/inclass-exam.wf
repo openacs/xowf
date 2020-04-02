@@ -474,7 +474,7 @@ Action instproc unpublish_link {obj} {
       set proctoring [:property proctoring]
       if {$proctoring ne "" && $proctoring} {
         set cLink [export_vars -base [:pretty_link] {
-          {m proctor} {link "[$wf pretty_link -query m=create-or-use&p.proctor=1]"}
+          {m proctor} {link "[:pretty_link -query m=proctor-answer]"}
         }]
         ::${:package_id} returnredirect $cLink
       } else {
@@ -482,7 +482,16 @@ Action instproc unpublish_link {obj} {
       }
     }
   }
+  :proc www-proctor-answer {} {
+    if {[:property _state] ne "published"} {
+      util_user_message -html -message "Cannot start answer workflow in this state"
+    } else {
+      set wf [xowf::test_item::answer_manager get_answer_wf [self]]
+      $wf www-create-or-use -parent_id [:item_id]
+    }
+  }
 
+  
   :proc www-qrcode {} {
     set aLink [:pretty_link -absolute true -query m=answer]
     set fn /tmp/qr-${:item_id}.png
