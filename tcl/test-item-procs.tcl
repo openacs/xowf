@@ -1281,7 +1281,7 @@ namespace eval ::xowf::test_item {
 
     ########################################################################
 
-    :public method get_duration {revision_sets} {
+    :public method get_duration {{-exam_published_time ""} revision_sets} {
       #
       # Get the duration from a set of revisions and return a dict
       # containing "from", "fromClock","to", "toClock", and "duration"
@@ -1297,6 +1297,13 @@ namespace eval ::xowf::test_item {
       dict set r to [clock format $toClock -format "%H:%M:%S"]
       set timeDiff [expr {$toClock - $fromClock}]
       dict set r duration "[expr {$timeDiff/60}]m [expr {$timeDiff%60}]s"
+      if {$exam_published_time ne ""} {
+        set examPublishedClock [clock scan [::xo::db::tcl_date $exam_published_time tz]]
+        dict set r examPublishedClock $examPublishedClock
+        dict set r examPublished [clock format $examPublishedClock -format "%H:%M:%S"]
+        set epTimeDiff [expr {$toClock - $examPublishedClock}]
+        dict set r examPublishedDuration "[expr {$epTimeDiff/60}]m [expr {$epTimeDiff%60}]s"
+      }
       return $r
     }
 
@@ -1330,6 +1337,15 @@ namespace eval ::xowf::test_item {
     }
 
     ########################################################################
+    :method last_time_in_state { -obj:object -state:required } {
+      set result ""
+      foreach ps [$obj get_revision_sets] {
+        if {$state eq [ns_set get $ps state]} {
+          set result [ns_set get $ps creation_date]
+        }
+      }
+      return $result
+    }
 
     :public method runtime_panel {
       {-revision_id ""}
@@ -1404,8 +1420,9 @@ namespace eval ::xowf::test_item {
       if {$revision_id eq ""} {
         set revision_sets [:revisions_up_to $revision_sets $live_revision_id]
       }
-      set duration [xowf::test_item::answer_manager get_duration $revision_sets]
-      set IPs [xowf::test_item::answer_manager get_IPs $revision_sets]
+      set last_published [:last_time_in_state -obj [$answerObj parent_id] -state published]
+      set duration [:get_duration -exam_published_time $last_published $revision_sets]
+      set IPs [:get_IPs $revision_sets]
 
       set state [$answerObj state]
       if {$state eq "done"} {
@@ -1413,11 +1430,19 @@ namespace eval ::xowf::test_item {
       } else {
         set submission_info "#xowf.not_submitted# ($page_info)"
       }
+      if {[dict exists $duration examPublished]} {
+        set publishedInfo "#xowf.Exam_published#: <span class='data'>[dict get $duration examPublished]</span><br>"
+        set extraDurationInfo " - #xowf.since_published#: [dict get $duration examPublishedDuration]"
+      } else {
+        set publishedInfo ""
+        set extraDurationInfo ""
+      }
       set HTML [subst {
+        $publishedInfo
         $revisionDetails<br>
         #xowf.Status#: <span class="data">$submission_info</span><br>
         #xowf.Duration#: <span class="data">[dict get $duration from] - [dict get $duration to]
-        ([dict get $duration duration])</span><br>
+        ([dict get $duration duration]$extraDurationInfo)</span><br>
         IP: <span class="data">$IPs</span>
       }]
       return $HTML
@@ -1725,7 +1750,10 @@ namespace eval ::xowf::test_item {
       {-target_time:required}
       {-id:required}
     } {
-      # new Date('1995-12-17T03:24:00')
+      #
+      # Accepted formats for target_time, determined by JavaScript
+      # ISO 8601, e.g. YYYY-MM-DDTHH:mm:ss.sss"
+
       template::add_body_script -script [subst {
         var countdown_target_date = new Date('$target_time').getTime();
         var countdown_days, countdown_hours, countdown_minutes, countdown_seconds;
@@ -1979,13 +2007,32 @@ namespace eval ::xowf::test_item {
       return $minutes
     }
 
-    :public method exam_target_time {-manager:object -instance:object} {
+    :public method exam_target_time {-manager:object -base_time} {
+      #
+      # Calculate the exam target time (finishing time) based on the
+      # duration of the exam plus the provided base_time (which is in
+      # the format returned by SQL)
+      #
+      # @param manager exam workflow
+      # @param base_time time in SQL format
+      #
       set combined_form_info [:combined_question_form $manager]
       set total_minutes [::xowf::test_item::question_manager total_minutes $combined_form_info]
-      set creation_time [::xo::db::tcl_date [$instance creation_date] tz]
-      set target_time [clock format [expr {[clock scan $creation_time] + $total_minutes*60}] \
+
+      # Use "try" for backward compatibility, versions before
+      # factional seconds. TODO: remove me.
+      try {
+        set base_clock [clock scan [::xo::db::tcl_date $base_time tz secfrac]]
+        if {[string length $secfrac] > 3} {
+          set secfrac [string range $secfrac 0 2]
+        }
+      } on error {errorMsg} {
+        set base_clock [clock scan [::xo::db::tcl_date $base_time tz]]
+        set secfrac 0
+      }
+      set target_time [clock format [expr {$base_clock + $total_minutes*60}] \
                            -format %Y-%m-%dT%H:%M:%S]
-      return $target_time
+      return ${target_time}.$secfrac
     }
 
     :public method current_question_form {

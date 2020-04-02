@@ -171,7 +171,7 @@ Action instproc unpublish_link {obj} {
       }]
       #
       # We could send answer link ("aLink") as well this way, but we
-      # want to keep the link short, therefore we handle the proctor
+      # want to keep the link short, therefore, we handle the proctor
       # link inside the www-answer method.
       #
     }
@@ -250,10 +250,8 @@ Action instproc unpublish_link {obj} {
   if {$state eq "published"} {
     set src [$obj pretty_link -query m=qrcode]
     set qrCode [subst {<div><img class="img-thumbnail qrcode" src="[ns_quotehtml $src]" ></div>}]
-    set total_minutes [::xowf::test_item::question_manager total_minutes $combined_form_info]
-    set publish_time [::xo::db::tcl_date [$obj last_modified] tz]
-    set target_time [clock format [expr {[clock scan $publish_time] + $total_minutes*60}] \
-                         -format %Y-%m-%dT%H:%M:%S]
+    set target_time [xowf::test_item::question_manager exam_target_time \
+                         -manager $obj -base_time [$obj last_modified]]
     set countdownHTML [xowf::test_item::answer_manager countdown_timer \
                            -target_time $target_time -id "countdown"]
   }
@@ -497,7 +495,7 @@ Action instproc unpublish_link {obj} {
     #
     # Redirect the exam to an iframe for implementing proctoring.  The
     # basic idea is that the web application turns on the camera and
-    # keeps the iframe while the user is iterating throught the exam.
+    # keeps the iframe while the user is iterating through the exam.
     # The line "<h1>You are being proctored!</h1>" is just a
     # placeholder and has to be replaced with real code.
     #
@@ -507,8 +505,8 @@ Action instproc unpublish_link {obj} {
     ::xo::cc set_parameter MenuBar 0
 
     return [:www-view [subst {
-      [real-proctering-code]
-      <h1>You are being proctored!</h1>
+      <!-- real-proctering-code -->
+      <h1>You ([xo::cc user_id]) are being proctored in exam ${:object_id}!</h1>
       <iframe src="$link" width="100%" height="600"></iframe>
     }]]
   }

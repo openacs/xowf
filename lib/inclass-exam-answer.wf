@@ -282,17 +282,22 @@ proc done_form_loader {ctx form_name} {
   #:msg set_title-set_parameter-MenuBar-[$obj state]
   ::xo::cc set_parameter MenuBar 0
   ::xo::cc set_parameter template_file view-plain-master
-  
+
   if {[$obj property proctor 0]} {
     template::set_css_property -class header -property display -value none
     template::set_css_property -class footer -property display -value none
-    template::set_css_property -class sidebar -property display -value none    
+    template::set_css_property -class sidebar -property display -value none
   }
 
   if {[$parent_obj state] eq "published" && [$obj state] ne "done"} {
+    set synchronized [$parent_obj property synchronized]
+    if {$synchronized eq ""} {set synchronized 0}
     set target_time [::xowf::test_item::question_manager exam_target_time \
                          -manager $parent_obj \
-                         -instance $obj]
+                         -base_time [expr { $synchronized
+                                            ? [$parent_obj last_modified]
+                                            : [$obj creation_date]}] \
+                        ]
     ::xo::cc set_parameter top_includelet [list countdown-timer -target_time $target_time]
   }
 }

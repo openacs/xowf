@@ -57,8 +57,8 @@
   <msg key="online-exam-actual_signature">Actual Signature</msg>
   <msg key="online-exam-submission_signature">Submission Signature</msg>
 
-  <msg key="signature">Signature</msg>
-  <msg key="signature_help_text">Provide a digital finger print of submitted answers as proof of submitted content</msg>
+  <msg key="Signature">Signature</msg>
+  <msg key="Signature_help_text">Provide a digital finger print of submitted answers as proof of submitted content</msg>
 
   <msg key="online-exam-select">Create Exam</msg>
   <msg key="online-exam-review">Review Exam</msg>
@@ -157,5 +157,10 @@
   <msg key="Live_revision">Submission revision</msg>
   <msg key="Solution">Solution</msg>
   <msg key="Proctoring">Proctoring</msg>
+  <msg key="Proctoring_help_text">Use E-Proctoring for this exam</msg>  <msg key="Proctoring">Proctoring</msg>
   <msg key="Proctoring_help_text">Use E-Proctoring for this exam</msg>
+  <msg key="Synchronized">Synchronized Exam</msg>
+  <msg key="Synchronized_help_text">Is the exam duration strictly controlled by the lecturer, or does every student get his working time displayed, independent from his starting time.</msg>
+  <msg key="Exam_published">Exam Published</msg>
+  <msg key="since_published">since published</msg>
 </message_catalog>

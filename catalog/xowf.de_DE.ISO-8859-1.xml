@@ -55,8 +55,8 @@
   <msg key="refresh">Aktualisieren</msg>
   <msg key="print">Drucken</msg>
 
-  <msg key="signature">Signatur</msg>
-  <msg key="signature_help_text">Erzeuge einen digitalen Fingerabdruck bei Prüfungsabgabe als Beleg der unveränderten Abgabe</msg>
+  <msg key="Signature">Signatur</msg>
+  <msg key="Signature_help_text">Erzeuge einen digitalen Fingerabdruck bei Prüfungsabgabe als Beleg der unveränderten Abgabe</msg>
 
   <msg key="online-exam-actual_signature">Aktuelle Signatur</msg>
   <msg key="online-exam-submission_signature">Abgegebene Signatur</msg>
@@ -138,5 +138,8 @@
   <msg key="Solution">Lösung</msg>
   <msg key="Proctoring">Online-Beaufsichtigung</msg>
   <msg key="Proctoring_help_text">Verwende für diese Prüfung eine Online-Beaufsichtigung</msg>
-
+  <msg key="Synchronized">Synchronisierte Abwicklung</msg>
+  <msg key="Synchronized_help_text">Wird die angezeigte Bearbeitungszeit strikt vom Lehrenden vorgegeben, oder hat jeder Student die Anzeige seiner aktuellen Bearbeitsdauer, auch wenn er etwas später beginnt</msg>
+  <msg key="Exam_published">Veröffentlichung der Prüfung</msg>
+  <msg key="since_published">seit der Veröffentlichung</msg>
 </message_catalog>
