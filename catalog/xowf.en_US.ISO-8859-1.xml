@@ -157,7 +157,6 @@
   <msg key="Live_revision">Submission revision</msg>
   <msg key="Solution">Solution</msg>
   <msg key="Proctoring">Proctoring</msg>
-  <msg key="Proctoring_help_text">Use E-Proctoring for this exam</msg>  <msg key="Proctoring">Proctoring</msg>
   <msg key="Proctoring_help_text">Use E-Proctoring for this exam</msg>
   <msg key="Synchronized">Synchronized Exam</msg>
   <msg key="Synchronized_help_text">Is the exam duration strictly controlled by the lecturer, or does every student get his working time displayed, independent from his starting time.</msg>
