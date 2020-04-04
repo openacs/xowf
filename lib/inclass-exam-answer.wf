@@ -228,10 +228,11 @@ proc done_form_loader {ctx form_name} {
   #
   #
   #
+  set container [$ctx wf_container]
   if {[$obj exists __feedback_mode] && [$obj set __feedback_mode] > 0} {
-    set container [$ctx wf_container]
     set result [$container summary_form $ctx $form_name]
   } else {
+    $container plain_template $obj
     set result [::xowiki::Form new \
                     -destroy_on_cleanup \
                     -set name en:finished \
@@ -246,7 +247,6 @@ proc done_form_loader {ctx form_name} {
   }
   return $result
 }
-
 
 #
 # Set "title" with question/user/IP information.  Note that the
@@ -280,14 +280,7 @@ proc done_form_loader {ctx form_name} {
   $obj title [join $title " · "]
 
   #:msg set_title-set_parameter-MenuBar-[$obj state]
-  ::xo::cc set_parameter MenuBar 0
-  ::xo::cc set_parameter template_file view-plain-master
-
-  if {[$obj property proctor 0]} {
-    template::set_css_property -class header -property display -value none
-    template::set_css_property -class footer -property display -value none
-    template::set_css_property -class sidebar -property display -value none
-  }
+  :plain_template $obj
 
   if {[$parent_obj state] eq "published" && [$obj state] ne "done"} {
     set synchronized [$parent_obj property synchronized]
@@ -302,6 +295,16 @@ proc done_form_loader {ctx form_name} {
   }
 }
 
+:proc plain_template {obj} {
+  ::xo::cc set_parameter MenuBar 0
+  ::xo::cc set_parameter template_file view-plain-master
+
+  if {[$obj property proctor 0]} {
+    template::set_css_property -class header -property display -value none
+    template::set_css_property -class footer -property display -value none
+    template::set_css_property -class sidebar -property display -value none
+  }
+}
 #
 # Form loader for summary (shows all submission data of a user)
 #

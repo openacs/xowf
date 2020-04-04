@@ -204,7 +204,7 @@ Action instproc unpublish_link {obj} {
       # In inclass cases, never show all questions on screen, since
       # the teacher might have the screen on the projector.
       #
-      template::add_body_script -script urn:ad:js:bootstrap3
+      template::add_body_script -src urn:ad:js:bootstrap3
       set fullQuestionForm [subst {
         <span class="glyphicon glyphicon-chevron-down"><button type="button" class="btn btn-small" data-toggle="collapse" data-target="#questions">#xowf.questions#</button></span>
         <div id="questions" class="collapse">
@@ -219,7 +219,7 @@ Action instproc unpublish_link {obj} {
     "created"   {
       append extraAction "<br>" \
           "#xowf.online-exam-try_out# " \
-          "<a class='btn btn-default' href='[ns_quotehtml $tLink]'>#xowf.testrun#</a>"
+          "<a class='btn btn-default' href='[ns_quotehtml $tLink]' target=”_blank”>#xowf.testrun#</a>"
     }
     "published" {
       append extraAction "<br>" \
@@ -491,7 +491,7 @@ Action instproc unpublish_link {obj} {
     }
   }
 
-  
+
   :proc www-qrcode {} {
     set aLink [:pretty_link -absolute true -query m=answer]
     set fn /tmp/qr-${:item_id}.png
@@ -513,11 +513,20 @@ Action instproc unpublish_link {obj} {
     ::xo::cc set_parameter template_file view-plain-master
     ::xo::cc set_parameter MenuBar 0
 
-    return [:www-view [subst {
-      <!-- real-proctering-code -->
-      <h1>You ([xo::cc user_id]) are being proctored in exam ${:object_id}!</h1>
-      <iframe src="$link" width="100%" height="600"></iframe>
-    }]]
+    if {[file exists [acs_package_root_dir xowf]/lib/proctored-page.adp]} {
+      set object_id ${:object_id}
+      set object_url $link
+      ${:package_id} return_page -adp /packages/xowf/lib/proctored-page -variables {
+        object_id
+        object_url
+      }
+    } else {
+      return [:www-view [subst {
+        <!-- ... proctor::start_dialog... -->
+        <h1>You ([xo::cc user_id]) are being proctored in exam ${:object_id}!</h1>
+        <iframe src="$link" width="100%" height="600"></iframe>
+      }]]
+    }
   }
 
   ########################################################################
