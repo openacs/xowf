@@ -302,8 +302,10 @@ proc done_form_loader {ctx form_name} {
   if {[$obj property proctor 0]} {
     template::set_css_property -class header -property display -value none
     template::set_css_property -class footer -property display -value none
-    template::set_css_property -class sidebar -property display -value none
+    template::set_css_property -class community_title -property display -value none
   }
+  template::set_css_property -class pagetitle -property display -value none
+  template::set_css_property -class sidebar -property display -value none
 }
 #
 # Form loader for summary (shows all submission data of a user)
@@ -376,7 +378,12 @@ proc done_form_loader {ctx form_name} {
   if {${:state} in {initial working done}} {
     set parent_obj [::xo::db::CrClass  get_instance_from_db -item_id [:parent_id]]
     set question_names [::xowf::test_item::question_manager question_names $parent_obj]
-
+    if {[:property seeds] eq ""} {
+      expr {srand(${:creation_user} * [clock seconds])}
+      :set_property -new 1 seeds [lmap q $question_names {
+        expr {int(rand() * ${:creation_user} * [clock seconds])}
+      }]
+    }
     #
     # Use the current_position in the sense of the nth question of the
     # user, which is not necessarily the nth question in the list of
