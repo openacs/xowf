@@ -589,9 +589,9 @@ namespace eval ::xowiki::formfield {
       "{#xowiki.file_upload# file_upload}"
     } " "]
     set textEntryConfigSpec [subst {
-        {options {radio,horizontal=true,form_item_wrapper_CSSclass=form-inline,options=$render_hints,default=single_word,label=#xowf.answer#}}
-        {lines {number,form_item_wrapper_CSSclass=form-inline,default=1,min=1,label=#xowf.lines#}}
-      }]
+      {options {radio,horizontal=true,form_item_wrapper_CSSclass=form-inline,options=$render_hints,default=single_word,label=#xowf.answer#}}
+      {lines {number,form_item_wrapper_CSSclass=form-inline,default=1,min=1,label=#xowf.lines#}}
+    }]
 
     #:msg autoCorrectSpec=$autoCorrectSpec
     :create_components  [subst {
@@ -1821,6 +1821,7 @@ namespace eval ::xowf::test_item {
     #   - question_objs
     #   - question_names
     #   - question_property
+    #   - add_seeds
     #   - total_minutes
     #   - exam_target_time
     #
@@ -1898,11 +1899,36 @@ namespace eval ::xowf::test_item {
       return [$obj property question]
     }
 
+    :public method add_seeds {-obj:object -seed:integer -number:integer} {
+      #
+      # Add property "seed" to the provided object, consisting of a
+      # list of the specified number of random values starting with a
+      # base seed. This can be used to use e.g. per user different
+      # random seeds depending on the position of an item.
+      #
+      expr {srand($seed * [clock microseconds])}
+      set seeds {}
+      for {set i 0} {$i < $number} {incr i} {
+        lappend seeds [expr {int(rand() * $seed * [clock microseconds])}]
+      }
+      $obj set_property -new 1 seeds $seeds
+    }
+
     :public method nth_question_obj {obj:object position:integer} {
       :assert_assessment $obj
       set questions [dict get [$obj instance_attributes] question]
       set result [:load_question_objs $obj [lindex $questions $position]]
       return $result
+    }
+
+    :method add_in_postion_to_fc {-fc -position} {
+      return [lmap c $fc {
+        if {[regexp {^[^:]+_:} $c]} {
+          append c ,in_position=$position
+          ns_log notice "APPEND $c"
+        }
+        set c
+      }]
     }
 
     :method question_info {
@@ -1915,7 +1941,7 @@ namespace eval ::xowf::test_item {
       set full_fc {}
       set full_disabled_fc {}
       set title_infos {}
-
+      set position 0
       foreach form_obj $form_objs number $numbers {
         set form_obj [::xowf::test_item::renaming_form_loader rename_attributes $form_obj]
         set form_title [$form_obj title]
@@ -1937,8 +1963,13 @@ namespace eval ::xowf::test_item {
                                  title $form_title \
                                  minutes $minutes \
                                  number $number]
-        lappend full_fc [$form_obj property form_constraints]
-        lappend full_disabled_fc [$form_obj property disabled_form_constraints]
+        lappend full_fc [:add_in_postion_to_fc \
+                             -fc [$form_obj property form_constraints] \
+                             -position $position]
+        lappend full_disabled_fc [:add_in_postion_to_fc \
+                                      -fc [$form_obj property disabled_form_constraints] \
+                                      -position $position]
+        incr position
       }
       return [list \
                   form $full_form \
