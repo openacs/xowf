@@ -331,7 +331,8 @@ proc done_form_loader {ctx form_name} {
   regsub -all {</?form[^>]*>} $summary_form {} summary_form
 
   :set_title $obj
-
+  #ns_log notice summary_form=$summary_form
+  #ns_log notice fc=$summary_fc
   return [::xowiki::Form new \
               -destroy_on_cleanup \
               -name en:summary \
@@ -378,11 +379,11 @@ proc done_form_loader {ctx form_name} {
   if {${:state} in {initial working done}} {
     set parent_obj [::xo::db::CrClass  get_instance_from_db -item_id [:parent_id]]
     set question_names [::xowf::test_item::question_manager question_names $parent_obj]
-    if {[:property seeds] eq ""} {
-      expr {srand(${:creation_user} * [clock seconds])}
-      :set_property -new 1 seeds [lmap q $question_names {
-        expr {int(rand() * ${:creation_user} * [clock seconds])}
-      }]
+    if {${:state} eq "initial" && [:property seeds] eq ""} {
+      ::xowf::test_item::question_manager add_seeds \
+          -obj [self] \
+          -seed ${:creation_user} \
+          -number [llength $question_names]
     }
     #
     # Use the current_position in the sense of the nth question of the
