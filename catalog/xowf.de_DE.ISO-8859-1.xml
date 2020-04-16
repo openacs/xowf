@@ -91,7 +91,7 @@
   <msg key="inclass-quiz-name">Bezeichung des Quiz</msg>
   <msg key="inclass-quiz-default_name">Quiz ...</msg>
 
-  <msg key="inclass-exam-submit">Abgabe def Prüfung</msg>
+  <msg key="inclass-exam-submit">Abgabe der Prüfung</msg>
   <msg key="inclass-exam-already_answered">Prüfung ist abgegeben</msg>
 
   <msg key="select_question_help_text">Wählen Sie Fragen mittels Drag &amp; Drop aus</msg>
