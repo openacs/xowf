@@ -1247,11 +1247,19 @@ namespace eval ::xowf::test_item {
     :public method get_wf_instances {
       {-initialize false}
       {-orderby ""}
+      -creation_user:integer
+      -item_id:integer
       wf:object
     } {
       # get_wf_instances: return the workflow instances
 
       :assert_assessment_container $wf
+      set extra_where_clause ""
+      foreach var {creation_user item_id} {
+        if {[info exists $var]} {
+          append extra_where_clause "AND $var = [set var] "
+        }
+      }
 
       return [::xowiki::FormPage get_form_entries \
                   -base_item_ids             [$wf item_id] \
@@ -1259,6 +1267,7 @@ namespace eval ::xowf::test_item {
                   -always_queried_attributes "*" \
                   -initialize                $initialize \
                   -orderby                   $orderby \
+                  -extra_where_clause        $extra_where_clause \
                   -publish_status            all \
                   -package_id                [$wf package_id]]
     }
@@ -1347,16 +1356,43 @@ namespace eval ::xowf::test_item {
       return $result
     }
 
+    ########################################################################
+    :public method achieved_points {-answer_object:object -answer_attributes:required } {
+      #
+      # This method has to be called after the instance was rendered,
+      # since it uses the produced form_fields.
+      #
+      set all_form_fields [::xowiki::formfield::FormField info instances -closure]
+      set totalPoints 0
+      set totalPossiblePoints 0
+      foreach a [dict keys $answer_attributes] {
+        set f [$answer_object lookup_form_field -name $a $all_form_fields]
+        if {[$f exists correction_data]} {
+          set cd [$f set correction_data]
+          #ns_log notice "FOO: $a <$f> $cd"
+          if {[dict exists $cd points]} {
+            set totalPoints [expr {$totalPoints + [dict get $cd points]}]
+            set totalPossiblePoints [expr {$totalPossiblePoints + [$f set test_item_minutes]}]
+          } else {
+            ns_log notice "$a: no points in correction_data, ignoring in points calculation"
+          }
+        }
+      }
+      return [list achievedPoints $totalPoints possiblePoints $totalPossiblePoints]
+    }
+
+    ########################################################################
     :public method runtime_panel {
       {-revision_id ""}
-      {-filter_id ""}
+      {-view default}
+      {-achieved_points ""}
       answerObj:object
     } {
       #
       # Return statistics for the provided object:
-      # - minimal statistics: when 'filter_id' is empty
-      # - statistics with clickable revisions: when 'filter_id' is non empty
-      # - per-revision statistics: when revision_id is provided
+      # - minimal statistics: when view default
+      # - statistics with clickable revisions: when view = revision_overview
+      # - per-revision statistics: when view = revision_overview and revision_id is provided
       #
       set revision_sets [$answerObj get_revision_sets]
       set item_id [$answerObj item_id]
@@ -1366,7 +1402,12 @@ namespace eval ::xowf::test_item {
       set current_question [expr {[dict get [$answerObj instance_attributes] position] + 1}]
       set page_info "#xowf.question#: $current_question"
 
-      if {$filter_id ne ""} {
+      if {$view eq "default"} {
+        set url [ad_return_url]&id=$item_id
+        set revisionDetails "#xowf.nr_changes#: <a href='$url'>[llength $revision_sets]</a><br>"
+      } elseif {$view eq "student"} {
+        set revisionDetails ""
+      } elseif {$view eq "revision_overview"} {
         set displayed_revision_info ""
         set live_revision_info ""
         set make_live_info ""
@@ -1412,17 +1453,14 @@ namespace eval ::xowf::test_item {
           <div class="revision-details right">$displayed_revision_info<br>$live_revision_info<br>
           $make_live_info
           </div>
+          <br>
         }]
-      } else {
-        set url [ad_return_url]&id=$item_id
-        set revisionDetails "#xowf.nr_changes#: <a href='$url'>[llength $revision_sets]</a>"
       }
       if {$revision_id eq ""} {
         set revision_sets [:revisions_up_to $revision_sets $live_revision_id]
       }
       set last_published [:last_time_in_state -obj [$answerObj parent_id] -state published]
       set duration [:get_duration -exam_published_time $last_published $revision_sets]
-      set IPs [:get_IPs $revision_sets]
 
       set state [$answerObj state]
       if {$state eq "done"} {
@@ -1430,6 +1468,7 @@ namespace eval ::xowf::test_item {
       } else {
         set submission_info "#xowf.not_submitted# ($page_info)"
       }
+
       if {[dict exists $duration examPublished]} {
         set publishedInfo "#xowf.Exam_published#: <span class='data'>[dict get $duration examPublished]</span><br>"
         set extraDurationInfo " - #xowf.since_published#: [dict get $duration examPublishedDuration]"
@@ -1437,13 +1476,32 @@ namespace eval ::xowf::test_item {
         set publishedInfo ""
         set extraDurationInfo ""
       }
+      if {$view eq "student"} {
+        set IPinfo ""
+        set statusInfo ""
+        set extraDurationInfo ""
+      } else {
+        set IPinfo [subst {IP: <span class="data">[:get_IPs $revision_sets]</span>}]
+        set statusInfo "#xowf.Status#: <span class='data'>$submission_info</span><br>"
+      }
+      if {$achieved_points ne ""} {
+        set possiblePoints [format  %.2f [dict get $achieved_points possiblePoints]]
+        set achievedPoints [format  %.2f [dict get $achieved_points achievedPoints]]
+        set percentage [format %.2f [expr {$achievedPoints*100.0/$possiblePoints}]]
+        set achievedPointsInfo [subst {
+          Punkte: <span class='data'>$achievedPoints von möglichen $possiblePoints Punkten, $percentage%</span>
+        }]
+      } else {
+        set achievedPointsInfo ""
+      }
       set HTML [subst {
         $publishedInfo
-        $revisionDetails<br>
-        #xowf.Status#: <span class="data">$submission_info</span><br>
+        $revisionDetails
+        $statusInfo
         #xowf.Duration#: <span class="data">[dict get $duration from] - [dict get $duration to]
         ([dict get $duration duration]$extraDurationInfo)</span><br>
-        IP: <span class="data">$IPs</span>
+        $IPinfo
+        $achievedPointsInfo
       }]
       return $HTML
     }
@@ -1622,6 +1680,7 @@ namespace eval ::xowf::test_item {
           #ns_log notice "[$p creation_user] [$ff_obj name] [$p property $property] -> [$ff_obj set evaluated_answer_result]"
           if {[$ff_obj exists grading_score]} {
             set r [$ff_obj set grading_score]
+            #ns_log notice "==== [$ff_obj name] grading_score => $r"
           } else {
             set r [expr {[$ff_obj set evaluated_answer_result] eq "correct" ? 100.0 : 0.0}]*
             #ns_log notice [$ff_obj serialize]
@@ -1921,11 +1980,16 @@ namespace eval ::xowf::test_item {
       return $result
     }
 
-    :method add_in_postion_to_fc {-fc -position} {
+    :method add_to_fc {-fc:required -position -minutes} {
       return [lmap c $fc {
         if {[regexp {^[^:]+_:} $c]} {
-          append c ,in_position=$position
-          ns_log notice "APPEND $c"
+          if {[info exists position]} {
+            append c ,test_item_in_position=$position
+          }
+          if {[info exists minutes]} {
+            append c ,test_item_minutes=$minutes
+          }
+          #ns_log notice "APPEND $c"
         }
         set c
       }]
@@ -1963,11 +2027,13 @@ namespace eval ::xowf::test_item {
                                  title $form_title \
                                  minutes $minutes \
                                  number $number]
-        lappend full_fc [:add_in_postion_to_fc \
+        lappend full_fc [:add_to_fc \
                              -fc [$form_obj property form_constraints] \
+                             -minutes $minutes \
                              -position $position]
-        lappend full_disabled_fc [:add_in_postion_to_fc \
+        lappend full_disabled_fc [:add_to_fc \
                                       -fc [$form_obj property disabled_form_constraints] \
+                                      -minutes $minutes \
                                       -position $position]
         incr position
       }
@@ -2154,12 +2220,13 @@ namespace eval ::xowf::test_item {
   ::xowiki::policy1 copy ::xowf::test_item::test-item-policy-answer
 
   #
-  # Add policy rules as used in two demo workflow. We are permissive
+  # Add policy rules as used in two demo workflows. We are permissive
   # for student actions and require admin right for teacher activities.
   #
   test-item-policy-publish contains {
     Class create FormPage -array set require_permission {
       answer         {{item_id read}}
+      view-my-exam   {{item_id read}}
       proctor-answer {{item_id read}}
       proctor        {{item_id read}}
       poll           admin

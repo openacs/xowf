@@ -204,7 +204,7 @@ Action instproc unpublish_link {obj} {
       # In inclass cases, never show all questions on screen, since
       # the teacher might have the screen on the projector.
       #
-      template::add_body_script -src urn:ad:js:bootstrap3
+      template::add_script -src urn:ad:js:bootstrap3
       set fullQuestionForm [subst {
         <span class="glyphicon glyphicon-chevron-down"><button type="button" class="btn btn-small" data-toggle="collapse" data-target="#questions">#xowf.questions#</button></span>
         <div id="questions" class="collapse">
@@ -317,7 +317,7 @@ Action instproc unpublish_link {obj} {
   ########################################################################
   # web-callable method "print-answer-table"
   #
-  # Print the answers in a somewhat printer friendly way.
+  # Print the answers in a tabular form.
   #
   :proc www-print-answer-table {} {
     set HTML ""
@@ -352,6 +352,17 @@ Action instproc unpublish_link {obj} {
   }
 
   ########################################################################
+  # web-callable method "view-my-exam "
+  #
+  # Provide feedback to the student about the results.
+  #
+  :proc www-view-my-exam {} {
+    ::xo::cc set_query_parameter creation_user [ad_conn user_id]
+    ::xo::cc set_query_parameter as_student 1
+    :www-print-answers
+  }
+
+  ########################################################################
   # web-callable method "print-answers"
   #
   # Print the answers in a somewhat printer friendly way.
@@ -361,13 +372,20 @@ Action instproc unpublish_link {obj} {
     set ctx [::xowf::Context require [self]]
     set wf [xowf::test_item::answer_manager get_answer_wf [self]]
     if {$wf ne ""} {
-      set items [xowf::test_item::answer_manager get_wf_instances $wf]
+      set package_id [$wf package_id]
+      set filter_id     [$package_id query_parameter id:integer ""]
+      set creation_user [$package_id query_parameter creation_user:integer ""]
+      set revision_id   [$package_id query_parameter rid:integer ""]
+      set as_student    [$package_id query_parameter as_student:boolean 0]
+
+      set items [xowf::test_item::answer_manager get_wf_instances \
+                     {*}[expr {$creation_user ne "" ? "-creation_user $creation_user" : ""}] \
+                     {*}[expr {$filter_id ne "" ? "-item_id $filter_id" : ""}] \
+                     $wf]
       set withSignature [expr {[dict exists ${:instance_attributes} signature]
                                ? [dict get ${:instance_attributes} signature]
                                : 0 }]
       set examTitle ${:title}
-      set filter_id [[$wf package_id] query_parameter id:integer ""]
-      set revision_id [[$wf package_id] query_parameter rid:integer ""]
 
       if {$revision_id ne ""} {
         set r [::xowiki::FormPage get_instance_from_db -revision_id $revision_id]
@@ -394,9 +412,7 @@ Action instproc unpublish_link {obj} {
           ns_log notice "online-exam: submission of $userName is not finished (state $state)"
           #continue
         }
-        if {$filter_id ne "" && [$i item_id] ne $filter_id} {
-          continue
-        }
+
         set revisions [$i get_revision_sets]
         if {[llength $revisions] <=1 } {
           # just an initial revision
@@ -406,18 +422,25 @@ Action instproc unpublish_link {obj} {
 
         #
         # The call to "render_content" calls actually the
-        # "summary_form" of online-exam-answer.wf when the submit
+        # "summary_form" of online/inclass-exam-answer.wf when the submit
         # instance is in state "done". We set the __feedback_mode to
         # get the auto-correction included.
         #
+        set achieved_points {}
         xo::cc eval_as_user -user_id [$i creation_user] {
           $i set __feedback_mode 2
           set question_form [$i render_content]
+          if {$withSignature || $as_student} {
+            set answerAttributes [xowf::test_item::renaming_form_loader \
+                                      answer_attributes [$i instance_attributes]]
+            if {$as_student} {
+              set achieved_points [xowf::test_item::answer_manager achieved_points \
+                                       -answer_object $i -answer_attributes $answerAttributes]
+            }
+          }
         }
 
         if {$withSignature} {
-          set answerAttributes [xowf::test_item::renaming_form_loader \
-                                    answer_attributes [$i instance_attributes]]
           set sha256 [ns_md string -digest sha256 $answerAttributes]
           set signatureString "<div class='signature'>online-exam-actual_signature: $sha256</div>\n"
           set submissionSignature [$i property signature ""]
@@ -430,11 +453,78 @@ Action instproc unpublish_link {obj} {
 
         set time [::xo::db::tcl_date [$i property _last_modified] tz_var]
         set pretty_date [clock format [clock scan $time] -format "%Y-%m-%d"]
+
+        if {$filter_id ne "" && [:property proctoring] eq "t"} {
+          set user_id [$i creation_user]
+          set img_url [:pretty_link -query m=proctor-image&user_id=$user_id]
+
+          set proctoring_dir [acs_root_dir]/proctoring/${:item_id}/$user_id/
+          set files [glob -nocomplain -path $proctoring_dir *.*]
+          ns_log notice "proctoring_dir $proctoring_dir files $files"
+
+          set start_date [ns_set get [lindex $revisions 0] creation_date]
+          set end_date [ns_set get [lindex $revisions end] creation_date]
+          set start_clock [clock scan [::xo::db::tcl_date $start_date tz_var]]
+          set end_clock [clock scan [::xo::db::tcl_date $end_date tz_var]]
+          foreach r $revisions {
+            ns_log notice "$r: [ns_set get $r revision_id] creation date [ns_set get $r creation_date]"
+          }
+
+          ns_log notice "start date $start_date end_date $end_date / $start_clock $end_clock"
+          foreach f $files {
+            ns_log notice "check: $f"
+            if {[regexp {/([^/]+)-(\d+)[.](webm|png|jpeg)$} $f . type stamp ext]} {
+              set inWindow [expr {$stamp >= $start_clock && $stamp <= $end_clock}]
+              ns_log notice "parsed $type $stamp $ext $inWindow $stamp \
+                [clock format $stamp -format {%m-%d %H:%M:%S}] >= \
+                $start_clock ([expr {$stamp >= $start_clock}]) \
+                && $stamp <= $end_clock ([expr {$stamp <= $end_clock}])"
+              if {$inWindow} {
+                dict set image $stamp $type $stamp
+              }
+            }
+          }
+          set markup ""
+          foreach ts [lsort -integer [dict keys $image]] {
+            ns_log notice "ts $ts [dict get $image $ts]"
+            append markup [subst {<div>[clock format $ts -format {%Y-%m-%d %H:%M:%S}]</div>}]
+            append markup {<div style="display: flex">}
+            foreach type {camera-image desktop-image} {
+              if {[dict exists $image $ts $type]} {
+                append markup [subst {<img src="$img_url&type=$type&ts=$ts&e=$ext">}]
+              }
+            }
+            if {[dict exists $image $ts camera-audio]} {
+              append markup [subst {<audio src="$img_url&type=camera-audio&ts=$ts&e=$ext">}]
+            }
+            append markup </div>\n
+          }
+
+
+          set question_form [subst {
+            <div class="container">
+              <div class="row">
+                <div class="col-md-6">$question_form</div>
+                <div class="col-md-6">$markup</div>
+              </div>
+            </div>
+          }]
+        }
+        set view [expr {$as_student
+                        ? "student"
+                        : $filter_id ne ""
+                        ? "revision_overview"
+                        : "default"}]
+        set runtime_panel [xowf::test_item::answer_manager runtime_panel \
+                               -revision_id $revision_id \
+                               -view $view \
+                               -achieved_points $achieved_points \
+                               $i]
         append HTML [subst {
           <div class='single_exam'>
           <div class='runtime-data'>
           <h2>$userName · $fullName · $pretty_date</h2>
-          [xowf::test_item::answer_manager runtime_panel -revision_id $revision_id -filter_id $filter_id $i]
+          $runtime_panel
           </div>
           $signatureString
           $question_form
@@ -448,7 +538,7 @@ Action instproc unpublish_link {obj} {
     } else {
       set HTML "<h1>#xowf.online-exam-protocol#</h1>$HTML"
     }
-    set return_url [[$wf package_id] query_parameter local_return_url:localurl [:pretty_link]]
+    set return_url [$package_id query_parameter local_return_url:localurl [:pretty_link]]
     append HTML "<hr><p><a  class='btn btn-default' href='$return_url'>#xowiki.back#</a></p>\n"
     ::xo::cc set_parameter template_file view-plain-master
     ::xo::cc set_parameter MenuBar 0
@@ -514,11 +604,13 @@ Action instproc unpublish_link {obj} {
     ::xo::cc set_parameter MenuBar 0
 
     if {[file exists [acs_package_root_dir xowf]/lib/proctored-page.adp]} {
-      set object_id ${:object_id}
+      set object_id ${:item_id}
       set object_url $link
+      set upload_url /xowf-proctoring-upload
       ${:package_id} return_page -adp /packages/xowf/lib/proctored-page -variables {
         object_id
         object_url
+        upload_url
       }
     } else {
       return [:www-view [subst {
@@ -527,6 +619,18 @@ Action instproc unpublish_link {obj} {
         <iframe src="$link" width="100%" height="600"></iframe>
       }]]
     }
+  }
+  :proc www-proctor-image {} {
+    set type [${:package_id} query_parameter type:ascii ""]
+    set ts   [${:package_id} query_parameter ts:integer ""]
+    set ext  [${:package_id} query_parameter e:wordchar ""]
+    set user_id [${:package_id} query_parameter user_id:integer ""]
+    set id ${:item_id}
+    set proctoring_dir [acs_root_dir]/proctoring/$id/$user_id
+    set png_path $proctoring_dir/$type-$ts.$ext
+    #ns_log notice "image: $png_path"
+    ns_returnfile 200 image/png $png_path
+    ad_script_abort
   }
 
   ########################################################################
