@@ -1257,7 +1257,7 @@ namespace eval ::xowf::test_item {
       set extra_where_clause ""
       foreach var {creation_user item_id} {
         if {[info exists $var]} {
-          append extra_where_clause "AND $var = [set var] "
+          append extra_where_clause "AND $var = [ns_dbquotevalue [set $var]] "
         }
       }
 
