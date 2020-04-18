@@ -140,10 +140,19 @@ Action instproc unpublish_link {obj} {
   set full_fc [dict get $combined_form_info disabled_form_constraints]
 
   #:log  fullQuestionForm=$fullQuestionForm
-  set text "<h2>$title</h2>"
+  set text "<h3>$title</h3>"
   set menu ""
   set proctoring [$obj property proctoring]
-  if {$proctoring eq ""} {set proctoring 0}
+  if {$proctoring eq ""} {
+    set proctoring 0
+  } else {
+    append text "<p>Exam with Proctoring.</p>"
+  }
+  set nrQuestions [llength [dict get $combined_form_info title_infos]]
+  append text [subst {
+    <p>$nrQuestions [expr {$nrQuestions == 1? "#xowf.question#" : "#xowf.questions#"}],
+    [::xowf::test_item::question_manager total_minutes $combined_form_info] #xowf.Minutes#</p>
+  }]
 
   set wf [xowf::test_item::answer_manager get_answer_wf $obj]
   if {$wf eq ""} {
