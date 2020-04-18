@@ -470,6 +470,7 @@ Action instproc unpublish_link {obj} {
             ns_log notice "$r: [ns_set get $r revision_id] creation date [ns_set get $r creation_date]"
           }
 
+          set image ""
           ns_log notice "start date $start_date end_date $end_date / $start_clock $end_clock"
           foreach f $files {
             ns_log notice "check: $f"
