@@ -462,8 +462,14 @@ Action instproc unpublish_link {obj} {
           set files [glob -nocomplain -path $proctoring_dir *.*]
           ns_log notice "proctoring_dir $proctoring_dir files $files"
 
-          set start_date [ns_set get [lindex $revisions 0] creation_date]
-          set end_date [ns_set get [lindex $revisions end] creation_date]
+          if {$revision_id ne ""} {
+            set filtered_revisions [xowf::test_item::answer_manager revisions_up_to $revisions $revision_id]
+          } else {
+            set filtered_revisions $revisions
+          }
+
+          set start_date [ns_set get [lindex $filtered_revisions 0] creation_date]
+          set end_date [ns_set get [lindex $filtered_revisions end] creation_date]
           set start_clock [clock scan [::xo::db::tcl_date $start_date tz_var]]
           set end_clock [clock scan [::xo::db::tcl_date $end_date tz_var]]
           foreach r $revisions {
@@ -481,7 +487,7 @@ Action instproc unpublish_link {obj} {
                 $start_clock ([expr {$stamp >= $start_clock}]) \
                 && $stamp <= $end_clock ([expr {$stamp <= $end_clock}])"
               if {$inWindow} {
-                dict set image $stamp $type $stamp
+                dict set image $stamp $type $ext
               }
             }
           }
@@ -492,10 +498,12 @@ Action instproc unpublish_link {obj} {
             append markup {<div style="display: flex">}
             foreach type {camera-image desktop-image} {
               if {[dict exists $image $ts $type]} {
+                set ext [dict get $image $ts $type]
                 append markup [subst {<img src="$img_url&type=$type&ts=$ts&e=$ext">}]
               }
             }
             if {[dict exists $image $ts camera-audio]} {
+              set ext [dict get $image $ts camera-audio]
               append markup [subst {<audio src="$img_url&type=camera-audio&ts=$ts&e=$ext">}]
             }
             append markup </div>\n
@@ -630,7 +638,7 @@ Action instproc unpublish_link {obj} {
     set proctoring_dir [acs_root_dir]/proctoring/$id/$user_id
     set png_path $proctoring_dir/$type-$ts.$ext
     #ns_log notice "image: $png_path"
-    ns_returnfile 200 image/png $png_path
+    ns_returnfile 200 [ns_guesstype $ts.$ext] $png_path
     ad_script_abort
   }
 

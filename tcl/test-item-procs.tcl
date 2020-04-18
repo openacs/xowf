@@ -1137,6 +1137,7 @@ namespace eval ::xowf::test_item {
     #  - marked_results
     #  - answers_panel
     #  - result_table
+    #  - revisions_up_to
     #
 
     :public method create_workflow {
@@ -1335,7 +1336,12 @@ namespace eval ::xowf::test_item {
 
     ########################################################################
 
-    :method revisions_up_to {revision_sets revision_id} {
+    :public method revisions_up_to {revision_sets revision_id} {
+      #
+      # Return the revisions of the provided revision set up the
+      # provided revision_id. If this revision_id does not exist,
+      # return the full set.
+      #
       set result ""
       set stop 0
       return [lmap s $revision_sets {
