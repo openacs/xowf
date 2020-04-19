@@ -297,8 +297,8 @@ proc done_form_loader {ctx form_name} {
 :proc plain_template {obj} {
   ::xo::cc set_parameter MenuBar 0
   ::xo::cc set_parameter template_file view-plain-master
-
-  if {[$obj property proctor 0]} {
+  set parent_obj [$obj set parent_obj]
+  if {[$obj property proctor 0] || [$parent_obj property proctoring 0]} {
     template::set_css_property -class header -property display -value none
     template::set_css_property -class footer -property display -value none
     template::set_css_property -class community_title -property display -value none
