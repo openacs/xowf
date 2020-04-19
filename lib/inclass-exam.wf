@@ -580,9 +580,9 @@ Action instproc unpublish_link {obj} {
       set HTML "<h1>#xowf.online-exam-review-protocol# - $heading</h1>\n$HTML"
     } else {
       set HTML "<h1>#xowf.online-exam-protocol#</h1>\n$HTML"
+      set return_url [$package_id query_parameter local_return_url:localurl [:pretty_link]]
+      append HTML "<hr><p><a  class='btn btn-default' href='$return_url'>#xowiki.back#</a></p>\n"
     }
-    set return_url [$package_id query_parameter local_return_url:localurl [:pretty_link]]
-    append HTML "<hr><p><a  class='btn btn-default' href='$return_url'>#xowiki.back#</a></p>\n"
     ::xo::cc set_parameter template_file view-plain-master
     ::xo::cc set_parameter MenuBar 0
     xo::Page requireCSS /resources/xowf/test-item.css
