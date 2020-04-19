@@ -190,7 +190,6 @@ proc working_form_loader {ctx form_name} {
   set parent_id [$obj parent_id]
   #:msg "working_form_loader [$obj instance_attributes]"
   set parent_obj [::xo::db::CrClass get_instance_from_db -item_id $parent_id]
-  set  parent_state [$parent_obj state]
 
   #
   # In case shuffling is required, fetch via the shuffled position.

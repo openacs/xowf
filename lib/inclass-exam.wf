@@ -37,6 +37,7 @@
 #
 #  - "answer" (for students),
 #  - "proctor" (for students),
+#  - "view-my-exam" (for students),
 #  - "edit" (for students),
 #  - "poll" (for teachers),
 #  - "print-answers" (for teachers),
@@ -44,7 +45,7 @@
 #  - "delete" (for teachers),
 #  - "qrcode" (for teachers)
 #
-# Gustaf Neumann, Feb 2012
+# Gustaf Neumann, Feb 2012-2020
 ########################################################################
 set :autoname 1   ;# to avoid editable name field
 set :policy ::xowf::test_item::test-item-policy-publish
@@ -60,6 +61,10 @@ Action republish -next_state published -label #xowf.online-exam-republish# \
     -title #xowf.online-exam-title-republish#
 Action restart -next_state initial -label #xowf.restart# \
     -title #xowf.online-exam-title-restart#
+Action open_submission_review -next_state submission_review -label #xowf.open_submission_review# \
+    -title #xowf.open_submission_review_title#
+Action close_submission_review -next_state done -label #xowf.close_submission_review# \
+    -title #xowf.close_submission_review_title#
 
 State parameter {
   {extra_css {/resources/xowf/test-item.css}}
@@ -69,8 +74,10 @@ State created -actions {publish restart} -form_loader load_form -view_method edi
     -form "#xowf.inclass-exam-draft_exam#"
 State published -actions {unpublish} -form_loader load_form -view_method edit \
     -form "#xowf.inclass-exam-open#"
-State done -actions {republish restart} -form_loader load_form -view_method edit \
+State done -actions {republish open_submission_review restart} -form_loader load_form -view_method edit \
     -form "#xowf.inclass-exam-closed#"
+State submission_review -actions {close_submission_review} -form_loader load_form -view_method edit \
+    -form "#xowf.inclass-exam-review#"
 
 ########################################################################
 # Activate action select: After the teacher has selected the
@@ -106,6 +113,12 @@ unpublish proc activate {obj} {
   :unpublish_link $obj
 }
 
+open_submission_review proc activate {obj} {
+  set aLink [$obj pretty_link -query m=view-my-exam]
+  util_user_message -html \
+      -message "[$obj name] exam review is available as <a target='_blank' href='[ns_quotehtml $aLink]'>[ns_quotehtml $aLink]</a>"
+}
+
 ########################################################################
 # publish_link: make the user participation link available for the
 # target group
@@ -116,7 +129,6 @@ Action instproc publish_link {obj} {
       -message "[$obj name] is available as <a target='_blank' href='[ns_quotehtml $aLink]'>[ns_quotehtml $aLink]</a>"
   # TODO: make it happen in the LMS
 }
-
 ########################################################################
 # unpublish_link: remove the user participation link for the target
 # group
@@ -208,6 +220,7 @@ Action instproc unpublish_link {obj} {
   switch $state {
     "created" -
     "done" -
+    "submission_review" -
     "published" {
       #
       # In inclass cases, never show all questions on screen, since
@@ -239,7 +252,7 @@ Action instproc unpublish_link {obj} {
 
   set answerStatus ""
   set marked ""
-  if {$state in {published done}} {
+  if {$state in {published done submission_review}} {
     if {$state eq "done"} {
       [$ctx object] setCSSDefaults
       set marked [xowf::test_item::answer_manager marked_results -obj $obj -wf $wf $combined_form_info]
@@ -366,9 +379,13 @@ Action instproc unpublish_link {obj} {
   # Provide feedback to the student about the results.
   #
   :proc www-view-my-exam {} {
-    ::xo::cc set_query_parameter creation_user [ad_conn user_id]
-    ::xo::cc set_query_parameter as_student 1
-    :www-print-answers
+    if {${:state} eq "submission_review"} {
+      ::xo::cc set_query_parameter creation_user [ad_conn user_id]
+      ::xo::cc set_query_parameter as_student 1
+      :www-print-answers
+    } else {
+      :www-view "#xowf.Exam-review-not-open#"
+    }
   }
 
   ########################################################################
@@ -378,6 +395,9 @@ Action instproc unpublish_link {obj} {
   #
   :proc www-print-answers {} {
     set HTML ""
+    set heading ""
+    set as_student [${:package_id} query_parameter as_student:boolean 0]
+
     set ctx [::xowf::Context require [self]]
     set wf [xowf::test_item::answer_manager get_answer_wf [self]]
     if {$wf ne ""} {
@@ -385,7 +405,7 @@ Action instproc unpublish_link {obj} {
       set filter_id     [$package_id query_parameter id:integer ""]
       set creation_user [$package_id query_parameter creation_user:integer ""]
       set revision_id   [$package_id query_parameter rid:integer ""]
-      set as_student    [$package_id query_parameter as_student:boolean 0]
+
 
       set items [xowf::test_item::answer_manager get_wf_instances \
                      {*}[expr {$creation_user ne "" ? "-creation_user $creation_user" : ""}] \
@@ -417,10 +437,10 @@ Action instproc unpublish_link {obj} {
         set fullName [$i set online-exam-fullName]
         set state [$i state]
 
-        if {$state ne "done"} {
-          ns_log notice "online-exam: submission of $userName is not finished (state $state)"
-          #continue
-        }
+        #if {$state ne "done"} {
+        #  ns_log notice "online-exam: submission of $userName is not finished (state $state)"
+        #  #continue
+        #}
 
         set revisions [$i get_revision_sets]
         if {[llength $revisions] <=1 } {
@@ -469,7 +489,7 @@ Action instproc unpublish_link {obj} {
 
           set proctoring_dir [acs_root_dir]/proctoring/${:item_id}/$user_id/
           set files [glob -nocomplain -path $proctoring_dir *.*]
-          ns_log notice "proctoring_dir $proctoring_dir files $files"
+          #ns_log notice "proctoring_dir $proctoring_dir files $files"
 
           if {$revision_id ne ""} {
             set filtered_revisions [xowf::test_item::answer_manager revisions_up_to $revisions $revision_id]
@@ -481,9 +501,6 @@ Action instproc unpublish_link {obj} {
           set end_date [ns_set get [lindex $filtered_revisions end] creation_date]
           set start_clock [clock scan [::xo::db::tcl_date $start_date tz_var]]
           set end_clock [clock scan [::xo::db::tcl_date $end_date tz_var]]
-          foreach r $revisions {
-            ns_log notice "$r: [ns_set get $r revision_id] creation date [ns_set get $r creation_date]"
-          }
 
           set image ""
           ns_log notice "start date $start_date end_date $end_date / $start_clock $end_clock"
@@ -518,7 +535,6 @@ Action instproc unpublish_link {obj} {
             append markup </div>\n
           }
 
-
           set question_form [subst {
             <div class="container">
               <div class="row">
@@ -538,10 +554,11 @@ Action instproc unpublish_link {obj} {
                                -view $view \
                                -achieved_points $achieved_points \
                                $i]
+        set heading "$userName · $fullName · $pretty_date"
         append HTML [subst {
           <div class='single_exam'>
           <div class='runtime-data'>
-          <h2>$userName · $fullName · $pretty_date</h2>
+          [expr {$as_student ? "" : "<h2>$heading</h2>"}]
           $runtime_panel
           </div>
           $signatureString
@@ -553,8 +570,16 @@ Action instproc unpublish_link {obj} {
 
     if {$HTML eq ""} {
       set HTML "#xowiki.no_data#"
+    }
+    if {$as_student} {
+      if {$heading eq ""} {
+        set userName [acs_user::get_element -user_id [ad_conn user_id] -element username]
+        set fullName [::xo::get_user_name  [ad_conn user_id]]
+        set heading "$userName - $fullName"
+      }
+      set HTML "<h1>#xowf.online-exam-review-protocol# - $heading</h1>\n$HTML"
     } else {
-      set HTML "<h1>#xowf.online-exam-protocol#</h1>$HTML"
+      set HTML "<h1>#xowf.online-exam-protocol#</h1>\n$HTML"
     }
     set return_url [$package_id query_parameter local_return_url:localurl [:pretty_link]]
     append HTML "<hr><p><a  class='btn btn-default' href='$return_url'>#xowiki.back#</a></p>\n"

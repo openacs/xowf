@@ -1486,6 +1486,7 @@ namespace eval ::xowf::test_item {
         set IPinfo ""
         set statusInfo ""
         set extraDurationInfo ""
+        set publishedInfo ""
       } else {
         set IPinfo [subst {IP: <span class="data">[:get_IPs $revision_sets]</span>}]
         set statusInfo "#xowf.Status#: <span class='data'>$submission_info</span><br>"
@@ -1495,7 +1496,7 @@ namespace eval ::xowf::test_item {
         set achievedPoints [format  %.2f [dict get $achieved_points achievedPoints]]
         set percentage [format %.2f [expr {$achievedPoints*100.0/$possiblePoints}]]
         set achievedPointsInfo [subst {
-          Punkte: <span class='data'>$achievedPoints von möglichen $possiblePoints Punkten, $percentage%</span>
+          #xowf.Achieved_points#: <span class='data'>$achievedPoints von möglichen $possiblePoints Punkten, $percentage%</span>
         }]
       } else {
         set achievedPointsInfo ""

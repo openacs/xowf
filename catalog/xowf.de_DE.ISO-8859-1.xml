@@ -52,6 +52,7 @@
   <msg key="online-exam-publish">Schalte Prüfung frei</msg>
   <msg key="online-exam-unpublish">Schließe Prüfung</msg>
   <msg key="online-exam-republish">Schalte Prüfung nochmals frei</msg>
+  <msg key="online-exam-review-protocol">Prüfungseinsicht</msg>
   <msg key="refresh">Aktualisieren</msg>
   <msg key="print">Drucken</msg>
 
@@ -72,6 +73,11 @@
   <msg key="online-exam-submitted_exams_msg">Studierende haben eine Prüfung abgegeben</msg>
   <msg key="online-exam-name">Bezeichung der Prüfung</msg>
   <msg key="online-exam-default_name">Prüfung aus ...</msg>
+
+  <msg key="open_submission_review">Einsicht öffnen</msg>
+  <msg key="open_submission_review_title">Öffne Einsicht für Studierende</msg>
+  <msg key="close_submission_review">Schließe Einsicht</msg>
+  <msg key="close_submission_review_title">Schließe Einsicht für Studierende</msg>
 
   <msg key="participant">Teilnehmer</msg>
   <msg key="participants_answered_question">Teilnehmer haben diese Frage beantwortet</msg>
@@ -120,14 +126,16 @@
   <msg key="menu-New-Item-MCInteraction">MC-Frage</msg>
   <msg key="menu-New-Item-SCInteraction">SC-Frage</msg>
   <msg key="menu-New-Item-UploadInteraction">Dateiabgabefrage</msg>
-  <msg key="menu-New-Item-ReorderInteraction">Anordnungsfrage</msg>  
-
+  <msg key="menu-New-Item-ReorderInteraction">Anordnungsfrage</msg>
 
   <msg key="inclass-exam-draft_exam">Entwurf des Inclass-Exams (nicht freigegeben)</msg>
   <msg key="inclass-exam-open">Inclass-Exam geöffnet (Zur Bearbeitung freigegeben)</msg>
   <msg key="inclass-exam-closed">Inclass-Exam geschlossen</msg>
+  <msg key="inclass-exam-review">Inclass-Exam geschlossen (Einsicht geöffnet)</msg>
+  <msg key="Exam-review-not-open">Die Einsicht für diese Prüfung ist nicht geöffnet.</msg>
+
   <msg key="nr_changes">Anzahl der Änderungen</msg>
-  <msg key="Duration">Dauer</msg>
+  <msg key="Duration">Bearbeitungsdauer</msg>
   <msg key="not_submitted">nicht abgegeben</msg>
   <msg key="submitted">abgegeben</msg>
   <msg key="Status">Status</msg>
@@ -142,4 +150,5 @@
   <msg key="Synchronized_help_text">Wird die angezeigte Bearbeitungszeit strikt vom Lehrenden vorgegeben, oder hat jeder Student die Anzeige seiner aktuellen Bearbeitsdauer, auch wenn er etwas später beginnt</msg>
   <msg key="Exam_published">Veröffentlichung der Prüfung</msg>
   <msg key="since_published">seit der Veröffentlichung</msg>
+  <msg key="Achieved_points">Erreichte Punkte</msg>
 </message_catalog>
