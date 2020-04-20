@@ -50,7 +50,7 @@
 set :autoname 1   ;# to avoid editable name field
 set :policy ::xowf::test_item::test-item-policy-publish
 set :debug 0
-set :live_updates 0
+set :live_updates 1
 
 Action select -next_state created -label #xowf.online-exam-select# \
     -title #xowf.online-exam-title-select#
@@ -157,7 +157,8 @@ Action instproc unpublish_link {obj} {
   set proctoring [$obj property proctoring]
   if {$proctoring eq ""} {
     set proctoring 0
-  } else {
+  }
+  if {$proctoring} {
     append text "<p>Exam with Proctoring.</p>"
   }
   set nrQuestions [llength [dict get $combined_form_info title_infos]]
