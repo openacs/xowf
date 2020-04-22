@@ -172,4 +172,10 @@
   <msg key="Exam_published">Exam Published</msg>
   <msg key="since_published">since published</msg>
   <msg key="Achieved_points">Achieved Points</msg>
+
+  <msg key="Correct">Correct</msg>  
+  <msg key="exam_review_possible">automated exam review possible</msg>
+  <msg key="exam_review_not_possible">automated exam review not possible</msg>
+  <msg key="randomization_for_exam_ok">randomization for exam ok</msg>
+  <msg key="randomization_for_exam_not_ok">randomization for exam not ok ("always" should not be used)</msg>
 </message_catalog>

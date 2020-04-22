@@ -151,4 +151,11 @@
   <msg key="Exam_published">Veröffentlichung der Prüfung</msg>
   <msg key="since_published">seit der Veröffentlichung</msg>
   <msg key="Achieved_points">Erreichte Punkte</msg>
+
+  <msg key="Correct">Korrekt</msg>  
+  <msg key="exam_review_possible">automatische Einsicht möglich</msg>
+  <msg key="exam_review_not_possible">automatische Einsicht nicht möglich</msg>
+  <msg key="randomization_for_exam_ok">Randomisierung für Prüfung geeignet</msg>
+  <msg key="randomization_for_exam_not_ok">Randomisierung für Prüfung nicht geeignet (keine Zufallsauswahl "immer" verwenden)</msg>
+
 </message_catalog>

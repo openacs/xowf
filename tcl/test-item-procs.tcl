@@ -713,6 +713,7 @@ namespace eval ::xowiki::formfield {
     set count 0
     set options {}
     set correct {}
+    set solution {}
 
     foreach {fieldName value} $answerFields {
       #ns_log notice ...fieldName=$fieldName->$value
@@ -723,11 +724,13 @@ namespace eval ::xowiki::formfield {
       regexp {^(.*)(</p>)\s*$} $text . text .
       lappend options [list $text [incr count]]
       lappend correct [dict get $value $fieldName.correct]
+      lappend solution [dict get $value $fieldName.solution]
     }
 
     dict set fc_dict richtext 1
     dict set fc_dict answer $correct
     dict set fc_dict options $options
+    dict set fc_dict descriptions $solution
     dict set fc_dict shuffle_kind [${:parent_field} get_named_sub_component_value shuffle]
     dict set fc_dict grading [${:parent_field} get_named_sub_component_value grading]
     dict set fc_dict show_max [${:parent_field} get_named_sub_component_value show_max]
@@ -760,6 +763,7 @@ namespace eval ::xowiki::formfield {
   # ::xowiki::formfield::mc_field
   #
   Class create mc_field -superclass TestItemField -parameter {
+    {n ""}
   }
 
   mc_field instproc initialize {} {
@@ -777,7 +781,8 @@ namespace eval ::xowiki::formfield {
     #:msg autoCorrectSpec=$autoCorrectSpec
     :create_components  [subst {
       {text  {$widget,height=50px,label=#xowf.sub_question#,plugins=OacsFs}}
-      {correct {boolean,horizontal=true,label=Korrekt}}
+      {correct {boolean,horizontal=true,label=#xowf.Correct#,form_item_wrapper_CSSclass=form-inline}}
+      {solution {textarea,rows=2,label=#xowf.Solution#,form_item_wrapper_CSSclass=form-inline}}
     }]
     set :__initialized 1
   }
@@ -1491,12 +1496,14 @@ namespace eval ::xowf::test_item {
         set IPinfo [subst {IP: <span class="data">[:get_IPs $revision_sets]</span>}]
         set statusInfo "#xowf.Status#: <span class='data'>$submission_info</span><br>"
       }
+
       if {$achieved_points ne ""} {
         set possiblePoints [format  %.2f [dict get $achieved_points possiblePoints]]
         set achievedPoints [format  %.2f [dict get $achieved_points achievedPoints]]
         set percentage [format %.2f [expr {$achievedPoints*100.0/$possiblePoints}]]
         set achievedPointsInfo [subst {
-          #xowf.Achieved_points#: <span class='data'>$achievedPoints von möglichen $possiblePoints Punkten, $percentage%</span>
+          #xowf.Achieved_points#: <span class='data'>$achievedPoints von möglichen $possiblePoints Punkten,
+          $percentage%</span><br>
         }]
       } else {
         set achievedPointsInfo ""
@@ -1507,8 +1514,8 @@ namespace eval ::xowf::test_item {
         $statusInfo
         #xowf.Duration#: <span class="data">[dict get $duration from] - [dict get $duration to]
         ([dict get $duration duration]$extraDurationInfo)</span><br>
-        $IPinfo
         $achievedPointsInfo
+        $IPinfo
       }]
       return $HTML
     }
@@ -2013,6 +2020,8 @@ namespace eval ::xowf::test_item {
       set full_disabled_fc {}
       set title_infos {}
       set position 0
+      set randomizationOk 1
+      set autoGrade 1
       foreach form_obj $form_objs number $numbers {
         set form_obj [::xowf::test_item::renaming_form_loader rename_attributes $form_obj]
         set form_title [$form_obj title]
@@ -2043,12 +2052,48 @@ namespace eval ::xowf::test_item {
                                       -minutes $minutes \
                                       -position $position]
         incr position
+
+        set formAttributes [$form_obj instance_attributes]
+        if {[dict exists $formAttributes question]} {
+          #
+          # Check autograding and randomization for exam.
+          #
+          set qd [dict get [$form_obj instance_attributes] question]
+          #
+          # No question should have shuffle "always".
+          #
+          if {[dict exists $qd question.shuffle]
+              && [dict get $qd question.shuffle] eq "always"} {
+            ns_log notice "FOUND shuffle $qd"
+            set randomizationOk 0
+          }
+          #
+          # For autoGrade, we assume currently to have either a grading,
+          # or a question, where every alternative is exactly provided.
+          #
+          if {[dict exists $qd question.grading]} {
+            # autograde ok
+          } elseif [dict exists $qd question.interaction question.interaction.answer] {
+            set answer [dict get $qd question.interaction question.interaction.answer]
+            foreach k [dict keys $answer] {
+              if {![dict exists $answer $k $k.correct]} {
+                set autoGrade 0
+              }
+            }
+          } else {
+            set autoGrade 0
+          }
+        }
       }
+
       return [list \
                   form $full_form \
                   title_infos $title_infos \
                   form_constraints [join [lsort -unique $full_fc] \n] \
-                  disabled_form_constraints [join [lsort -unique $full_disabled_fc] \n]]
+                  disabled_form_constraints [join [lsort -unique $full_disabled_fc] \n] \
+                  randomization_for_exam $randomizationOk \
+                  autograde $autoGrade \
+                  question_objs $form_objs]
     }
 
 

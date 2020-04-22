@@ -161,10 +161,17 @@ Action instproc unpublish_link {obj} {
   if {$proctoring} {
     append text "<p>Exam with Proctoring.</p>"
   }
-  set nrQuestions [llength [dict get $combined_form_info title_infos]]
+  set question_objs   [dict get $combined_form_info question_objs]
+  set nrQuestions     [llength $question_objs]
+  set randomizationOk [dict get $combined_form_info randomization_for_exam]
+  set autograde       [dict get $combined_form_info autograde]
+
   append text [subst {
-    <p>$nrQuestions [expr {$nrQuestions == 1? "#xowf.question#" : "#xowf.questions#"}],
-    [::xowf::test_item::question_manager total_minutes $combined_form_info] #xowf.Minutes#</p>
+    <p>$nrQuestions [expr {$nrQuestions == 1 ? "#xowf.question#" : "#xowf.questions#"}],
+    [::xowf::test_item::question_manager total_minutes $combined_form_info] #xowf.Minutes#,<br>
+    [expr {$autograde ? "#xowf.exam_review_possible#" : "#xowf.exam_review_not_possible#"}],<br>
+    [expr {$randomizationOk ? "#xowf.randomization_for_exam_ok#" : "#xowf.randomization_for_exam_not_ok#"}].
+    </p>
   }]
 
   set wf [xowf::test_item::answer_manager get_answer_wf $obj]
@@ -176,7 +183,7 @@ Action instproc unpublish_link {obj} {
     set pLink "."
   } else {
     #
-    # Always compute the testrun and answer link.
+    # Always compute the test-run and answer link.
     #
     set wf_pretty_link [$wf pretty_link]
     set tLink [export_vars -base $wf_pretty_link {
@@ -398,6 +405,8 @@ Action instproc unpublish_link {obj} {
     set HTML ""
     set heading ""
     set as_student [${:package_id} query_parameter as_student:boolean 0]
+    set combined_form_info [::xowf::test_item::question_manager combined_question_form [self]]
+    set autograde [dict get $combined_form_info autograde]
 
     set ctx [::xowf::Context require [self]]
     set wf [xowf::test_item::answer_manager get_answer_wf [self]]
@@ -406,7 +415,6 @@ Action instproc unpublish_link {obj} {
       set filter_id     [$package_id query_parameter id:integer ""]
       set creation_user [$package_id query_parameter creation_user:integer ""]
       set revision_id   [$package_id query_parameter rid:integer ""]
-
 
       set items [xowf::test_item::answer_manager get_wf_instances \
                      {*}[expr {$creation_user ne "" ? "-creation_user $creation_user" : ""}] \
@@ -460,10 +468,10 @@ Action instproc unpublish_link {obj} {
         xo::cc eval_as_user -user_id [$i creation_user] {
           $i set __feedback_mode 2
           set question_form [$i render_content]
-          if {$withSignature || $as_student} {
+          if {$withSignature || $autograde} {
             set answerAttributes [xowf::test_item::renaming_form_loader \
                                       answer_attributes [$i instance_attributes]]
-            if {$as_student} {
+            if {$autograde} {
               set achieved_points [xowf::test_item::answer_manager achieved_points \
                                        -answer_object $i -answer_attributes $answerAttributes]
             }
