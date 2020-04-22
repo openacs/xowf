@@ -2150,7 +2150,12 @@ namespace eval ::xowf::test_item {
       set minutes 0
       foreach title_info [dict get $form_info title_infos] {
         if {[dict exists $title_info minutes]} {
-          set minutes [expr {$minutes + [dict get $title_info minutes]}]
+          set title_minutes [dict get $title_info minutes]
+          if {$title_minutes eq ""} {
+             ns_log notice "missing minutes in '$title_info'"
+             set title_minutes 0
+          }
+          set minutes [expr {$minutes + $title_minutes}]
         }
       }
       return $minutes
