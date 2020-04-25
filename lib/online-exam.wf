@@ -272,7 +272,7 @@ Action instproc unpublish_link {obj} {
         $i set online-exam-userName [acs_user::get_element -user_id [$i creation_user] -element username]
         $i set online-exam-fullName [::xo::get_user_name [$i creation_user]]
       }
-      set HTML [::xowf::test_item::answer_manager result_table \
+      set HTML [::xowf::test_item::answer_manager results_table \
                     -package_id ${:package_id} \
                     -items $items2 \
                     [self]]

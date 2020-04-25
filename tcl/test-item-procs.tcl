@@ -1141,7 +1141,8 @@ namespace eval ::xowf::test_item {
     #
     #  - marked_results
     #  - answers_panel
-    #  - result_table
+    #  - results_table
+    #  - participants_table
     #  - revisions_up_to
     #
 
@@ -1592,7 +1593,7 @@ namespace eval ::xowf::test_item {
     }
 
 
-    :public method result_table {
+    :public method results_table {
       -package_id:integer
       -items:object,required
       {-view_all_method print-answers}
@@ -1731,6 +1732,89 @@ namespace eval ::xowf::test_item {
       $table_widget destroy
       return $HTML
     }
+
+    :public method participants_table {
+      -package_id:integer
+      -items:object,required
+      {-view_all_method print-answers}
+      {-state done}
+      wf:object
+    } {
+
+      set form_field_objs {}
+      lappend form_field_objs \
+          [$wf create_raw_form_field \
+               -name _online-exam-userName \
+               -spec text,label=#xowf.participant#] \
+          [$wf create_raw_form_field \
+               -name _online-exam-fullName \
+               -spec text,label=#acs-subsite.Name#] \
+          [$wf create_raw_form_field \
+               -name _online-exam-seconds \
+               -spec number,label=#xowf.Seconds#] \
+          [$wf create_raw_form_field \
+               -name _creation_date \
+               -spec date,label=#xowiki.Page-last_modified#]
+
+      #
+      # Take "orderby" from the query parameter. If not set, order by
+      # the first field.
+      #
+      set orderby [::$package_id query_parameter orderby:token ""]
+      if {$orderby eq "" && [llength $form_field_objs] > 0} {
+        set orderby [[lindex $form_field_objs 0] name],asc
+      }
+
+      #
+      # Create table widget.
+      #
+      set table_widget [::xowiki::TableWidget create_from_form_fields \
+                            -package_id $package_id \
+                            -form_field_objs $form_field_objs \
+                            -orderby $orderby]
+      #
+      # Extend properties of every answer with corresponding ".score"
+      # values.
+      #
+      foreach p [$items children] {
+
+        #foreach ff_obj $answer_form_field_objs {
+        #  $ff_obj object $p
+        #  set property [$ff_obj name]
+        #  $ff_obj value [$p property $property]
+        #}
+
+        set duration [:get_duration [$p get_revision_sets]]
+        $p set_property -new 1 _online-exam-seconds \
+            [expr {[dict get $duration toClock] - [dict get $duration fromClock]}]
+      }
+
+      if {$state eq "done"} {
+        set uc {tcl {[$p state] ne "done"}}
+      } else {
+        set uc {tcl {false}}
+      }
+
+      #
+      # Render table widget with extended properties.
+      #
+      set HTML [$table_widget render_page_items_as_table \
+                    -package_id $package_id \
+                    -items $items \
+                    -form_field_objs $form_field_objs \
+                    -csv true \
+                    -uc $uc \
+                    -view_field _online-exam-userName \
+                    -view_filter_link [$wf pretty_link -query m=$view_all_method] \
+                    {*}[expr {[info exists generate] ? [list -generate $generate] : ""}] \
+                    -return_url [ad_return_url] \
+                    -return_url_att local_return_url \
+                   ]
+      $table_widget destroy
+      return $HTML
+    }
+
+
 
     :public method marked_results {-obj:object -wf:object form_info} {
       set form_field_objs [:answer_form_field_objs -wf $wf $form_info]
@@ -1934,16 +2018,6 @@ namespace eval ::xowf::test_item {
 
     :public method current_question_obj {obj:object} {
       return [:load_question_objs $obj [:current_question_name $obj]]
-    }
-
-
-    :public method shuffled_question_objs {obj:object shuffle_id} {
-      set form_objs [:question_objs $obj]
-      set result {}
-      foreach i [::xowiki::randomized_indices -seed $shuffle_id [llength $form_objs]] {
-        lappend result [lindex $form_objs $i]
-      }
-      return $result
     }
 
     :public method shuffled_index {{-shuffle_id:integer -1} obj:object position} {
@@ -2290,6 +2364,7 @@ namespace eval ::xowf::test_item {
       edit           admin
       print-answers  admin
       print-answer-table admin
+      print-participants admin
       delete         admin
       qrcode         admin
       make-live-revision admin

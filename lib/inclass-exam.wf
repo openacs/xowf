@@ -42,6 +42,7 @@
 #  - "poll" (for teachers),
 #  - "print-answers" (for teachers),
 #  - "print-answer-table" (for teachers),
+#  - "print-participants" (for teachers),
 #  - "delete" (for teachers),
 #  - "qrcode" (for teachers)
 #
@@ -214,12 +215,14 @@ Action instproc unpublish_link {obj} {
       set lLink "$wf_pretty_link?m=list"
       set pLink1 [$obj pretty_link -query m=print-answers]
       set pLink2 [$obj pretty_link -query m=print-answer-table]
+      set pLink3 [$obj pretty_link -query m=print-participants]
 
       set menu "\["
       if {[acs_user::site_wide_admin_p -user_id [::xo::cc user_id]]} {
         append menu "<a href='[ns_quotehtml $lLink]'>#xowf.online-exam-exam_instances#</a>, "
       }
       append menu \
+          "<a href='[ns_quotehtml $pLink3]'>#xowf.Participants#</a>, " \
           "<a href='[ns_quotehtml $pLink1]'>#xowf.online-exam-protocol#</a>, " \
           "<a href='[ns_quotehtml $pLink2]'>#xowf.online-exam-results-table#</a>\]"
     }
@@ -351,7 +354,6 @@ Action instproc unpublish_link {obj} {
   #
   :proc www-print-answer-table {} {
     set HTML ""
-    set ctx [::xowf::Context require [self]]
     set wf [xowf::test_item::answer_manager get_answer_wf [self]]
     if {$wf ne ""} {
       #set form_info [::xowf::test_item::question_manager combined_question_form -with_numbers [self]]
@@ -379,6 +381,41 @@ Action instproc unpublish_link {obj} {
 
     xo::Page requireCSS /resources/xowf/test-item.css
     :www-view $HTML
+  }
+
+  ########################################################################
+  # web-callable method "print-participants"
+  #
+  # Print participants in a tabular form.
+  #
+  :proc www-print-participants {} {
+    set HTML ""
+    set wf [xowf::test_item::answer_manager get_answer_wf [self]]
+    if {$wf ne ""} {
+
+      set items [xowf::test_item::answer_manager get_wf_instances $wf]
+      set items2 [$items deep_copy]
+      foreach i [$items2 children] {
+        $i set online-exam-userName [acs_user::get_element -user_id [$i creation_user] -element username]
+        $i set online-exam-fullName [::xo::get_user_name [$i creation_user]]
+      }
+      set HTML [::xowf::test_item::answer_manager participants_table \
+                    -package_id ${:package_id} \
+                    -items $items2 \
+                    -state * \
+                    [self]]
+      $items2 destroy
+    }
+    if {$HTML eq ""} {
+      set HTML "#xowiki.no_data#"
+    } else {
+      set HTML "<h3>#xowf.Participants#</h3>$HTML"
+    }
+    set return_url [[$wf package_id] query_parameter local_return_url:localurl [:pretty_link]]
+    append HTML "<hr><p><a class='btn btn-default' href='$return_url'>#xowiki.back#</a></p>\n"
+
+    :www-view $HTML
+
   }
 
   ########################################################################

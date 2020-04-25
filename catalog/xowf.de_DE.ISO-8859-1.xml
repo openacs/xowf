@@ -80,6 +80,7 @@
   <msg key="close_submission_review_title">Schließe Einsicht für Studierende</msg>
 
   <msg key="participant">Teilnehmer</msg>
+  <msg key="Participants">Teilnehmer</msg>
   <msg key="participants_answered_question">Teilnehmer haben diese Frage beantwortet</msg>
   <msg key="please_answer">Bitte beantworten Sie</msg>
   <msg key="results">Ergebnisse</msg>

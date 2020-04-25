@@ -49,6 +49,7 @@
   <msg key="testrun">Testrun</msg>
   <msg key="please_answer">Please answer</msg>
   <msg key="participant">Participant</msg>
+  <msg key="Participants">Participants</msg>  
   <msg key="participants_answered_question">participants answered this question</msg>
   <msg key="results">Results</msg>
   <msg key="show_results">Show Results</msg>
