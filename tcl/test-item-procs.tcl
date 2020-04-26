@@ -1376,7 +1376,7 @@ namespace eval ::xowf::test_item {
       #
       set all_form_fields [::xowiki::formfield::FormField info instances -closure]
       set totalPoints 0
-      set totalPossiblePoints 0
+      set achieveablePoints 0
       foreach a [dict keys $answer_attributes] {
         set f [$answer_object lookup_form_field -name $a $all_form_fields]
         if {[$f exists correction_data]} {
@@ -1384,13 +1384,13 @@ namespace eval ::xowf::test_item {
           #ns_log notice "FOO: $a <$f> $cd"
           if {[dict exists $cd points]} {
             set totalPoints [expr {$totalPoints + [dict get $cd points]}]
-            set totalPossiblePoints [expr {$totalPossiblePoints + [$f set test_item_minutes]}]
+            set achieveablePoints [expr {$achieveablePoints + [$f set test_item_minutes]}]
           } else {
             ns_log notice "$a: no points in correction_data, ignoring in points calculation"
           }
         }
       }
-      return [list achievedPoints $totalPoints possiblePoints $totalPossiblePoints]
+      return [list achievedPoints $totalPoints achieveablePoints $achieveablePoints]
     }
 
     ########################################################################
@@ -1499,11 +1499,11 @@ namespace eval ::xowf::test_item {
       }
 
       if {$achieved_points ne ""} {
-        set possiblePoints [format %.2f [dict get $achieved_points possiblePoints]]
+        set totalPoints [format %.2f [dict get $achieved_points totalPoints]]
         set achievedPoints [format %.2f [dict get $achieved_points achievedPoints]]
-        set percentage [format %.2f [expr {$possiblePoints > 0 ? ($achievedPoints*100.0/$possiblePoints) : 0}]]
+        set percentage [format %.2f [expr {$totalPoints > 0 ? ($achievedPoints*100.0/$totalPoints) : 0}]]
         set achievedPointsInfo [subst {
-          #xowf.Achieved_points#: <span class='data'>$achievedPoints von möglichen $possiblePoints Punkten,
+          #xowf.Achieved_points#: <span class='data'>$achievedPoints von möglichen $totalPoints Punkten,
           $percentage%</span><br>
         }]
       } else {

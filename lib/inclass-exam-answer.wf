@@ -110,6 +110,7 @@ Action save \
 Action logout \
     -next_state done \
     -label #xowf.inclass-exam-submit# \
+    -extra_css_class "logout" \
     -proc activate {obj} {
       [[$obj wf_context ] wf_container] addSignature $obj
       #set pid [$obj package_id]
@@ -420,6 +421,7 @@ proc done_form_loader {ctx form_name} {
 
     ${container}::${:state} actions $actions
   }
+  template::add_confirm_handler -CSSclass logout
 }
 
 #
