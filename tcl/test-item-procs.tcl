@@ -1499,9 +1499,9 @@ namespace eval ::xowf::test_item {
       }
 
       if {$achieved_points ne ""} {
-        set possiblePoints [format  %.2f [dict get $achieved_points possiblePoints]]
-        set achievedPoints [format  %.2f [dict get $achieved_points achievedPoints]]
-        set percentage [format %.2f [expr {$achievedPoints*100.0/$possiblePoints}]]
+        set possiblePoints [format %.2f [dict get $achieved_points possiblePoints]]
+        set achievedPoints [format %.2f [dict get $achieved_points achievedPoints]]
+        set percentage [format %.2f [expr {$possiblePoints > 0 ? ($achievedPoints*100.0/$possiblePoints) : 0}]]
         set achievedPointsInfo [subst {
           #xowf.Achieved_points#: <span class='data'>$achievedPoints von möglichen $possiblePoints Punkten,
           $percentage%</span><br>
@@ -1749,6 +1749,9 @@ namespace eval ::xowf::test_item {
           [$wf create_raw_form_field \
                -name _online-exam-fullName \
                -spec text,label=#acs-subsite.Name#] \
+          [$wf create_raw_form_field \
+               -name _state \
+               -spec text,label=#xowf.Status#] \
           [$wf create_raw_form_field \
                -name _online-exam-seconds \
                -spec number,label=#xowf.Seconds#] \
