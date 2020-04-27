@@ -999,7 +999,7 @@ namespace eval ::xowf {
         }
       }
       set references [$page references get resolved]
-      :log "-- link_text=$link_text// $references"
+      #:log "-- link_text=$link_text// $references"
 
       if {[llength $references] > 0} {
         #:msg "updating references refs=$references"
