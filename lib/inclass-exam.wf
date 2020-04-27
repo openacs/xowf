@@ -155,13 +155,13 @@ Action instproc unpublish_link {obj} {
   #:log  fullQuestionForm=$fullQuestionForm
   set text "<h3>$title</h3>"
   set menu ""
-  set proctoring [$obj property proctoring]
-  if {$proctoring eq ""} {
-    set proctoring 0
-  }
-  if {$proctoring} {
-    append text "<p>Exam with Proctoring.</p>"
-  }
+  set proctoring [$obj property proctoring 0]
+  set synchronized [$obj property synchronized 0]  
+
+  append text [subst {<p>
+    [expr {$synchronized ? "" : "Non-"}]Synchronized Exam
+    [expr {$proctoring ? " with Proctoring" : ""}]
+    </p>}]
   set question_objs   [dict get $combined_form_info question_objs]
   set nrQuestions     [llength $question_objs]
   set randomizationOk [dict get $combined_form_info randomization_for_exam]
@@ -553,7 +553,7 @@ Action instproc unpublish_link {obj} {
           set image ""
           ns_log notice "start date $start_date end_date $end_date / $start_clock $end_clock"
           foreach f $files {
-            ns_log notice "check: $f"
+            #ns_log notice "check: $f"
             if {[regexp {/([^/]+)-(\d+)[.](webm|png|jpeg)$} $f . type stamp ext]} {
               set inWindow [expr {$stamp >= $start_clock && $stamp <= $end_clock}]
               ns_log notice "parsed $type $stamp $ext $inWindow $stamp \
@@ -567,7 +567,7 @@ Action instproc unpublish_link {obj} {
           }
           set markup ""
           foreach ts [lsort -integer [dict keys $image]] {
-            ns_log notice "ts $ts [dict get $image $ts]"
+            #ns_log notice "ts $ts [dict get $image $ts]"
             append markup [subst {<div>[clock format $ts -format {%Y-%m-%d %H:%M:%S}]</div>}]
             append markup {<div style="display: flex">}
             foreach type {camera-image desktop-image} {
