@@ -232,4 +232,11 @@ div.xowiki-content div.countdown-timer {
     height: 14px;
 }
 
-
+/*
+ * This is more or less a standard setup for bootstrap 3,
+ * just used here for over-eager downstream styling.
+ */
+table.grading .progress-bar {
+    background-color: #337ab7;
+    height: 100%;
+}
