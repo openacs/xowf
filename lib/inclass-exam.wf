@@ -448,6 +448,7 @@ Action instproc unpublish_link {obj} {
     set combined_form_info [::xowf::test_item::question_manager combined_question_form [self]]
     set autograde   [dict get $combined_form_info autograde]
     set totalPoints [::xowf::test_item::question_manager total_minutes $combined_form_info]
+    set percentage_to_grade {50.0 60.0 70.0 80.0} ;# WI
 
     set ctx [::xowf::Context require [self]]
     set wf [xowf::test_item::answer_manager get_answer_wf [self]]
@@ -505,6 +506,15 @@ Action instproc unpublish_link {obj} {
         # instance is in state "done". We set the __feedback_mode to
         # get the auto-correction included.
         #
+        foreach f [::xowiki::formfield::FormField info instances -closure] {
+          #ns_log notice "FF could DESTROY $f [$f name]"
+          if {[string match *_ [$f name]]} {
+            #ns_log notice "FF DESTROY $f [$f name]"            
+            $f destroy
+          }
+        }
+        $wf form_field_flush_cache
+
         set achieved_points {}
         xo::cc eval_as_user -user_id [$i creation_user] {
           $i set __feedback_mode 2
@@ -525,7 +535,7 @@ Action instproc unpublish_link {obj} {
           set signatureString "<div class='signature'>online-exam-actual_signature: $sha256</div>\n"
           set submissionSignature [$i property signature ""]
           if {$submissionSignature ne ""} {
-            append signatureString "<div>#xowf.online-exam-submission_signature#: $submissionSignature<div>\n"
+            append signatureString "<div>#xowf.online-exam-submission_signature#: $submissionSignature</div>\n"
           }
         } else {
           set signatureString ""
@@ -605,6 +615,29 @@ Action instproc unpublish_link {obj} {
                                -view $view \
                                -achieved_points $achieved_points \
                                $i]
+        if {$autograde} {
+          # achieved_points achievedPoints 4.0 achieveablePoints 4 totalPoints 4
+          if {[dict exists $achieved_points totalPoints] && [dict get $achieved_points totalPoints] > 0} {
+            set percentage [format %.2f [expr {
+                                               [dict get $achieved_points achievedPoints]*100/
+                                               [dict get $achieved_points totalPoints]
+                                             }]]
+            set grade 1
+            set gradePos 0
+            foreach boundary $percentage_to_grade {
+              #ns_log notice "compare $percentage < $boundary"
+              if {$percentage < $boundary} {
+                set grade [expr {5-$gradePos}]
+                #ns_log notice "setting grade to $grade"
+                break
+              }
+              incr gradePos
+            }
+            dict incr grade_count $grade
+          }
+        }
+
+        
         set heading "$userName · $fullName · $pretty_date"
         append HTML [subst {
           <div class='single_exam'>
@@ -631,6 +664,28 @@ Action instproc unpublish_link {obj} {
       set HTML "<h1>#xowf.online-exam-review-protocol# - $heading</h1>\n$HTML"
     } else {
       set HTML "<h1>#xowf.online-exam-protocol#</h1>\n$HTML"
+
+      if {$autograde} {
+        set gradingTable {<div class="table-responsive"><table class="table grading">}
+        append gradingTable \
+            "<thead><th class='text-right col-md-1'>#xowf.Grade#</th><th class='col-md-1 text-right'>#</th></thead>" \
+            "<tbody>\n"
+        set nrGrades 0
+        foreach v [dict values $grade_count] { incr nrGrades $v}
+        foreach k [lsort [dict keys $grade_count]] {
+          set count [dict get $grade_count $k]
+          set countPercentage [format %.2f [expr {$count*100.0/$nrGrades}]]
+          append gradingTable \
+              <tr> \
+              [subst {<td class="text-right">$k</td><td class="text-right">$count</td>}] \
+              [subst {<td><div class="progress"><div class="progress-bar"
+                style="width:$countPercentage%">$countPercentage%</div></td}] \
+              </tr>\n
+        }
+        append gradingTable "</tbody></table></div>\n"
+        append HTML <p>$gradingTable</p>
+      }
+     
       set return_url [$package_id query_parameter local_return_url:localurl [:pretty_link]]
       append HTML "<hr><p><a  class='btn btn-default' href='$return_url'>#xowiki.back#</a></p>\n"
     }
@@ -722,7 +777,7 @@ Action instproc unpublish_link {obj} {
     set id ${:item_id}
     set proctoring_dir [acs_root_dir]/proctoring/$id/$user_id
     set png_path $proctoring_dir/$type-$ts.$ext
-    #ns_log notice "image: $png_path"
+    #ns_log notice "image: $png_path ... [file exists $$png_path]"
     ns_returnfile 200 [ns_guesstype $ts.$ext] $png_path
     ad_script_abort
   }
