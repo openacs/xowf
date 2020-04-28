@@ -1574,7 +1574,7 @@ namespace eval ::xowf::test_item {
         # assessments protocols/tables on the same page (currently
         # not).
         #
-        unset $key
+        unset -nocomplain $key
       } else {
         #ns_log notice "### key exists [info exists $key]"
         if {![info exists $key]} {
@@ -1586,7 +1586,7 @@ namespace eval ::xowf::test_item {
                         -lookup \
                         [lsort -unique $fc]]
           ::xo::cc perconnection_parameter_set_all $pc_params
-          $wf form_field_index  [set $key]
+          $wf form_field_index [set $key]
         }
         return [set $key]
       }
@@ -1607,9 +1607,9 @@ namespace eval ::xowf::test_item {
       set autograde [dict get $form_info autograde]
 
       set percentage_to_grade {50.0 60.0 70.0 80.0} ;# WI
-      if {$autograde && [llength $answer_form_field_objs] > 10} {
-        set with_answers 0
-      }
+      #if {$autograde && [llength $answer_form_field_objs] > 10} {
+      #  set with_answers 0
+      #}
 
       set form_field_objs {}
       lappend form_field_objs \
@@ -1638,7 +1638,7 @@ namespace eval ::xowf::test_item {
         }
       }
 
-      if {$autograde} {
+      if {0 && $autograde} {
         lappend form_field_objs \
             [$wf create_raw_form_field \
                -name _online-exam-total-score \
@@ -1735,7 +1735,7 @@ namespace eval ::xowf::test_item {
         $p set_property -new 1 _online-exam-seconds \
             [expr {[dict get $duration toClock] - [dict get $duration fromClock]}]
 
-        if {$autograde && $total_points > 0} {
+        if {0 && $autograde && $total_points > 0} {
           set final_score [expr {$total_score/$total_points}]
           $p set_property -new 1 _online-exam-total-score $final_score
 
@@ -1779,7 +1779,7 @@ namespace eval ::xowf::test_item {
                    ]
       $table_widget destroy
 
-      if {$autograde} {
+      if {0 && $autograde} {
         set gradingTable {<div class="table-responsive"><table class="table">}
         append gradingTable \
             "<thead><th class='text-right col-md-1'>#xowf.Grade#</th><th class='col-md-1 text-right'>#</th></thead>" \
@@ -2220,7 +2220,7 @@ namespace eval ::xowf::test_item {
           #
           if {[dict exists $qd question.shuffle]
               && [dict get $qd question.shuffle] eq "always"} {
-            ns_log notice "FOUND shuffle $qd"
+            #ns_log notice "FOUND shuffle $qd"
             set randomizationOk 0
           }
           #
