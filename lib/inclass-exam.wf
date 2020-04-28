@@ -156,7 +156,7 @@ Action instproc unpublish_link {obj} {
   set text "<h3>$title</h3>"
   set menu ""
   set proctoring [$obj property proctoring 0]
-  set synchronized [$obj property synchronized 0]  
+  set synchronized [$obj property synchronized 0]
 
   append text [subst {<p>
     [expr {$synchronized ? "" : "Non-"}]Synchronized Exam
@@ -509,7 +509,7 @@ Action instproc unpublish_link {obj} {
         foreach f [::xowiki::formfield::FormField info instances -closure] {
           #ns_log notice "FF could DESTROY $f [$f name]"
           if {[string match *_ [$f name]]} {
-            #ns_log notice "FF DESTROY $f [$f name]"            
+            #ns_log notice "FF DESTROY $f [$f name]"
             $f destroy
           }
         }
@@ -616,28 +616,11 @@ Action instproc unpublish_link {obj} {
                                -achieved_points $achieved_points \
                                $i]
         if {$autograde} {
-          # achieved_points achievedPoints 4.0 achieveablePoints 4 totalPoints 4
-          if {[dict exists $achieved_points totalPoints] && [dict get $achieved_points totalPoints] > 0} {
-            set percentage [format %.2f [expr {
-                                               [dict get $achieved_points achievedPoints]*100/
-                                               [dict get $achieved_points totalPoints]
-                                             }]]
-            set grade 1
-            set gradePos 0
-            foreach boundary $percentage_to_grade {
-              #ns_log notice "compare $percentage < $boundary"
-              if {$percentage < $boundary} {
-                set grade [expr {5-$gradePos}]
-                #ns_log notice "setting grade to $grade"
-                break
-              }
-              incr gradePos
-            }
-            dict incr grade_count $grade
-          }
+          dict incr grade_count [xowf::test_item::answer_manager grade \
+                                     -achieved_points $achieved_points \
+                                     -percentage_boundaries $percentage_to_grade]
         }
 
-        
         set heading "$userName · $fullName · $pretty_date"
         append HTML [subst {
           <div class='single_exam'>
@@ -666,26 +649,9 @@ Action instproc unpublish_link {obj} {
       set HTML "<h1>#xowf.online-exam-protocol#</h1>\n$HTML"
 
       if {$autograde} {
-        set gradingTable {<div class="table-responsive"><table class="table grading">}
-        append gradingTable \
-            "<thead><th class='text-right col-md-1'>#xowf.Grade#</th><th class='col-md-1 text-right'>#</th></thead>" \
-            "<tbody>\n"
-        set nrGrades 0
-        foreach v [dict values $grade_count] { incr nrGrades $v}
-        foreach k [lsort [dict keys $grade_count]] {
-          set count [dict get $grade_count $k]
-          set countPercentage [format %.2f [expr {$count*100.0/$nrGrades}]]
-          append gradingTable \
-              <tr> \
-              [subst {<td class="text-right">$k</td><td class="text-right">$count</td>}] \
-              [subst {<td><div class="progress"><div class="progress-bar"
-                style="width:$countPercentage%">$countPercentage%</div></td}] \
-              </tr>\n
-        }
-        append gradingTable "</tbody></table></div>\n"
-        append HTML <p>$gradingTable</p>
+        append HTML <p>[xowf::test_item::answer_manager grading_table $grade_count]</p>
       }
-     
+
       set return_url [$package_id query_parameter local_return_url:localurl [:pretty_link]]
       append HTML "<hr><p><a  class='btn btn-default' href='$return_url'>#xowiki.back#</a></p>\n"
     }

@@ -1142,6 +1142,8 @@ namespace eval ::xowf::test_item {
     #  - marked_results
     #  - answers_panel
     #  - results_table
+    #  - grading_table
+    #  - grade
     #  - participants_table
     #  - revisions_up_to
     #
@@ -1592,6 +1594,60 @@ namespace eval ::xowf::test_item {
       }
     }
 
+    :public method grading_table {grade_count_dict} {
+      #
+      # Produce HTML markup based on a dict with grades as keys and
+      # counts as values.
+      #
+      set gradingTable {<div class="table-responsive"><table class="table grading">}
+      append gradingTable \
+          "<thead><th class='text-right col-md-1'>#xowf.Grade#</th><th class='col-md-1 text-right'>#</th></thead>" \
+          "<tbody>\n"
+      set nrGrades 0
+      foreach v [dict values $grade_count_dict] { incr nrGrades $v}
+      foreach k [lsort [dict keys $grade_count_dict]] {
+        set count [dict get $grade_count_dict $k]
+        set countPercentage [format %.2f [expr {$count *100.0 / $nrGrades}]]
+        append gradingTable \
+            <tr> \
+            [subst {<td class="text-right">$k</td><td class="text-right">$count</td>}] \
+            [subst {<td><div class="progress"><div class="progress-bar"
+              style="width:$countPercentage%">$countPercentage%</div></td}] \
+            </tr>\n
+      }
+      append gradingTable "</tbody></table></div>\n"
+      return $gradingTable
+    }
+
+    :public method grade {-achieved_points -percentage_boundaries} {
+      #
+      # Return a numeric grade based on achieved_points dict and
+      # percentage_mapping. On invalid data, return 0.
+      #
+      #     achieved_points:    {achievedPoints 4.0 achieveablePoints 4 totalPoints 4}
+      #     percentage_mapping: {50.0 60.0 70.0 80.0}
+      #
+      if {[dict exists $achieved_points totalPoints] && [dict get $achieved_points totalPoints] > 0} {
+        set percentage [format %.2f [expr {
+                                           [dict get $achieved_points achievedPoints]*100/
+                                           [dict get $achieved_points totalPoints]
+                                         }]]
+        set grade 1
+        set gradePos 0
+        foreach boundary $percentage_boundaries {
+          #ns_log notice "compare $percentage < $boundary"
+          if {$percentage < $boundary} {
+            set grade [expr {5-$gradePos}]
+            #ns_log notice "setting grade to $grade"
+            break
+          }
+          incr gradePos
+        }
+      } else {
+        set grade 0
+      }
+      return $grade
+    }
 
     :public method results_table {
       -package_id:integer
