@@ -1603,6 +1603,7 @@ namespace eval ::xowf::test_item {
       #set form_info [:combined_question_form -with_numbers $wf]
       set form_info [::xowf::test_item::question_manager combined_question_form $wf]
       set answer_form_field_objs [:answer_form_field_objs -wf $wf $form_info]
+      set autograde [dict get $form_info autograde]
 
       set form_field_objs {}
       lappend form_field_objs \
@@ -1913,11 +1914,21 @@ namespace eval ::xowf::test_item {
       #
       # Accepted formats for target_time, determined by JavaScript
       # ISO 8601, e.g. YYYY-MM-DDTHH:mm:ss.sss"
-
+      #
+      # Set current time based on host time instead of new
+      # Date().getTime() to avoid surprises, in cases, the time at the
+      # client browser is set incorrectly.
+      #
+      set nowMs [clock milliseconds]
+      set nowIsoTime [clock format [expr {$nowMs/1000}] -format "%Y-%m-%dT%H:%M:%S"].[format %.3d [expr {$nowMs % 1000}]]
+      
       template::add_body_script -script [subst {
         var countdown_target_date = new Date('$target_time').getTime();
         var countdown_days, countdown_hours, countdown_minutes, countdown_seconds;
         var countdown = document.getElementById('$id');
+
+        // adjust target time by the difference between the host and client time
+        countdown_target_date = countdown_target_date - (new Date('$nowIsoTime').getTime() - new Date().getTime());
 
         setInterval(function () {
           var current_date = new Date().getTime();
@@ -2263,6 +2274,7 @@ namespace eval ::xowf::test_item {
       }
       set target_time [clock format [expr {$base_clock + $total_minutes*60}] \
                            -format %Y-%m-%dT%H:%M:%S]
+      ns_log notice "exam_target_time $base_time base clock $base_clock + total_minutes $total_minutes = ${target_time}.$secfrac"
       return ${target_time}.$secfrac
     }
 

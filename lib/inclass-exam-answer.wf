@@ -283,8 +283,7 @@ proc done_form_loader {ctx form_name} {
   :plain_template $obj
 
   if {[$parent_obj state] eq "published" && [$obj state] ne "done"} {
-    set synchronized [$parent_obj property synchronized]
-    if {$synchronized eq ""} {set synchronized 0}
+    set synchronized [$parent_obj property synchronized 0]
     set target_time [::xowf::test_item::question_manager exam_target_time \
                          -manager $parent_obj \
                          -base_time [expr { $synchronized
