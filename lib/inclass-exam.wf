@@ -354,6 +354,8 @@ Action instproc unpublish_link {obj} {
   #
   :proc www-print-answer-table {} {
     set HTML ""
+    set withAnswerColumns [${:package_id} query_parameter with_answers:boolean 0]
+
     set wf [xowf::test_item::answer_manager get_answer_wf [self]]
     if {$wf ne ""} {
       #set form_info [::xowf::test_item::question_manager combined_question_form -with_numbers [self]]
@@ -368,6 +370,7 @@ Action instproc unpublish_link {obj} {
                     -package_id ${:package_id} \
                     -items $items2 \
                     -state * \
+                    -with_answers $withAnswerColumns \
                     [self]]
       $items2 destroy
     }

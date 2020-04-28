@@ -4,6 +4,8 @@
   <msg key="Exercise">Exercise</msg>
   <msg key="Grading-Scheme">Grading Scheme</msg>
   <msg key="Grading-Score">Score</msg>
+  <msg key="Grade">Grade</msg>  
+  <msg key="Total-Score">Total Score</msg>
   <msg key="Shuffle">Shuffle</msg>
   <msg key="Days">Days</msg>
   <msg key="Day">Day</msg>

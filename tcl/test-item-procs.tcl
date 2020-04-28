@@ -1597,6 +1597,7 @@ namespace eval ::xowf::test_item {
       -package_id:integer
       -items:object,required
       {-view_all_method print-answers}
+      {-with_answers:boolean true}
       {-state done}
       wf:object
     } {
@@ -1605,29 +1606,46 @@ namespace eval ::xowf::test_item {
       set answer_form_field_objs [:answer_form_field_objs -wf $wf $form_info]
       set autograde [dict get $form_info autograde]
 
+      set percentage_to_grade {50.0 60.0 70.0 80.0} ;# WI
+      if {$autograde && [llength $answer_form_field_objs] > 10} {
+        set with_answers 0
+      }
+
       set form_field_objs {}
       lappend form_field_objs \
           [$wf create_raw_form_field \
                -name _online-exam-userName \
                -spec text,label=#xowf.participant#]
 
-      #
-      # Create for every answer field a matching grading field
-      #
-      set ff_dict {}
-      foreach answer_field_obj $answer_form_field_objs {
-        #ns_log notice "LABEL [$answer_field_obj name] <[$answer_field_obj label]>"
-        $answer_field_obj label [string trimright [$answer_field_obj name] _]
-        $answer_field_obj mixin ::xowf::test_item::td_pretty_value
+      if {$with_answers} {
+        #
+        # Create for every answer field a matching grading field
+        #
+        set ff_dict {}
+        foreach answer_field_obj $answer_form_field_objs {
+          #ns_log notice "LABEL [$answer_field_obj name] <[$answer_field_obj label]>"
+          $answer_field_obj label [string trimright [$answer_field_obj name] _]
+          $answer_field_obj mixin ::xowf::test_item::td_pretty_value
 
-        set grading_field_obj [$wf create_raw_form_field \
-                                   -name [$answer_field_obj name].score \
-                                   -spec number,label=#xowf.Grading-Score#]
+          set grading_field_obj [$wf create_raw_form_field \
+                                     -name [$answer_field_obj name].score \
+                                     -spec number,label=#xowf.Grading-Score#]
+          lappend form_field_objs \
+              $answer_field_obj \
+              $grading_field_obj
+          dict set ff_dict [$answer_field_obj name] $answer_field_obj
+          dict set ff_dict [$grading_field_obj name] $grading_field_obj
+        }
+      }
+
+      if {$autograde} {
         lappend form_field_objs \
-            $answer_field_obj \
-            $grading_field_obj
-        dict set ff_dict [$answer_field_obj name] $answer_field_obj
-        dict set ff_dict [$grading_field_obj name] $grading_field_obj
+            [$wf create_raw_form_field \
+               -name _online-exam-total-score \
+               -spec number,label=#xowf.Total-Score#] \
+            [$wf create_raw_form_field \
+                 -name _online-exam-grade \
+                 -spec number,label=#xowf.Grade#]
       }
 
       lappend form_field_objs \
@@ -1686,6 +1704,8 @@ namespace eval ::xowf::test_item {
           }
         }
 
+        set total_score 0
+        set total_points 0
         foreach ff_obj $answer_form_field_objs {
           $ff_obj object $p
           set property [$ff_obj name]
@@ -1696,6 +1716,13 @@ namespace eval ::xowf::test_item {
           #ns_log notice "[$p creation_user] [$ff_obj name] [$p property $property] -> [$ff_obj set evaluated_answer_result]"
           if {[$ff_obj exists grading_score]} {
             set r [$ff_obj set grading_score]
+            #
+            # Add exericse score weighted to the total score.
+            #
+            if {[$ff_obj exists test_item_minutes]} {
+              set total_score [expr {$total_score + ([$ff_obj set test_item_minutes] * [$ff_obj set grading_score])}]
+              set total_points [expr {$total_points + [$ff_obj set test_item_minutes]}]
+            }
             #ns_log notice "==== [$ff_obj name] grading_score => $r"
           } else {
             set r [expr {[$ff_obj set evaluated_answer_result] eq "correct" ? 100.0 : 0.0}]*
@@ -1707,6 +1734,26 @@ namespace eval ::xowf::test_item {
         set duration [:get_duration [$p get_revision_sets]]
         $p set_property -new 1 _online-exam-seconds \
             [expr {[dict get $duration toClock] - [dict get $duration fromClock]}]
+
+        if {$autograde && $total_points > 0} {
+          set final_score [expr {$total_score/$total_points}]
+          $p set_property -new 1 _online-exam-total-score $final_score
+
+          set percentage [format %.0f $final_score]
+          set grade 1
+          set gradePos 0
+          foreach boundary $percentage_to_grade {
+            #ns_log notice "compare $percentage < $boundary"
+            if {$percentage < $boundary} {
+              set grade [expr {5-$gradePos}]
+              #ns_log notice "setting grade to $grade"
+              break
+            }
+            incr gradePos
+          }
+          dict incr grade_count $grade
+          $p set_property -new 1 _online-exam-grade $grade
+        }
       }
 
       if {$state eq "done"} {
@@ -1731,6 +1778,27 @@ namespace eval ::xowf::test_item {
                     -return_url_att local_return_url \
                    ]
       $table_widget destroy
+
+      if {$autograde} {
+        set gradingTable {<div class="table-responsive"><table class="table">}
+        append gradingTable \
+            "<thead><th class='text-right col-md-1'>#xowf.Grade#</th><th class='col-md-1 text-right'>#</th></thead>" \
+            "<tbody>\n"
+        set nrGrades 0
+        foreach v [dict values $grade_count] { incr nrGrades $v}
+        foreach k [lsort [dict keys $grade_count]] {
+          set count [dict get $grade_count $k]
+          set countPercentage [expr {$count*100.0/$nrGrades}]
+          append gradingTable \
+              <tr> \
+              [subst {<td class="text-right">$k</td><td class="text-right">$count</td>}] \
+              [subst {<td><div class="progress"><div class="progress-bar"
+                style="width:$countPercentage%">$countPercentage%</div></td}] \
+              </tr>\n
+        }
+        append gradingTable "</tbody></table></div>\n"
+        append HTML <p>$gradingTable</p>
+      }
       return $HTML
     }
 
@@ -1921,7 +1989,7 @@ namespace eval ::xowf::test_item {
       #
       set nowMs [clock milliseconds]
       set nowIsoTime [clock format [expr {$nowMs/1000}] -format "%Y-%m-%dT%H:%M:%S"].[format %.3d [expr {$nowMs % 1000}]]
-      
+
       template::add_body_script -script [subst {
         var countdown_target_date = new Date('$target_time').getTime();
         var countdown_days, countdown_hours, countdown_minutes, countdown_seconds;
