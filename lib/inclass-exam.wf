@@ -449,7 +449,8 @@ Action instproc unpublish_link {obj} {
     set autograde   [dict get $combined_form_info autograde]
     set totalPoints [::xowf::test_item::question_manager total_minutes $combined_form_info]
     set percentage_to_grade {50.0 60.0 70.0 80.0} ;# WI
-
+    set grade_count {}
+    
     set ctx [::xowf::Context require [self]]
     set wf [xowf::test_item::answer_manager get_answer_wf [self]]
     if {$wf ne ""} {
