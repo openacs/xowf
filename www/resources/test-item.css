@@ -50,7 +50,12 @@ div.single_exam div.runtime-data .revision-details {
     div.single_exam div.form-label {
 	display: none;
     }
-
+    div.xowiki-content a.btn {
+	display: none;
+    }
+    div.header {
+	display: none;
+    }    
 }
 
 /*
