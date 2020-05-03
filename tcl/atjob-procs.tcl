@@ -89,7 +89,7 @@ namespace eval ::xowf {
     set sql "select package_id, item_id, name, parent_id, publish_status, creation_user,
                     revision_id, page_template, instance_attributes
              from xowiki_form_instance_item_view
-             where item_id in ([join $item_ids ,])"
+             where item_id in ([ns_dbquotelist $item_ids])"
     
     set items [::xowiki::FormPage instantiate_objects \
                    -object_class ::xowiki::FormPage \
