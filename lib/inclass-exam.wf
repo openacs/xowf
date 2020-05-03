@@ -442,22 +442,23 @@ Action instproc unpublish_link {obj} {
   # Print the answers in a somewhat printer friendly way.
   #
   :proc www-print-answers {} {
-    set HTML ""
-    set heading ""
-    set as_student  [${:package_id} query_parameter as_student:boolean 0]
+    set as_student    [:query_parameter as_student:boolean 0]
+    set filter_id     [:query_parameter id:integer ""]
+    set creation_user [:query_parameter creation_user:integer ""]
+    set revision_id   [:query_parameter rid:integer ""]
+
     set combined_form_info [::xowf::test_item::question_manager combined_question_form [self]]
     set autograde   [dict get $combined_form_info autograde]
     set totalPoints [::xowf::test_item::question_manager total_minutes $combined_form_info]
     set percentage_to_grade {50.0 60.0 70.0 80.0} ;# WI
-    set grade_count {}
-    
+    set grading_scheme ::xowf::test_item::grading::wi1
+    set grade_dict {}
+    set grade_csv ""
+
     set ctx [::xowf::Context require [self]]
     set wf [xowf::test_item::answer_manager get_answer_wf [self]]
+
     if {$wf ne ""} {
-      set package_id [$wf package_id]
-      set filter_id     [$package_id query_parameter id:integer ""]
-      set creation_user [$package_id query_parameter creation_user:integer ""]
-      set revision_id   [$package_id query_parameter rid:integer ""]
 
       set items [xowf::test_item::answer_manager get_wf_instances \
                      {*}[expr {$creation_user ne "" ? "-creation_user $creation_user" : ""}] \
@@ -467,6 +468,35 @@ Action instproc unpublish_link {obj} {
                                ? [dict get ${:instance_attributes} signature]
                                : 0 }]
       set examTitle ${:title}
+      set do_stream [expr {[llength [$items children]] > 100}]
+
+      ::xo::cc set_parameter template_file view-plain-master
+      ::xo::cc set_parameter MenuBar 0
+      template::head::add_link -rel stylesheet -href /resources/xowf/test-item.css
+
+      if {$as_student} {
+        set userName [acs_user::get_element -user_id [ad_conn user_id] -element username]
+        set fullName [::xo::get_user_name  [ad_conn user_id]]
+        set heading "$userName - $fullName"
+        set HTML "<h2>#xowf.online-exam-review-protocol# - $heading</h2>\n"
+      } else {
+        set HTML "<h2>#xowf.online-exam-protocol#</h2>\n"
+      }
+
+      if {$do_stream} {
+        # ns_log notice STREAM-[info level]-$::template::parse_level
+        uplevel #$::template::parse_level [subst {set title "${:title}"; set context .}]
+        ad_return_top_of_page [ad_parse_template \
+                                   -params [list context title] \
+                                   [template::streaming_template]]
+        ns_write [subst {
+          <div class=''main-content>
+          <div class='xowiki-content' style='padding-left:15px;'>
+          <h1>[ns_quotehtml ${:title}]</h1>
+          [lang::util::localize $HTML]
+        }]
+        set HTML ""
+      }
 
       if {$revision_id ne ""} {
         set r [::xowiki::FormPage get_instance_from_db -revision_id $revision_id]
@@ -611,15 +641,18 @@ Action instproc unpublish_link {obj} {
                         : $filter_id ne ""
                         ? "revision_overview"
                         : "default"}]
+        set gradingInfo [$grading_scheme print -achieved_points $achieved_points]
+        set grandingPanel [expr {[dict exists  $gradingInfo panel] ? [dict get $gradingInfo panel] : ""}]
         set runtime_panel [xowf::test_item::answer_manager runtime_panel \
                                -revision_id $revision_id \
                                -view $view \
-                               -achieved_points $achieved_points \
+                               -grading_info $grandingPanel \
                                $i]
         if {$autograde} {
-          dict incr grade_count [xowf::test_item::answer_manager grade \
-                                     -achieved_points $achieved_points \
-                                     -percentage_boundaries $percentage_to_grade]
+          set grade [$grading_scheme grade -achieved_points $achieved_points]
+          ns_log notice "CSV $userName\t[dict get $gradingInfo csv]"
+          dict incr grade_dict $grade
+          append grade_csv $userName\t[dict get $gradingInfo csv]\n
         }
 
         set heading "$userName · $fullName · $pretty_date"
@@ -633,33 +666,38 @@ Action instproc unpublish_link {obj} {
           $question_form
           </div>
         }]
+
+        if {$do_stream} {
+          ns_write [lang::util::localize $HTML]
+          set HTML " "
+        }
       }
     }
 
     if {$HTML eq ""} {
-      set HTML "#xowiki.no_data#"
+      append HTML "#xowiki.no_data#"
     }
-    if {$as_student} {
-      if {$heading eq ""} {
-        set userName [acs_user::get_element -user_id [ad_conn user_id] -element username]
-        set fullName [::xo::get_user_name  [ad_conn user_id]]
-        set heading "$userName - $fullName"
-      }
-      set HTML "<h1>#xowf.online-exam-review-protocol# - $heading</h1>\n$HTML"
-    } else {
-      set HTML "<h1>#xowf.online-exam-protocol#</h1>\n$HTML"
 
+    if {!$as_student} {
       if {$autograde} {
-        append HTML <p>[xowf::test_item::answer_manager grading_table $grade_count]</p>
+        append HTML <p>[xowf::test_item::answer_manager grading_table -csv $grade_csv $grade_dict]</p>
       }
 
-      set return_url [$package_id query_parameter local_return_url:localurl [:pretty_link]]
+      set return_url [:query_parameter local_return_url:localurl [:pretty_link]]
       append HTML "<hr><p><a  class='btn btn-default' href='$return_url'>#xowiki.back#</a></p>\n"
     }
-    ::xo::cc set_parameter template_file view-plain-master
-    ::xo::cc set_parameter MenuBar 0
-    xo::Page requireCSS /resources/xowf/test-item.css
-    :www-view $HTML
+    #::xo::cc set_parameter template_file view-plain-master
+    #::xo::cc set_parameter MenuBar 0
+    #xo::Page requireCSS /resources/xowf/test-item.css
+
+    if {$do_stream} {
+      ns_write [lang::util::localize $HTML]
+      set HTML ""
+       [$wf package_id] set __continuation ad_progress_bar_end
+      return ""
+    } else {
+      :www-view $HTML
+    }
   }
 
   ########################################################################

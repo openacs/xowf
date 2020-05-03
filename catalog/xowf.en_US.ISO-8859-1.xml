@@ -181,4 +181,6 @@
   <msg key="exam_review_not_possible">automated exam review not possible</msg>
   <msg key="randomization_for_exam_ok">randomization for exam ok</msg>
   <msg key="randomization_for_exam_not_ok">randomization for exam not ok ("always" should not be used)</msg>
+
+  <msg key="panel_achievied_points_wi1">%achievedPoints% (rounded%rounded%) of possible %totalPoints% points, %percentage%%, grade: %grade%</msg>
 </message_catalog>

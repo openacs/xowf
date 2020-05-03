@@ -160,5 +160,5 @@
   <msg key="exam_review_not_possible">automatische Einsicht nicht möglich</msg>
   <msg key="randomization_for_exam_ok">Randomisierung für Prüfung geeignet</msg>
   <msg key="randomization_for_exam_not_ok">Randomisierung für Prüfung nicht geeignet (keine Zufallsauswahl "immer" verwenden)</msg>
-
+  <msg key="panel_achievied_points_wi1">%achievedPoints% (gerundet %rounded%) von möglichen %totalPoints% Punkten, %percentage%%, Note: %grade%</msg>
 </message_catalog>
