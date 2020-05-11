@@ -7,6 +7,6 @@
     -form {{<form>@question@ @_nls_language@</form>} text/html} \
     -form_constraints {
 	{question:test_item,question_type=mc2,grading=ggw wi1 wi2 exact,feedback_level=single,label=#xowf.mc_question#}
-    	_description:omit _page_order:omit
+	_name:test_item_name _description:omit _page_order:omit
     }
 

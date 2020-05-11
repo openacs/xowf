@@ -7,7 +7,7 @@
     -form {{<form>@question@ @_nls_language@</form>} text/html} \
     -form_constraints {
 	question:test_item,question_type=st,grading=none,feedback_level=single,auto_correct=1,label=#xowf.short_text_question#
-	_description:omit _page_order:omit
+	_name:test_item_name _description:omit _page_order:omit
     }
 
 

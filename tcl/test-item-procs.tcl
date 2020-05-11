@@ -42,7 +42,18 @@ namespace eval ::xowiki::formfield {
   }
   TestItemField set abstract 1
 
-
+  Class create test_item_name -superclass text \
+      -extend_slot_default validator name -ad_doc {
+        Name sanitizer for test items
+  }
+  test_item_name instproc check=name {value} {
+    set valid [regexp {^[[:alnum:]:/_-]+$} $value]
+    if {!$valid} {
+      :uplevel {set __langPkg xowf}
+    }
+    return $valid
+  }
+  
   ###########################################################
   #
   # ::xowiki::formfield::test_item
