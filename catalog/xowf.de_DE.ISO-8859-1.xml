@@ -101,7 +101,7 @@
   <msg key="inclass-quiz-default_name">Quiz ...</msg>
 
   <msg key="inclass-exam-submit">Abgabe der Prüfung</msg>
-  <msg key="inclass-exam-already_answered">Prüfung ist abgegeben</msg>
+  <msg key="inclass-exam-already_answered">Ihre Prüfung ist abgegeben und gespeichert.</msg>
 
   <msg key="select_question_help_text">Wählen Sie Fragen mittels Drag &amp; Drop aus</msg>
 
@@ -132,9 +132,9 @@
   <msg key="menu-New-Item-ReorderInteraction">Anordnungsfrage</msg>
 
   <msg key="inclass-exam-draft_exam">Entwurf des Inclass-Exams (nicht freigegeben)</msg>
-  <msg key="inclass-exam-open">Inclass-Exam geöffnet (Zur Bearbeitung freigegeben)</msg>
+  <msg key="inclass-exam-open">Inclass-Exam freigeschaltet</msg>
   <msg key="inclass-exam-closed">Inclass-Exam geschlossen</msg>
-  <msg key="inclass-exam-review">Inclass-Exam geschlossen (Einsicht geöffnet)</msg>
+  <msg key="inclass-exam-review">Einsicht geöffnet</msg>
   <msg key="Exam-review-not-open">Die Einsicht für diese Prüfung ist nicht geöffnet.</msg>
 
   <msg key="nr_changes">Anzahl der Änderungen</msg>

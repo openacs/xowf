@@ -1146,8 +1146,6 @@ namespace eval ::xowf::test_item {
     #  - get_wf_instances
     #  - get_answers
     #
-    #  - get_duration
-    #  - get_IPs
     #  - runtime_panel
     #
     #  - marked_results
@@ -1156,7 +1154,12 @@ namespace eval ::xowf::test_item {
     #  - grading_table
     #  - grade
     #  - participants_table
+    #
+    #  - get_duration    
+    #  - get_IPs    
     #  - revisions_up_to
+    #  - last_time_in_state
+    #  - state_periods
     #
 
     :public method create_workflow {
@@ -1318,7 +1321,7 @@ namespace eval ::xowf::test_item {
 
       set first [lindex $revision_sets 0]
       set last [lindex $revision_sets end]
-      set fromClock [clock scan [::xo::db::tcl_date [ns_set get $first creation_date] tz]]
+      set fromClock [clock scan [::xo::db::tcl_date [ns_set get $first creation_date] tz]]      
       set toClock [clock scan [::xo::db::tcl_date [ns_set get $last creation_date] tz]]
       dict set r fromClock $fromClock
       dict set r toClock $toClock
@@ -1371,14 +1374,64 @@ namespace eval ::xowf::test_item {
     }
 
     ########################################################################
-    :method last_time_in_state { -obj:object -state:required } {
+    :public method last_time_in_state {revision_sets -state:required -with_until:switch } {
       set result ""
-      foreach ps [$obj get_revision_sets] {
+      foreach ps $revision_sets {
         if {$state eq [ns_set get $ps state]} {
           set result [ns_set get $ps creation_date]
         }
       }
       return $result
+    }
+
+    ########################################################################
+    :method pretty_period {{-dayfmt %q} {-timefmt %H:%M} from to} {
+      set from_day [lc_time_fmt $from $dayfmt]
+      set from_time [lc_time_fmt $from $timefmt]
+      if {$to ne ""} {
+        set to_day [lc_time_fmt $to $dayfmt]
+        set to_time [lc_time_fmt $to $timefmt]
+      } else {
+        set to_day ""
+        set to_time ""
+      }
+      if {$to_day eq ""} {
+        set period "$from_day, $from_time -"        
+      } elseif {$from_day eq $to_day} {
+        set period "$from_day, $from_time - $to_time"
+      } else {
+        set period "$from_day, $from_time - $to_day, $to_time"        
+      }
+      return $period
+    }
+
+    ########################################################################
+    :public method state_periods {revision_sets -state:required} {
+      set periods ""
+      set from ""
+      set last_from ""
+      set until ""
+      foreach ps $revision_sets {
+        set current_state [ns_set get $ps state]
+        if {$state eq $current_state} {
+          if {$until ne ""} {
+            lappend periods [:pretty_period $last_from $until]
+          }
+          set from [ns_set get $ps creation_date]
+          set until ""
+        } elseif {$until eq "" && $current_state ne $state && $from ne ""} {
+          set until [ns_set get $ps creation_date]
+          set last_from $from
+          set from ""
+        }
+      }
+      if {$until ne ""} {
+        lappend periods [:pretty_period $last_from $until]
+      } elseif {$from ne ""} {
+        lappend periods [:pretty_period $from ""]
+      }
+      #ns_log  notice "state_periods $state <$from> <$last_from> <$until> <$periods>"
+      return $periods
     }
 
     ########################################################################
@@ -1422,6 +1475,7 @@ namespace eval ::xowf::test_item {
       # - per-revision statistics: when view = revision_overview and revision_id is provided
       #
       set revision_sets [$answerObj get_revision_sets]
+      set parent_revsion_sets [[$answerObj parent_id] get_revision_sets]
       set item_id [$answerObj item_id]
       set live_revision_id [xo::dc get_value -prepare integer live_revision_id {
         select live_revision from cr_items where item_id = :item_id
@@ -1486,7 +1540,7 @@ namespace eval ::xowf::test_item {
       if {$revision_id eq ""} {
         set revision_sets [:revisions_up_to $revision_sets $live_revision_id]
       }
-      set last_published [:last_time_in_state -obj [$answerObj parent_id] -state published]
+      set last_published [:last_time_in_state $parent_revsion_sets -state published]
       set duration [:get_duration -exam_published_time $last_published $revision_sets]
 
       set state [$answerObj state]
@@ -1752,7 +1806,7 @@ namespace eval ::xowf::test_item {
           if {[$ff_obj exists grading_score]} {
             set r [$ff_obj set grading_score]
             #
-            # Add exericse score weighted to the total score.
+            # Add exercise score weighted to the total score.
             #
             if {[$ff_obj exists test_item_minutes]} {
               set minutes [$ff_obj set test_item_minutes]

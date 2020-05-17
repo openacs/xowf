@@ -162,16 +162,21 @@ Action instproc unpublish_link {obj} {
     [expr {$synchronized ? "" : "Non-"}]Synchronized Exam
     [expr {$proctoring ? " with Proctoring" : ""}]
     </p>}]
-  set question_objs   [dict get $combined_form_info question_objs]
-  set nrQuestions     [llength $question_objs]
-  set randomizationOk [dict get $combined_form_info randomization_for_exam]
-  set autograde       [dict get $combined_form_info autograde]
-
+  set question_objs     [dict get $combined_form_info question_objs]
+  set nrQuestions       [llength $question_objs]
+  set randomizationOk   [dict get $combined_form_info randomization_for_exam]
+  set autograde         [dict get $combined_form_info autograde]
+  set revision_sets     [$obj get_revision_sets]
+  set published_periods [xowf::test_item::answer_manager state_periods $revision_sets -state published]
+  set review_periods    [xowf::test_item::answer_manager state_periods $revision_sets -state submission_review]
+  
   append text [subst {
-    <p>$nrQuestions [expr {$nrQuestions == 1 ? "#xowf.question#" : "#xowf.questions#"}],
-    [::xowf::test_item::question_manager total_minutes $combined_form_info] #xowf.Minutes#,<br>
-    [expr {$autograde ? "#xowf.exam_review_possible#" : "#xowf.exam_review_not_possible#"}],<br>
-    [expr {$randomizationOk ? "#xowf.randomization_for_exam_ok#" : "#xowf.randomization_for_exam_not_ok#"}].
+    <p>$nrQuestions [expr {$nrQuestions == 1 ? "#xowf.question#" : "#xowf.questions#"}]
+    [::xowf::test_item::question_manager total_minutes $combined_form_info] #xowf.Minutes#<br>
+    [expr {$autograde ? "#xowf.exam_review_possible#" : "#xowf.exam_review_not_possible#"}]<br>
+    [expr {$randomizationOk ? "#xowf.randomization_for_exam_ok#" : "#xowf.randomization_for_exam_not_ok#"}]<br>
+    [expr {[llength $published_periods] > 0 ? "<br>#xowf.inclass-exam-open#: [join $published_periods {, }]<br>" : ""}]
+    [expr {[llength $review_periods] > 0 ? "#xowf.inclass-exam-review#: [join $review_periods {, }]<br>" : ""}]
     </p>
   }]
 
