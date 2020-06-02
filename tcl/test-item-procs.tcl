@@ -1803,12 +1803,19 @@ namespace eval ::xowf::test_item {
           $ff_obj set_feedback 3
 
           #ns_log notice "[$p creation_user] [$ff_obj name] [$p property $property] -> [$ff_obj set evaluated_answer_result]"
-          if {[$ff_obj exists grading_score]} {
-            set r [$ff_obj set grading_score]
+          set r [expr {[$ff_obj exists grading_score] ? [$ff_obj set grading_score] : ""}]
+          #
+          # In case, we have a grading score, which is not starred, we
+          # can compute points from this.
+          #
+          if {$r ne "" && ![regexp {[*]$} $r]} {
             #
-            # Add exercise score weighted to the total score.
+            # Add exercise score weighted to the total score to
+            # compute points.
             #
             if {[$ff_obj exists test_item_minutes]} {
+              #ns_log notice "[$ff_obj name]: grading_score <$r>, test_item_minutes <[$ff_obj set test_item_minutes]>"
+              
               set minutes [$ff_obj set test_item_minutes]
               set total_score [expr {$total_score + ($minutes * [$ff_obj set grading_score])}]
               set total_points [expr {$total_points + $minutes}]
