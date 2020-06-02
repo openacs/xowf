@@ -53,7 +53,7 @@ namespace eval ::xowiki::formfield {
     }
     return $valid
   }
-  
+
   ###########################################################
   #
   # ::xowiki::formfield::test_item
@@ -1155,8 +1155,8 @@ namespace eval ::xowf::test_item {
     #  - grade
     #  - participants_table
     #
-    #  - get_duration    
-    #  - get_IPs    
+    #  - get_duration
+    #  - get_IPs
     #  - revisions_up_to
     #  - last_time_in_state
     #  - state_periods
@@ -1321,7 +1321,7 @@ namespace eval ::xowf::test_item {
 
       set first [lindex $revision_sets 0]
       set last [lindex $revision_sets end]
-      set fromClock [clock scan [::xo::db::tcl_date [ns_set get $first creation_date] tz]]      
+      set fromClock [clock scan [::xo::db::tcl_date [ns_set get $first creation_date] tz]]
       set toClock [clock scan [::xo::db::tcl_date [ns_set get $last creation_date] tz]]
       dict set r fromClock $fromClock
       dict set r toClock $toClock
@@ -1396,11 +1396,11 @@ namespace eval ::xowf::test_item {
         set to_time ""
       }
       if {$to_day eq ""} {
-        set period "$from_day, $from_time -"        
+        set period "$from_day, $from_time -"
       } elseif {$from_day eq $to_day} {
         set period "$from_day, $from_time - $to_time"
       } else {
-        set period "$from_day, $from_time - $to_day, $to_time"        
+        set period "$from_day, $from_time - $to_day, $to_time"
       }
       return $period
     }
@@ -1815,7 +1815,7 @@ namespace eval ::xowf::test_item {
             #
             if {[$ff_obj exists test_item_minutes]} {
               #ns_log notice "[$ff_obj name]: grading_score <$r>, test_item_minutes <[$ff_obj set test_item_minutes]>"
-              
+
               set minutes [$ff_obj set test_item_minutes]
               set total_score [expr {$total_score + ($minutes * [$ff_obj set grading_score])}]
               set total_points [expr {$total_points + $minutes}]
