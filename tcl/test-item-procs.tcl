@@ -452,6 +452,7 @@ namespace eval ::xowiki::formfield {
     dict set fc_dict cols [:get_named_sub_component_value columns]
     dict set fc_dict disabled_as_div 1
     dict set fc_dict label #xowf.answer#
+    dict set fc_dict autosave true
 
     if {${:auto_correct}} {
       dict set fc_dict correct_when [:get_named_sub_component_value correct_when]
@@ -2065,6 +2066,7 @@ namespace eval ::xowf::test_item {
     :public method countdown_timer {
       {-target_time:required}
       {-id:required}
+      {-audio_alarm:boolean true}
     } {
       #
       # Accepted formats for target_time, determined by JavaScript
@@ -2097,6 +2099,15 @@ namespace eval ::xowf::test_item {
           countdown_minutes = parseInt(seconds_left / 60);
           countdown_seconds = parseInt(seconds_left % 60);
 
+          var alarmseconds = countdown.parentNode.dataset.alarmseconds;
+          if (typeof alarmseconds !== 'undefined') {
+            var full_seconds = Math.trunc(seconds_left);
+            // for testing purposes, use: (full_seconds % 5 == 0)
+            if (alarmseconds.includes(full_seconds)) {
+              beep(200);
+            }
+          }
+
           if (countdown_days != 0) {
             HTML += '<span class="days">' + countdown_days + ' <b> '
                  + (countdown_days != 1 ? '[_ xowf.Days]' : '[_ xowf.Day]')
@@ -2116,8 +2127,124 @@ namespace eval ::xowf::test_item {
 
           countdown.innerHTML = HTML;
         }, 1000);
+
+        var beep = (function () {
+          return function (duration, finishedCallback) {
+            var container = document.getElementById('$id').parentNode;
+
+            //console.log("beep attempt " + duration + ' ' + audioContext + ' ' + container.dataset.alarm);
+            if (typeof audioContext !== 'undefined' && (container.dataset.alarm == 'active')) {
+
+              //console.log("true beep duration " + duration + ' ' + audioContext + ' ' + audioContext.state);
+              var osc = audioContext.createOscillator();
+              osc.type = "sine";
+              osc.connect(audioContext.destination);
+              if (osc.noteOn) osc.noteOn(0); // old browsers
+              if (osc.start) osc.start(); // new browsers
+
+              setTimeout(function () {
+                if (osc.noteOff) osc.noteOff(0); // old browsers
+                if (osc.stop) osc.stop(); // new browsers
+              }, duration);
+            }
+          };
+        })();
       }]
-      return "<div id='$id'></div>"
+
+      if {$audio_alarm} {
+        #
+        # Audio alarm handling is more tricky than expected, since
+        # modern browsers do not allow to create without a "user
+        # gesture" an active sound context (requires e.g. a click to
+        # start).
+        #
+        # The code tries to remember the audio state between different
+        # pages, such when e.g. being in an exam, the user has to
+        # activate/deactivate the audio not on every page. However,
+        # when the user does a full reload, then the user has to
+        # activate the audio alarm again.
+        #
+        # The state is symbolized using bootstrap 3 glyphicons.  The
+        # code is tested primarily with chrome.
+        #
+        template::add_body_script -script [subst {
+          var audioContext = new AudioContext();
+          var audioContext_setSate = (function (targetState) {
+            var container = document.getElementById('$id').parentNode;
+            //console.log('--- state = ' + audioContext.state + ' want ' + targetState);
+            if (targetState == 'active') {
+              var span = container.getElementsByTagName('span')\[0\];
+              span.classList.remove('glyphicon-volume-off');
+              span.classList.add('glyphicon-volume-up');
+              container.dataset.alarm = 'active';
+              document.cookie = 'incass_exam_audio_alarm=active; sameSite=strict';
+              audioContext.resume().then(() => {console.log('Playback resumed successfully ' + targetState);});
+            } else {
+              var span = container.getElementsByTagName('span')\[0\];
+              span.classList.remove('glyphicon-volume-up');
+              span.classList.add('glyphicon-volume-off');
+              container.dataset.alarm = 'inactive';
+              document.cookie = 'incass_exam_audio_alarm=inactive; sameSite=strict';
+              audioContext.suspend().then(() => {console.log('Playback suspended successfully ' + targetState);});
+            }
+            //console.log('setSate ' + audioContext.state + ' alarm ' + container.dataset.alarm);
+          });
+
+          var audioContext_toggle = (function (event) {
+            var container = document.getElementById('$id').parentNode;
+            //console.log('audioContext_toggle  ' + audioContext.state);
+            if (container.dataset.alarm != 'active') {
+              audioContext_setSate('active');
+              beep(200);
+            } else {
+              audioContext_setSate('inactive');
+            }
+          });
+
+          var audioContext_onload = (function (event) {
+            var m = document.cookie.match('(^|;)\\s*incass_exam_audio_alarm\\s*=\\s*(\[^;\]+)');
+            var cookieValue = (m ? m.pop() : 'inactive');
+
+            console.log('audioContext_onload ' + audioContext.state + ' cookie ' + cookieValue);
+            //
+            // When the current state is 'running' the behavior seems
+            // cross browser uniform, we can set it to the state we got
+            // from the cookie.
+            //
+            if (audioContext.state == 'running') {
+              audioContext_setSate(cookieValue);
+            } else {
+              //
+              // FireFox can switch to "active" after reload, while
+              // this does not work on Chrome and friends.
+              //
+              if (navigator.userAgent.toLowerCase().indexOf('firefox') > -1) {
+                audioContext_setSate(cookieValue);
+              } else {
+                audioContext_setSate('inactive');
+              }
+            }
+          });
+
+          document.getElementById('$id').parentNode.addEventListener('click', audioContext_toggle);
+          window.addEventListener('load', audioContext_onload);
+        }]
+
+        set alarmState [ns_getcookie incass_exam_audio_alarm "inactive"]
+        set glypphIcon [expr {$alarmState eq "inactive" ? "glyphicon-volume-off":"glyphicon-volume-up"}]
+        #ns_log notice "C=$alarmState"
+
+        return [subst {
+          <div data-alarm='$alarmState' data-alarmseconds='\[60, 30, 20, 10, 5, 2\]'>
+          <span class='glyphicon $glypphIcon'></span>
+          <div style='display: inline-block;' id='$id'></div>
+          </div>
+        }]
+      } else {
+        return [subst {
+          <div style='display: inline-block;' id='$id'></div>
+        }]
+      }
     }
   }
 
