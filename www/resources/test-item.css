@@ -235,7 +235,19 @@ div.xowiki-content h1 {
 div.xowiki-content div.countdown-timer {
     float: right;
     height: 14px;
+    vertical-align: text-bottom;
 }
+div.xowiki-content div.countdown-timer span.glyphicon-volume-off {
+    color: red;
+    font-size: large;
+    vertical-align: text-bottom;
+}
+div.xowiki-content div.countdown-timer span.glyphicon-volume-up {
+    color: green;
+    font-size: large;
+    vertical-align: text-bottom;
+}
+
 
 /*
  * This is more or less a standard setup for bootstrap 3,
