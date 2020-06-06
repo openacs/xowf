@@ -2067,6 +2067,8 @@ namespace eval ::xowf::test_item {
       {-target_time:required}
       {-id:required}
       {-audio_alarm:boolean true}
+      {-audio_alarm_cookie incass_exam_audio_alarm}
+      {-audio_alarm_times: 60,30,20,10,5,2}
     } {
       #
       # Accepted formats for target_time, determined by JavaScript
@@ -2177,14 +2179,14 @@ namespace eval ::xowf::test_item {
               span.classList.remove('glyphicon-volume-off');
               span.classList.add('glyphicon-volume-up');
               container.dataset.alarm = 'active';
-              document.cookie = 'incass_exam_audio_alarm=active; sameSite=strict';
+              document.cookie = '$audio_alarm_cookie=active; sameSite=strict';
               audioContext.resume().then(() => {console.log('Playback resumed successfully ' + targetState);});
             } else {
               var span = container.getElementsByTagName('span')\[0\];
               span.classList.remove('glyphicon-volume-up');
               span.classList.add('glyphicon-volume-off');
               container.dataset.alarm = 'inactive';
-              document.cookie = 'incass_exam_audio_alarm=inactive; sameSite=strict';
+              document.cookie = '$audio_alarm_cookie=inactive; sameSite=strict';
               audioContext.suspend().then(() => {console.log('Playback suspended successfully ' + targetState);});
             }
             //console.log('setSate ' + audioContext.state + ' alarm ' + container.dataset.alarm);
@@ -2202,7 +2204,7 @@ namespace eval ::xowf::test_item {
           });
 
           var audioContext_onload = (function (event) {
-            var m = document.cookie.match('(^|;)\\s*incass_exam_audio_alarm\\s*=\\s*(\[^;\]+)');
+            var m = document.cookie.match('(^|;)\\s*$audio_alarm_cookie\\s*=\\s*(\[^;\]+)');
             var cookieValue = (m ? m.pop() : 'inactive');
 
             console.log('audioContext_onload ' + audioContext.state + ' cookie ' + cookieValue);
@@ -2230,12 +2232,12 @@ namespace eval ::xowf::test_item {
           window.addEventListener('load', audioContext_onload);
         }]
 
-        set alarmState [ns_getcookie incass_exam_audio_alarm "inactive"]
+        set alarmState [ns_getcookie $audio_alarm_cookie "inactive"]
         set glypphIcon [expr {$alarmState eq "inactive" ? "glyphicon-volume-off":"glyphicon-volume-up"}]
         #ns_log notice "C=$alarmState"
 
         return [subst {
-          <div data-alarm='$alarmState' data-alarmseconds='\[60, 30, 20, 10, 5, 2\]'>
+          <div data-alarm='$alarmState' data-alarmseconds='\[$audio_alarm_times\]'>
           <span class='glyphicon $glypphIcon'></span>
           <div style='display: inline-block;' id='$id'></div>
           </div>

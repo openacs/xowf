@@ -622,7 +622,7 @@ Action instproc unpublish_link {obj} {
             foreach type {camera-image desktop-image} {
               if {[dict exists $image $ts $type]} {
                 set ext [dict get $image $ts $type]
-                append markup [subst {<img src="$img_url&type=$type&ts=$ts&e=$ext">}]
+                append markup [subst {<img height="240" src="$img_url&type=$type&ts=$ts&e=$ext">}]
               }
             }
             if {[dict exists $image $ts camera-audio]} {
@@ -757,7 +757,7 @@ Action instproc unpublish_link {obj} {
     # The line "<h1>You are being proctored!</h1>" is just a
     # placeholder and has to be replaced with real code.
     #
-    set link [${:package_id} query_parameter link:localurl ""]
+    set link [:query_parameter link:localurl ""]
 
     ::xo::cc set_parameter template_file view-plain-master
     ::xo::cc set_parameter MenuBar 0
@@ -766,10 +766,16 @@ Action instproc unpublish_link {obj} {
       set object_id ${:item_id}
       set object_url $link
       set upload_url /xowf-proctoring-upload
+      if {[string match *p.try_out_mode=1* $link]} {
+        #set examination_statement_p 0
+        set examination_statement_url ""
+      }
+
       ${:package_id} return_page -adp /packages/xowf/lib/proctored-page -variables {
         object_id
         object_url
         upload_url
+        examination_statement_url
       }
     } else {
       return [:www-view [subst {
@@ -779,6 +785,7 @@ Action instproc unpublish_link {obj} {
       }]]
     }
   }
+  
   :proc www-proctor-image {} {
     set type [${:package_id} query_parameter type:ascii ""]
     set ts   [${:package_id} query_parameter ts:integer ""]

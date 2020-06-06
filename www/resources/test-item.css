@@ -234,8 +234,9 @@ div.xowiki-content h1 {
  */
 div.xowiki-content div.countdown-timer {
     float: right;
-    height: 14px;
-    vertical-align: text-bottom;
+    margin-top: 10px;
+    margin-bottom: 10px;
+    vertical-align: text-bottom;    
 }
 div.xowiki-content div.countdown-timer span.glyphicon-volume-off {
     color: red;
