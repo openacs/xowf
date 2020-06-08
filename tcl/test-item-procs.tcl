@@ -2156,8 +2156,8 @@ namespace eval ::xowf::test_item {
       if {$audio_alarm} {
         #
         # Audio alarm handling is more tricky than expected, since
-        # modern browsers do not allow to create without a "user
-        # gesture" an active sound context (requires e.g. a click to
+        # modern browsers do not allow one to create an active sound
+        # context without a "user gesture" (requires e.g. a click to
         # start).
         #
         # The code tries to remember the audio state between different
