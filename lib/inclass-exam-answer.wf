@@ -47,16 +47,13 @@ Action allocate -proc activate {obj} {
 Action initialize -proc activate {obj} {
   # called, after workflow instance was created
 
-  # make sure to create the parent (the controlling workflow)
-  set parent_obj [::xo::db::CrClass get_instance_from_db -item_id [$obj parent_id]]
-  set parent_state [$parent_obj state]
-
   #
-  # Don't allow one to enter values when the state of the parent
-  # workflow is not published (the teacher has not published the exam,
-  # or closed it already). Only allow usage in the try-out-mode.
+  # When the exam is not open, force the user out of the exam.
   #
-  if {$parent_state ne "published" && [$obj property try_out_mode 0] == 0} {
+  set ctx [:wf_context]
+  set exam_is_open [[$ctx wf_container] exam_is_open $obj]
+  
+  if {!$exam_is_open} {
     set current_state [$obj property _state]
     set locking_state [expr {$current_state eq "initial" ? "initial" : "done"}]
     set locking_msg(initial) "#xowf.online-exam-not-published#"
@@ -64,10 +61,11 @@ Action initialize -proc activate {obj} {
 
     util_user_message -message $locking_msg($locking_state)
     #
-    # Force the user in the done state. Alternatively, we could
-    # handle this in the provide a different form or push the user to some other state.
+    # Force the user in the done state. Alternatively, we could handle
+    # this in the provide a different form or push the user to some
+    # other state.
     #
-    [:wf_context] set_current_state $locking_state
+    $ctx set_current_state $locking_state
   }
 }
 
@@ -350,6 +348,16 @@ proc done_form_loader {ctx form_name} {
   return $sha256
 }
 
+:proc exam_is_open {obj} {
+  #
+  # Don't allow a student to enter values when the state of the parent
+  # workflow is not published (the teacher has not published the exam,
+  # or closed it already). But allow always usage in try-out-mode.
+  #
+  set parent_obj [::xo::db::CrClass get_instance_from_db -item_id [$obj parent_id]]
+  
+  return [expr {[$parent_obj state] eq "published" || [$obj property try_out_mode 0] == 1}]
+}
 
 ########################################################################
 #
@@ -421,6 +429,21 @@ proc done_form_loader {ctx form_name} {
     ${container}::${:state} actions $actions
   }
   template::add_confirm_handler -CSSclass logout
+
+  :proc www-autosave-attribute {} {
+    #
+    # Reject autosave in case the exam was closed already.
+    #
+    set is_open [[[:wf_context] wf_container] exam_is_open [self]]
+    if {$is_open} {
+      next
+    } else {
+      ns_log notice "INCLASS inclass-exam autosave rejected"
+      ns_return 200 text/plain "not ok"
+      ad_script_abort
+    }
+  }
+
 }
 
 #
