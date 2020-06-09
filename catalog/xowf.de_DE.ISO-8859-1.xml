@@ -151,6 +151,8 @@
   <msg key="Proctoring_help_text">Verwende für diese Prüfung eine Online-Beaufsichtigung</msg>
   <msg key="Synchronized">Synchronisierte Abwicklung</msg>
   <msg key="Synchronized_help_text">Wird die angezeigte Bearbeitungszeit strikt vom Lehrenden vorgegeben, oder hat jeder Student die Anzeige seiner aktuellen Bearbeitsdauer, auch wenn er etwas später beginnt</msg>
+  <msg key="Allow_paste">Cut und Paste erlaubt</msg>
+  <msg key="Allow_paste_help_text">Darf der Studierende in mehrzeiligen Textfeldern Cut-und-Paste verwenden?</msg>
   <msg key="Exam_published">Veröffentlichung der Prüfung</msg>
   <msg key="since_published">seit der Veröffentlichung</msg>
   <msg key="Achieved_points">Erreichte Punkte</msg>

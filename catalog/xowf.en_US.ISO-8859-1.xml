@@ -172,6 +172,8 @@
   <msg key="Proctoring_help_text">Use E-Proctoring for this exam</msg>
   <msg key="Synchronized">Synchronized Exam</msg>
   <msg key="Synchronized_help_text">Is the exam duration strictly controlled by the lecturer, or does every student get his working time displayed, independent from his starting time.</msg>
+  <msg key="Allow_paste">Allow Paste</msg>
+  <msg key="Allow_paste_help_text">Is the student allow to use cut and paste in multiline text fields?</msg>
   <msg key="Exam_published">Exam Published</msg>
   <msg key="since_published">since published</msg>
   <msg key="Achieved_points">Achieved Points</msg>

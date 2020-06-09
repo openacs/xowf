@@ -2366,6 +2366,23 @@ namespace eval ::xowf::test_item {
       return $result
     }
 
+    :public method disallow_paste {form_obj:object} {
+      #
+      # This function changes the the form_constraints of the provided
+      # form object by adding "paste=false" properties to textarea or
+      # text_fields entries.
+      #
+      set fc {}
+      foreach e [$form_obj property form_constraints] {
+        if {[regexp {^[^:]+_:(textarea|text_fields)} $e]} {
+          #ns_log notice "======= turn paste off"
+          append e , paste=false
+        }
+        lappend fc $e
+      }
+      $form_obj set_property form_constraints $fc
+    }
+
     :method add_to_fc {-fc:required -position -minutes} {
       return [lmap c $fc {
         if {[regexp {^[^:]+_:} $c]} {
