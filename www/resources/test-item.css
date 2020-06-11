@@ -180,15 +180,19 @@ div.short_text_interaction div.description {
     white-space: pre-wrap;
 }
 
+/*
+ * At least, when bootstrap forms are in use (vertical mode), there is
+ * no need to limit the width of a form label.
+ */
+div.xowiki-content .content-with-folders form div.form-label {
+    /* width: 200px;*/
+}
 
 /*
  * Selection form styling
  */
 div.xowiki-content .content-with-folders form  {
     margin: 0px 0px 0px 16px;
-}
-div.xowiki-content .content-with-folders form div.form-label {
-    width: 200px;
 }
 div.workarea h3 {
     font-weight: normal;
