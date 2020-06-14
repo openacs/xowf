@@ -2275,6 +2275,7 @@ namespace eval ::xowf::test_item {
     #   - combined_question_form
     #   - question_objs
     #   - question_names
+    #   - question_count
     #   - question_property
     #   - add_seeds
     #   - total_minutes
@@ -2289,7 +2290,7 @@ namespace eval ::xowf::test_item {
         set position [$obj property position]
       }
       set questions [dict get [$obj instance_attributes] question]
-      return [expr {$position + 1 < [llength $questions]}]
+      return [expr {$position + 1 < [:question_count $obj]}]
     }
 
     :method load_question_objs {obj:object names} {
@@ -2344,6 +2345,22 @@ namespace eval ::xowf::test_item {
       return [$obj property question]
     }
 
+    :public method question_count {obj:object} {
+      #
+      # Return the number questions in an exam. It is either the
+      # number of defined questions, or it might be restricted by the
+      # max_items (if specified).
+      #
+      set nr_questions [llength [$obj property question]]
+      set max_items [$obj property max_items ""]
+      if {$max_items ne ""} {
+        if {$max_items < $nr_questions} {
+          set nr_questions $max_items
+        }
+      }
+      return $nr_questions
+    }
+
     :public method add_seeds {-obj:object -seed:integer -number:integer} {
       #
       # Add property "seed" to the provided object, consisting of a
@@ -2368,7 +2385,7 @@ namespace eval ::xowf::test_item {
 
     :public method disallow_paste {form_obj:object} {
       #
-      # This function changes the the form_constraints of the provided
+      # This function changes the form_constraints of the provided
       # form object by adding "paste=false" properties to textarea or
       # text_fields entries.
       #
@@ -2515,10 +2532,17 @@ namespace eval ::xowf::test_item {
       {-with_numbers:switch false}
       {-with_title:switch false}
       {-with_minutes:switch false}
+      {-user_specific:switch false}
       {-shuffle_id:integer -1}
       obj:object
     } {
       set form_objs [:question_objs -shuffle_id $shuffle_id $obj]
+      if {$user_specific} {
+        set max_items [$obj property max_items ""]
+        if {$max_items ne ""} {
+          set form_objs [lrange $form_objs 0 $max_items-1]
+        }
+      }
       if {$with_numbers} {
         set numbers ""
         for {set i 1} {$i <= [llength $form_objs]} {incr i} {
@@ -2535,18 +2559,27 @@ namespace eval ::xowf::test_item {
                   $form_objs]
     }
 
-    :public method total_minutes {form_info} {
-      set minutes 0
-      foreach title_info [dict get $form_info title_infos] {
-        if {[dict exists $title_info minutes]} {
-          set title_minutes [dict get $title_info minutes]
-          if {$title_minutes eq ""} {
-             ns_log notice "missing minutes in '$title_info'"
-             set title_minutes 0
-          }
-          set minutes [expr {$minutes + $title_minutes}]
-        }
+    :public method total_minutes {{-max_items:integer,0..1 ""} form_info} {
+      #
+      # Compute the duration of an exam. When max_items is non-empty,
+      # sum the duration of all items. Otherwise, sum the duration
+      # of the specified number of items.
+      #
+      set title_infos [dict get $form_info title_infos]
+      if {$max_items ne ""} {
+        set title_infos [lrange $title_infos 0 $max_items-1]
       }
+      set minutes 0
+      foreach title_info $title_infos {
+          if {[dict exists $title_info minutes]} {
+            set title_minutes [dict get $title_info minutes]
+            if {$title_minutes eq ""} {
+              ns_log notice "missing minutes in '$title_info'"
+              set title_minutes 0
+            }
+            set minutes [expr {$minutes + $title_minutes}]
+          }
+        }
       return $minutes
     }
 
@@ -2559,8 +2592,11 @@ namespace eval ::xowf::test_item {
       # @param manager exam workflow
       # @param base_time time in SQL format
       #
+      set max_items [$manager property max_items ""]
       set combined_form_info [:combined_question_form $manager]
-      set total_minutes [::xowf::test_item::question_manager total_minutes $combined_form_info]
+      set total_minutes [::xowf::test_item::question_manager total_minutes \
+                             -max_items $max_items \
+                             $combined_form_info]
 
       # Use "try" for backward compatibility, versions before
       # factional seconds. TODO: remove me.

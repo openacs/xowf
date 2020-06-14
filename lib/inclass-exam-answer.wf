@@ -52,7 +52,7 @@ Action initialize -proc activate {obj} {
   #
   set ctx [:wf_context]
   set exam_is_open [[$ctx wf_container] exam_is_open $obj]
-  
+
   if {!$exam_is_open} {
     set current_state [$obj property _state]
     set locking_state [expr {$current_state eq "initial" ? "initial" : "done"}]
@@ -327,6 +327,7 @@ proc done_form_loader {ctx form_name} {
                      -with_numbers \
                      -with_title \
                      -with_minutes \
+                     -user_specific \
                      -shuffle_id $shuffle_id \
                      $parent_obj]
 
@@ -362,7 +363,7 @@ proc done_form_loader {ctx form_name} {
   # or closed it already). But allow always usage in try-out-mode.
   #
   set parent_obj [::xo::db::CrClass get_instance_from_db -item_id [$obj parent_id]]
-  
+
   return [expr {[$parent_obj state] eq "published" || [$obj property try_out_mode 0] == 1}]
 }
 
@@ -392,12 +393,12 @@ proc done_form_loader {ctx form_name} {
 
   if {${:state} in {initial working done}} {
     set parent_obj [::xo::db::CrClass  get_instance_from_db -item_id [:parent_id]]
-    set question_names [::xowf::test_item::question_manager question_names $parent_obj]
+    set question_count [::xowf::test_item::question_manager question_count $parent_obj]
     if {${:state} eq "initial" && [:property seeds] eq ""} {
       ::xowf::test_item::question_manager add_seeds \
           -obj [self] \
           -seed ${:creation_user} \
-          -number [llength $question_names]
+          -number $question_count
     }
     #
     # Use the current_position in the sense of the nth question of the
@@ -411,9 +412,8 @@ proc done_form_loader {ctx form_name} {
     #  lappend actions prevQuestion
     #}
     if {${:state} ne "done"} {
-      set count 0
-      foreach question $question_names {
-        incr count
+
+      for {set count 1} {$count <= $question_count} {incr count} {
         ${container}::Action create ${container}::$count \
             -label "$count" \
             -next_state working \

@@ -172,8 +172,21 @@
   <msg key="Proctoring_help_text">Use E-Proctoring for this exam</msg>
   <msg key="Synchronized">Synchronized Exam</msg>
   <msg key="Synchronized_help_text">Is the exam duration strictly controlled by the lecturer, or does every student get his working time displayed, independent from his starting time.</msg>
-  <msg key="Allow_paste">Allow Paste</msg>
+  <msg key="Allow_paste">Allow Cut and Paste</msg>
   <msg key="Allow_paste_help_text">Is the student allow to use cut and paste in multiline text fields?</msg>
+  <msg key="Cut_and_paste_allowed">Cut and Paste is allowed in multi-line text fields</msg>
+  <msg key="Cut_and_paste_not_allowed">Cut and Paste is not allowed in multi-line text fields</msg>  
+
+  <msg key="Max_items">Restrict Items</msg>
+  <msg key="Max_items_help_text">Restrict item selection to this number of Items (requires same number weight of every item)</msg>
+  <msg key="Max_items_ok">Restriction to %n% items ok, %n% of </msg>
+  <msg key="Max_items_not_ok_duration">Item Restriction to %n% items NOT ok (duration varies), </msg>  
+  <msg key="Max_items_not_ok_number">Item Restriction to %n% items NOT ok (not enough test items), </msg>  
+
+  <msg key="Allow_paste_help_text">Is the student allow to use cut and paste in multiline text fields?</msg>
+  <msg key="Cut_and_paste_allowed">Cut and Paste is allowed in multi-line text fields</msg>
+  <msg key="Cut_and_paste_not_allowed">Cut and Paste is not allowed in multi-line text fields</msg>  
+  
   <msg key="Exam_published">Exam Published</msg>
   <msg key="since_published">since published</msg>
   <msg key="Achieved_points">Achieved Points</msg>
@@ -182,7 +195,7 @@
   <msg key="exam_review_possible">automated exam review possible</msg>
   <msg key="exam_review_not_possible">automated exam review not possible</msg>
   <msg key="randomization_for_exam_ok">randomization for exam ok</msg>
-  <msg key="randomization_for_exam_not_ok">randomization for exam not ok ("always" should not be used)</msg>
+  <msg key="randomization_for_exam_not_ok">randomization for exam NOT ok ("always" should not be used)</msg>
 
   <msg key="panel_achievied_points_wi1">%achievedPoints% (rounded%rounded%) of possible %totalPoints% points, %percentage%%, grade: %grade%</msg>
 

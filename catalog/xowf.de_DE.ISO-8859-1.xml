@@ -151,8 +151,18 @@
   <msg key="Proctoring_help_text">Verwende für diese Prüfung eine Online-Beaufsichtigung</msg>
   <msg key="Synchronized">Synchronisierte Abwicklung</msg>
   <msg key="Synchronized_help_text">Wird die angezeigte Bearbeitungszeit strikt vom Lehrenden vorgegeben, oder hat jeder Student die Anzeige seiner aktuellen Bearbeitsdauer, auch wenn er etwas später beginnt</msg>
-  <msg key="Allow_paste">Cut und Paste erlaubt</msg>
-  <msg key="Allow_paste_help_text">Darf der Studierende in mehrzeiligen Textfeldern Cut-und-Paste verwenden?</msg>
+  <msg key="Allow_paste">Ausschneiden und Einfügen erlaubt</msg>
+  <msg key="Allow_paste_help_text">Darf der Studierende in mehrzeiligen Textfeldern Ausschneiden und Einfügen verwenden?</msg>
+  <msg key="Cut_and_paste_allowed">Ausschneiden und Einfügen in mehrzeiligen Textfeldern ist erlaubt</msg>
+  <msg key="Cut_and_paste_not_allowed">Ausschneiden und Einfügen in mehrzeiligen Textfeldern ist nicht erlaubt</msg>
+
+  <msg key="Max_items">Beschränkte Fragenzahl</msg>
+  <msg key="Max_items_help_text">Beschränke die Zahl der Fragen auf
+  diesen Wert. Sinnvoll in Kombination mit radomisierter Fragenfolge. Einschränkung: Alle Fragen müssen gleiche Dauer haben,</msg>
+  <msg key="Max_items_ok">Beschränkung auf %n% Fragen ok, zeige Studierenden %n% von </msg>
+  <msg key="Max_items_not_ok_duration">Beschränkung auf %n% Fragen NICHT ok (unterschiedliche Dauer), </msg>
+  <msg key="Max_items_not_ok_number">Beschränkung auf %n% Fragen NICHT ok (Fragenanzahl zu gering), </msg>
+  
   <msg key="Exam_published">Veröffentlichung der Prüfung</msg>
   <msg key="since_published">seit der Veröffentlichung</msg>
   <msg key="Achieved_points">Erreichte Punkte</msg>

@@ -155,8 +155,10 @@ Action instproc unpublish_link {obj} {
   #:log  fullQuestionForm=$fullQuestionForm
   set text "<h3>$title</h3>"
   set menu ""
-  set proctoring [$obj property proctoring 0]
+  set proctoring   [$obj property proctoring 0]
   set synchronized [$obj property synchronized 0]
+  set allow_paste  [$obj property allow_paste 1]
+  set max_items    [$obj property max_items ""]
 
   append text [subst {<p>
     [expr {$synchronized ? "" : "Non-"}]Synchronized Exam
@@ -169,12 +171,29 @@ Action instproc unpublish_link {obj} {
   set revision_sets     [$obj get_revision_sets]
   set published_periods [xowf::test_item::answer_manager state_periods $revision_sets -state published]
   set review_periods    [xowf::test_item::answer_manager state_periods $revision_sets -state submission_review]
-  
+  set total_minutes     [xowf::test_item::question_manager total_minutes -max_items $max_items $combined_form_info]
+  set max_items_msg     ""
+
+  if {$max_items ne ""} {
+    set all_minutes [lmap t [dict get $combined_form_info title_infos] {
+      dict get $t minutes
+    }]
+    if {[llength [lsort -unique $all_minutes]] != 1} {
+      set max_items_msg [_ xowf.Max_items_not_ok_duration [list n $max_items]]
+    } elseif {$max_items > [llength $all_minutes]} {
+      set max_items_msg [_ xowf.Max_items_not_ok_number [list n $max_items]]
+    } else {
+      set max_items_msg [_ xowf.Max_items_ok [list n $max_items]]
+    }
+  }
   append text [subst {
-    <p>$nrQuestions [expr {$nrQuestions == 1 ? "#xowf.question#" : "#xowf.questions#"}]
-    [::xowf::test_item::question_manager total_minutes $combined_form_info] #xowf.Minutes#<br>
+    <p>
+    [expr {$max_items_msg ne "" ? "$max_items_msg" : ""}]
+    $nrQuestions [expr {$nrQuestions == 1 ? "#xowf.question#" : "#xowf.questions#"}],
+    $total_minutes #xowf.Minutes#<br>
     [expr {$autograde ? "#xowf.exam_review_possible#" : "#xowf.exam_review_not_possible#"}]<br>
     [expr {$randomizationOk ? "#xowf.randomization_for_exam_ok#" : "#xowf.randomization_for_exam_not_ok#"}]<br>
+    [expr {$allow_paste ? "#xowf.Cut_and_paste_allowed#" : "#xowf.Cut_and_paste_not_allowed#"}]<br>
     [expr {[llength $published_periods] > 0 ? "<br>#xowf.inclass-exam-open#: [join $published_periods {, }]<br>" : ""}]
     [expr {[llength $review_periods] > 0 ? "#xowf.inclass-exam-review#: [join $review_periods {, }]<br>" : ""}]
     </p>
@@ -454,8 +473,9 @@ Action instproc unpublish_link {obj} {
 
     set combined_form_info [::xowf::test_item::question_manager combined_question_form [self]]
     set autograde   [dict get $combined_form_info autograde]
-    set totalPoints [::xowf::test_item::question_manager total_minutes $combined_form_info]
-    set percentage_to_grade {50.0 60.0 70.0 80.0} ;# WI
+    set totalPoints [::xowf::test_item::question_manager total_minutes \
+                         -max_items [:property max_items ""] \
+                         $combined_form_info]
     set grading_scheme ::xowf::test_item::grading::wi1
     set grade_dict {}
     set grade_csv ""
@@ -785,7 +805,7 @@ Action instproc unpublish_link {obj} {
       }]]
     }
   }
-  
+
   :proc www-proctor-image {} {
     set type [${:package_id} query_parameter type:ascii ""]
     set ts   [${:package_id} query_parameter ts:integer ""]

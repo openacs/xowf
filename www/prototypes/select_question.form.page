@@ -4,12 +4,13 @@
     -title "Select Question" \
     -anon_instances f \
     -text {} \
-    -form {{<form>@question@ @shuffle_items@ @allow_paste@ @synchronized@ @signature@ @proctoring@</form>} text/html} \
+    -form {{<form>@question@ @shuffle_items@ @max_items@ @allow_paste@ @synchronized@ @signature@ @proctoring@</form>} text/html} \
     -form_constraints {
 	@cr_fields:hidden
 	{_title:text,label=#xowf.online-exam-name#,default=#xowf.online-exam-default_name#}
 	{question:form_page,multiple=true,form=en:TestItemText.form|en:TestItemShortText.form|en:TestItemMC.form|en:TestItemSC.form|en:TestItemUpload.form|en:TestItemReorder.form,required,help_text=#xowf.select_question_help_text#,label=#xowiki.questions#}
 	{shuffle_items:boolean,horizontal=true,label=#xowf.randomized_items#,help_text=#xowf.randomized_items_help_text#}
+	{max_items:number,min=1,label=#xowf.Max_items#,help_text=#xowf.Max_items_help_text#}
 	{allow_paste:boolean,horizontal=true,default=t,label=#xowf.Allow_paste#,help_text=#xowf.Allow_paste_help_text#}
 	{synchronized:boolean,horizontal=true,default=f,label=#xowf.Synchronized#,help_text=#xowf.Synchronized_help_text#}	
 	{signature:boolean,horizontal=true,default=f,label=#xowf.Signature#,help_text=#xowf.Signature_help_text#}
