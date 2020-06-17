@@ -158,11 +158,15 @@
 
   <msg key="Max_items">Beschränkte Fragenzahl</msg>
   <msg key="Max_items_help_text">Beschränke die Zahl der Fragen auf
-  diesen Wert. Sinnvoll in Kombination mit radomisierter Fragenfolge. Einschränkung: Alle Fragen müssen gleiche Dauer haben,</msg>
+  diesen Wert. Sinnvoll in Kombination mit randomisierter Fragenfolge, jeder Student sieht potentiell andere X von Y Fragen. Einschränkung: Alle Fragen müssen gleiche Dauer haben,</msg>
   <msg key="Max_items_ok">Beschränkung auf %n% Fragen ok, zeige Studierenden %n% von </msg>
   <msg key="Max_items_not_ok_duration">Beschränkung auf %n% Fragen NICHT ok (unterschiedliche Dauer), </msg>
   <msg key="Max_items_not_ok_number">Beschränkung auf %n% Fragen NICHT ok (Fragenanzahl zu gering), </msg>
-  
+
+  <msg key="Automatically_published_from_to">Automatische Freischaltung der Prüfung von %from% bis %to%</msg>
+  <msg key="Exam_time_window">Zeitfenster für Prüfung</msg>
+  <msg key="Exam_time_window_help_text">Optionales automatisches Freischalten/Schließen der Prüfung. Auch wenn das Zeitfenster aktiviert ist, kann die Prüfung manuell freigeschalten/geschlossen werden.</msg>  
+
   <msg key="Exam_published">Veröffentlichung der Prüfung</msg>
   <msg key="since_published">seit der Veröffentlichung</msg>
   <msg key="Achieved_points">Erreichte Punkte</msg>

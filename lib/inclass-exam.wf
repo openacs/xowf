@@ -114,10 +114,21 @@ unpublish proc activate {obj} {
   :unpublish_link $obj
 }
 
+########################################################################
+# When the user restarts an exam, make sure, that already scheduled
+# atjobs are removed.
+#
+restart proc activate {obj} {
+  xowf::test_item::answer_manager delete_scheduled_atjobs $obj
+}
+
+########################################################################
+# When the user opens the submission review, offer a link.
+#
 open_submission_review proc activate {obj} {
   set aLink [$obj pretty_link -query m=view-my-exam]
-  util_user_message -html \
-      -message "[$obj name] exam review is available as <a target='_blank' href='[ns_quotehtml $aLink]'>[ns_quotehtml $aLink]</a>"
+  $obj util_user_message -html -message \
+      "[$obj name] exam review is available as <a target='_blank' href='[ns_quotehtml $aLink]'>[ns_quotehtml $aLink]</a>"$msg
 }
 
 ########################################################################
@@ -126,7 +137,7 @@ open_submission_review proc activate {obj} {
 #
 Action instproc publish_link {obj} {
   set aLink [$obj pretty_link -query m=answer]
-  util_user_message -html \
+  $obj util_user_message -html \
       -message "[$obj name] is available as <a target='_blank' href='[ns_quotehtml $aLink]'>[ns_quotehtml $aLink]</a>"
   # TODO: make it happen in the LMS
 }
@@ -135,7 +146,7 @@ Action instproc publish_link {obj} {
 # group
 #
 Action instproc unpublish_link {obj} {
-  util_user_message -html -message "[$obj name] is closed</a>"
+  $obj util_user_message -html -message "[$obj name] is closed</a>"
   # TODO: make it happen in the LMS
 }
 
@@ -159,6 +170,7 @@ Action instproc unpublish_link {obj} {
   set synchronized [$obj property synchronized 0]
   set allow_paste  [$obj property allow_paste 1]
   set max_items    [$obj property max_items ""]
+  set time_window  [$obj property time_window ""]
 
   append text [subst {<p>
     [expr {$synchronized ? "" : "Non-"}]Synchronized Exam
@@ -186,6 +198,18 @@ Action instproc unpublish_link {obj} {
       set max_items_msg [_ xowf.Max_items_ok [list n $max_items]]
     }
   }
+
+  set time_window_msg ""
+  if {$time_window ne ""} {
+    set dtstart [dict get $time_window time_window.dtstart]
+    if {$dtstart ne ""} {
+      regsub -all T $dtstart " " dtstart
+      set dtend [dict get $time_window time_window.dtend]
+      set time_window_msg <br>[_ xowf.Automatically_published_from_to [list from $dtstart to $dtend]]
+      set time_window_msg "<br>Automatische Freischaltung der Prüfung von $dtstart bis $dtend"
+    }
+  }
+  
   append text [subst {
     <p>
     [expr {$max_items_msg ne "" ? "$max_items_msg" : ""}]
@@ -194,6 +218,7 @@ Action instproc unpublish_link {obj} {
     [expr {$autograde ? "#xowf.exam_review_possible#" : "#xowf.exam_review_not_possible#"}]<br>
     [expr {$randomizationOk ? "#xowf.randomization_for_exam_ok#" : "#xowf.randomization_for_exam_not_ok#"}]<br>
     [expr {$allow_paste ? "#xowf.Cut_and_paste_allowed#" : "#xowf.Cut_and_paste_not_allowed#"}]<br>
+    $time_window_msg
     [expr {[llength $published_periods] > 0 ? "<br>#xowf.inclass-exam-open#: [join $published_periods {, }]<br>" : ""}]
     [expr {[llength $review_periods] > 0 ? "#xowf.inclass-exam-review#: [join $review_periods {, }]<br>" : ""}]
     </p>
@@ -259,7 +284,7 @@ Action instproc unpublish_link {obj} {
     "published" {
       #
       # In inclass cases, never show all questions on screen, since
-      # the teacher might have the screen on the projector.
+      # the lecturer might have the screen on the projector.
       #
       template::add_script -src urn:ad:js:bootstrap3
       set fullQuestionForm [subst {
@@ -737,7 +762,7 @@ Action instproc unpublish_link {obj} {
     # state different to "published".
     #
     if {[:property _state] ne "published"} {
-      util_user_message -html -message "Cannot start answer workflow in this state"
+      $obj util_user_message -html -message "Cannot start answer workflow in this state"
     } else {
       set wf [xowf::test_item::answer_manager get_answer_wf [self]]
       set proctoring [:property proctoring]
@@ -753,7 +778,7 @@ Action instproc unpublish_link {obj} {
   }
   :proc www-proctor-answer {} {
     if {[:property _state] ne "published"} {
-      util_user_message -html -message "Cannot start answer workflow in this state"
+      $obj util_user_message -html -message "Cannot start answer workflow in this state"
     } else {
       set wf [xowf::test_item::answer_manager get_answer_wf [self]]
       $wf www-create-or-use -parent_id [:item_id]

@@ -1236,6 +1236,77 @@ namespace eval ::xowf::test_item {
       $wf save_new
       #ns_log notice "create_answer_workflow $wf DONE [$wf pretty_link] IA <[$wf instance_attributes]>"
       #ns_log notice "create_answer_workflow parent $parentObj IA <[$parentObj instance_attributes]>"
+
+      set time_window [$parentObj property time_window]
+      if {$time_window ne ""} {
+        :time_window_setup $parentObj -time_window $time_window
+      }
+    }
+
+    ########################################################################
+
+    :method time_window_setup {parentObj:object {-time_window:required}} {
+      #
+      # Check the provided time_window values, adjust it if necessary,
+      # and make sure, accoding atjobs are provided.
+      #
+      set dtstart [dict get $time_window time_window.dtstart]
+      set dtend [dict get $time_window time_window.dtend]
+
+      if {$dtstart ne ""} {
+        set total_minutes [xowf::test_item::question_manager total_minutes_for_exam -manager $parentObj]
+        ns_log notice "#### create_workflows: atjobs for time_window <$time_window> total-mins $total_minutes"
+        set start_clock [clock scan $dtstart -format %Y-%m-%dT%H:%M]
+
+        if {$dtend eq ""} {
+          #
+          # No end given. set it to start + exam time + 5 minutes
+          #
+          set end_clock [expr {$start_clock + ($total_minutes + 5)*60}]
+          set new_dtend [clock format $end_clock -format %H:%M]
+          ns_log notice "#### no dtend given. set it from $dtend to $new_dtend"
+
+        } else {
+          set end_date    [clock format $start_clock -format %Y-%m-%d]T$dtend
+          set end_clock   [clock scan $end_date      -format %Y-%m-%dT%H:%M]
+          if {($end_clock - $start_clock) < ($total_minutes*60)} {
+            #
+            # The specified end time is too early. Set it to start +
+            # exam time + 5 minutes
+            #
+            set end_clock [expr {$start_clock + ($total_minutes + 5)*60}]
+            set new_dtend [clock format $end_clock -format %H:%M]
+            ns_log notice "#### dtend is too early. Move it from $dtend to $new_dtend"
+
+          } else {
+            set new_dtend $dtend
+          }
+        }
+
+        if {$new_dtend ne $dtend} {
+          ns_log notice "#### create_workflows: must change dtend from <$dtend> to <$new_dtend>"
+          set ia [$parentObj instance_attributes]
+          dict set time_window time_window.dtend $new_dtend
+          dict set ia time_window $time_window
+          #ns_log notice "SAVE updated ia <${:instance_attributes}>"
+          $parentObj update_attribute_from_slot [$parentObj find_slot instance_attributes] $ia
+        }
+
+        #
+        # Delete previously scheduled atjobs
+        #
+        :delete_scheduled_atjobs $parentObj
+
+        #
+        # Schedule new atjobs
+        #
+        $parentObj schedule_action \
+            -time [clock format $start_clock -format "%Y-%m-%d %H:%M:%S"] \
+            -action publish
+        $parentObj schedule_action \
+            -time [clock format $end_clock -format "%Y-%m-%d %H:%M:%S"] \
+            -action unpublish
+      }
     }
 
     ########################################################################
@@ -1251,6 +1322,29 @@ namespace eval ::xowf::test_item {
       }
       return $wf
     }
+
+    ########################################################################
+    :public method delete_scheduled_atjobs {obj:object} {
+      #
+      # Delete previously scheduled atjobs
+      #
+      ns_log notice "#### delete_scheduled_atjobs"
+
+      set item_id [$obj item_id]
+      set atjob_form_id [::xowf::atjob form_id -parent_id $item_id -package_id [ad_conn package_id]]
+
+      set to_delete [xo::dc list get_children {
+        select item_id from xowiki_form_instance_item_index
+        where parent_id = :item_id
+        and page_template = :atjob_form_id
+      }]
+
+      foreach id $to_delete {
+        ns_log notice "#### xo::db::sql::content_item proc delete -item_id $id"
+        xo::db::sql::content_item delete -item_id $id
+      }
+    }
+
 
 
     ########################################################################
@@ -2232,8 +2326,13 @@ namespace eval ::xowf::test_item {
           window.addEventListener('load', audioContext_onload);
         }]
 
-        set alarmState [ns_getcookie $audio_alarm_cookie "inactive"]
-        set glypphIcon [expr {$alarmState eq "inactive" ? "glyphicon-volume-off":"glyphicon-volume-up"}]
+        if {[ns_conn isconnected]} {
+          set alarmState [ns_getcookie $audio_alarm_cookie "inactive"]
+          set glypphIcon [expr {$alarmState eq "inactive" ? "glyphicon-volume-off":"glyphicon-volume-up"}]
+        } else {
+          set alarmState "inactive"
+          set glypphIcon "glyphicon-volume-off"
+        }
         #ns_log notice "C=$alarmState"
 
         return [subst {
@@ -2279,6 +2378,7 @@ namespace eval ::xowf::test_item {
     #   - question_property
     #   - add_seeds
     #   - total_minutes
+    #   - total_minutes_for_exam
     #   - exam_target_time
     #
     :public method goto_page {obj:object position} {
@@ -2583,6 +2683,14 @@ namespace eval ::xowf::test_item {
       return $minutes
     }
 
+    :public method total_minutes_for_exam {-manager:object} {
+      set max_items [$manager property max_items ""]
+      set combined_form_info [:combined_question_form $manager]
+      set total_minutes [:total_minutes \
+                             -max_items $max_items \
+                             $combined_form_info]
+    }
+
     :public method exam_target_time {-manager:object -base_time} {
       #
       # Calculate the exam target time (finishing time) based on the
@@ -2592,11 +2700,7 @@ namespace eval ::xowf::test_item {
       # @param manager exam workflow
       # @param base_time time in SQL format
       #
-      set max_items [$manager property max_items ""]
-      set combined_form_info [:combined_question_form $manager]
-      set total_minutes [::xowf::test_item::question_manager total_minutes \
-                             -max_items $max_items \
-                             $combined_form_info]
+      set total_minutes [:total_minutes_for_exam -manager $manager]
 
       # Use "try" for backward compatibility, versions before
       # factional seconds. TODO: remove me.
