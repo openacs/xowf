@@ -2,7 +2,7 @@ namespace eval ::xowf {
   #
   # simple at-handler
   #
-  
+
   #
   # Define a simple Class for atjobs. In future versions, this is a
   # good candidate to be turned into a nx class.
@@ -33,7 +33,7 @@ namespace eval ::xowf {
   }
 
   #
-  # 
+  #
   # temporary cleanup
   #
   # delete from acs_objects where object_type  = '::xowf::atjob';
@@ -45,7 +45,7 @@ namespace eval ::xowf {
     set class [self class]
     set owner_id [${:object} item_id]
     set package_id [${:object} package_id]
-    set ansi_time [$class ansi_time [clock scan [:time]]]
+    set ansi_time [$class ansi_time [clock scan ${:time}]]
     if {![info exists :party_id]} {
       set :party_id [::xo::cc set untrusted_user_id]
     }
@@ -54,7 +54,7 @@ namespace eval ::xowf {
     if {$form_id != 0} {
       ::xo::db::CrClass get_instance_from_db -item_id $form_id
       set instance_attributes [dict merge [::$form_id default_instance_attributes] [list cmd ${:cmd}]]
-      set name [::xowiki::autoname new -name [::$form_id name] -parent_id $owner_id] 
+      set name [::xowiki::autoname new -name [::$form_id name] -parent_id $owner_id]
       set f [::xowiki::FormPage new -destroy_on_cleanup \
                  -package_id $package_id \
                  -parent_id $owner_id \
@@ -66,7 +66,7 @@ namespace eval ::xowf {
                  -instance_attributes $instance_attributes \
                  -page_template $form_id]
       $f save_new -use_given_publish_date true -creation_user ${:party_id}
-      :log "--at formpage saved"
+      #:log "--at formpage saved"
     }
   }
 
@@ -74,15 +74,17 @@ namespace eval ::xowf {
     set form_name en:atjob-form
     set form_id [::xo::db::CrClass lookup -name $form_name -parent_id $parent_id]
     if {$form_id == 0} {
-      set page [::$package_id resolve_page $form_name __m]
-      if {$page ne ""} {set form_id [$page item_id]}
+      set page [::$package_id resolve_page -lang en $form_name __m]
+      if {$page ne ""} {
+        set form_id [$page item_id]
+      }
       if {$form_id == 0} {
         ns_log error "Cannot lookup form $form_name; ignore request"
       }
     }
     return $form_id
   }
-  
+
   atjob proc run_jobs {item_ids} {
     #:log "---run xowf jobs START"
 
@@ -90,13 +92,13 @@ namespace eval ::xowf {
                     revision_id, page_template, instance_attributes
              from xowiki_form_instance_item_view
              where item_id in ([ns_dbquotelist $item_ids])"
-    
+
     set items [::xowiki::FormPage instantiate_objects \
                    -object_class ::xowiki::FormPage \
                    -sql $sql]
 
     if {[llength [$items children]] > 0} {
-      
+
       :log "--at we got [llength [$items children]] scheduled items"
 
       foreach item [$items children] {
@@ -110,6 +112,12 @@ namespace eval ::xowf {
           continue
         }
         set cmd [dict get $__ia cmd]
+
+        #
+        # Probably, we should add an URL to the form to get better
+        # conformance for atjobs.
+        #
+        ::xo::ConnectionContext require -url /
 
         # We assume, the owner object is a cr-item
         ::xo::db::CrClass get_instance_from_db -item_id $owner_id
@@ -140,7 +148,7 @@ namespace eval ::xowf {
   atjob proc check {{-with_older false}} {
     #:log "--at START"
     #
-    # check, if there are jobs scheduled for execution
+    # Check, if there are jobs scheduled for execution.
     #
     set op [expr {$with_older ? "<=" : "=" }]
     set ansi_time [:ansi_time [clock seconds]]
@@ -171,12 +179,12 @@ namespace eval ::xowf {
                 and xi.publish_status = 'production'
                 and xi.package_id is not null
                 order by cr.title desc, xi.item_id asc "
-    
+
     set item_ids [::xo::dc list get_due_atjobs $sql]
-    
+
     if {[llength $item_ids] > 0} {
       :log "--at we got [llength $item_ids] scheduled items"
-    
+
       #
       # Running the jobs here in this proc could lead to a problem with
       # the exact match for the time, when e.g. the jobs take longer
