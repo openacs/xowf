@@ -47,6 +47,7 @@ namespace eval ::xowf {
 
   Package site_wide_pages {
     Workflow.form
+    atjob-form
 
     TestItemText.form
     TestItemShortText.form
