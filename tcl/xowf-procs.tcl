@@ -1480,6 +1480,15 @@ namespace eval ::xowf {
     }
   }
 
+  WorkflowPage instproc util_user_message {-html:switch -message} {
+    if {[ns_conn isconnected]} {
+      ::util_user_message -message $message -html=$html
+    } else {
+      ns_log notice "util_user_message suppressed (no connection): $message"
+    }
+  }
+
+  
   WorkflowPage instproc debug_msg {msg} {
     #util_user_message -message $msg
     ns_log notice "--WF $msg"
@@ -2255,7 +2264,7 @@ namespace eval ::xowf {
     Schedule the specified Tcl command for the current package
     instance at the given time.
   } {
-    :log "-at"
+    :log "-at $time"
     set j [::xowf::atjob new -time $time -party_id $party_id -cmd $cmd -object [self]]
     $j persist
   }
