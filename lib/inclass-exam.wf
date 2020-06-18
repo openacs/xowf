@@ -128,7 +128,7 @@ restart proc activate {obj} {
 open_submission_review proc activate {obj} {
   set aLink [$obj pretty_link -query m=view-my-exam]
   $obj util_user_message -html -message \
-      "[$obj name] exam review is available as <a target='_blank' href='[ns_quotehtml $aLink]'>[ns_quotehtml $aLink]</a>"$msg
+      "[$obj name] exam review is available as <a target='_blank' href='[ns_quotehtml $aLink]'>[ns_quotehtml $aLink]</a>"
 }
 
 ########################################################################
