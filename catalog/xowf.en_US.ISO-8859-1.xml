@@ -4,7 +4,7 @@
   <msg key="Exercise">Exercise</msg>
   <msg key="Grading-Scheme">Grading Scheme</msg>
   <msg key="Grading-Score">Score</msg>
-  <msg key="Grade">Grade</msg>  
+  <msg key="Grade">Grade</msg>
   <msg key="Total-Score">Total Score</msg>
   <msg key="Shuffle">Shuffle</msg>
   <msg key="Days">Days</msg>
@@ -51,7 +51,7 @@
   <msg key="testrun">Testrun</msg>
   <msg key="please_answer">Please answer</msg>
   <msg key="participant">Participant</msg>
-  <msg key="Participants">Participants</msg>  
+  <msg key="Participants">Participants</msg>
   <msg key="participants_answered_question">participants answered this question</msg>
   <msg key="results">Results</msg>
   <msg key="show_results">Show Results</msg>
@@ -94,7 +94,7 @@
   <msg key="open_submission_review_title">Open submission review for students</msg>
   <msg key="close_submission_review">Close student submission review</msg>
   <msg key="close_submission_review_title">Close submission review for students</msg>
-  
+
   <msg key="inclass-quiz-not-published">The quiz has not been published</msg>
   <msg key="inclass-quiz-open">The quiz is open</msg>
   <msg key="inclass-quiz-closed">The quiz is closed</msg>
@@ -175,27 +175,27 @@
   <msg key="Allow_paste">Allow Cut and Paste</msg>
   <msg key="Allow_paste_help_text">Is the student allow to use cut and paste in multiline text fields?</msg>
   <msg key="Cut_and_paste_allowed">Cut and Paste is allowed in multi-line text fields</msg>
-  <msg key="Cut_and_paste_not_allowed">Cut and Paste is not allowed in multi-line text fields</msg>  
+  <msg key="Cut_and_paste_not_allowed">Cut and Paste is not allowed in multi-line text fields</msg>
 
   <msg key="Max_items">Restrict Items</msg>
   <msg key="Max_items_help_text">Restrict item selection to this number of Items (requires same number weight of every item)</msg>
   <msg key="Max_items_ok">Restriction to %n% items ok, %n% of </msg>
-  <msg key="Max_items_not_ok_duration">Item Restriction to %n% items NOT ok (duration varies), </msg>  
-  <msg key="Max_items_not_ok_number">Item Restriction to %n% items NOT ok (not enough test items), </msg>  
+  <msg key="Max_items_not_ok_duration">Item Restriction to %n% items NOT ok (duration varies), </msg>
+  <msg key="Max_items_not_ok_number">Item Restriction to %n% items NOT ok (not enough test items), </msg>
 
   <msg key="Automatically_published_from_to">Automatically published from %from% to %to%</msg>
   <msg key="Exam_time_window">Exam Time Window</msg>
-  <msg key="Exam_time_window_help_text">Optional time window for automatically open/close exam. When these values are set, manual opening and closing of the exam is still possible.</msg>  
-  
+  <msg key="Exam_time_window_help_text">Optional time window for automatically open/close exam. When these values are set, manual opening and closing of the exam is still possible.</msg>
+
   <msg key="Allow_paste_help_text">Is the student allow to use cut and paste in multiline text fields?</msg>
   <msg key="Cut_and_paste_allowed">Cut and Paste is allowed in multi-line text fields</msg>
-  <msg key="Cut_and_paste_not_allowed">Cut and Paste is not allowed in multi-line text fields</msg>  
-  
+  <msg key="Cut_and_paste_not_allowed">Cut and Paste is not allowed in multi-line text fields</msg>
+
   <msg key="Exam_published">Exam Published</msg>
   <msg key="since_published">since published</msg>
   <msg key="Achieved_points">Achieved Points</msg>
 
-  <msg key="Correct">Correct</msg>  
+  <msg key="Correct">Correct</msg>
   <msg key="exam_review_possible">automated exam review possible</msg>
   <msg key="exam_review_not_possible">automated exam review not possible</msg>
   <msg key="randomization_for_exam_ok">randomization for exam ok</msg>

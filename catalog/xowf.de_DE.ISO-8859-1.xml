@@ -165,13 +165,13 @@
 
   <msg key="Automatically_published_from_to">Automatische Freischaltung der Prüfung von %from% bis %to%</msg>
   <msg key="Exam_time_window">Zeitfenster für Prüfung</msg>
-  <msg key="Exam_time_window_help_text">Optionales automatisches Freischalten/Schließen der Prüfung. Auch wenn das Zeitfenster aktiviert ist, kann die Prüfung manuell freigeschalten/geschlossen werden.</msg>  
+  <msg key="Exam_time_window_help_text">Optionales automatisches Freischalten/Schließen der Prüfung. Auch wenn das Zeitfenster aktiviert ist, kann die Prüfung manuell freigeschalten/geschlossen werden.</msg>
 
   <msg key="Exam_published">Veröffentlichung der Prüfung</msg>
   <msg key="since_published">seit der Veröffentlichung</msg>
   <msg key="Achieved_points">Erreichte Punkte</msg>
 
-  <msg key="Correct">Korrekt</msg>  
+  <msg key="Correct">Korrekt</msg>
   <msg key="exam_review_possible">automatische Einsicht möglich</msg>
   <msg key="exam_review_not_possible">automatische Einsicht nicht möglich</msg>
   <msg key="randomization_for_exam_ok">Randomisierung für Prüfung geeignet</msg>
