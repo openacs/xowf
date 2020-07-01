@@ -1248,7 +1248,7 @@ namespace eval ::xowf::test_item {
     :method time_window_setup {parentObj:object {-time_window:required}} {
       #
       # Check the provided time_window values, adjust it if necessary,
-      # and make sure, accoding atjobs are provided.
+      # and make sure, according atjobs are provided.
       #
       set dtstart [dict get $time_window time_window.dtstart]
       set dtend [dict get $time_window time_window.dtend]
@@ -2661,7 +2661,7 @@ namespace eval ::xowf::test_item {
 
     :public method total_minutes {{-max_items:integer,0..1 ""} form_info} {
       #
-      # Compute the duration of an exam. When max_items is non-empty,
+      # Compute the duration of an exam. When max_items is nonempty,
       # sum the duration of all items. Otherwise, sum the duration
       # of the specified number of items.
       #

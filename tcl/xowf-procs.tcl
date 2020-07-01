@@ -466,7 +466,7 @@ namespace eval ::xowf {
     set package_id [$object package_id]
     #
     # We have to load the form, maybe via a form loader.  If the
-    # form_loader is set non-empty and the method exists, then use the
+    # form_loader is set nonempty and the method exists, then use the
     # form loader instead of the plain lookup. In case the form_loader
     # fails, it is supposed to return 0.
     #

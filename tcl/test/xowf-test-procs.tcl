@@ -265,10 +265,10 @@ namespace eval ::xowf::test {
         ::xowf::WorkflowConstruct x
 
         aa_equals "non-conditional test with empty" [x get_value ""] ""
-        aa_equals "non-conditional test with non-empty scalar" [x get_value "a"] "a"
+        aa_equals "non-conditional test with nonempty scalar" [x get_value "a"] "a"
 
-        aa_equals "non-conditional test with non-empty list" [x get_value {a b}] "a b"
-        aa_equals "non-conditional test with non-empty list" [x get_value "a b"] "a b"
+        aa_equals "non-conditional test with nonempty list" [x get_value {a b}] "a b"
+        aa_equals "non-conditional test with nonempty list" [x get_value "a b"] "a b"
 
         aa_equals "conditional test, true branch" [x get_value "? true a default b"] "a"
         aa_equals "conditional test, false branch" [x get_value "? false a default b"] "b"

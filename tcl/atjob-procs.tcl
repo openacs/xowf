@@ -114,7 +114,7 @@ namespace eval ::xowf {
         set cmd [dict get $__ia cmd]
 
         #
-        # Probably, we should add an URL to the form to get better
+        # Probably, we should add a URL to the form to get better
         # conformance for atjobs.
         #
         ::xo::ConnectionContext require -url /
