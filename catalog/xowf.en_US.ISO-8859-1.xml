@@ -173,7 +173,7 @@
   <msg key="Synchronized">Synchronized Exam</msg>
   <msg key="Synchronized_help_text">Is the exam duration strictly controlled by the lecturer, or does every student get his working time displayed, independent from his starting time.</msg>
   <msg key="Allow_paste">Allow Cut and Paste</msg>
-  <msg key="Allow_paste_help_text">Is the student allow to use cut and paste in multiline text fields?</msg>
+  <msg key="Allow_paste_help_text">Is the student allowed to use cut and paste in multiline text fields?</msg>
   <msg key="Cut_and_paste_allowed">Cut and Paste is allowed in multi-line text fields</msg>
   <msg key="Cut_and_paste_not_allowed">Cut and Paste is not allowed in multi-line text fields</msg>
 
@@ -187,7 +187,7 @@
   <msg key="Exam_time_window">Exam Time Window</msg>
   <msg key="Exam_time_window_help_text">Optional time window for automatically open/close exam. When these values are set, manual opening and closing of the exam is still possible.</msg>
 
-  <msg key="Allow_paste_help_text">Is the student allow to use cut and paste in multiline text fields?</msg>
+  <msg key="Allow_paste_help_text">Is the student allowed to use cut and paste in multiline text fields?</msg>
   <msg key="Cut_and_paste_allowed">Cut and Paste is allowed in multi-line text fields</msg>
   <msg key="Cut_and_paste_not_allowed">Cut and Paste is not allowed in multi-line text fields</msg>
 
