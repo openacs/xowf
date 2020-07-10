@@ -619,10 +619,18 @@ namespace eval ::xowf {
     #:log START-CREATES
     if {$::xowf::sharedWorkflowDefinition} {
       if {[${:object} is_wf]} {
-        set :wf_container ::xowf::[${:object} revision_id]
+        set source_obj ${:object}
       } else {
-        set :wf_container ::xowf::[[${:object} page_template] revision_id]
+        set source_obj [${:object} page_template]
       }
+      set revision_id [$source_obj revision_id]
+      if {$revision_id == 0} {
+        set revision_id [::xo::db::sql::content_item get_live_revision \
+                             -item_id [$source_obj item_id]]
+        ns_log warning "xowf: tried to create a wf_container with revision_id 0 -> fixed to $revision_id"
+      }
+
+      set :wf_container ::xowf::$revision_id
 
       #
       # Validate workflow container: We cannot trust the shared
@@ -1489,7 +1497,7 @@ namespace eval ::xowf {
     }
   }
 
-  
+
   WorkflowPage instproc debug_msg {msg} {
     #util_user_message -message $msg
     ns_log notice "--WF $msg"
