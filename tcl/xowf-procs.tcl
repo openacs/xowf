@@ -644,7 +644,7 @@ namespace eval ::xowf {
         if {[${:wf_container} exists __xowf_depends]} {
           set depends [${:wf_container} set __xowf_depends]
           foreach {fn mtime} $depends {
-            if {[file mtime $fn] ne $mtime} {
+            if {[ad_file mtime $fn] ne $mtime} {
               set ok 0
               break
             }
@@ -2405,7 +2405,7 @@ namespace eval ::xowf {
     }
     set fname [acs_root_dir]$wfName
 
-    if {![file readable $fname]} {
+    if {![ad_file readable $fname]} {
       error "file '$fname' not found"
     }
 
@@ -2414,7 +2414,7 @@ namespace eval ::xowf {
     # invocation. It would be nicer to have this more OO, such we can
     # avoid the global variable ::__xowf_depends.
     #
-    lappend ::__xowf_depends $fname [file mtime $fname]
+    lappend ::__xowf_depends $fname [ad_file mtime $fname]
 
     set f [open $fname]; set wfDefinition [read $f]; close $f
     #::xotcl::Object log "INCLUDE $wfName [list $vars]"
