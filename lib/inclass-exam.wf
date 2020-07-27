@@ -115,7 +115,7 @@ unpublish proc activate {obj} {
 }
 
 ########################################################################
-# When the user restarts an exam, make sure, that already scheduled
+# When the user restarts an exam, make sure that already scheduled
 # atjobs are removed.
 #
 restart proc activate {obj} {
@@ -209,7 +209,7 @@ Action instproc unpublish_link {obj} {
       set time_window_msg "<br>Automatische Freischaltung der Prüfung von $dtstart bis $dtend"
     }
   }
-  
+
   append text [subst {
     <p>
     [expr {$max_items_msg ne "" ? "$max_items_msg" : ""}]
@@ -753,10 +753,10 @@ Action instproc unpublish_link {obj} {
   ########################################################################
   # web-callable method "answer"
   #
-  # Create or use an answering workflow for the current exam. This is
-  # a convenience routine to shorten the published URL.
-  #
   :proc www-answer {} {
+    #
+    # Create or use an answering workflow for the current exam. This
+    # is a convenience routine to shorten the published URL.
     #
     # Make sure that no-one tries to start the answer workflow in a
     # state different to "published".
@@ -777,6 +777,9 @@ Action instproc unpublish_link {obj} {
     }
   }
   :proc www-proctor-answer {} {
+    #
+    # Start answering an exam in proctored mode
+    #
     if {[:property _state] ne "published"} {
       $obj util_user_message -html -message "Cannot start answer workflow in this state"
     } else {
@@ -787,6 +790,9 @@ Action instproc unpublish_link {obj} {
 
 
   :proc www-qrcode {} {
+    #
+    # Produce a QR code with an answer link
+    #
     set aLink [:pretty_link -absolute true -query m=answer]
     set fn /tmp/qr-${:item_id}.png
     exec qrencode -o $fn -l h $aLink
@@ -832,6 +838,9 @@ Action instproc unpublish_link {obj} {
   }
 
   :proc www-proctor-image {} {
+    #
+    # View a proctored image
+    #
     set type [${:package_id} query_parameter type:ascii ""]
     set ts   [${:package_id} query_parameter ts:integer ""]
     set ext  [${:package_id} query_parameter e:wordchar ""]
@@ -847,9 +856,10 @@ Action instproc unpublish_link {obj} {
   ########################################################################
   # AJAX call "poll"
   #
-  # Return statistics about working and finished exams.
-  #
   :proc www-poll {} {
+    #
+    # Return statistics about working and finished exams.
+    #
     set wf [xowf::test_item::answer_manager get_answer_wf [self]]
     set answers [xowf::test_item::answer_manager get_answers $wf]
     set answered [xowf::test_item::answer_manager get_answers -state done $wf]
