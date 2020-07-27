@@ -216,7 +216,9 @@
                     }
                 } else {
                     console.log("Request has failed with status: " + this.status + "... Retry in 10s");
-                    setTimeout(approveStartExam, 10000);
+		    //setTimeout(approveStartExam, 10000);
+		    // in case, we have no handler for examination_statement_url installed, continue anyhow.
+		     startExam();
                 }
             }
         });
