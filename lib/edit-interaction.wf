@@ -4,7 +4,7 @@
 # ===============================
 #
 # This worflow can be used edit test items of different types,
-# where the type of the item can be provided via a query paramter.
+# where the type of the item can be provided via a query parameter.
 # See e.g.:
 #
 # {entry -name New.Item.TextInteraction -form en:edit-interaction.wf -query p.item_type=Text}
