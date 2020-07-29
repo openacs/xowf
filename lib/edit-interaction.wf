@@ -1,0 +1,49 @@
+# -*- Tcl -*-
+########################################################################
+# Workflow for editing test items
+# ===============================
+#
+# This worflow can be used edit test items of different types,
+# where the type of the item can be provided via a query paramter.
+# See e.g.:
+#
+# {entry -name New.Item.TextInteraction -form en:edit-interaction.wf -query p.item_type=Text}
+#
+
+Action save
+Action initialize -proc activate {obj} {
+    set name [$obj name]
+    if {[$obj is_new_entry $name]} {
+	set container [[$obj wf_context] wf_container]
+	set item_type [$container item_type $obj]
+	$obj title "Fresh '$item_type' interaction ($name)"
+    }
+}
+
+State initial -actions {save}
+
+:proc item_type {obj} {
+    set item_type [$obj property item_type]
+    if {$item_type eq ""} {
+	set item_type [ns_queryget p.item_type]
+	if {$item_type eq ""} {set item_type ShortText}
+	$obj set_property -new 1 item_type $item_type
+    }
+    return $item_type
+}
+:proc form_name_from_item_type {obj} {
+    return en:TestItem[:item_type $obj].form
+}
+
+
+:object-specific {
+    set container [[:wf_context] wf_container]
+    ${container}::initial form [${container} form_name_from_item_type [self]]
+}
+
+#
+# Local variables:
+#    mode: tcl
+#    tcl-indent-level: 2
+#    indent-tabs-mode: nil
+# End:

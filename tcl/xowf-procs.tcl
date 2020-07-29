@@ -59,6 +59,7 @@ namespace eval ::xowf {
     online-exam.wf
     inclass-quiz.wf
     inclass-exam.wf
+    edit-interaction.wf
 
     quiz-select_question.form
     select_question.form

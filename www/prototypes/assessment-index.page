@@ -1,7 +1,7 @@
 ::xowiki::Page new -title "Assessment Index" -text {
 <h3>#xowf.Created_Questions#:</h3>
 
-<p>{{form-usages -title "Questions" -with_form_link 0 -form en:TestItemText.form|en:TestItemShortText.form|en:TestItemMC.form|en:TestItemSC.form|en:TestItemUpload.form|en:TestItemReorder.form -buttons "edit duplicate slim_publish_status delete" -field_names "_title,_last_modified,_creation_user" -date_format "pretty-age" -csv false}}</p>
+<p>{{form-usages -title "Questions" -with_form_link 0 -form en:edit-interaction.wf|en:TestItemText.form|en:TestItemShortText.form|en:TestItemMC.form|en:TestItemSC.form|en:TestItemUpload.form|en:TestItemReorder.form -buttons "edit duplicate slim_publish_status delete" -field_names "_title,_last_modified,_creation_user" -date_format "pretty-age" -csv false}}</p>
 
 <h3>#xowf.Created_Assessments#:</h3>
 

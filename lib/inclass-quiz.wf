@@ -19,11 +19,13 @@
 #
 #   {clear_menu -menu New}
 #
-#   {entry -name New.Item.TextInteraction -form en:TestItemText.form}
-#   {entry -name New.Item.ShortTextInteraction -form en:TestItemShortText.form}
-#   {entry -name New.Item.MCInteraction -form en:TestItemMC.form}
-#   {entry -name New.Item.SCInteraction -form en:TestItemSC.form}
-#   {entry -name New.Item.ReorderInteraction -form en:TestItemReorder.form}
+#   {entry -name New.Item.TextInteraction -form en:edit-interaction.wf -query p.item_type=Text}
+#   {entry -name New.Item.ShortTextInteraction -form en:edit-interaction.wf -query p.item_type=ShortText}
+#   {entry -name New.Item.SCInteraction -form en:edit-interaction.wf -query p.item_type=SC}
+#   {entry -name New.Item.MCInteraction -form en:edit-interaction.wf -query p.item_type=MC}
+#   {entry -name New.Item.ReorderInteraction -form en:edit-interaction.wf -query p.item_type=Reorder}
+#   {entry -name New.Item.UploadInteraction -form en:edit-interaction.wf -query p.item_type=Upload}
+#
 #   {entry -name New.App.Quiz -label "Inclass Quiz" -form en:inclass-quiz.wf}
 #
 # The policy has to allow the following methods on FormPages:

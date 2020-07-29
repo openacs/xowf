@@ -1,23 +1,23 @@
 # -*- Tcl -*-
 ########################################################################
 # Inclass-Exam workflow, designed similar to online-exam
-# ========================================================
+# ======================================================
 #
-# Defining exams: This workflow lets a teacher choose from a
+# Defining exams: This workflow lets a lecturer choose from a
 # predefined set of exam questions, which are typically open text,
-# short text, single or multiple choice questions.  The teacher
-# selects test questions via drag and drop. The teacher can perform a
+# short text, single or multiple choice questions.  The lecturer
+# selects test questions via drag and drop. The lecturer can perform a
 # test run of the created exam, and can get the results via a result
 # table.
 #
-# Publishing and closing exams: When a teacher is satisfied with the
+# Publishing and closing exams: When a lecturer is satisfied with the
 # exam, the exam can be published. In this step, all answers of the
 # testing phase are deleted. In the process of publishing, the link to
 # start the exam is offered to the user.  When the exam is published,
-# the teacher can see the incoming answers in the report by refreshing
+# the lecturer can see the incoming answers in the report by refreshing
 # the page. When the exam is done, it is unpublished. The workflow
-# offers the teacher to see a summary of the results in form of a
-# table (an to download the results via csv), or the teacher can
+# offers the lecturer to see a summary of the results in form of a
+# table (an to download the results via csv), or the lecturer can
 # produce a printer friendly version of the answers.
 #
 # An admin might with to add the following entries to the folder to ease
@@ -25,13 +25,14 @@
 #
 #   {clear_menu -menu New}
 #
-#   {entry -name New.Item.TextInteraction -form en:TestItemText.form}
-#   {entry -name New.Item.ShortTextInteraction -form en:TestItemShortText.form}
-#   {entry -name New.Item.MCInteraction -form en:TestItemMC.form}
-#   {entry -name New.Item.SCInteraction -form en:TestItemSC.form}
-#   {entry -name New.Item.ReorderInteraction -form en:TestItemReorder.form}
-#   {entry -name New.Item.UploadInteraction -form en:TestItemUpload.form}
-#   {entry -name New.App.Exam -label "Online Exam" -form en:online-exam.wf}
+#   {entry -name New.Item.TextInteraction -form en:edit-interaction.wf -query p.item_type=Text}
+#   {entry -name New.Item.ShortTextInteraction -form en:edit-interaction.wf -query p.item_type=ShortText}
+#   {entry -name New.Item.SCInteraction -form en:edit-interaction.wf -query p.item_type=SC}
+#   {entry -name New.Item.MCInteraction -form en:edit-interaction.wf -query p.item_type=MC}
+#   {entry -name New.Item.ReorderInteraction -form en:edit-interaction.wf -query p.item_type=Reorder}
+#   {entry -name New.Item.UploadInteraction -form en:edit-interaction.wf -query p.item_type=Upload}
+#
+#   {entry -name New.App.Exam -label "Inclass Exam" -form en:inclass-exam.wf}
 #
 # The policy has to allow the following methods on FormPages:
 #
@@ -39,12 +40,12 @@
 #  - "proctor" (for students),
 #  - "view-my-exam" (for students),
 #  - "edit" (for students),
-#  - "poll" (for teachers),
-#  - "print-answers" (for teachers),
-#  - "print-answer-table" (for teachers),
-#  - "print-participants" (for teachers),
-#  - "delete" (for teachers),
-#  - "qrcode" (for teachers)
+#  - "poll" (for lecturers),
+#  - "print-answers" (for lecturers),
+#  - "print-answer-table" (for lecturers),
+#  - "print-participants" (for lecturers),
+#  - "delete" (for lecturers),
+#  - "qrcode" (for lecturers)
 #
 # Gustaf Neumann, Feb 2012-2020
 ########################################################################
@@ -81,7 +82,7 @@ State submission_review -actions {close_submission_review} -form_loader load_for
     -form "#xowf.inclass-exam-review#"
 
 ########################################################################
-# Activate action select: After the teacher has selected the
+# Activate action select: After the lecturer has selected the
 # exercises, the answer workflow is created.
 #
 select proc activate {obj} {
@@ -848,7 +849,7 @@ Action instproc unpublish_link {obj} {
     set id ${:item_id}
     set proctoring_dir [acs_root_dir]/proctoring/$id/$user_id
     set png_path $proctoring_dir/$type-$ts.$ext
-    #ns_log notice "image: $png_path ... [file exists $$png_path]"
+    #ns_log notice "image: $png_path ... [ad_file exists $$png_path]"
     ns_returnfile 200 [ns_guesstype $ts.$ext] $png_path
     ad_script_abort
   }
