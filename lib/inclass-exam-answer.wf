@@ -295,7 +295,15 @@ proc done_form_loader {ctx form_name} {
                                             ? [$parent_obj last_modified]
                                             : [$obj creation_date]}] \
                         ]
-    ::xo::cc set_parameter top_includelet [list countdown-timer -target_time $target_time]
+    set url_poll [$obj pretty_link -query m=message-poll]
+    set url_dismiss [$obj pretty_link -query m=message-dismiss]
+    ::xo::cc set_parameter top_includelet \
+        [list exam-top-includelet \
+             -target_time $target_time \
+             -url_poll $url_poll \
+             -url_dismiss $url_dismiss \
+             -poll_interval 5000 \
+            ]
   }
 }
 
@@ -451,7 +459,38 @@ proc done_form_loader {ctx form_name} {
     }
   }
 
+  ########################################################################
+  # AJAX call "message-poll"
+  #
+  :proc www-message-poll {} {
+    #
+    # Query messages for this exam and user
+    #
+    set response [::xowiki::includelet::personal-notification-messages get_messages_response \
+                      -notification_id ${:parent_id} \
+                      -user_id [xo::cc user_id]]
+    ns_return 200 text/json $response
+    ns_log notice "AJAX-message-poll -> $response"
+    ad_script_abort
+  }
+
+  #
+  # AJAX call "message-dismiss"
+  #
+  :proc www-message-dismiss {} {
+    #
+    # Handle message dismiss
+    #
+    ns_log notice "AJAX-message-dismiss (${:parent_id} [xo::cc user_id] [ns_queryget ts])"
+    ::xowiki::includelet::personal-notification-messages message_dismiss \
+        -notification_id ${:parent_id} \
+        -user_id [xo::cc user_id] \
+        -ts [ns_queryget ts]
+    ns_return 200 text/plain OK
+    ad_script_abort    
+  }
 }
+
 
 #
 # Local variables:

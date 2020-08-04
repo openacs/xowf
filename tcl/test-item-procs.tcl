@@ -68,7 +68,7 @@ namespace eval ::xowiki::formfield {
     Wrapper for complex test items, containing specification for
     minutes, grading scheme, feedback levels, handling different types
     of questions ("interactions" in the terminology of QTI). When such
-    a question is saved, a HTML form is generated, which is used as a
+    a question is saved, an HTML form is generated, which is used as a
     question.
 
     @param feedback_level "full", "single", or "none"
@@ -1999,7 +1999,7 @@ namespace eval ::xowf::test_item {
                -spec text,label=#xowf.participant#] \
           [$wf create_raw_form_field \
                -name _online-exam-fullName \
-               -spec text,label=#acs-subsite.Name#] \
+               -spec url,label=#acs-subsite.Name#] \
           [$wf create_raw_form_field \
                -name _state \
                -spec text,label=#xowf.Status#] \
@@ -2030,6 +2030,7 @@ namespace eval ::xowf::test_item {
       # Extend properties of every answer with corresponding ".score"
       # values.
       #
+      set dialogs ""
       foreach p [$items children] {
 
         #foreach ff_obj $answer_form_field_objs {
@@ -2041,14 +2042,22 @@ namespace eval ::xowf::test_item {
         set duration [:get_duration [$p get_revision_sets]]
         $p set_property -new 1 _online-exam-seconds \
             [expr {[dict get $duration toClock] - [dict get $duration fromClock]}]
+
+        set dialog_info [::xowiki::includelet::personal-notification-messages \
+                        modal_message_dialog -to_user_id [$p creation_user]]
+        append dialogs [dict get $dialog_info dialog] \n
+        $p set online-exam-fullName "[dict get $dialog_info link] [$p set online-exam-fullName]"
       }
+
+      ::xowiki::includelet::personal-notification-messages \
+          modal_message_dialog_register_submit \
+          -url [$wf pretty_link -query m=send-participant-message]
 
       if {$state eq "done"} {
         set uc {tcl {[$p state] ne "done"}}
       } else {
         set uc {tcl {false}}
       }
-
       #
       # Render table widget with extended properties.
       #
@@ -2065,7 +2074,7 @@ namespace eval ::xowf::test_item {
                     -return_url_att local_return_url \
                    ]
       $table_widget destroy
-      return $HTML
+      return $dialogs$HTML
     }
 
 
@@ -2879,6 +2888,7 @@ namespace eval ::xowf::test_item {
       proctor-answer {{item_id read}}
       proctor        {{item_id read}}
       poll           admin
+      send-participant-message admin
       edit           admin
       print-answers  admin
       print-answer-table admin
@@ -2890,8 +2900,10 @@ namespace eval ::xowf::test_item {
   }
   test-item-policy-answer contains {
     Class create FormPage -array set require_permission {
-      poll           {{item_id read}}
-      edit           {{item_id read}}
+      poll            {{item_id read}}
+      edit            {{item_id read}}
+      message-poll    {{item_id read}}
+      message-dismiss {{item_id read}}
     }
   }
 

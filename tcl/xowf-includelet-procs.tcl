@@ -5,8 +5,8 @@
   @creation-date 2008-03-05
 }
 
-::xo::db::require package xowiki
-
+::xo::library require -package xotcl-core 06-package-procs
+::xo::library require -package xowiki includelet-procs
 
 namespace eval ::xowiki::includelet {
   #
@@ -157,8 +157,55 @@ namespace eval ::xowiki::includelet {
     return [xowf::test_item::answer_manager countdown_timer \
                 -target_time $target_time -id [::xowiki::Includelet html_id [self]]]
   }
+}
+
+namespace eval ::xowiki::includelet {
+  #
+  # exam-top-includelet
+  #
+  Class exam-top-includelet -superclass ::xowiki::Includelet \
+      -parameter {
+        {__decoration plain}
+        {parameter_declaration {
+          {-target_time ""}
+          {-url_poll ""}
+          {-url_dismiss ""}
+          {-poll_interval 5000}          
+        }}
+      } -ad_doc {
+        
+        This is the top includelet for the in-class exam, containing a
+        countdown timer and the personal notifications includelet
+
+        @param target_time
+        @param url_poll
+        @param url_dismiss
+        @param poll_interval
+      }
+
+  exam-top-includelet instproc render {} {
+    :get_parameters
+
+    if {$url_poll ne ""} {
+      set pn [${:__including_page} include \
+                  [list personal-notification-messages \
+                       -url_poll $url_poll \
+                       -url_dismiss $url_dismiss \
+                       -poll_interval $poll_interval \
+                      ]]
+    } else {
+      set pn ""
+    }
+    return [subst {
+      [${:__including_page} include [list countdown-timer -target_time $target_time]]
+      $pn
+    }]
+  }
 
 }
+
+
+::xo::library source_dependent
 #
 # Local variables:
 #    mode: tcl

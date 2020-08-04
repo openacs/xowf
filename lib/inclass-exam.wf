@@ -311,45 +311,50 @@ Action instproc unpublish_link {obj} {
     }
   }
 
-  set answerStatus ""
-  set marked ""
-  if {$state in {published done submission_review}} {
-    if {$state eq "done"} {
-      [$ctx object] setCSSDefaults
-      set marked [xowf::test_item::answer_manager marked_results -obj $obj -wf $wf $combined_form_info]
-      set marked ""  ;# not needed right now
+  set www_method [xo::cc query_parameter m]
+  if {$www_method ni {edit view}} {
+    set marked ""
+  } else {
+    set answerStatus ""
+    set marked ""
+    if {$state in {published done submission_review} } {
+      if {$state eq "done"} {
+        [$ctx object] setCSSDefaults
+        set marked [xowf::test_item::answer_manager marked_results -obj $obj -wf $wf $combined_form_info]
+        set marked ""  ;# not needed right now
+      }
+      set answerStatus [xowf::test_item::answer_manager answers_panel  \
+                            -heading "#xowf.online-exam-submitted_exams_heading#" \
+                            -submission_msg "#xowf.online-exam-submitted_exams_msg#" \
+                            -polling=[expr {${:live_updates} && $state ni {initial created done}}] \
+                            -manager_obj $obj \
+                            -target_state done \
+                            -wf $wf]
     }
-    set answerStatus [xowf::test_item::answer_manager answers_panel  \
-                          -heading "#xowf.online-exam-submitted_exams_heading#" \
-                          -submission_msg "#xowf.online-exam-submitted_exams_msg#" \
-                          -polling=[expr {${:live_updates} && $state ni {initial created done}}] \
-                          -manager_obj $obj \
-                          -target_state done \
-                          -wf $wf]
+
+    set qrCode ""
+    set countdownHTML ""
+    if {$state eq "published"} {
+      set src [$obj pretty_link -query m=qrcode]
+      set qrCode [subst {<div><img class="img-thumbnail qrcode" src="[ns_quotehtml $src]" ></div>}]
+      set target_time [xowf::test_item::question_manager exam_target_time \
+                           -manager $obj -base_time [$obj last_modified]]
+      set countdownHTML [xowf::test_item::answer_manager countdown_timer \
+                             -target_time $target_time -id "countdown"]
+    }
+
+    # Remove wrapping forms
+    regsub -all {</?form[^>]*>} $fullQuestionForm {} fullQuestionForm
+
+    append text [subst {
+      <div class='container-fluid'><div class='row'>
+      <div class="col-sm-12">$answerStatus</div>
+      <div class="col-sm-9 quiz-preview">$fullQuestionForm</div>
+      <div class="col-sm-3">$qrCode</div>
+      <div class="col-sm-6">$countdownHTML</div>
+      </div></div>
+    }]
   }
-
-  set qrCode ""
-  set countdownHTML ""
-  if {$state eq "published"} {
-    set src [$obj pretty_link -query m=qrcode]
-    set qrCode [subst {<div><img class="img-thumbnail qrcode" src="[ns_quotehtml $src]" ></div>}]
-    set target_time [xowf::test_item::question_manager exam_target_time \
-                         -manager $obj -base_time [$obj last_modified]]
-    set countdownHTML [xowf::test_item::answer_manager countdown_timer \
-                           -target_time $target_time -id "countdown"]
-  }
-
-  # Remove wrapping forms
-  regsub -all {</?form[^>]*>} $fullQuestionForm {} fullQuestionForm
-
-  append text [subst {
-    <div class='container-fluid'><div class='row'>
-    <div class="col-sm-12">$answerStatus</div>
-    <div class="col-sm-9 quiz-preview">$fullQuestionForm</div>
-    <div class="col-sm-3">$qrCode</div>
-    <div class="col-sm-6">$countdownHTML</div>
-    </div></div>
-  }]
 
   set footer "$menu $extraAction"
 
@@ -445,7 +450,6 @@ Action instproc unpublish_link {obj} {
     set HTML ""
     set wf [xowf::test_item::answer_manager get_answer_wf [self]]
     if {$wf ne ""} {
-
       set items [xowf::test_item::answer_manager get_wf_instances $wf]
       set items2 [$items deep_copy]
       foreach i [$items2 children] {
@@ -789,7 +793,6 @@ Action instproc unpublish_link {obj} {
     }
   }
 
-
   :proc www-qrcode {} {
     #
     # Produce a QR code with an answer link
@@ -866,6 +869,22 @@ Action instproc unpublish_link {obj} {
     set answered [xowf::test_item::answer_manager get_answers -state done $wf]
     ns_return 200 text/plain [llength $answered]/[llength $answers]
     #ns_log notice "MASTER POLL [self] ${:name}, returned [llength $answered]/[llength $answers]"
+    ad_script_abort
+  }
+  
+  ########################################################################
+  # AJAX call "send-participant-message"
+  #
+  :proc www-send-participant-message {} {
+    #
+    # Send a message to a participant
+    #    
+    ::xowiki::includelet::personal-notification-messages message_add \
+        -notification_id ${:item_id} \
+        -to_user_id [xo::cc user_id] \
+        -payload [list msg [ns_queryget msg] from [xo::cc user_id] urgency [ns_queryget urgency]]
+    
+    ns_return 200 text/plain ok
     ad_script_abort
   }
 }
