@@ -78,7 +78,7 @@ if {0} {
        object_id:naturalnum,notnull
        file
        file.tmpfile
-   }  
+   }
 }
 
 if {[apm_package_installed_p tlf-lrn-core]} {
@@ -88,9 +88,9 @@ if {[apm_package_installed_p tlf-lrn-core]} {
     set msg(proctoring_banner) [_ tlf-lrn-core.proctoring_banner_message]
     set msg(accept)            [_ tlf-lrn-core.Accept]
 } else {
-    set msg(missing_stream)    "missing stream"   
+    set msg(missing_stream)    "missing stream"
     set msg(proctoring_accept)  {
-	An automated exam-supervision is activated to detect any
+        An automated exam-supervision is activated to detect any
         fraudulent examination performance. You and your screen will
         be recorded. Your data will only be used for the stated
         purpose, will be stored securely and will not be passed on to
@@ -99,8 +99,8 @@ if {[apm_package_installed_p tlf-lrn-core]} {
     set msg(proctoring_banner) "This browser window is running in exam mode. Close this browser window after the exam."
     set msg(accept)            "Accept"
     set msg(exam_mode)         {
-	<h4>Examination Statement</h4>
-	<h5>1.) Participation</h5>
+        <h4>Examination Statement</h4>
+        <h5>1.) Participation</h5>
     <p> Only students who are officially registered for the course and/or the examination may take the exam.</p>
     <p>The exam is only graded if all 3 of the following conditions have been fulfilled:</p>
     <ul>
@@ -108,14 +108,14 @@ if {[apm_package_installed_p tlf-lrn-core]} {
     <li><p>You have consented to automated online supervision, if previously announced for this examination</p>
     <li><p>You have confirmed that you have read and understood this examination statement</p>
     </ul>
-    
+
     <p>If you have received the examination but not fulfilled the
     identity requirement and/or confirmed your consent to online
     supervision, the examination will be declared VOID and will count
     as an examination attempt. If you have not confirmed that you have
     read and understood this examination statement, your examination
     will not be graded and the attempt will not be counted.</p>
-    
+
     <h5>2.) Technical requirements</h5>
 
     <p>It is your responsibility to ensure that you will not be
@@ -200,3 +200,9 @@ set mobile_p [ad_conn mobile_p]
 set preview_p [expr {$preview_p ? true : false}]
 set proctoring_p [expr {$proctoring_p ? true : false}]
 
+#
+# Local variables:
+#    mode: tcl
+#    tcl-indent-level: 2
+#    indent-tabs-mode: nil
+# End:
