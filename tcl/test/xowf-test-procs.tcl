@@ -21,7 +21,7 @@ namespace eval ::xowf::test {
         "::xo::Package instproc reply_to_user"
     } create_folder_with_page {
 
-        Create a folder in a xowf instance with a form page and edit this
+        Create a folder in an xowf instance with a form page and edit this
 
     } {
         #
@@ -99,7 +99,7 @@ namespace eval ::xowf::test {
         "::xo::Package instproc reply_to_user"
     } create_workflow_with_instance {
 
-        Create a xowf workflow and a instance in a folder.
+        Create an xowf workflow and a instance in a folder.
 
     } {
         #
