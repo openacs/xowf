@@ -1393,6 +1393,16 @@ namespace eval ::xowf::test_item {
     ########################################################################
 
     :public method get_answers {{-state ""} wf:object} {
+      #
+      # Extracts wf instances as answers (e.g. extracting their
+      # answer-specific attributes)
+      #
+      # @param wf the workflow
+      # @param state retrieve only instances in this state
+      #
+      # @return a list of dicts
+      #
+
       set results {}
       set items [:get_wf_instances $wf]
       foreach i [$items children] {
