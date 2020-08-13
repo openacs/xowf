@@ -265,7 +265,7 @@ namespace eval ::xowiki::formfield {
   mc_exercise instproc convert_to_internal {} {
     #
     # Build a form from the components of the exercise on the fly.
-    # Actually, this methods computes the properties "form" and
+    # Actually, this method computes the properties "form" and
     # "form_constraints" based on the components of this form field.
     #
     set form "<FORM>\n<table class='mchoice'>\n<tbody>"
@@ -287,7 +287,9 @@ namespace eval ::xowiki::formfield {
       if {$value(feedback_incorrect) ne ""} {
         lappend alt_fc "feedback_answer_incorrect=[::xowiki::formfield:::FormField fc_encode $value(feedback_incorrect)]"
       }
-      if {[llength $alt_fc] > 0} {append fc [list $input_field_name:checkbox,[join $alt_fc ,]]\n}
+      if {[llength $alt_fc] > 0} {
+        append fc [list $input_field_name:checkbox,[join $alt_fc ,]] \n
+      }
       #:msg "$input_field_name .correct = $value(correct)"
     }
     append form "</tbody></table></FORM>\n"
