@@ -1480,6 +1480,16 @@ namespace eval ::xowf::test_item {
 
     ########################################################################
     :public method last_time_in_state {revision_sets -state:required -with_until:switch } {
+      #
+      # Loops through revision sets and retrieve the latest date
+      # where state is that specified.
+      #
+      # @param revision_sets a list of ns_sets containing revision
+      #        data. List is assumed to be sorted in descending
+      #        creation_date order
+      #
+      # @return a date
+      #
       set result ""
       foreach ps $revision_sets {
         if {$state eq [ns_set get $ps state]} {
