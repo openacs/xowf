@@ -580,7 +580,7 @@ namespace eval ::xowf {
        Class create Property -superclass  ::xowf::Property -set abstract 1
        [:default_definition]
        $workflow_definition"} errorMsg]} {
-      ns_log error "Error in workflow definition: $errorMsg\n$::errorInfo\n\
+      ns_log error "Error in workflow definition ([${:object} name]): $errorMsg\n$::errorInfo\n\
          ===== default_definition: [:default_definition] \n\
          ===== workflow_definition: $workflow_definition"
       :msg -html t "Error in workflow definition: [ns_quotehtml $errorMsg]"
@@ -617,7 +617,7 @@ namespace eval ::xowf {
     # multiple workflow instances are created for a single workflow
     # definition in a request.
     #
-    #:log START-CREATES
+    #:log START-CREATES-sharedWorkflowDefinition=$::xowf::sharedWorkflowDefinition
     if {$::xowf::sharedWorkflowDefinition} {
       if {[${:object} is_wf]} {
         set source_obj ${:object}
