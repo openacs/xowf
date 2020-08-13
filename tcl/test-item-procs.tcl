@@ -279,7 +279,7 @@ namespace eval ::xowiki::formfield {
   mc_interaction instproc convert_to_internal {} {
     #
     # Build a form from the components of the exercise on the fly.
-    # Actually, this methods computes the properties "form" and
+    # Actually, this method computes the properties "form" and
     # "form_constraints" based on the components of this form field.
     #
     set form "<form>\n<table class='mchoice'>\n<tbody>"
@@ -338,14 +338,21 @@ namespace eval ::xowiki::formfield {
       # build form constraints per input field
       #
       set if_fc [list]
-      if {[string is true -strict $correct]} {lappend if_fc "answer=$input_field_name"} else {lappend if_fc "answer="}
+      #lappend answer_set [string is true -strict $correct]
+      if {[string is true -strict $correct]} {
+        lappend if_fc "answer=t" "options={{} $input_field_name}"
+      } else {
+         lappend if_fc "answer=f"
+      }
       if {$value(feedback_correct) ne ""} {
         lappend if_fc "feedback_answer_correct=[::xowiki::formfield::FormField fc_encode $value(feedback_correct)]"
       }
       if {$value(feedback_incorrect) ne ""} {
         lappend if_fc "feedback_answer_incorrect=[::xowiki::formfield:::FormField fc_encode $value(feedback_incorrect)]"
       }
-      if {[llength $if_fc] > 0} {append fc [list $input_field_name:checkbox,[join $if_fc ,]]\n}
+      if {[llength $if_fc] > 0} {
+        append fc [list $input_field_name:checkbox,[join $if_fc ,]] \n
+      }
       #:msg "$input_field_name .correct = $value(correct)"
     }
 
@@ -354,8 +361,7 @@ namespace eval ::xowiki::formfield {
       lappend fc "radio:text,answer=$correct_field_value"
     }
     append form "</tbody></table></form>\n"
-    #ns_log notice FORM=$form
-    #ns_log notice FC=$fc
+    ns_log notice FORM=$form\nFC=$fc
     ${:object} set_property -new 1 form $form
     ${:object} set_property -new 1 form_constraints $fc
     set anon_instances true ;# TODO make me configurable
@@ -929,7 +935,7 @@ namespace eval ::xowiki::formfield {
           if {$field_name in $alt_inputs} {
             lappend fc $prefix-$f
           } elseif {[$ff exists answer] && $field_name eq [$ff answer]} {
-            # this rules is for single choice
+            # this rule is for single choice
             lappend fc $prefix-$f
           }
         }
