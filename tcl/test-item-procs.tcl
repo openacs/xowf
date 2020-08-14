@@ -338,7 +338,6 @@ namespace eval ::xowiki::formfield {
       # build form constraints per input field
       #
       set if_fc [list]
-      #lappend answer_set [string is true -strict $correct]
       if {[string is true -strict $correct]} {
         lappend if_fc "answer=t" "options={{} $input_field_name}"
       } else {
