@@ -170,10 +170,10 @@ namespace eval ::xowiki::includelet {
           {-target_time ""}
           {-url_poll ""}
           {-url_dismiss ""}
-          {-poll_interval 5000}          
+          {-poll_interval 5000}
         }}
       } -ad_doc {
-        
+
         This is the top includelet for the in-class exam, containing a
         countdown timer and the personal notifications includelet
 

@@ -5,6 +5,8 @@
 }
 
 :::xo::db::require package xowiki
+::xo::library require -package xowiki menu-procs
+::xo::library require -package xowiki form-field-procs
 
 namespace eval ::xowiki::formfield {
   ###########################################################
@@ -1486,12 +1488,12 @@ namespace eval ::xowf::test_item {
     ########################################################################
     :public method last_time_in_state {revision_sets -state:required -with_until:switch } {
       #
-      # Loops through revision sets and retrieve the latest date
-      # where state is that specified.
+      # Loops through revision sets and retrieves the latest date
+      # where state is equal the specified value.
       #
       # @param revision_sets a list of ns_sets containing revision
       #        data. List is assumed to be sorted in descending
-      #        creation_date order
+      #        creation_date order (as retrieved by get_revision_sets)
       #
       # @return a date
       #
@@ -2889,6 +2891,40 @@ namespace eval ::xowf::test_item::grading {
     }
   }
 }
+
+namespace eval ::xowiki {
+  ::xowiki::MenuBar instproc config=test-items {
+    {-bind_vars {}}
+    -current_page:required
+    -package_id:required
+    -folder_link:required
+    -return_url
+  } {
+    :config=default \
+        -bind_vars $bind_vars \
+        -current_page $current_page \
+        -package_id $package_id \
+        -folder_link $folder_link \
+        -return_url $return_url
+
+    return {
+      {clear_menu -menu New}
+
+      {entry -name New.Item.TextInteraction -form en:edit-interaction.wf -query p.item_type=Text}
+      {entry -name New.Item.ShortTextInteraction -form en:edit-interaction.wf -query p.item_type=ShortText}
+      {entry -name New.Item.SCInteraction -form en:edit-interaction.wf -query p.item_type=SC}
+      {entry -name New.Item.MCInteraction -form en:edit-interaction.wf -query p.item_type=MC}
+      {entry -name New.Item.ReorderInteraction -form en:edit-interaction.wf -query p.item_type=Reorder}
+      {entry -name New.Item.UploadInteraction -form en:edit-interaction.wf -query p.item_type=Upload}
+
+      {entry -name New.App.OnlineExam -form en:online-exam.wf}
+      {entry -name New.App.InclassQuiz -form en:inclass-quiz.wf}
+      {entry -name New.App.InclassExam -form en:inclass-exam.wf}
+    }
+  }
+}
+
+
 
 
 namespace eval ::xowf::test_item {
