@@ -1360,9 +1360,8 @@ namespace eval ::xowf::test_item {
       #
       # return the workflow denoted by the property wfName in obj
       #
-      return [::xowiki::Weblog instantiate_forms \
+      return [::[$obj package_id] instantiate_forms \
                   -parent_id    [$obj item_id] \
-                  -package_id   [$obj package_id] \
                   -default_lang [$obj lang] \
                   -forms        [$obj property wfName]]
     }
@@ -2437,8 +2436,7 @@ namespace eval ::xowf::test_item {
         set ref
       }]
       set questionNames [join $questions |]
-      set questionForms [::xowiki::Weblog instantiate_forms \
-                             -package_id [$obj package_id] \
+      set questionForms [::[$obj package_id] instantiate_forms \
                              -default_lang [$obj lang] \
                              -forms $questionNames]
 
