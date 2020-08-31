@@ -634,7 +634,9 @@ Action instproc unpublish_link {obj} {
           set user_id [$i creation_user]
           set img_url [:pretty_link -query m=proctor-image&user_id=$user_id]
 
-          set proctoring_dir [acs_root_dir]/proctoring/${:item_id}/$user_id/
+          set proctoring_dir [proctoring::folder \
+                                  -object_id ${:item_id} \
+                                  -user_id $user_id]
           set files [glob -nocomplain -path $proctoring_dir *.*]
           #ns_log notice "proctoring_dir $proctoring_dir files $files"
 
@@ -817,19 +819,18 @@ Action instproc unpublish_link {obj} {
     ::xo::cc set_parameter template_file view-plain-master
     ::xo::cc set_parameter MenuBar 0
 
-    if {[file exists [acs_package_root_dir xowf]/lib/proctored-page.adp]} {
+    set proctoring_template [acs_package_root_dir proctoring-support]/lib/proctored-page
+    if {[file exists ${proctoring_template}.adp]} {
       set object_id ${:item_id}
       set object_url $link
-      set upload_url /xowf-proctoring-upload
       if {[string match *p.try_out_mode=1* $link]} {
         #set examination_statement_p 0
         set examination_statement_url ""
       }
 
-      ${:package_id} return_page -adp /packages/xowf/lib/proctored-page -variables {
+      ${:package_id} return_page -adp $proctoring_template -variables {
         object_id
         object_url
-        upload_url
         examination_statement_url
       }
     } else {
@@ -849,8 +850,9 @@ Action instproc unpublish_link {obj} {
     set ts   [${:package_id} query_parameter ts:integer ""]
     set ext  [${:package_id} query_parameter e:wordchar ""]
     set user_id [${:package_id} query_parameter user_id:integer ""]
-    set id ${:item_id}
-    set proctoring_dir [acs_root_dir]/proctoring/$id/$user_id
+    set proctoring_dir [proctoring::folder \
+                            -object_id ${:item_id} \
+                            -user_id $user_id]
     set png_path $proctoring_dir/$type-$ts.$ext
     #ns_log notice "image: $png_path ... [ad_file exists $$png_path]"
     ns_returnfile 200 [ns_guesstype $ts.$ext] $png_path
