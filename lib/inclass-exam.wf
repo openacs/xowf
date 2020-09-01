@@ -823,15 +823,14 @@ Action instproc unpublish_link {obj} {
     if {[file exists [acs_root_dir]${proctoring_template}.adp]} {
       set object_id ${:item_id}
       set object_url $link
-      if {[string match *p.try_out_mode=1* $link]} {
-        #set examination_statement_p 0
-        set examination_statement_url ""
-      }
+      set examination_statement_p [expr {![string match *p.try_out_mode=1* $link]}]
 
       ${:package_id} return_page -adp $proctoring_template -variables {
         object_id
         object_url
-        examination_statement_url
+        {preview_p true}
+        examination_statement_p
+        {check_active_p false}
       }
     } else {
       return [:www-view [subst {
