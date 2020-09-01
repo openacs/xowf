@@ -819,8 +819,8 @@ Action instproc unpublish_link {obj} {
     ::xo::cc set_parameter template_file view-plain-master
     ::xo::cc set_parameter MenuBar 0
 
-    set proctoring_template [acs_package_root_dir proctoring-support]/lib/proctored-page
-    if {[file exists ${proctoring_template}.adp]} {
+    set proctoring_template /packages/proctoring-support/lib/proctored-page
+    if {[file exists [acs_root_dir]${proctoring_template}.adp]} {
       set object_id ${:item_id}
       set object_url $link
       if {[string match *p.try_out_mode=1* $link]} {
