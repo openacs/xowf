@@ -1197,11 +1197,13 @@ namespace eval ::xowf {
     $package set object "[$package folder_path -parent_id [$object parent_id]][$object name]"
 
     #:log "call_action calls:   $package invoke -method edit -batch_mode 1 // obj=[$package set object]"
-    if {[catch {$package invoke -method edit -batch_mode 1} errorMsg]} {
-      :msg "---call_action returns error $errorMsg"
+    ad_try {
+      $package invoke -method edit -batch_mode 1
+    } on error {errorMsg} {
       ns_log error "$errorMsg\n$::errorInfo"
       error $errorMsg
     }
+
     #:log  "RESETTING package_id object"
     $package set object $last_object
     $package context $last_context
