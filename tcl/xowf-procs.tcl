@@ -382,6 +382,7 @@ namespace eval ::xowf {
     set parent_id [$object parent_id]
     set item_info [::$package_id item_ref -normalize_name false \
                        -use_package_path 1 \
+                       -use_site_wide_pages true \
                        -default_lang [$object lang] \
                        -parent_id $parent_id \
                        $name]
