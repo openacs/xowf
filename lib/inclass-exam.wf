@@ -34,6 +34,12 @@
 #
 #   {entry -name New.App.Exam -label "Inclass Exam" -form en:inclass-exam.wf}
 #
+# Alternatively, one can use the programmatic setup for the menubar
+# via config=test-items in case a site wants to change all setups in
+# all instances for menubars by updating a single file.
+#
+#   {config -use test-items}
+#
 # The policy has to allow the following methods on FormPages:
 #
 #  - "answer" (for students),
