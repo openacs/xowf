@@ -2025,7 +2025,7 @@ namespace eval ::xowf::test_item {
                -spec text,label=#xowf.participant#] \
           [$wf create_raw_form_field \
                -name _online-exam-fullName \
-               -spec url,label=#acs-subsite.Name#] \
+               -spec label,label=#acs-subsite.Name#,disableOutputEscaping=true] \
           [$wf create_raw_form_field \
                -name _state \
                -spec text,label=#xowf.Status#] \
@@ -2053,8 +2053,7 @@ namespace eval ::xowf::test_item {
                             -form_field_objs $form_field_objs \
                             -orderby $orderby]
       #
-      # Extend properties of every answer with corresponding ".score"
-      # values.
+      # Extend properties of individial answers and add notification dialogs
       #
       set dialogs ""
       foreach p [$items children] {
@@ -2065,14 +2064,28 @@ namespace eval ::xowf::test_item {
         #  $ff_obj value [$p property $property]
         #}
 
+        #
+        # Provide a notification dialog only before the student has
+        # submitted her exam.
+        #
+        if {[$p state] ne "done"} {
+          set dialog_info [::xowiki::includelet::personal-notification-messages \
+                               modal_message_dialog -to_user_id [$p creation_user]]
+          append dialogs [dict get $dialog_info dialog] \n
+          set notification_dialog_button [dict get $dialog_info link]
+        } else {
+          set notification_dialog_button ""
+        }
+
+        #
+        # Extend every answer with corresponding precomputed extra
+        # "_online-exam-*" values to ease rendering:
+        #
         set duration [:get_duration [$p get_revision_sets]]
         $p set_property -new 1 _online-exam-seconds \
             [expr {[dict get $duration toClock] - [dict get $duration fromClock]}]
 
-        set dialog_info [::xowiki::includelet::personal-notification-messages \
-                        modal_message_dialog -to_user_id [$p creation_user]]
-        append dialogs [dict get $dialog_info dialog] \n
-        $p set online-exam-fullName "[dict get $dialog_info link] [$p set online-exam-fullName]"
+        $p set online-exam-fullName "$notification_dialog_button [$p set online-exam-fullName]"
       }
 
       ::xowiki::includelet::personal-notification-messages \
@@ -2102,8 +2115,6 @@ namespace eval ::xowf::test_item {
       $table_widget destroy
       return $dialogs$HTML
     }
-
-
 
     :public method marked_results {-obj:object -wf:object form_info} {
       set form_field_objs [:answer_form_field_objs -wf $wf $form_info]
