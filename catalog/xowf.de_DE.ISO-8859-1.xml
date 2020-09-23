@@ -170,6 +170,8 @@
   <msg key="Exam_published">Veröffentlichung der Prüfung</msg>
   <msg key="since_published">seit der Veröffentlichung</msg>
   <msg key="Achieved_points">Erreichte Punkte</msg>
+  <msg key="Point">Punkt</msg>
+  <msg key="Points">Punkte</msg>  
 
   <msg key="Correct">Korrekt</msg>
   <msg key="exam_review_possible">automatische Einsicht möglich</msg>

@@ -214,6 +214,7 @@ namespace eval ::xowiki::formfield {
     }
     :create_components  [subst {
       {minutes number,form_item_wrapper_CSSclass=form-inline,min=1,default=2,label=#xowf.Minutes#}
+      {points number,form_item_wrapper_CSSclass=form-inline,min=0.1,default=2,step=0.1,label=#xowf.Points#}
       $shuffleSpec
       $gradingSpec
       {interaction {$interaction_class,$options,feedback_level=${:feedback_level},auto_correct=${:auto_correct},label=}}
@@ -1269,14 +1270,14 @@ namespace eval ::xowf::test_item {
           #
           # No end given. set it to start + exam time + 5 minutes
           #
-          set end_clock [expr {$start_clock + ($total_minutes + 5)*60}]
+          set end_clock [expr {$start_clock + ($total_minutes + 5) * 60}]
           set new_dtend [clock format $end_clock -format %H:%M]
           ns_log notice "#### no dtend given. set it from $dtend to $new_dtend"
 
         } else {
           set end_date    [clock format $start_clock -format %Y-%m-%d]T$dtend
           set end_clock   [clock scan $end_date      -format %Y-%m-%dT%H:%M]
-          if {($end_clock - $start_clock) < ($total_minutes*60)} {
+          if {($end_clock - $start_clock) < ($total_minutes * 60)} {
             #
             # The specified end time is too early. Set it to start +
             # exam time + 5 minutes
@@ -1571,7 +1572,7 @@ namespace eval ::xowf::test_item {
           #ns_log notice "FOO: $a <$f> $cd"
           if {[dict exists $cd points]} {
             set totalPoints [expr {$totalPoints + [dict get $cd points]}]
-            set achieveablePoints [expr {$achieveablePoints + [$f set test_item_minutes]}]
+            set achieveablePoints [expr {$achieveablePoints + [$f set test_item_points]}]
           } else {
             ns_log notice "$a: no points in correction_data, ignoring in points calculation"
           }
@@ -1934,10 +1935,10 @@ namespace eval ::xowf::test_item {
             # Add exercise score weighted to the total score to
             # compute points.
             #
-            if {[$ff_obj exists test_item_minutes]} {
-              #ns_log notice "[$ff_obj name]: grading_score <$r>, test_item_minutes <[$ff_obj set test_item_minutes]>"
+            if {[$ff_obj exists test_item_points]} {
+              #ns_log notice "[$ff_obj name]: grading_score <$r>, test_item_points <[$ff_obj set test_item_points]>"
 
-              set minutes [$ff_obj set test_item_minutes]
+              set minutes [$ff_obj set test_item_points]
               set total_score [expr {$total_score + ($minutes * [$ff_obj set grading_score])}]
               set total_points [expr {$total_points + $minutes}]
             }
@@ -2545,7 +2546,7 @@ namespace eval ::xowf::test_item {
       $form_obj set_property form_constraints $fc
     }
 
-    :method add_to_fc {-fc:required -position -minutes} {
+    :method add_to_fc {-fc:required -position -minutes -points} {
       return [lmap c $fc {
         if {[regexp {^[^:]+_:} $c]} {
           if {[info exists position]} {
@@ -2553,6 +2554,9 @@ namespace eval ::xowf::test_item {
           }
           if {[info exists minutes]} {
             append c ,test_item_minutes=$minutes
+          }
+          if {[info exists points]} {
+            append c ,test_item_points=$points
           }
           #ns_log notice "APPEND $c"
         }
@@ -2564,6 +2568,7 @@ namespace eval ::xowf::test_item {
       {-numbers ""}
       {-with_title:switch false}
       {-with_minutes:switch false}
+      {-with_points:switch false}
       form_objs
     } {
       set full_form {}
@@ -2577,6 +2582,11 @@ namespace eval ::xowf::test_item {
         set form_obj [::xowf::test_item::renaming_form_loader rename_attributes $form_obj]
         set form_title [$form_obj title]
         set minutes [:question_property $form_obj minutes]
+        set points [:question_property $form_obj points]
+        if {$points eq ""} {
+          ns_log notice "NO POINTS, default to minutes $minutes"
+          set points $minutes
+        }
         set title ""
         if {$number ne ""} {
           append title "#xowf.question# $number:"
@@ -2586,6 +2596,9 @@ namespace eval ::xowf::test_item {
         }
         if {$with_minutes} {
           append title " - [:minutes_string $form_obj]"
+        }
+        if {$with_points} {
+          append title " - [:points_string $form_obj]"
         }
 
         append full_form "<h3>$title</h3>\n"
@@ -2597,10 +2610,12 @@ namespace eval ::xowf::test_item {
         lappend full_fc [:add_to_fc \
                              -fc [$form_obj property form_constraints] \
                              -minutes $minutes \
+                             -points $points \
                              -position $position]
         lappend full_disabled_fc [:add_to_fc \
                                       -fc [$form_obj property disabled_form_constraints] \
                                       -minutes $minutes \
+                                      -points $points \
                                       -position $position]
         incr position
 
@@ -2668,8 +2683,23 @@ namespace eval ::xowf::test_item {
       #
       set minutes [:question_property $form_obj minutes]
       if {$minutes ne ""} {
-        set key [expr {$minutes eq "1" ? [_ xowiki.minute] : [_ xowiki.minutes]}]
-        set minutes "($minutes $key)"
+        set pretty_label [expr {$minutes eq "1" ? [_ xowiki.minute] : [_ xowiki.minutes]}]
+        set minutes "($minutes $pretty_label)"
+      }
+    }
+
+    :public method points_string {form_obj:object} {
+      #
+      # Get an attribute of the original question
+      #
+      set points [:question_property $form_obj points]
+      if {$points eq ""} {
+        # just for legacy, questions without points
+        set points [:question_property $form_obj minutes]
+      }
+      if {$points ne ""} {
+        set pretty_label [expr {$points eq "1" ? [_ xowf.Point] : [_ xowf.Points]}]
+        set minutes "($points $pretty_label)"
       }
     }
 
@@ -2677,6 +2707,7 @@ namespace eval ::xowf::test_item {
       {-with_numbers:switch false}
       {-with_title:switch false}
       {-with_minutes:switch false}
+      {-with_points:switch false}
       {-user_specific:switch false}
       {-shuffle_id:integer -1}
       obj:object
@@ -2700,6 +2731,7 @@ namespace eval ::xowf::test_item {
       return [:question_info \
                   -with_title=$with_title \
                   -with_minutes=$with_minutes \
+                  -with_points=$with_points \
                   {*}$extra_flags \
                   $form_objs]
     }

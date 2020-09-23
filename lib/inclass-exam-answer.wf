@@ -334,7 +334,7 @@ proc done_form_loader {ctx form_name} {
   set form_info [::xowf::test_item::question_manager combined_question_form \
                      -with_numbers \
                      -with_title \
-                     -with_minutes \
+                     -with_points \
                      -user_specific \
                      -shuffle_id $shuffle_id \
                      $parent_obj]
@@ -487,7 +487,7 @@ proc done_form_loader {ctx form_name} {
         -user_id [xo::cc user_id] \
         -ts [ns_queryget ts]
     ns_return 200 text/plain OK
-    ad_script_abort    
+    ad_script_abort
   }
 }
 

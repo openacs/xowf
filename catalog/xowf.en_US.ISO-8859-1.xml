@@ -194,6 +194,8 @@
   <msg key="Exam_published">Exam Published</msg>
   <msg key="since_published">since published</msg>
   <msg key="Achieved_points">Achieved Points</msg>
+  <msg key="Point">Point</msg>
+  <msg key="Points">Points</msg>  
 
   <msg key="Correct">Correct</msg>
   <msg key="exam_review_possible">automated exam review possible</msg>
