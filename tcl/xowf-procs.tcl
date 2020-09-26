@@ -17,6 +17,7 @@
 ::xo::db::require package xowiki
 ::xo::library require -package xowiki xowiki-procs
 ::xo::library require -package xotcl-core 06-package-procs
+::xo::library require -package xowiki menu-procs
 
 namespace eval ::xowf {
   #
@@ -75,7 +76,7 @@ namespace eval ::xowf {
     instance_attributes {
       MenuBar t top_includelet none production_mode t with_user_tracking t with_general_comments f
       with_digg f with_tags f
-      ExtraMenuEntries {{entry -name New.Extra.Workflow -form en:Workflow.form}}
+      ExtraMenuEntries {{config -use xowf}}
       with_delicious f with_notifications f security_policy ::xowiki::policy1
     }
   }
@@ -2432,6 +2433,27 @@ namespace eval ::xowf {
     return [list eval $wfDefinition]
   }
 
+}
+
+namespace eval ::xowiki {
+  ::xowiki::MenuBar instproc config=xowf {
+    {-bind_vars {}}
+    -current_page:required
+    -package_id:required
+    -folder_link:required
+    -return_url
+  } {
+    :config=default \
+        -bind_vars $bind_vars \
+        -current_page $current_page \
+        -package_id $package_id \
+        -folder_link $folder_link \
+        -return_url $return_url
+
+    return {
+      {entry -name New.Extra.Workflow -form en:Workflow.form}
+    }
+  }
 }
 
 ::xo::library source_dependent
