@@ -2584,7 +2584,7 @@ namespace eval ::xowf::test_item {
         set minutes [:question_property $form_obj minutes]
         set points [:question_property $form_obj points]
         if {$points eq ""} {
-          ns_log notice "NO POINTS, default to minutes $minutes"
+          ns_log notice "[$form_obj name]: NO POINTS, default to minutes $minutes"
           set points $minutes
         }
         set title ""
