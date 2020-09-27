@@ -57,6 +57,8 @@ namespace eval ::xowf {
     TestItemReorder.form
     TestItemUpload.form
 
+    ExamFolder
+    
     online-exam.wf
     inclass-quiz.wf
     inclass-exam.wf

@@ -30,6 +30,7 @@
   <msg key="feedback_incorrect">Feedback falsch</msg>
   <msg key="lines">Zeilen</msg>
   <msg key="menu-New-Extra-Workflow">Neuer Workflow</msg>
+  <msg key="menu-New-Item-ExamFolder">Neuer Exam-Ordner</msg>
   <msg key="answer">Antwort</msg>
   <msg key="answers">Antworten</msg>
   <msg key="submitted_answers">Abgegebene Antworten</msg>

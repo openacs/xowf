@@ -4,7 +4,8 @@
   @author Gustaf Neumann
 }
 
-:::xo::db::require package xowiki
+::xo::db::require package xowiki
+::xo::library require xowf-procs
 ::xo::library require -package xowiki menu-procs
 ::xo::library require -package xowiki form-field-procs
 
@@ -2963,9 +2964,38 @@ namespace eval ::xowiki {
       {entry -name New.App.InclassExam -form en:inclass-exam.wf}
     }
   }
+
+  ::xowiki::MenuBar instproc config=test-item-exams {
+    {-bind_vars {}}
+    -current_page:required
+    -package_id:required
+    -folder_link:required
+    -return_url
+  } {
+    :config=default \
+        -bind_vars $bind_vars \
+        -current_page $current_page \
+        -package_id $package_id \
+        -folder_link $folder_link \
+        -return_url $return_url
+
+    # {entry -name New.Item.ExamFolder -form en:Folder.form -query p.configure=exam_folder}
+
+    return {
+      {clear_menu -menu New}
+      {entry -name New.Item.ExamFolder -form en:folder.form -query p.source=ExamFolder&publish_status=ready}
+    }
+  }
+
 }
 
-
+# namespace eval ::xowf {
+#   ::xowf::WorkflowPage instproc configure_page=exam_folder {name} {
+#     ns_log notice "configure_page=exam_folder called on [self] ${:name} ($name) [:info precedence] ia <${:instance_attributes}> "
+#     ns_log notice [:serialize]
+#     dict set :instance_attributes extra_menu_entries {{config -use test-items}}
+#   }
+# }
 
 
 namespace eval ::xowf::test_item {
