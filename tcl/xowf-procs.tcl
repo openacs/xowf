@@ -58,7 +58,7 @@ namespace eval ::xowf {
     TestItemUpload.form
 
     ExamFolder
-    
+
     online-exam.wf
     inclass-quiz.wf
     inclass-exam.wf
@@ -1402,7 +1402,9 @@ namespace eval ::xowf {
             $f append form_button_CSSclass " " [$action extra_css_class]
           }
           #ns_log notice "RENDER BUTTON has CSSclass [$f CSSclass] // [$f form_button_CSSclass]"
-          if {[$action exists title]} {$f title [$action title]}
+          if {[$action exists title]} {
+            $f title [$action title]
+          }
           $f value [$action label]
           lappend buttons $f
         }
@@ -1697,10 +1699,10 @@ namespace eval ::xowf {
         set cc [${:package_id} context]
         foreach {name value} [$cc get_all_form_parameter] {
           if {[regexp {^__action_(.+)$} $name _ action]} {
+            set actionObj [:get_action_obj -action $action]
             set next_state [:activate $ctx $action]
             #:log "after activate next_state=$next_state, current_state=[$ctx get_current_state], ${:instance_attributes}"
             if {$next_state ne ""} {
-              set actionObj [$ctx wf_definition_object $action]
               if {[$actionObj exists assigned_to]} {
                 :assignee [:get_assignee [$actionObj assigned_to]]
               }
@@ -2226,15 +2228,12 @@ namespace eval ::xowf {
     }
   }
 
+  WorkflowPage ad_instproc get_action_obj {-action:required} {
 
-  WorkflowPage ad_instproc call_action {-action {-attributes {}}} {
-    Call the specified action in the current workflow instance.
-    The specified attributes are provided like form_parameters to
-    the action of the workflow.
+    Check if the action can be excuted in the current state,
+    and if so, return the action_obj.
+
   } {
-    if {![:is_wf_instance]} {
-      error "Page [self] is not a Workflow Instance"
-    }
     set ctx [::xowf::Context require [self]]
     #
     # First try to call the action in the current state
@@ -2243,7 +2242,7 @@ namespace eval ::xowf {
       if {[namespace tail $a] eq "$action"} {
         # In the current state, the specified action is allowed
         :log  "--xowf action $action allowed -- name='${:name}'"
-        return [$a invoke -attributes $attributes]
+        return $a
       }
     }
     #
@@ -2253,11 +2252,24 @@ namespace eval ::xowf {
     if {[nsf::is object $actionObj] && [$actionObj state_safe]} {
       # The action is defined as state-safe, so if can be called in every state
       :log  "--xowf action $action state_safe -- name='${:name}'"
-      return [$actionObj invoke -attributes $attributes]
+      return $actionObj
     }
     error "\tNo state-safe action '$action' available in workflow instance [self] of \
     [${:page_template} name] in state [$ctx get_current_state]
-    Available actions: [[$ctx current_state] get_actions]"
+    \tAvailable actions: [[$ctx current_state] get_actions]"
+  }
+
+  WorkflowPage ad_instproc call_action {-action {-attributes {}}} {
+    Call the specified action in the current workflow instance.
+    The specified attributes are provided like form_parameters to
+    the action of the workflow.
+  } {
+    if {![:is_wf_instance]} {
+      error "Page [self] is not a Workflow Instance"
+    }
+
+    set actionObj [:get_action_obj -action $action]
+    return [$actionObj invoke -attributes $attributes]
   }
 
   #
