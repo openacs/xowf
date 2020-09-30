@@ -643,7 +643,7 @@ Action instproc unpublish_link {obj} {
           set proctoring_dir [proctoring::folder \
                                   -object_id ${:item_id} \
                                   -user_id $user_id]
-          set files [glob -nocomplain -path $proctoring_dir *.*]
+          set files [glob -nocomplain -directory $proctoring_dir *.*]
           #ns_log notice "proctoring_dir $proctoring_dir files $files"
 
           if {$revision_id ne ""} {
