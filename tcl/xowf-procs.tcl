@@ -2230,7 +2230,7 @@ namespace eval ::xowf {
 
   WorkflowPage ad_instproc get_action_obj {-action:required} {
 
-    Check if the action can be excuted in the current state,
+    Check if the action can be executed in the current state,
     and if so, return the action_obj.
 
   } {
