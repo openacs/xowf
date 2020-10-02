@@ -106,7 +106,7 @@
   <msg key="inclass-quiz-unpublish">Close quiz</msg>
   <msg key="inclass-quiz-republish">Publish quiz again</msg>
   <msg key="online-exam-review-protocol">Exam review protocol</msg>
-  <msg key="inclass-quiz-save">Save Answer"</msg>
+  <msg key="inclass-quiz-save">Save Answer</msg>
   <msg key="inclass-quiz-submit">Submit</msg>
   <msg key="inclass-quiz-waiting_for_next">Waiting for next question ...</msg>
   <msg key="inclass-quiz-not_available">The quiz is currently not available for answering</msg>
