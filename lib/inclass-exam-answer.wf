@@ -316,6 +316,7 @@ proc done_form_loader {ctx form_name} {
     template::set_css_property -class footer -property display -value none
     template::set_css_property -class community_title -property display -value none
   }
+  #template::set_css_property -querySelector ".context a" -property pointerEvents -value none    
   template::set_css_property -class pagetitle -property display -value none
   template::set_css_property -class sidebar -property display -value none
 }
