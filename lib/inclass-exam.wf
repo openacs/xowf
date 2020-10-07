@@ -618,6 +618,7 @@ Action instproc unpublish_link {obj} {
               set achieved_points [xowf::test_item::answer_manager achieved_points \
                                        -answer_object $i -answer_attributes $answerAttributes]
               dict set achieved_points totalPoints $totalPoints
+              #ns_log notice "===== www-print-answers: $userName achieved_points $achieved_points"              
             }
           }
         }

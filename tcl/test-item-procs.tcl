@@ -1565,23 +1565,32 @@ namespace eval ::xowf::test_item {
       #
       set all_form_fields [::xowiki::formfield::FormField info instances -closure]
       set totalPoints 0
-      set achieveablePoints 0
+      set achieveableTotalPoints 0
+      set details {}
       foreach a [dict keys $answer_attributes] {
         set f [$answer_object lookup_form_field -name $a $all_form_fields]
+        set points {}
+        set achieveablePoints [$f set test_item_points]
+        set achieveableTotalPoints [expr {$achieveableTotalPoints + $achieveablePoints}]
         if {[$f exists correction_data]} {
           set cd [$f set correction_data]
           #ns_log notice "FOO: $a <$f> $cd"
           if {[dict exists $cd points]} {
-            set totalPoints [expr {$totalPoints + [dict get $cd points]}]
-            set achieveablePoints [expr {$achieveablePoints + [$f set test_item_points]}]
+            set points [dict get $cd points]
+            set totalPoints [expr {$totalPoints + $points}]
           } else {
-            ns_log notice "$a: no points in correction_data, ignoring in points calculation"
+            ns_log warning "$a: no points in correction_data, ignoring in points calculation"
           }
         }
+        lappend details [dict create \
+                                   item_id [[$f object] item_id] \
+                                   achieved $points \
+                                   achieveable $achieveablePoints]
       }
       return [list achievedPoints $totalPoints \
+                  details $details \
                   achievedPointsRounded [format %.0f $totalPoints] \
-                  achieveablePoints $achieveablePoints]
+                  achieveablePoints $achieveableTotalPoints]
     }
 
     ########################################################################
@@ -2639,7 +2648,9 @@ namespace eval ::xowf::test_item {
           # or a question, where every alternative is exactly provided.
           #
           if {[dict exists $qd question.grading]} {
-            # autograde ok
+            # autograde ok on the question level
+          } elseif {[dict exists $formAttributes auto_correct] && [dict get $formAttributes auto_correct]} {
+            # autograde ok on the form level
           } elseif [dict exists $qd question.interaction question.interaction.answer] {
             set answer [dict get $qd question.interaction question.interaction.answer]
             foreach k [dict keys $answer] {
@@ -2650,6 +2661,7 @@ namespace eval ::xowf::test_item {
           } else {
             set autoGrade 0
           }
+          #ns_log notice "question_info [$form_obj name] [$form_obj title] autoGrade $autoGrade"
         }
       }
 
