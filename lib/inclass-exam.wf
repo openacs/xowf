@@ -516,6 +516,13 @@ Action instproc unpublish_link {obj} {
     set grade_dict {}
     set grade_csv ""
 
+    #
+    # Provide quick mapping from the mangled attribute name to the question obj.
+    #
+    set nameToQuestionObj [xowf::test_item::renaming_form_loader \
+                               name_to_question_obj_dict \
+                               [dict get $combined_form_info question_objs]]
+
     set ctx [::xowf::Context require [self]]
     set wf [xowf::test_item::answer_manager get_answer_wf [self]]
 
@@ -618,7 +625,11 @@ Action instproc unpublish_link {obj} {
               set achieved_points [xowf::test_item::answer_manager achieved_points \
                                        -answer_object $i -answer_attributes $answerAttributes]
               dict set achieved_points totalPoints $totalPoints
-              #ns_log notice "===== www-print-answers: $userName achieved_points $achieved_points"              
+              #ns_log notice "==== www-print-answers: $userName achieved_points $achieved_points"
+              #foreach detailInfo [dict get $achieved_points details] {
+              #  set questionObj [dict get $nameToQuestionObj [dict get $detailInfo attributeName]]
+              #  ns_log notice ".... $detailInfo item_id [$questionObj item_id]"
+              #}
             }
           }
         }
@@ -879,19 +890,19 @@ Action instproc unpublish_link {obj} {
     #ns_log notice "MASTER POLL [self] ${:name}, returned [llength $answered]/[llength $answers]"
     ad_script_abort
   }
-  
+
   ########################################################################
   # AJAX call "send-participant-message"
   #
   :proc www-send-participant-message {} {
     #
     # Send a message to a participant
-    #    
+    #
     ::xowiki::includelet::personal-notification-messages message_add \
         -notification_id ${:item_id} \
         -to_user_id [xo::cc user_id] \
         -payload [list msg [ns_queryget msg] from [xo::cc user_id] urgency [ns_queryget urgency]]
-    
+
     ns_return 200 text/plain ok
     ad_script_abort
   }

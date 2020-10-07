@@ -1014,6 +1014,7 @@ namespace eval ::xowf::test_item {
     # - answer_for_form
     # - answers_for_form
     # - form_name_based_attribute_stem
+    # - name_to_question_obj_dict
     #
     # - get_form_object
     # - rename_attributes
@@ -1047,6 +1048,16 @@ namespace eval ::xowf::test_item {
       return ${stem}_
     }
 
+    :public method name_to_question_obj_dict {question_objs} {
+      #
+      # Produce a dict for attribute name to question_obj
+      #
+      set nameToQuestionObjDict {}
+      foreach o $question_objs {
+        dict set nameToQuestionObjDict [:form_name_based_attribute_stem [$o name]] $o
+      }
+      return $nameToQuestionObjDict
+    }    
 
     :public method answer_attributes {instance_attributes} {
       #
@@ -1583,7 +1594,7 @@ namespace eval ::xowf::test_item {
           }
         }
         lappend details [dict create \
-                                   item_id [[$f object] item_id] \
+                                   attributeName $a \
                                    achieved $points \
                                    achieveable $achieveablePoints]
       }
