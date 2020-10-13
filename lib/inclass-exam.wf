@@ -512,7 +512,19 @@ Action instproc unpublish_link {obj} {
     set totalPoints [::xowf::test_item::question_manager total_minutes \
                          -max_items [:property max_items ""] \
                          $combined_form_info]
+    #
+    # The management of the grading scheme has to be extended. For the
+    # time being, we have a single grading scheme with the option to
+    # round to full points or not. When an exam has less than 40
+    # points, we do not round, since this rounding could provide more
+    # than 1 percent of the result. This should be made configurable
+    # (also in www-print-answer-table, which is not used right now).
+    #
     set grading_scheme ::xowf::test_item::grading::wi1
+
+    if {$totalPoints < 40} {
+      append grading_scheme _noround
+    }
     set grade_dict {}
     set grade_csv ""
 

@@ -205,6 +205,6 @@
   <msg key="randomization_for_exam_not_ok">randomization for exam NOT ok ("always" should not be used)</msg>
 
   <msg key="panel_achievied_points_wi1">%achievedPoints% (rounded%rounded%) of possible %totalPoints% points, %percentage%%, grade: %grade%</msg>
-
+  <msg key="panel_achievied_points_wi1_noround">%achievedPoints% of possible %totalPoints% points, %percentage%%, grade: %grade%</msg>
   <msg key="test_item_name-validate_name">Name contains at least one invalid character</msg>
 </message_catalog>

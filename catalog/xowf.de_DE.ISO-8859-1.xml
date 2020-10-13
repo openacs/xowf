@@ -180,6 +180,7 @@
   <msg key="randomization_for_exam_ok">Randomisierung für Prüfung geeignet</msg>
   <msg key="randomization_for_exam_not_ok">Randomisierung für Prüfung nicht geeignet (keine Zufallsauswahl "immer" verwenden)</msg>
   <msg key="panel_achievied_points_wi1">%achievedPoints% (gerundet %rounded%) von möglichen %totalPoints% Punkten, %percentage%%, Note: %grade%</msg>
+  <msg key="panel_achievied_points_wi1_noround">%achievedPoints% von möglichen %totalPoints% Punkten, %percentage%%, Note: %grade%</msg>
 
   <msg key="test_item_name-validate_name">Name enthält zumindest ein ungültiges Zeichen</msg>
 </message_catalog>

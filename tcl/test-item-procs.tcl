@@ -1057,7 +1057,7 @@ namespace eval ::xowf::test_item {
         dict set nameToQuestionObjDict [:form_name_based_attribute_stem [$o name]] $o
       }
       return $nameToQuestionObjDict
-    }    
+    }
 
     :public method answer_attributes {instance_attributes} {
       #
@@ -2955,6 +2955,28 @@ namespace eval ::xowf::test_item::grading {
       }
     }
   }
+
+  Grading create ::xowf::test_item::grading::wi1_noround -percentage_boundaries {50.0 60.0 70.0 80.0} {
+
+    :public object method print {-achieved_points:required} {
+      if {[dict exists $achieved_points achievedPoints]} {
+        set totalPoints    [format %.2f [dict get $achieved_points totalPoints]]
+        set achievedPoints [format %.2f [dict get $achieved_points achievedPoints]]
+        set percentage     [format %.2f [expr {$totalPoints > 0 ? ($achievedPoints*100.0/$totalPoints) : 0}]]
+        set grade          [:grade -achieved_points $achieved_points]
+        set panelHTML      [_ xowf.panel_achievied_points_wi1_noround]
+        return [list panel $panelHTML csv [subst {$achievedPoints\t$percentage%\t$grade}]]
+      }
+    }
+    :public object method grade {-achieved_points:required} {
+      if {[dict exists $achieved_points achievedPoints]} {
+        set achieved [format %.2f [dict get $achieved_points achievedPoints]]
+        ns_log notice "XXXX $achieved_points -> [list calc_grade -points $achieved -achieved_points $achieved_points]"
+        return [:calc_grade -points $achieved -achieved_points $achieved_points]
+      }
+    }
+  }
+
 }
 
 namespace eval ::xowiki {
