@@ -215,7 +215,7 @@ namespace eval ::xowiki::formfield {
     }
     :create_components  [subst {
       {minutes number,form_item_wrapper_CSSclass=form-inline,min=1,default=2,label=#xowf.Minutes#}
-      {points number,form_item_wrapper_CSSclass=form-inline,min=0.1,default=2,step=0.1,label=#xowf.Points#}
+      {points number,form_item_wrapper_CSSclass=form-inline,min=0.0,step=0.1,label=#xowf.Points#}
       $shuffleSpec
       $gradingSpec
       {interaction {$interaction_class,$options,feedback_level=${:feedback_level},auto_correct=${:auto_correct},label=}}
