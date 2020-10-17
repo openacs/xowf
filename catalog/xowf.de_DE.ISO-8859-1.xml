@@ -138,6 +138,8 @@
   <msg key="inclass-exam-review">Einsicht geöffnet</msg>
   <msg key="Exam-review-not-open">Die Einsicht für diese Prüfung ist nicht geöffnet.</msg>
 
+  <msg key="Created_Questions">Verfügbare Fragen</msg>
+  <msg key="Created_Assessments">Verfügbare Assessments</msg>
   <msg key="nr_changes">Anzahl der Änderungen</msg>
   <msg key="Duration">Bearbeitungsdauer</msg>
   <msg key="not_submitted">nicht abgegeben</msg>
