@@ -1541,10 +1541,14 @@ namespace eval ::xowf::test_item {
 
     ########################################################################
     :public method state_periods {revision_sets -state:required} {
+      #
+      # Return for the provided revision_sets the time ranges the
+      # workflow was in the provided state.
+      #
       set periods ""
       set from ""
       set last_from ""
-      set until ""
+      theset until ""
       foreach ps $revision_sets {
         set current_state [ns_set get $ps state]
         if {$state eq $current_state} {
@@ -2039,7 +2043,12 @@ namespace eval ::xowf::test_item {
       {-state done}
       wf:object
     } {
-
+      #
+      # This method returns an HTML table containing a row for every
+      # participant with Name and short summary information. This
+      # table provides as well an interface for sending messages to
+      # this student.
+      #
       set form_field_objs {}
       lappend form_field_objs \
           [$wf create_raw_form_field \
@@ -2075,7 +2084,8 @@ namespace eval ::xowf::test_item {
                             -form_field_objs $form_field_objs \
                             -orderby $orderby]
       #
-      # Extend properties of individial answers and add notification dialogs
+      # Extend properties of individual answers and add notification
+      # dialogs.
       #
       set dialogs ""
       foreach p [$items children] {
@@ -2139,6 +2149,9 @@ namespace eval ::xowf::test_item {
     }
 
     :public method marked_results {-obj:object -wf:object form_info} {
+      #
+      # Return for every participant the individual results for an exam
+      #
       set form_field_objs [:answer_form_field_objs -wf $wf $form_info]
 
       set items [:get_wf_instances $wf]
@@ -2450,10 +2463,18 @@ namespace eval ::xowf::test_item {
     #   - exam_target_time
     #
     :public method goto_page {obj:object position} {
+      #
+      # Set the position (test item number) of the workflow
+      # (exam). This sets the question number shown to the user.
+      #
       $obj set_property position $position
     }
 
     :public method more_ahead {{-position ""} obj:object} {
+      #
+      # Return true, when this is for the current user not the last
+      # question.
+      #
       if {$position eq ""} {
         set position [$obj property position]
       }
@@ -2509,6 +2530,9 @@ namespace eval ::xowf::test_item {
     }
 
     :public method question_names {obj:object} {
+      #
+      # Return the names of the questions of an assessment.
+      #
       return [$obj property question]
     }
 
@@ -2544,6 +2568,10 @@ namespace eval ::xowf::test_item {
     }
 
     :public method nth_question_obj {obj:object position:integer} {
+      #
+      # Return the nth question object of an assessment (based on
+      # position).
+      #
       :assert_assessment $obj
       set questions [dict get [$obj instance_attributes] question]
       set result [:load_question_objs $obj [lindex $questions $position]]
@@ -2785,6 +2813,10 @@ namespace eval ::xowf::test_item {
     }
 
     :public method total_minutes_for_exam {-manager:object} {
+      #
+      # Compute the total time of an exam, based on the minutes
+      # provided by the single questions.
+      #
       set max_items [$manager property max_items ""]
       set combined_form_info [:combined_question_form $manager]
       set total_minutes [:total_minutes \
@@ -2836,6 +2868,10 @@ namespace eval ::xowf::test_item {
       {-with_minutes:switch false}
       obj:object
     } {
+      #
+      # Return the question_info of the nth form (question).  The
+      # information added to the tile can be configured via parameter.
+      #
       if {![info exists position]} {
         set position [$obj property position]
       }
@@ -2928,6 +2964,9 @@ namespace eval ::xowf::test_item::grading {
     }
 
     :public method print {-achieved_points:required} {
+      #
+      # Return the achievedPoints when available (or empty).
+      #
       if {[dict exists $achieved_points achievedPoints]} {
         return [dict get $achieved_points achievedPoints]
       }
