@@ -1112,6 +1112,12 @@ namespace eval ::xowf::test_item {
     }
 
     :public method rename_attributes {form_obj:object} {
+      #
+      # Perform attribute renaming in the provided form_obj and return
+      # this form_obj. In essence, this changes the generic "@answer@"
+      # value in the form and in the form constraints to a name based
+      # on the form name.
+      #
 
       set form [$form_obj get_property -name form]
       set fc   [$form_obj get_property -name form_constraints]
@@ -1141,7 +1147,12 @@ namespace eval ::xowf::test_item {
       return $form_obj
     }
 
-    :public method get_form_object {{-set_title:boolean true} ctx:object form_name} {
+    :public method -deprecated get_form_object {ctx:object form_name} {
+      #
+      # Return the form object based on the provided form name. This
+      # function performs attribute renaming on the returned form
+      # object.
+      #
       set form_id [$ctx default_load_form_id $form_name]
       set obj [$ctx object]
       set form_obj [::xo::db::CrClass get_instance_from_db -item_id $form_id]
@@ -1548,7 +1559,7 @@ namespace eval ::xowf::test_item {
       set periods ""
       set from ""
       set last_from ""
-      theset until ""
+      set until ""
       foreach ps $revision_sets {
         set current_state [ns_set get $ps state]
         if {$state eq $current_state} {
@@ -2483,6 +2494,10 @@ namespace eval ::xowf::test_item {
     }
 
     :method load_question_objs {obj:object names} {
+      #
+      # Load the question objects for the provided question names and
+      # return the quesion objs.
+      #
       set questions [lmap ref $names {
         if {![string match "*/*" $ref]} {
           set ref [[$obj parent_id] name]/$ref
@@ -2498,16 +2513,23 @@ namespace eval ::xowf::test_item {
       return $questionForms
     }
 
-    :public method current_question_name {obj:object} {
+    :method current_question_name {obj:object} {
       set questions [dict get [$obj instance_attributes] question]
       return [lindex [dict get [$obj instance_attributes] question] [$obj property position]]
     }
 
     :public method current_question_obj {obj:object} {
+      #
+      # Load the current question obj based on the current question
+      # name.
+      #
       return [:load_question_objs $obj [:current_question_name $obj]]
     }
 
     :public method shuffled_index {{-shuffle_id:integer -1} obj:object position} {
+      #
+      # Return the shuffled index position, in case shuffling is turned on.
+      #
       if {$shuffle_id > -1} {
         set form_objs [:question_objs $obj]
         set shuffled [::xowiki::randomized_indices -seed $shuffle_id [llength $form_objs]]
@@ -2517,6 +2539,10 @@ namespace eval ::xowf::test_item {
     }
 
     :public method question_objs {{-shuffle_id:integer -1} obj:object} {
+      #
+      # For the provided assessment object, return the question
+      # objects in the right order, depending on the shuffle_id.
+      #
       :assert_assessment $obj
       set form_objs [:load_question_objs $obj [$obj property question]]
       if {$shuffle_id > -1} {
@@ -2764,6 +2790,12 @@ namespace eval ::xowf::test_item {
       {-shuffle_id:integer -1}
       obj:object
     } {
+      #
+      # For the provided assessment, return a combined question_form
+      # as a single (combined) form, containing the content of all
+      # question forms. The result is a dict, containing also title
+      # information etc. depending on the provided parameters.
+      #
       set form_objs [:question_objs -shuffle_id $shuffle_id $obj]
       if {$user_specific} {
         set max_items [$obj property max_items ""]
@@ -2857,6 +2889,9 @@ namespace eval ::xowf::test_item {
       {-with_title:switch false}
       obj:object
     } {
+      #
+      # Return the current form object of the provided assessment.
+      #
       return [:nth_question_form -with_numbers=$with_numbers -with_title=$with_title $obj]
     }
 
@@ -2869,8 +2904,10 @@ namespace eval ::xowf::test_item {
       obj:object
     } {
       #
-      # Return the question_info of the nth form (question).  The
-      # information added to the tile can be configured via parameter.
+      # Return the question_info of the nth form (question) of the
+      # assessment.  The information added to the title can be
+      # optionally included as expressed by the non-positional
+      # parameters.
       #
       if {![info exists position]} {
         set position [$obj property position]
@@ -2893,9 +2930,17 @@ namespace eval ::xowf::test_item {
     }
 
     :public method current_question_number {obj:object} {
+      #
+      # Translate the position of an object into its question number
+      # (as e.g. used by current_question_title)
+      #
       return [expr {[$obj property position] + 1}]
     }
     :public method current_question_title {{-with_numbers:switch false} obj:object} {
+      #
+      # In case, with_numbers is provided, return a internationalized
+      # title for the question, such as "Question 1"
+      #
       if {$with_numbers} {
         return "#xowf.question# [:current_question_number $obj]"
       }
