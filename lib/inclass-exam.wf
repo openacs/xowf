@@ -191,6 +191,7 @@ Action instproc unpublish_link {obj} {
   set published_periods [xowf::test_item::answer_manager state_periods $revision_sets -state published]
   set review_periods    [xowf::test_item::answer_manager state_periods $revision_sets -state submission_review]
   set total_minutes     [xowf::test_item::question_manager total_minutes -max_items $max_items $combined_form_info]
+  set total_points      [xowf::test_item::question_manager total_points -max_items $max_items $combined_form_info]
   set max_items_msg     ""
 
   if {$max_items ne ""} {
@@ -221,7 +222,7 @@ Action instproc unpublish_link {obj} {
     <p>
     [expr {$max_items_msg ne "" ? "$max_items_msg" : ""}]
     $nrQuestions [expr {$nrQuestions == 1 ? "#xowf.question#" : "#xowf.questions#"}],
-    $total_minutes #xowf.Minutes#<br>
+    $total_minutes #xowf.Minutes#, $total_points #xowf.Points#<br>
     [expr {$autograde ? "#xowf.exam_review_possible#" : "#xowf.exam_review_not_possible#"}]<br>
     [expr {$randomizationOk ? "#xowf.randomization_for_exam_ok#" : "#xowf.randomization_for_exam_not_ok#"}]<br>
     [expr {$allow_paste ? "#xowf.Cut_and_paste_allowed#" : "#xowf.Cut_and_paste_not_allowed#"}]<br>

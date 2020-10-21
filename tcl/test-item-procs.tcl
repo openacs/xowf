@@ -2470,6 +2470,7 @@ namespace eval ::xowf::test_item {
     #   - question_property
     #   - add_seeds
     #   - total_minutes
+    #   - total_points    
     #   - total_minutes_for_exam
     #   - exam_target_time
     #
@@ -2681,6 +2682,7 @@ namespace eval ::xowf::test_item {
         lappend title_infos [list full_title $title \
                                  title $form_title \
                                  minutes $minutes \
+                                 points $points \
                                  number $number]
         lappend full_fc [:add_to_fc \
                              -fc [$form_obj property form_constraints] \
@@ -2820,28 +2822,46 @@ namespace eval ::xowf::test_item {
                   $form_objs]
     }
 
-    :public method total_minutes {{-max_items:integer,0..1 ""} form_info} {
+    :method total {-property:required title_infos} {
+      set total 0
+      foreach title_info $title_infos {
+          if {[dict exists $title_info $property]} {
+            set value [dict get $title_info  $property]
+            if {$value eq ""} {
+              ns_log notice "missing $property in '$title_info'"
+              set value 0
+            }
+            set total [expr {$total + $value}]
+          }
+        }
+      return $total
+    }
+
+    :method title_infos {{-max_items:integer,0..1 ""} form_info} {
       #
-      # Compute the duration of an exam. When max_items is nonempty,
-      # sum the duration of all items. Otherwise, sum the duration
-      # of the specified number of items.
+      # When max_items is nonempty, return the title infos of all
+      # items. Otherwise, just the specified number of items.
       #
       set title_infos [dict get $form_info title_infos]
       if {$max_items ne ""} {
         set title_infos [lrange $title_infos 0 $max_items-1]
       }
-      set minutes 0
-      foreach title_info $title_infos {
-          if {[dict exists $title_info minutes]} {
-            set title_minutes [dict get $title_info minutes]
-            if {$title_minutes eq ""} {
-              ns_log notice "missing minutes in '$title_info'"
-              set title_minutes 0
-            }
-            set minutes [expr {$minutes + $title_minutes}]
-          }
-        }
-      return $minutes
+      return $title_infos
+    }
+
+    :public method total_minutes {{-max_items:integer,0..1 ""} form_info} {
+      #
+      # Compute the duration of an exam based on the form_info dict.
+      #
+      return [:total -property minutes [:title_infos -max_items $max_items $form_info]]
+    }
+
+    :public method total_points {{-max_items:integer,0..1 ""} form_info} {
+      #
+      # Compute the maximal achievable points of an exam based on the
+      # form_info dict.
+      #
+      return [:total -property points [:title_infos -max_items $max_items $form_info]]
     }
 
     :public method total_minutes_for_exam {-manager:object} {
@@ -2878,7 +2898,7 @@ namespace eval ::xowf::test_item {
         set base_clock [clock scan [::xo::db::tcl_date $base_time tz]]
         set secfrac 0
       }
-      set target_time [clock format [expr {$base_clock + $total_minutes*60}] \
+      set target_time [clock format [expr {$base_clock + $total_minutes * 60}] \
                            -format %Y-%m-%dT%H:%M:%S]
       ns_log notice "exam_target_time $base_time base clock $base_clock + total_minutes $total_minutes = ${target_time}.$secfrac"
       return ${target_time}.$secfrac
