@@ -251,6 +251,24 @@ namespace eval ::xowf {
       }
     }
 
+    WorkflowContainer instproc init {} {
+      set :creation_time [clock seconds]
+      ::xo::add_cleanup [self] [list [self] cleanup]
+      next
+    }
+
+    WorkflowContainer instproc cleanup {} {
+      #
+      #  Keep workflow container 10 minutes in the per-thread cache.
+      #
+      if {[clock seconds] - ${:creation_time} > 600} {
+        ns_log notice "======================== WorkflowContainer [self] self destroys"
+        ::xo::remove_cleanup [self]
+        :destroy
+      }
+    }
+
+
     WorkflowContainer instproc object {} {
       #
       # Method for emulating "object". Object specific code cannot
