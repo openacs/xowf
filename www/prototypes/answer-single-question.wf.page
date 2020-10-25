@@ -1,0 +1,13 @@
+# -*- Tcl-*-
+# The variables "package_id" and "parent_id" are provided via the caller context.
+#
+xowf::Package create_new_workflow_page \
+    -package_id $package_id \
+    -parent_id $parent_id \
+    -name en:answer-single-question.wf \
+    -title "Answer Single Question Workflow" \
+    -instance_attributes {
+        workflow_definition {::xowf::include /packages/xowf/lib/answer-single-question.wf}
+        form_constraints {}
+        return_url {}
+    }

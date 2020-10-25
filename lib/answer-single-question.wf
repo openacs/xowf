@@ -1,0 +1,134 @@
+# -*- Tcl -*-
+#
+# Workflow template for answering a single question.
+#
+# This workflow creates for a test-item a simple answer workflow for the create
+#
+
+set :autoname 1   ;# to avoid editable name field
+set :policy ::xowf::test_item::test-item-policy-answer
+set :debug 0
+
+########################################################################
+#
+# Action definitions
+#
+########################################################################
+
+Action allocate -proc activate {obj} {
+  #
+  # Called, when we try to create or use a workflow instance
+  # via a workflow definition ($obj is a workflow definition)
+  #
+  set package_id [$obj package_id]
+  set parent_id [$package_id query_parameter parent_id:integer]
+  set parent_obj [::xo::db::CrClass get_instance_from_db -item_id $parent_id]
+  set name [ns_md5 $parent_id-[::xo::cc set untrusted_user_id]]
+
+  :payload [list title [$parent_obj title] name $name parent_id $parent_id]
+}
+
+Action initialize -proc activate {obj} {
+  #
+  # Called, after workflow instance was created
+  #
+}
+
+Action back -label #xowiki.back# -proc activate {obj} {
+  set parent_obj [::xo::db::CrClass get_instance_from_db -item_id [$obj parent_id]]
+  #
+  # In case, we have saved in the question a return_url (this is the
+  # return_url passed originally into the "edit question" method), set
+  # this as well again as return_url parameter when going back to this
+  # question.
+  #
+  if {[$parent_obj exists_property return_url]} {
+    set return_url [$parent_obj property return_url]
+  }
+  set url [export_vars -base [$parent_obj pretty_link] {
+    {m edit} return_url
+  }]
+  ad_returnredirect $url
+  ad_script_abort
+}
+
+
+
+########################################################################
+#
+# State definitions
+#
+########################################################################
+
+State parameter {
+  {view_method edit}
+  {extra_css {
+    /resources/xowf/test-item.css
+  }}
+}
+
+State initial -actions {back} \
+    -form_loader basic_form_loader
+
+########################################################################
+#
+# Helper methods for the workflow container
+#
+########################################################################
+
+#
+# Minimal form loader
+#
+proc basic_form_loader {ctx form_name} {
+  set obj [$ctx object]
+  set parent_id [$obj parent_id]
+  set parent_obj [::xo::db::CrClass get_instance_from_db -item_id $parent_id]
+
+  #
+  # In case shuffling is required, fetch via the shuffled position.
+  #
+  set shuffle_id [expr {[$parent_obj property shuffle_items 0] ? [$obj creation_user] : -1}]
+
+  #
+  # Load the form. This is here simply the parent object
+  #
+  set form_obj ::[$obj parent_id]
+
+  #
+  # Update the title of the page
+  #
+  #:set_title $obj -position $position -item_nr $item_nr -for_question -with_minutes
+
+  return $form_obj
+}
+
+########################################################################
+#
+# Object specific operations
+#
+########################################################################
+
+:object-specific {
+  set ctx [:wf_context]
+  set container [$ctx wf_container]
+
+  #
+  # Provide a forwarder to the form-loader, since the from-loader is
+  # defined in the workflow container.
+  #
+  if {$ctx ne $container} {
+    $ctx forward basic_form_loader $container %proc $ctx
+  }
+  #
+  # Set the same policy as in the inclass-exam-answer workflow.
+  #
+  set :policy ::xowf::test_item::test-item-policy1
+}
+
+
+#
+# Local variables:
+#    mode: tcl
+#    tcl-indent-level: 2
+#    indent-tabs-mode: nil
+# End:
