@@ -2470,7 +2470,7 @@ namespace eval ::xowf::test_item {
     #   - question_property
     #   - add_seeds
     #   - total_minutes
-    #   - total_points    
+    #   - total_points
     #   - total_minutes_for_exam
     #   - exam_target_time
     #
@@ -3108,8 +3108,8 @@ namespace eval ::xowiki {
       {entry -name New.Item.ReorderInteraction -form en:edit-interaction.wf -query p.item_type=Reorder}
       {entry -name New.Item.UploadInteraction -form en:edit-interaction.wf -query p.item_type=Upload}
 
-      {entry -name New.App.OnlineExam -form en:online-exam.wf}
-      {entry -name New.App.InclassQuiz -form en:inclass-quiz.wf}
+      {entry -name New.App.OnlineExam -form en:online-exam.wf -disabled true}
+      {entry -name New.App.InclassQuiz -form en:inclass-quiz.wf -disabled true}
       {entry -name New.App.InclassExam -form en:inclass-exam.wf}
     }
   }
