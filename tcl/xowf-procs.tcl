@@ -262,7 +262,7 @@ namespace eval ::xowf {
       #  Keep workflow container 10 minutes in the per-thread cache.
       #
       if {[clock seconds] - ${:creation_time} > 600} {
-        ns_log notice "======================== WorkflowContainer [self] self destroys"
+        #ns_log notice "======================== WorkflowContainer [self] self destroys"
         ::xo::remove_cleanup [self]
         :destroy
       }
