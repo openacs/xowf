@@ -123,6 +123,7 @@
 
   <msg key="ul_question">Dateiabgabefrage</msg>
   <msg key="sub_question">Teilfrage</msg>
+  <msg key="choice_answer">Antwort</msg>
   <msg key="show_max">Zeige maximal</msg>
 
   <msg key="menu-New-Item-TextInteraction">Textfrage</msg>

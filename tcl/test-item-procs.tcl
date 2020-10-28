@@ -801,7 +801,7 @@ namespace eval ::xowiki::formfield {
     }
     #:msg autoCorrectSpec=$autoCorrectSpec
     :create_components  [subst {
-      {text  {$widget,height=50px,label=#xowf.sub_question#,plugins=OacsFs}}
+      {text  {$widget,height=50px,label=#xowf.choice_answer#,plugins=OacsFs}}
       {correct {boolean,horizontal=true,label=#xowf.Correct#,form_item_wrapper_CSSclass=form-inline}}
       {solution {textarea,rows=2,label=#xowf.Solution#,form_item_wrapper_CSSclass=form-inline}}
     }]
