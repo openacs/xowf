@@ -66,7 +66,7 @@ Action view  -label #xowiki.view# -proc activate {obj} {
   ad_script_abort
 }
 
-State initial -actions {save view tryout}
+State initial -actions {save tryout}
 
 :proc item_type {obj} {
     set item_type [$obj property item_type]
