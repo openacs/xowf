@@ -800,7 +800,7 @@ Action instproc unpublish_link {obj} {
     # state different to "published".
     #
     if {[:property _state] ne "published"} {
-      $obj util_user_message -html -message "Cannot start answer workflow in this state"
+      :util_user_message -html -message "Cannot start answer workflow in this state"
     } else {
       set wf [xowf::test_item::answer_manager get_answer_wf [self]]
       set proctoring [:property proctoring]
@@ -819,7 +819,7 @@ Action instproc unpublish_link {obj} {
     # Start answering an exam in proctored mode
     #
     if {[:property _state] ne "published"} {
-      $obj util_user_message -html -message "Cannot start answer workflow in this state"
+      :util_user_message -html -message "Cannot start answer workflow in this state"
     } else {
       set wf [xowf::test_item::answer_manager get_answer_wf [self]]
       $wf www-create-or-use -parent_id [:item_id]
