@@ -82,7 +82,11 @@ State created -actions {publish restart} -form_loader load_form -view_method edi
     -form "#xowf.inclass-exam-draft_exam#"
 State published -actions {unpublish} -form_loader load_form -view_method edit \
     -form "#xowf.inclass-exam-open#"
-State done -actions {republish open_submission_review restart} -form_loader load_form -view_method edit \
+State done -actions {republish open_submission_review} \
+    -in_role swa {
+      -actions {republish open_submission_review restart}
+    } \
+    -form_loader load_form -view_method edit \
     -form "#xowf.inclass-exam-closed#"
 State submission_review -actions {close_submission_review} -form_loader load_form -view_method edit \
     -form "#xowf.inclass-exam-review#"
@@ -391,6 +395,11 @@ Action instproc unpublish_link {obj} {
   }
 
   ${container}::Property return_url -default "" -allow_query_parameter true
+  ${container}::done actions {republish open_submission_review}
+  ${container}::done in_role swa {
+    -actions {republish open_submission_review restart}
+  }
+
   #
   # Unset the actual query return_url, since we want to use it via
   # property.  In some cases, we have to set it explicitly from the
@@ -805,8 +814,9 @@ Action instproc unpublish_link {obj} {
       set wf [xowf::test_item::answer_manager get_answer_wf [self]]
       set proctoring [:property proctoring]
       if {$proctoring ne "" && $proctoring} {
+        set po [:property proctoring_options]
         set cLink [export_vars -base [:pretty_link] {
-          {m proctor} {link "[:pretty_link -query m=proctor-answer]"}
+          {m proctor} {link "[:pretty_link -query m=proctor-answer&proctoring_options=$po]"}
         }]
         ::${:package_id} returnredirect $cLink
       } else {
@@ -855,15 +865,26 @@ Action instproc unpublish_link {obj} {
       set object_id ${:item_id}
       set object_url $link
       set examination_statement_p [expr {![string match *p.try_out_mode=1* $link]}]
+      set proctoring_options [:property proctoring_options "d c a s"]
+      foreach proctoring_parm {d c a s} flag {desktop_p camera_p audio_p examination_statement_p} {
+        set $flag [expr {$proctoring_parm in $proctoring_options}]
+      }
+      set preview_p [expr {$desktop_p || $camera_p || $audio_p}]
 
       ${:package_id} return_page -adp $proctoring_template -variables {
         object_id
         object_url
-        {preview_p true}
+        preview_p
+        desktop_p
+        camera_p
+        audio_p
         examination_statement_p
         {check_active_p false}
       }
     } else {
+      #
+      # Minimal fallback in case the proctoring-support is not installed
+      #
       return [:www-view [subst {
         <!-- ... proctor::start_dialog... -->
         <h1>You ([xo::cc user_id]) are being proctored in exam ${:object_id}!</h1>

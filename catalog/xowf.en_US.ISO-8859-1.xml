@@ -208,4 +208,11 @@
   <msg key="panel_achievied_points_wi1">%achievedPoints% (rounded%rounded%) of possible %totalPoints% points, %percentage%%, grade: %grade%</msg>
   <msg key="panel_achievied_points_wi1_noround">%achievedPoints% of possible %totalPoints% points, %percentage%%, grade: %grade%</msg>
   <msg key="test_item_name-validate_name">Name contains at least one invalid character</msg>
+
+  <msg key="Detail_configuration">Detailed Configuration</msg>
+  <msg key="Time_management">Time Management</msg>
+  <msg key="Question_management">Question Management</msg>
+  <msg key="Security">Security</msg>
+  <msg key="Proctoring_options">Proctoring Options</msg>
+  <msg key="Proctoring_options_help_text">Options to tailor proctoring behavior</msg>
 </message_catalog>

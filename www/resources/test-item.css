@@ -271,3 +271,10 @@ table.grading .progress-bar {
     background-color: #337ab7;
     height: 100%;
 }
+
+/*
+ * Indent collapsed content a little. (can/should be improved)
+ */
+form.Form-inclass-exam div.collapse {
+    margin-left: 2em;
+}

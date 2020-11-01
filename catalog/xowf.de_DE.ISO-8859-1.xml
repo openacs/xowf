@@ -186,4 +186,11 @@
   <msg key="panel_achievied_points_wi1_noround">%achievedPoints% von möglichen %totalPoints% Punkten, %percentage%%, Note: %grade%</msg>
 
   <msg key="test_item_name-validate_name">Name enthält zumindest ein ungültiges Zeichen</msg>
+
+  <msg key="Detail_configuration">Detaileinstellungen</msg>
+  <msg key="Time_management">Zeitablauf</msg>
+  <msg key="Question_management">Fragen</msg>
+  <msg key="Security">Sicherheit</msg>
+  <msg key="Proctoring_options">Optionen für Online-Beaufsichtigung</msg>
+  <msg key="Proctoring_options_help_text">Detailangaben, welche Funktionen der Online-Beaufsichtigung genutzt werden sollen</msg>
 </message_catalog>
