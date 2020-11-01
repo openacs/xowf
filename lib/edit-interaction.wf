@@ -10,7 +10,6 @@
 # {entry -name New.Item.TextInteraction -form en:edit-interaction.wf -query p.item_type=Text}
 #
 
-Action save -label #xowiki.Form-submit_button#
 Action initialize -proc activate {obj} {
     set name [$obj name]
     if {[$obj is_new_entry $name]} {
@@ -19,7 +18,9 @@ Action initialize -proc activate {obj} {
         $obj title "Fresh '$item_type' interaction ($name)"
     }
 }
-Action tryout -label #xowf.testrun# -proc activate {obj} {
+
+Action save -next_state created -label #xowiki.Form-submit_button#
+Action tryout -next_state created -label #xowf.testrun# -proc activate {obj} {
   #
   # The action tryout renders the current test-item (question,
   # exercise, ...) the same was as it is shown in an quiz/exam. The
@@ -58,7 +59,7 @@ Action tryout -label #xowf.testrun# -proc activate {obj} {
   ::xo::cc set_query_parameter return_url $url
 }
 
-Action view  -label #xowiki.view# -proc activate {obj} {
+Action view -label #xowiki.view# -proc activate {obj} {
   set url [export_vars -base [$obj pretty_link] {
     {m view} {p.return_url "[::xo::cc url]"}
   }]
@@ -67,6 +68,7 @@ Action view  -label #xowiki.view# -proc activate {obj} {
 }
 
 State initial -actions {save tryout}
+State created -actions {save view tryout}
 
 :proc item_type {obj} {
     set item_type [$obj property item_type]
