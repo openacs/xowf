@@ -68,7 +68,11 @@ Action view -label #xowiki.view# -proc activate {obj} {
 }
 
 State initial -actions {save tryout}
-State created -actions {save view tryout}
+State created \
+    -actions {save tryout} \
+    -in_role swa {
+      -actions {save view tryout}
+    }
 
 :proc item_type {obj} {
     set item_type [$obj property item_type]
@@ -88,6 +92,7 @@ State created -actions {save view tryout}
   set container [[:wf_context] wf_container]
   set form_name  [${container} form_name_from_item_type [self]]
   ${container}::initial form $form_name
+  ${container}::created form $form_name
 }
 
 #
