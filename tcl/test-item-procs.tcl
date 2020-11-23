@@ -800,9 +800,10 @@ namespace eval ::xowiki::formfield {
       set autoCorrectSpec ""
     }
     #:msg autoCorrectSpec=$autoCorrectSpec
+    # {correct {boolean_checkbox,horizontal=true,label=#xowf.Correct#,form_item_wrapper_CSSclass=form-inline}}    
     :create_components  [subst {
       {text  {$widget,height=50px,label=#xowf.choice_option#,plugins=OacsFs}}
-      {correct {boolean,horizontal=true,label=#xowf.Correct#,form_item_wrapper_CSSclass=form-inline}}
+      {correct {boolean_checkbox,horizontal=true,label=#xowf.Correct#,form_item_wrapper_CSSclass=form-inline}}
       {solution {textarea,rows=2,label=#xowf.Solution#,form_item_wrapper_CSSclass=form-inline}}
     }]
     set :__initialized 1

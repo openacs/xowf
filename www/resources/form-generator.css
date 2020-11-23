@@ -33,3 +33,6 @@
     width: 60px;
 }
 
+.xowiki-content fieldset div.form-inline div input[type=checkbox] {
+    position: relative;    
+}
