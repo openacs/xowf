@@ -94,11 +94,29 @@ proc basic_form_loader {ctx form_name} {
   #
   set form_obj ::[$obj parent_id]
 
-  #
-  # Update the title of the page
-  #
-  #:set_title $obj -position $position -item_nr $item_nr -for_question -with_minutes
-
+  set question_infos [::xowf::test_item::question_manager describe_form $form_obj]
+  foreach question_info $question_infos {
+    if {$question_info ne ""} {
+      #
+      # The handled metrics are currently hardcoded here. So, we can
+      # rely on having the returned value in the message keys. The
+      # list order is important, since it determines also the ordering
+      # in the message.
+      #
+      foreach metric { choice_options sub_questions nrcorrect shuffle } {
+        if {[dict exists $question_info $metric]} {
+          set m [dict get $question_info $metric]
+          switch $metric {
+            nrcorrect { append msg " (#xowf.Correct# $m) " }
+            shuffle   { append msg "<strong>#xowf.Shuffle#:</strong> #xowf.shuffle_$m# " }
+            default   { append msg "<strong>#xowf.$metric#:</strong> $m "}
+          }
+        }
+      }
+      #append  msg " <pre>$question_info</pre> "
+      util_user_message -html -message $msg
+    }
+  }
   return $form_obj
 }
 

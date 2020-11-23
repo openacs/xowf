@@ -15,6 +15,7 @@
         <summary>XoWiki Content Flow - an XoWiki based workflow system implementing state-based behavior of wiki pages and forms</summary>
         <release-date>2017-08-06</release-date>
         <vendor url="http://wu.ac.at">WU Vienna</vendor>
+	<license>BSD-Style</license>
         <maturity>2</maturity>
 
         <provides url="xowf" version="5.10.0d27"/>

@@ -83,7 +83,7 @@ namespace eval ::xowiki::formfield {
   #
   # Provide a default setting for the rich-text widgets.
   #
-  test_item set richtextWidget {richtext,editor=ckeditor4,ck_package=standard,extraPlugins=}
+  test_item set richtextWidget {richtext,editor=ckeditor4,ck_package=standard,displayMode=inline,extraPlugins=}
 
   test_item instproc feed_back_definition {} {
     #
@@ -2822,6 +2822,23 @@ namespace eval ::xowf::test_item {
                   $form_objs]
     }
 
+    :public method describe_form {form_obj} {
+      #
+      # Call for every form field of the form_obj the "describe"
+      # method and return these infos in a form of a list.
+      #
+      # @result list of dicts describing the form fields.
+      #
+      set form_fields [$form_obj create_form_fields_from_form_constraints \
+                           -lookup \
+                           [lsort -unique [$form_obj property form_constraints]]]
+      return [lmap form_field $form_fields {
+        $form_field describe
+      }]
+    }
+
+
+
     :method total {-property:required title_infos} {
       set total 0
       foreach title_info $title_infos {
@@ -2971,9 +2988,72 @@ namespace eval ::xowf::test_item {
 
 }
 
+namespace eval ::xowiki::formfield {
+  #
+  # The following "describe" function should be moved to a more
+  # generic place, probably to the formfield procs in xowiki (to the
+  # relevant formfield classes). It is just kept here for the time
+  # being, until we have a better understanding what's needed in
+  # detail.
+  #
+  ::xowiki::formfield::FormField instproc describe {} {
+    set d ""
+    #
+    # The dict keys of the result should correspond as far as possible
+    # to message keys to ease multi-language communication.
+    #
+    switch [:info class] {
+      ::xowiki::formfield::checkbox {
+        # mc interaction
+        #
+        # The factual (displayed) answer is in ${:answer}, but we want
+        # to see the list of possibilities, so use the data from the
+        # original spec.
+        #
+        foreach s [split ${:spec} ,] {
+          if {[regexp {^answer=(.*)$} $s . answer]} {
+            break
+          }
+        }
+        dict set d choice_options [llength ${answer}]
+        dict set d nrcorrect [llength [lsearch -exact -all ${answer} t]]
+        dict set d shuffle ${:shuffle_kind}
+        if {[info exists :show_max]} {
+          dict set d show_max ${:show_max}
+        }
+        #dict set d all [:serialize]
+        #ns_log warning "describe: $d"
+      }
+      ::xowiki::formfield::text_fields {
+        # short text interaction
+        #
+        # The factual (displayed) answer is in ${:answer}, but we want
+        # to see the list of possibilities, so use the data from the
+        # original spec (here in $options)
+        #
+        foreach s [split ${:spec} ,] {
+          ns_log warning "s=$s"
+          if {[regexp {^options=(.*)$} $s . options]} {
+            break
+          }
+        }
+        dict set d all ${:spec}
+        dict set d sub_questions [llength ${options}]
+        dict set d shuffle ${:shuffle_kind}
+        #ns_log warning "describe: $d"
+      }
+      default {
+        ns_log warning "describe: class [:info class] not handled"
+      }
+    }
+    return $d
+  }
+}
+
 namespace eval ::xowf::test_item {
   #
-  # Define handling of form-field "td_pretty_value"
+  # Define handling of form-field "td_pretty_value".  This class is
+  # used as a mixin class in the result table renderer.
   #
   ::xotcl::Class create ::xowf::test_item::td_pretty_value \
       -superclass ::xowiki::formfield::FormField

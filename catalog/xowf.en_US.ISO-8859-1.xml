@@ -130,7 +130,9 @@
   <msg key="code_question">Code Question</msg>
   <msg key="ul_question">File Upload Question</msg>
   <msg key="sub_question">Sub-Question</msg>
+  <msg key="sub_questions">Sub-Questions</msg>  
   <msg key="choice_option">Answer Option</msg>
+  <msg key="choice_options">Answer Options</msg>  
   <msg key="reorder_question">Ordering Question</msg>
   <msg key="reorder_question_elements">Ordering Elements</msg>
 
