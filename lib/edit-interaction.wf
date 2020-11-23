@@ -20,7 +20,7 @@ Action initialize -proc activate {obj} {
 }
 
 Action save -next_state created -label #xowiki.Form-submit_button#
-Action tryout -next_state created -label #xowf.testrun# -proc activate {obj} {
+Action tryout -next_state created -label #xowf.Preview# -proc activate {obj} {
   #
   # The action tryout renders the current test-item (question,
   # exercise, ...) the same was as it is shown in an quiz/exam. The
