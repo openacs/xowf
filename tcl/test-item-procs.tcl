@@ -673,7 +673,8 @@ namespace eval ::xowiki::formfield {
     dict set fc_dict label ""
     dict set fc_dict options $options
     dict set fc_dict answer $answer
-
+    dict set fc_dict grading exact
+    
     append form \
         "<form>\n" \
         "<div class='reorder_interaction'>\n" \
