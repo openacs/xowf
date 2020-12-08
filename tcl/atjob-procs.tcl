@@ -16,6 +16,7 @@ namespace eval ::xowf {
     ::xo::Attribute create cmd
     ::xo::Attribute create time
     ::xo::Attribute create object
+    ::xo::Attribute create url
     ::xo::Attribute create priority -default 5
   }
 
@@ -54,7 +55,12 @@ namespace eval ::xowf {
     if {$form_id != 0} {
       ::xo::db::CrClass get_instance_from_db -item_id $form_id
       set instance_attributes [dict merge [::$form_id default_instance_attributes] [list cmd ${:cmd}]]
-      set name [::xowiki::autoname new -name [::$form_id name] -parent_id $owner_id]
+      if {[info exists :url]} {
+        dict set instance_attributes url ${:url}
+      }
+      set name [::xowiki::autoname new \
+                    -name [::$form_id name] \
+                    -parent_id $owner_id]
       set f [::xowiki::FormPage new -destroy_on_cleanup \
                  -package_id $package_id \
                  -parent_id $owner_id \
@@ -86,7 +92,7 @@ namespace eval ::xowf {
   }
 
   atjob proc run_jobs {item_ids} {
-    #:log "---run xowf jobs START"
+    :log "--at run jobs START"
 
     set sql "select package_id, item_id, name, parent_id, publish_status, creation_user,
                     revision_id, page_template, instance_attributes
@@ -95,7 +101,8 @@ namespace eval ::xowf {
 
     set items [::xowiki::FormPage instantiate_objects \
                    -object_class ::xowiki::FormPage \
-                   -sql $sql]
+                   -sql $sql \
+                   -initialize false]
 
     if {[llength [$items children]] > 0} {
 
@@ -105,7 +112,9 @@ namespace eval ::xowf {
         #:log "--at *** job=[$item serialize] ***\n"
         set owner_id [$item parent_id]
         set party_id [$item creation_user]
+        set package_id [$item package_id]
         set __ia [$item instance_attributes]
+
         if {![dict exists $__ia cmd]} {
           #ns_log notice "--at ignore strange entry [$item serialize]"
           ns_log notice "--at ignore strange entry, no cmd in [$item instance_attributes]"
@@ -113,21 +122,34 @@ namespace eval ::xowf {
         }
         set cmd [dict get $__ia cmd]
 
-        #
-        # Probably, we should add a URL to the form to get better
-        # conformance for atjobs.
-        #
-        ::xo::ConnectionContext require -url /
+        if {[dict exists $__ia url]} {
+          set url [dict get $__ia url]
+          if {$url eq ""} {
+            set url [lindex [site_node::get_url_from_object_id -object_id $package_id] 0]
+            ns_log warning "--at providing best effort url, since no valid URL was provided by caller (cmd $cmd)"
+          }
+        }
 
-        # We assume, the owner object is a cr-item
-        ::xo::db::CrClass get_instance_from_db -item_id $owner_id
-
-        # We assume, the package is from the xowiki family; make sure, the url looks like real
+        #
+        # Initialize the package with the provided url and user_id.
+        #
         ::xo::Package initialize \
-            -package_id [::$owner_id package_id] \
-            -user_id $party_id \
-            -init_url 0 -actual_query ""
-        ::$package_id set_url -url [::$package_id package_url][::$owner_id name]
+            -package_id $package_id \
+            -url $url \
+            -user_id $party_id
+        #
+        # We require that the owner object is at least a cr-item
+        #
+        ::xo::db::CrClass get_instance_from_db -item_id $owner_id
+        #
+        # We require that the package is from the xowiki family; make
+        # sure, the url looks like real
+        #
+        #::xo::Package initialize \
+        #    -package_id [::$owner_id package_id] \
+        #    -user_id $party_id \
+        #    -init_url 0 -actual_query ""
+        #::$package_id set_url -url [::$package_id package_url][::$owner_id name]
 
         :log "--at executing atjob $cmd"
         ad_try {
@@ -172,7 +194,9 @@ namespace eval ::xowf {
     #
     set sql "select xi.item_id
               from xowiki_form_instance_item_index xi, cr_items i2, cr_items i1, cr_revisions cr
-              where i2.item_id = xi.page_template and i2.content_type = '::xowiki::Form' and i2.name = 'en:atjob-form'
+              where i2.item_id = xi.page_template
+                and i2.content_type = '::xowiki::Form'
+                and i2.name = 'en:atjob-form'
                 and cr.publish_date $op to_timestamp(:ansi_time,'YYYY-MM-DD HH24:MI')
                 and i1.item_id = xi.item_id
                 and cr.revision_id = i1.live_revision
