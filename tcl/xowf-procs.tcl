@@ -408,6 +408,7 @@ namespace eval ::xowf {
                        -default_lang [$object lang] \
                        -parent_id $parent_id \
                        $name]
+    #ns_log notice "*** resolve_form_name <$name> in $parent_id [$parent_id name] => $item_info"
     set item_id [dict get $item_info item_id]
     set form_name [dict get $item_info prefix]:[dict get $item_info stripped_name]
     return [list form_id $item_id name $form_name]
@@ -1210,6 +1211,7 @@ namespace eval ::xowf {
     $cc array set form_parameter \
         [list __object_name [$object name] \
              _name [$object name] \
+             _nls_language [$last_context locale] \
              __form_action save-form-data \
              __form_redirect_method __none \
              __action_$action_name $action_name]
@@ -1234,7 +1236,7 @@ namespace eval ::xowf {
 
     #:log "CHECK batch mode: [$package  exists __batch_mode]"
     if {[$package  exists __batch_mode]} {
-      :msg "RESETTING BATCH MODE"
+      #:msg "RESETTING BATCH MODE"
       :log "RESETTING BATCH MODE"
       $package unset __batch_mode
     }
@@ -2273,9 +2275,9 @@ namespace eval ::xowf {
       :log  "--xowf action $action state_safe -- name='${:name}'"
       return $actionObj
     }
-    error "\tNo state-safe action '$action' available in workflow instance [self] of \
-    [${:page_template} name] in state [$ctx get_current_state]
-    \tAvailable actions: [[$ctx current_state] get_actions]"
+    error "No state-safe action '$action' available in workflow instance [self] of \
+    [${:page_template} name] in state [$ctx get_current_state]\n\ 
+    Available actions: [[$ctx current_state] get_actions]"
   }
 
   WorkflowPage ad_instproc call_action {-action {-attributes {}}} {
@@ -2294,25 +2296,45 @@ namespace eval ::xowf {
   #
   # Interface to atjobs
   #
-  WorkflowPage ad_instproc schedule_action {-time -party_id -action {-attributes {}}} {
-    Schedule the specified action for the current workflow instance at the given
-    time. The specified attributes are provided like form_parameters to
-    the action of the workflow.
+  WorkflowPage ad_instproc schedule_action {
+    -time:required
+    -party_id
+    -action:required
+    {-attributes {}}
+  } {
+    Schedule the specified action for the current workflow instance at
+    the given time. The specified attributes are provided like
+    form_parameters to the action of the workflow.
+
+    @param time       time when the atjob should be excuted
+    @param party_id   party_id for the user executing the atjob
+    @param action     workflow action to be executed
+    @param attributes arguments provided to the workflow action
+                      (attribute value pairs)
   } {
     if {![:is_wf_instance]} {
       error "Page [self] is not a Workflow Instance"
     }
-    if {![info exists party_id]} {set party_id [::xo::cc user_id]}
+    if {![info exists party_id]} {
+      set party_id [::xo::cc user_id]
+    }
     :schedule_job -time $time -party_id $party_id \
         [list call_action -action $action -attributes $attributes]
   }
 
   WorkflowPage ad_instproc schedule_job {-time:required -party_id cmd} {
+    
     Schedule the specified Tcl command for the current package
     instance at the given time.
+    
   } {
     :log "-at $time"
-    set j [::xowf::atjob new -time $time -party_id $party_id -cmd $cmd -object [self]]
+    set j [::xowf::atjob new \
+               -time $time \
+               -party_id $party_id \
+               -cmd $cmd \
+               -url [:pretty_link] \
+               -object [self]]
     $j persist
   }
 
@@ -2332,6 +2354,7 @@ namespace eval ::xowf {
       lassign $atts state assignee instance_attributes xowiki_form_page_id
       if {[dict exists $instance_attributes wf_current_state]
           && [dict get $instance_attributes wf_current_state] ne $state} {
+        
         #Object msg "must update state $state for $xowiki_form_page_id to [dict get $instance_attributes wf_current_state]"
 
         xo::db dml update_state "update xowiki_form_page \
@@ -2339,7 +2362,9 @@ namespace eval ::xowf {
                 where xowiki_form_page_id  = :xowiki_form_page_id"
         incr count
       }
-      if {[dict exists $instance_attributes wf_assignee] && [dict get $instance_attributes wf_assignee] ne $assignee} {
+      if {[dict exists $instance_attributes wf_assignee]
+          && [dict get $instance_attributes wf_assignee] ne $assignee
+        } {
         #Object msg "must update assignee $assignee for $xowiki_form_page_id to [dict get $instance_attributes wf_assignee]"
         set wf_assignee [dict get $instance_attributes wf_assignee]
         xo::dc dml update_state "update xowiki_form_page set assignee = :wf_assignee \
