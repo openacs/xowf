@@ -3157,7 +3157,7 @@ namespace eval ::xowf::test_item::grading {
     :public object method grade {-achieved_points:required} {
       if {[dict exists $achieved_points achievedPoints]} {
         set achieved [format %.2f [dict get $achieved_points achievedPoints]]
-        ns_log notice "XXXX $achieved_points -> [list calc_grade -points $achieved -achieved_points $achieved_points]"
+        #ns_log notice "XXXX $achieved_points -> [list calc_grade -points $achieved -achieved_points $achieved_points]"
         return [:calc_grade -points $achieved -achieved_points $achieved_points]
       }
     }
