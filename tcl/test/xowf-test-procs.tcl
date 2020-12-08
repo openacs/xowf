@@ -94,13 +94,28 @@ namespace eval ::xowf::test {
     }
 
     aa_register_case -init_classes {xowf_require_test_instance} -cats {web} -procs {
-        "::xowf::Package instproc initialize"
-        "::xowiki::Package instproc invoke"
         "::xo::Package instproc reply_to_user"
+        "::xowf::Package instproc destroy"
+        "::xowf::Package instproc initialize"
+        "::xowf::WorkflowPage instproc footer"
+        "::xowf::WorkflowPage instproc get_action_obj"
+        "::xowf::WorkflowPage instproc is_wf"
+        "::xowf::WorkflowPage instproc is_wf_instance"
+        "::xowf::WorkflowPage instproc post_process_dom_tree"
+        "::xowf::WorkflowPage instproc post_process_form_fields"
+        "::xowf::WorkflowPage instproc render_form_action_buttons"
+        "::xowf::WorkflowPage instproc render_form_action_buttons_widgets"
+        "::xowf::WorkflowPage instproc render_icon"
+        "::xowf::WorkflowPage instproc wf_context"
+        "::xowf::WorkflowPage instproc www-edit"
+        "::xowf::WorkflowPage instproc www-view"
+        "::xowiki::Package instproc invoke"
     } create_workflow_with_instance {
 
         Create an xowf workflow and a instance in a folder.
 
+        The procs list contains the public methods called via the web
+        interface.
     } {
         #
         # Run the test under the current user_id.
