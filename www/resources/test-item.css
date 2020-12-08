@@ -55,7 +55,14 @@ div.single_exam div.runtime-data .revision-details {
     }
     div.header {
 	display: none;
-    }    
+    }
+    #print-button {
+	display: none;        
+    }
+}
+
+#print-button {
+    float: right;
 }
 
 /*

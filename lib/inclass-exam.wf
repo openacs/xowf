@@ -560,6 +560,24 @@ Action instproc unpublish_link {obj} {
       set examTitle ${:title}
       set do_stream [expr {[llength [$items children]] > 100}]
 
+      # 
+      # Add a simple print button for the unaware that makes it easy
+      # to print the exam protocol to PDF and use e.g. a pdf-tool to
+      # annotate free text answers.
+      #
+      set HTML {
+        <button id="print-button">
+          <span class='glyphicon glyphicon-print' aria-hidden='true'></span> print
+        </button>
+      }
+
+      template::add_event_listener \
+          -id print-button \
+          -event click \
+          -preventdefault=false \
+          -script "window.print();"
+      append HTML [template::collect_body_scripts]
+      
       ::xo::cc set_parameter template_file view-plain-master
       ::xo::cc set_parameter MenuBar 0
       template::head::add_link -rel stylesheet -href /resources/xowf/test-item.css
@@ -568,9 +586,9 @@ Action instproc unpublish_link {obj} {
         set userName [acs_user::get_element -user_id [ad_conn user_id] -element username]
         set fullName [::xo::get_user_name  [ad_conn user_id]]
         set heading "$userName - $fullName"
-        set HTML "<h2>#xowf.online-exam-review-protocol# - $heading</h2>\n"
+        append HTML "<h2>#xowf.online-exam-review-protocol# - $heading</h2>\n"
       } else {
-        set HTML "<h2>#xowf.online-exam-protocol#</h2>\n"
+        append HTML "<h2>#xowf.online-exam-protocol#</h2>\n"
       }
 
       if {$do_stream} {
