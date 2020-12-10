@@ -122,12 +122,10 @@ namespace eval ::xowf {
         }
         set cmd [dict get $__ia cmd]
 
-        if {[dict exists $__ia url]} {
-          set url [dict get $__ia url]
-          if {$url eq ""} {
-            set url [lindex [site_node::get_url_from_object_id -object_id $package_id] 0]
-            ns_log warning "--at providing best effort url, since no valid URL was provided by caller (cmd $cmd)"
-          }
+        set url [expr {[dict exists $__ia url] ? [dict get $__ia url] : ""}]
+        if {$url eq ""} {
+          set url [lindex [site_node::get_url_from_object_id -object_id $package_id] 0]
+          ns_log warning "--at providing best effort url, since no valid URL was provided by caller (cmd $cmd)"
         }
 
         #
