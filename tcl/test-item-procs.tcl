@@ -674,7 +674,7 @@ namespace eval ::xowiki::formfield {
     dict set fc_dict options $options
     dict set fc_dict answer $answer
     dict set fc_dict grading exact
-    
+
     append form \
         "<form>\n" \
         "<div class='reorder_interaction'>\n" \
@@ -801,7 +801,7 @@ namespace eval ::xowiki::formfield {
       set autoCorrectSpec ""
     }
     #:msg autoCorrectSpec=$autoCorrectSpec
-    # {correct {boolean_checkbox,horizontal=true,label=#xowf.Correct#,form_item_wrapper_CSSclass=form-inline}}    
+    # {correct {boolean_checkbox,horizontal=true,label=#xowf.Correct#,form_item_wrapper_CSSclass=form-inline}}
     :create_components  [subst {
       {text  {$widget,height=50px,label=#xowf.choice_option#,plugins=OacsFs}}
       {correct {boolean_checkbox,horizontal=true,label=#xowf.Correct#,form_item_wrapper_CSSclass=form-inline}}
@@ -2647,6 +2647,8 @@ namespace eval ::xowf::test_item {
       {-with_title:switch false}
       {-with_minutes:switch false}
       {-with_points:switch false}
+      {-titleless_form:switch false}
+      {-obj:object}
       form_objs
     } {
       set full_form {}
@@ -2679,8 +2681,23 @@ namespace eval ::xowf::test_item {
           append title " - [:points_string $form_obj]"
         }
 
-        append full_form "<h3>$title</h3>\n"
-        append full_form [$form_obj property form] \n
+        if {!$titleless_form} {
+          append full_form \
+              "<h3>$title</h3>\n"
+        }
+        #
+        # Resolve links in the context of the resolve_object
+        #
+        append full_form \
+            [$obj substitute_markup \
+                 -context_obj $form_obj \
+                 [$form_obj property form]]
+
+        #append full_form \
+        #    [$form_obj substitute_markup -context_obj $form_obj [$form_obj property form]]
+
+        #ns_log notice "FORM=$full_form"
+
         lappend title_infos [list full_title $title \
                                  title $form_title \
                                  minutes $minutes \
@@ -2821,6 +2838,7 @@ namespace eval ::xowf::test_item {
                   -with_minutes=$with_minutes \
                   -with_points=$with_points \
                   {*}$extra_flags \
+                  -obj $obj \
                   $form_objs]
     }
 
@@ -2939,6 +2957,7 @@ namespace eval ::xowf::test_item {
       {-item_nr:integer}
       {-with_numbers:switch false}
       {-with_title:switch false}
+      {-titleless_form:switch false}
       {-with_minutes:switch false}
       obj:object
     } {
@@ -2963,8 +2982,10 @@ namespace eval ::xowf::test_item {
       }
       return [:question_info \
                   -with_title=$with_title \
+                  -titleless_form=$titleless_form \
                   -with_minutes=$with_minutes \
                   {*}$extra_flags \
+                  -obj $obj \
                   $form_objs]
     }
 

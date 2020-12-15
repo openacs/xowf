@@ -201,8 +201,24 @@ proc working_form_loader {ctx form_name} {
   #
   # Load the form.
   #
-  set form_obj [::xowf::test_item::question_manager nth_question_obj $parent_obj $position]
 
+  set form_info [::xowf::test_item::question_manager nth_question_form \
+                     -with_numbers \
+                     -with_title=false \
+                     -titleless_form \
+                     -with_minutes \
+                     -position $position \
+                     -item_nr $item_nr \
+                     $parent_obj]
+
+  set form_obj [::xowiki::Form new \
+                -destroy_on_cleanup \
+                -name en:one_question \
+                -title [dict get [lindex [dict get $form_info title_infos] 0] full_title] \
+                -form [list [dict get $form_info form] text/html] \
+                -text {} \
+                -anon_instances t \
+                -form_constraints [dict get $form_info form_constraints]]
   #
   # Update IP address each time the form is loaded.
   #
@@ -213,7 +229,7 @@ proc working_form_loader {ctx form_name} {
   #
   # Update the title of the page
   #
-  :set_title $obj -position $position -item_nr $item_nr -for_question -with_minutes
+  :set_title $obj -position $position -item_nr $item_nr -for_question -with_minutes -form_info $form_info
 
   #
   # Disallow paste if required
@@ -264,16 +280,10 @@ proc done_form_loader {ctx form_name} {
   -item_nr:integer
   {-for_question:switch false}
   {-with_minutes:switch false}
+  {-form_info ""}
 } {
   set parent_obj [::xo::db::CrClass get_instance_from_db -item_id [$obj parent_id]]
   if {$for_question && [$obj state] in {initial working}} {
-    set form_info [::xowf::test_item::question_manager nth_question_form \
-                       -with_numbers \
-                       -with_title=false \
-                       -with_minutes=$with_minutes \
-                       -position $position \
-                       -item_nr $item_nr \
-                       $parent_obj]
     set title_info [lindex [dict get $form_info title_infos] 0]
     set titleString [dict get $title_info full_title]
     set title [list [string trim $titleString]]
@@ -316,14 +326,14 @@ proc done_form_loader {ctx form_name} {
     template::set_css_property -class footer -property display -value none
     template::set_css_property -class community_title -property display -value none
   }
-  #template::set_css_property -querySelector ".context a" -property pointerEvents -value none    
+  #template::set_css_property -querySelector ".context a" -property pointerEvents -value none
   template::set_css_property -class pagetitle -property display -value none
   template::set_css_property -class sidebar -property display -value none
 }
 #
 # Form loader for summary (shows all submission data of a user)
 #
-# This form loader is also called indirectly by www-print-answers of
+# This form loader is e.g. called indirectly by www-print-answers of
 # oneline-exam.wf
 #
 :proc summary_form {ctx form_title} {
