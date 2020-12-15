@@ -300,7 +300,7 @@ Action instproc unpublish_link {obj} {
       #
       template::add_script -src urn:ad:js:bootstrap3
       set fullQuestionForm [subst {
-        <span class="glyphicon glyphicon-chevron-down"><button type="button" class="btn btn-small" data-toggle="collapse" data-target="#questions">#xowf.questions#</button></span>
+        <button type="button" class="btn btn-default btn-sm dropdown-toggle" data-toggle="collapse" data-target="#questions">#xowf.questions# <span class="caret"></span></button>
         <div id="questions" class="collapse">
         $fullQuestionForm
         </div>
