@@ -93,6 +93,10 @@ State created \
   set form_name  [${container} form_name_from_item_type [self]]
   ${container}::initial form $form_name
   ${container}::created form $form_name
+  ${container}::created actions {save tryout}
+  ${container}::created in_role swa {
+    -actions {save view tryout}
+  }
 }
 
 #
