@@ -201,24 +201,29 @@ proc working_form_loader {ctx form_name} {
   #
   # Load the form.
   #
+  set form_obj [::xowf::test_item::question_manager nth_question_obj $parent_obj $position]
 
-  set form_info [::xowf::test_item::question_manager nth_question_form \
-                     -with_numbers \
-                     -with_title=false \
-                     -titleless_form \
-                     -with_minutes \
-                     -position $position \
-                     -item_nr $item_nr \
-                     $parent_obj]
+  if {0} {
+    # Deactivated for now.
+    set form_info [::xowf::test_item::question_manager nth_question_form \
+                       -with_numbers \
+                       -with_title=false \
+                       -titleless_form \
+                       -with_minutes \
+                       -position $position \
+                       -item_nr $item_nr \
+                       $parent_obj]
 
-  set form_obj [::xowiki::Form new \
-                -destroy_on_cleanup \
-                -name en:one_question \
-                -title [dict get [lindex [dict get $form_info title_infos] 0] full_title] \
-                -form [list [dict get $form_info form] text/html] \
-                -text {} \
-                -anon_instances t \
-                -form_constraints [dict get $form_info form_constraints]]
+    set form_obj [::xowiki::Form new \
+                      -destroy_on_cleanup \
+                      -name en:one_question \
+                      -title [dict get [lindex [dict get $form_info title_infos] 0] full_title] \
+                      -form [list [dict get $form_info form] text/html] \
+                      -text {} \
+                      -anon_instances t \
+                      -form_constraints [dict get $form_info form_constraints]]
+  }
+
   #
   # Update IP address each time the form is loaded.
   #
@@ -229,7 +234,11 @@ proc working_form_loader {ctx form_name} {
   #
   # Update the title of the page
   #
-  :set_title $obj -position $position -item_nr $item_nr -for_question -with_minutes -form_info $form_info
+  if {0} {
+    :set_title $obj -position $position -item_nr $item_nr -for_question -with_minutes -form_info $form_info
+  } else {
+    :set_title $obj -position $position -item_nr $item_nr -for_question -with_minutes
+  }
 
   #
   # Disallow paste if required
@@ -284,6 +293,15 @@ proc done_form_loader {ctx form_name} {
 } {
   set parent_obj [::xo::db::CrClass get_instance_from_db -item_id [$obj parent_id]]
   if {$for_question && [$obj state] in {initial working}} {
+    if {$form_info eq ""} {
+    set form_info [::xowf::test_item::question_manager nth_question_form \
+                       -with_numbers \
+                       -with_title=false \
+                       -with_minutes=$with_minutes \
+                       -position $position \
+                       -item_nr $item_nr \
+                       $parent_obj]
+    }
     set title_info [lindex [dict get $form_info title_infos] 0]
     set titleString [dict get $title_info full_title]
     set title [list [string trim $titleString]]
@@ -349,6 +367,7 @@ proc done_form_loader {ctx form_name} {
                      -user_specific \
                      -shuffle_id $shuffle_id \
                      $parent_obj]
+  #ns_log notice "SUMMARY FORM shuffle_id $shuffle_id $form_info"
 
   set summary_form [dict get $form_info form]
   set summary_fc [dict get $form_info disabled_form_constraints]
