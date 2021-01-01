@@ -2306,7 +2306,7 @@ namespace eval ::xowf {
     the given time. The specified attributes are provided like
     form_parameters to the action of the workflow.
 
-    @param time       time when the atjob should be excuted
+    @param time       time when the atjob should be executed
     @param party_id   party_id for the user executing the atjob
     @param action     workflow action to be executed
     @param attributes arguments provided to the workflow action
