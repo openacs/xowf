@@ -351,7 +351,7 @@ proc done_form_loader {ctx form_name} {
 #
 # Form loader for summary (shows all submission data of a user)
 #
-# This form loader is e.g. called indirectly by www-print-answers of
+# The summary_form loader is e.g. called indirectly by www-print-answers of
 # oneline-exam.wf
 #
 :proc summary_form {ctx form_title} {
