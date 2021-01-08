@@ -202,28 +202,15 @@ proc working_form_loader {ctx form_name} {
   # Load the form.
   #
   set form_obj [::xowf::test_item::question_manager nth_question_obj $parent_obj $position]
-
-  if {0} {
-    # Deactivated for now.
-    set form_info [::xowf::test_item::question_manager nth_question_form \
-                       -with_numbers \
-                       -with_title=false \
-                       -titleless_form \
-                       -with_minutes \
-                       -position $position \
-                       -item_nr $item_nr \
-                       $parent_obj]
-
-    set form_obj [::xowiki::Form new \
-                      -destroy_on_cleanup \
-                      -name en:one_question \
-                      -title [dict get [lindex [dict get $form_info title_infos] 0] full_title] \
-                      -form [list [dict get $form_info form] text/html] \
-                      -text {} \
-                      -anon_instances t \
-                      -form_constraints [dict get $form_info form_constraints]]
-  }
-
+  #
+  # Substitute markup in the constant part of the form in the context
+  # of the original form object, setting the resolve context in the
+  # background to be able to refer to links relative to the from, when
+  # it was created.
+  #
+  $form_obj set_property form [$obj substitute_markup \
+                                   -context_obj $form_obj \
+                                   [$form_obj property form]]
   #
   # Update IP address each time the form is loaded.
   #
@@ -234,11 +221,7 @@ proc working_form_loader {ctx form_name} {
   #
   # Update the title of the page
   #
-  if {0} {
-    :set_title $obj -position $position -item_nr $item_nr -for_question -with_minutes -form_info $form_info
-  } else {
-    :set_title $obj -position $position -item_nr $item_nr -for_question -with_minutes
-  }
+  :set_title $obj -position $position -item_nr $item_nr -for_question -with_minutes
 
   #
   # Disallow paste if required
