@@ -516,6 +516,7 @@ Action instproc unpublish_link {obj} {
     set filter_id     [:query_parameter id:integer ""]
     set creation_user [:query_parameter creation_user:integer ""]
     set revision_id   [:query_parameter rid:integer ""]
+    set export        [:query_parameter export:boolean 0]    
 
     set combined_form_info [::xowf::test_item::question_manager combined_question_form [self]]
     set autograde   [dict get $combined_form_info autograde]
@@ -616,6 +617,14 @@ Action instproc unpublish_link {obj} {
         $items add $r
       }
 
+      if {$export} {
+        set recutil [xowf::test_item::answer_manager recutil_create \
+                         -clear \
+                         -exam_id [$wf parent_id] \
+                         -fn [expr {$filter_id eq "" ? "all.rec" : "$filter_id.rec"}]
+                    ]
+      }
+
       foreach i [$items children] {
         $i set online-exam-userName [acs_user::get_element -user_id [$i creation_user] -element username]
         $i set online-exam-fullName [::xo::get_user_name [$i creation_user]]
@@ -658,6 +667,14 @@ Action instproc unpublish_link {obj} {
         xo::cc eval_as_user -user_id [$i creation_user] {
           $i set __feedback_mode 2
           set question_form [$i render_content]
+
+          if {$export} {
+            xowf::test_item::answer_manager export_answer \
+                -user_answers $i \
+                -html $question_form \
+                -combined_form_info $combined_form_info \
+                -recutil $recutil
+          }
           if {$withSignature || $autograde} {
             set answerAttributes [xowf::test_item::renaming_form_loader \
                                       answer_attributes [$i instance_attributes]]
@@ -704,13 +721,13 @@ Action instproc unpublish_link {obj} {
             set filtered_revisions $revisions
           }
 
-          set start_date [ns_set get [lindex $filtered_revisions 0] creation_date]
-          set end_date [ns_set get [lindex $filtered_revisions end] creation_date]
+          set start_date  [ns_set get [lindex $filtered_revisions 0] creation_date]
+          set end_date    [ns_set get [lindex $filtered_revisions end] creation_date]
           set start_clock [clock scan [::xo::db::tcl_date $start_date tz_var]]
-          set end_clock [clock scan [::xo::db::tcl_date $end_date tz_var]]
+          set end_clock   [clock scan [::xo::db::tcl_date $end_date tz_var]]
 
           set image ""
-          ns_log notice "start date $start_date end_date $end_date / $start_clock $end_clock"
+          #ns_log notice "start date $start_date end_date $end_date / $start_clock $end_clock"
           foreach f $files {
             #ns_log notice "check: $f"
             if {[regexp {/([^/]+)-(\d+)[.](webm|png|jpeg)$} $f . type stamp ext]} {
@@ -786,6 +803,9 @@ Action instproc unpublish_link {obj} {
           ns_write [lang::util::localize $HTML]
           set HTML " "
         }
+      }
+      if {$export} {
+        $recutil destroy
       }
     }
 

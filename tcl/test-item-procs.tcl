@@ -83,7 +83,7 @@ namespace eval ::xowiki::formfield {
   #
   # Provide a default setting for the rich-text widgets.
   #
-  test_item set richtextWidget {richtext,editor=ckeditor4,ck_package=standard,displayMode=inline,extraPlugins=}
+  test_item set richtextWidget {richtext,editor=ckeditor4,ck_package=basic,displayMode=inline,extraPlugins=}
 
   test_item instproc feed_back_definition {} {
     #
@@ -924,7 +924,7 @@ namespace eval ::xowiki::formfield {
           lappend alt_values $alt_value
         }
       }
-      # We have to drop the toplevel <form> of the included form
+      # We have to drop the top-level <form> of the included form
       foreach n [$root childNodes] {append form [$n asHTML]}
       append form "</li>\n"
       #
@@ -1278,6 +1278,174 @@ namespace eval ::xowf::test_item {
 
     ########################################################################
 
+    :method fc_to_dict {form_constraints} {
+      #
+      # Convert from form_constraint syntax to a dict. This is just a
+      # partial implementation, since form constraints are interprted
+      # from left to right, changing types, etc., which is not
+      # supported here.
+      #
+      foreach fc $form_constraints {
+        #ns_log notice "... fc_to_dict works on <$fc>"        
+        if {[regexp {^([^:]+):(.*)$} $fc _ field_name definition]} {
+          if {[string match @* $field_name]} continue
+          set elements [split $definition ,]
+          dict set result $field_name type [lindex $elements 0]
+          foreach s [lrange $elements 1 end] {
+            switch -glob -- $s {
+              *=* {
+                set p [string first = $s]
+                set attribute [string range $s 0 $p-1]
+                set value [::xowiki::formfield::FormField fc_decode [string range $s $p+1 end]]
+                dict set result $field_name $attribute $value
+              }
+              default {
+                ns_log notice "... fc_to_dict ignores <$s>"
+              }
+            }
+          }
+          dict set result $field_name definition $definition
+        }
+      }
+      return $result      
+    }
+
+    :method get_label_from_options {value options} {
+      foreach option $options {
+        if {[lindex $option 1] eq $value} {
+          return [lindex $option 0]
+        }
+      }
+      return ""
+    }
+
+
+    :public method recutil_create {
+      -exam_id:integer
+      {-fn "answers.rec"}
+      -clear:switch
+    } {
+      set export_dir [acs_root_dir]/log/exam-exports/$exam_id/
+      if {![file isdirectory $export_dir]} {
+        file mkdir $export_dir
+      }
+      if {$clear && [file exists $export_dir$fn]} {
+        file delete $export_dir$fn
+      }
+      #
+      # If we have no recutils, create for the time being a stub
+      #
+      if {![ns::is class ::xo::recutil]} {
+        ns_log warning "no recutil class available"
+        set r [::xotcl::Object new -proc ins args {;}]
+        return $r
+      }
+      return [::xo::recutil new -file $export_dir$fn]
+    }
+
+    :public method export_answer {
+      -user_answers:object
+      -html:required
+      -combined_form_info
+      -recutil:object,required
+    } {
+      #
+      # Export the provided question and answer in GNU rectuil format. 
+      #
+      #ns_log notice "answers: [$user_answers serialize]"
+
+      if {[$user_answers exists __form_fields]} {
+        set form_fields [$user_answers set __form_fields]
+      } else {
+        #
+        # We do not have the newest version of xowiki, so locate the
+        # objs the hard way based on the naming convention.
+        #
+        set form_field_objs [lmap f [::xowiki::formfield::FormField info instances -closure] {
+          if {![string match *_ [$f name]]} {continue}
+          set f
+        }]
+        foreach form_field_obj $form_field_objs {
+          dict set form_fields [$form_field_obj name] $form_field_obj
+        }
+        ns_log notice "export_answers: old style form_fields: $form_fields"
+      }
+
+      set export_dict ""
+      set user [$user_answers set creation_user]
+      if {![info exists ::__running_ids]} {
+         set ::__running_ids ""
+      }      
+      if {![dict exists $::__running_ids $user]} {
+        dict set ::__running_ids $user [incr ::__running_id]
+      }
+      
+      set seeds [$user_answers property seeds]
+      set instance_attributes [$user_answers set instance_attributes]
+      set answer_attributes [lmap a $instance_attributes {
+        if {![string match *_ $a]} {continue}
+        set a
+      }]
+      
+      #ns_log notice "export_answers: combined_form_info: $combined_form_info"
+      #set title_infos [dict get $combined_form_info title_infos]
+      
+      #
+      # Get the question dict, which is a mapping between question
+      # names and form_obj_ids.
+      #
+      set question_dict [renaming_form_loader name_to_question_obj_dict \
+                             [dict get $combined_form_info question_objs]]
+      # ns_log notice "export_answers: question_dict: $question_dict"
+      
+      set form_constraints [lsort -unique [dict get $combined_form_info form_constraints]]
+      set fc_dict [:fc_to_dict $form_constraints]
+      #ns_log notice "... form_constraints ([llength $form_constraints]) $form_constraints"
+      #ns_log notice ".... dict $fc_dict"
+      #
+      # Every answer_attribute contains the answer to a test_item
+      # (which potentially sub answers).
+      #
+      foreach a $answer_attributes {
+        #ns_log notice "answers <[dict get $instance_attributes $a]>"
+        foreach {alternative_id answer} [dict get $instance_attributes $a] {
+          set alt_value [lindex [split $alternative_id .] 1]
+          set form_obj [dict get $question_dict $a]
+          
+          #set ff [dict get $form_fields $a]
+          #ns_log notice "answer $a: [dict get $instance_attributes $a] [$ff serialize]"
+          #ns_log notice "answer $a: form_obj [$form_obj serialize]"
+          set form_obj_ia [$form_obj instance_attributes]
+          #ns_log notice "answer $a: [dict get $instance_attributes $a] [dict keys [dict get $form_obj_ia question]]"
+          #ns_log notice "INTERACTION [dict get [dict get $form_obj_ia question] question.interaction]"
+          set intro [dict get [dict get [dict get $form_obj_ia question] question.interaction] question.interaction.text]
+          #ns_log notice "TEXT $intro"
+          #set question_title [question_manager question_property $form_obj title]
+          #set question_minutes [question_manager question_property $form_obj minutes]
+          #ns_log notice "answer $a: [dict get $instance_attributes $a] [dict keys [dict get $form_obj_ia question]]"
+
+          #dict set export_dict name $a
+          dict set export_dict name $alternative_id
+          dict set export_dict user_id $user
+          dict set export_dict running_id [dict get $::__running_ids $user]
+          dict set export_dict question_obj $form_obj
+          dict set export_dict question_title [$form_obj title]
+          dict set export_dict question_intro [ns_striphtml $intro]
+          dict set export_dict question_minutes [dict get $fc_dict $a test_item_minutes]
+          dict set export_dict question_points [dict get $fc_dict $a test_item_points]
+          dict set export_dict question_text [ns_striphtml [:get_label_from_options $alt_value [dict get $fc_dict $a options]]]
+          #dict set export_dict options [dict get $fc_dict $a options]        
+          dict set export_dict answer $answer
+
+          ns_log notice "answer $a: DICT $export_dict"
+          #ns_log notice "avail $a: [dict get $fc_dict $a]"
+          $recutil ins $export_dict
+        }
+      }
+    }
+    
+    ########################################################################
+
     :method time_window_setup {parentObj:object {-time_window:required}} {
       #
       # Check the provided time_window values, adjust it if necessary,
@@ -1287,7 +1455,7 @@ namespace eval ::xowf::test_item {
       set dtend [dict get $time_window time_window.dtend]
 
       if {$dtstart ne ""} {
-        set total_minutes [xowf::test_item::question_manager total_minutes_for_exam -manager $parentObj]
+        set total_minutes [question_manager total_minutes_for_exam -manager $parentObj]
         ns_log notice "#### create_workflows: atjobs for time_window <$time_window> total-mins $total_minutes"
         set start_clock [clock scan $dtstart -format %Y-%m-%dT%H:%M]
 
@@ -2817,6 +2985,8 @@ namespace eval ::xowf::test_item {
       # question forms. The result is a dict, containing also title
       # information etc. depending on the provided parameters.
       #
+      # @param shuffle_id used only for selecting form_objs
+      #
       set form_objs [:question_objs -shuffle_id $shuffle_id $obj]
       if {$user_specific} {
         set max_items [$obj property max_items ""]
@@ -2996,6 +3166,7 @@ namespace eval ::xowf::test_item {
       #
       return [expr {[$obj property position] + 1}]
     }
+
     :public method current_question_title {{-with_numbers:switch false} obj:object} {
       #
       # In case, with_numbers is provided, return a internationalized
