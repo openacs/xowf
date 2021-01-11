@@ -972,7 +972,7 @@ Action instproc unpublish_link {obj} {
     #
     ::xowiki::includelet::personal-notification-messages message_add \
         -notification_id ${:item_id} \
-        -to_user_id [xo::cc user_id] \
+        -to_user_id [${:package_id} query_parameter user_id:integer ""] \
         -payload [list msg [ns_queryget msg] from [xo::cc user_id] urgency [ns_queryget urgency]]
 
     ns_return 200 text/plain ok
