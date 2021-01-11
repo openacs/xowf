@@ -35,6 +35,7 @@ namespace eval ::xowiki::formfield {
   Class create TestItemField -superclass FormGeneratorField -parameter {
     {feedback_level full}
     {auto_correct:boolean false}
+    {nr_attachments 15}    
   } -ad_doc {
 
     Abstract class for defining common attributes for all Test Item
@@ -45,6 +46,26 @@ namespace eval ::xowiki::formfield {
   }
   TestItemField set abstract 1
 
+  TestItemField instproc text_attachments {} {
+    set attachments_html ""
+    if {[:exists_named_sub_component attachments]} {
+      set attachments_ff [:get_named_sub_component attachments]
+      set attachments_count [$attachments_ff count_values [$attachments_ff value]]
+      for {set i 1} {$i <= $attachments_count} {incr i} {
+        set attachment_label [dict get [:get_named_sub_component_value attachments $i] name]
+        append attachments_links \
+            "<div class='attachment'>" \
+            "\[\[file:question.interaction.attachments.$i|$attachment_label\]\]" \
+            "</div>"
+      }
+      if {$attachments_count > 0} {
+        append attachments_html "<div class='question_attachments'>[$attachments_ff label] $attachments_links</div><br>"
+      }
+    }
+    #ns_log notice text_attachments=>$attachments_html
+    return $attachments_html
+  }
+  
   Class create test_item_name -superclass text \
       -extend_slot_default validator name -ad_doc {
         Name sanitizer for test items
@@ -57,6 +78,7 @@ namespace eval ::xowiki::formfield {
     return $valid
   }
 
+  
   ###########################################################
   #
   # ::xowiki::formfield::test_item
@@ -831,12 +853,15 @@ namespace eval ::xowiki::formfield {
     set widget [test_item set richtextWidget]
     :create_components  [subst {
       {text  {$widget,height=150px,label=#xowf.exercise-text#,plugins=OacsFs}}
+      {attachments {file,repeat=0..${:nr_attachments},label=#general-comments.Attachments#}}
     }]
     set :__initialized 1
   }
 
   upload_interaction instproc convert_to_internal {} {
+    next
     set intro_text [:get_named_sub_component_value text]
+    append intro_text [:text_attachments]
     append form \
         "<form>\n" \
         "<div class='upload_interaction'>\n" \

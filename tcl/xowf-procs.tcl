@@ -576,7 +576,7 @@ namespace eval ::xowf {
                            -form_constraints ""]
     }
 
-    set :form_obj $form_object
+    set :form_obj $form_object    
     return $form_object
   }
   ::nsf::method::property Context form_object returns object
