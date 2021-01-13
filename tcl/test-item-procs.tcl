@@ -55,7 +55,7 @@ namespace eval ::xowiki::formfield {
         set attachment_label [dict get [:get_named_sub_component_value attachments $i] name]
         append attachments_links \
             "<div class='attachment'>" \
-            "\[\[file:question.interaction.attachments.$i|$attachment_label\]\]" \
+            "\[\[file:question.interaction.attachments.$i|$attachment_label|-query filename=[ns_urlencode ${attachment_label}]\]\]" \
             "</div>"
       }
       if {$attachments_count > 0} {
