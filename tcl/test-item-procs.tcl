@@ -51,12 +51,14 @@ namespace eval ::xowiki::formfield {
     if {[:exists_named_sub_component attachments]} {
       set attachments_ff [:get_named_sub_component attachments]
       set attachments_count [$attachments_ff count_values [$attachments_ff value]]
+      
       for {set i 1} {$i <= $attachments_count} {incr i} {
-        set attachment_label [dict get [:get_named_sub_component_value attachments $i] name]
+        set attachment_label [lindex [dict get [:get_named_sub_component_value -from_repeat attachments $i] name] 0]
+        set encoded_label [ns_urlencode $attachment_label] 
         append attachments_links \
-            "<div class='attachment'>" \
-            "\[\[file:question.interaction.attachments.$i|$attachment_label|-query filename=[ns_urlencode ${attachment_label}]\]\]" \
-            "</div>"
+            {<div class='attachment'>} \
+            [subst -nocommands {[[file:question.interaction.attachments.$i|$attachment_label|-query filename=$encoded_label]]}] \
+            </div>
       }
       if {$attachments_count > 0} {
         append attachments_html "<div class='question_attachments'>[$attachments_ff label] $attachments_links</div><br>"
@@ -852,7 +854,7 @@ namespace eval ::xowiki::formfield {
     }
     set widget [test_item set richtextWidget]
     :create_components  [subst {
-      {text  {$widget,height=150px,label=#xowf.exercise-text#,plugins=OacsFs}}
+      {text        {$widget,height=150px,label=#xowf.exercise-text#,plugins=OacsFs}}
       {attachments {file,repeat=0..${:nr_attachments},label=#general-comments.Attachments#}}
     }]
     set :__initialized 1
