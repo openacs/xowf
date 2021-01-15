@@ -48,27 +48,42 @@ Action initialize -proc activate {obj} {
   # called, after workflow instance was created
 
   #
-  # When the exam is not open, force the user out of the exam.
+  # When the exam is not open, keep the user from providing more input.
   #
   set ctx [:wf_context]
-  set exam_is_open [[$ctx wf_container] exam_is_open $obj]
+  set exam_info [[$ctx wf_container] exam_info $obj]
 
-  if {!$exam_is_open} {
-    set current_state [$obj property _state]
-    set locking_state [expr {$current_state eq "initial" ? "initial" : "done"}]
-    set locking_msg(initial) "#xowf.online-exam-not-published#"
-    set locking_msg(done) "#xowf.online-exam-finished#"
-
-    util_user_message -message $locking_msg($locking_state)
+  if {![dict get $exam_info open]} {
     #
-    # Force the user in the done state. Alternatively, we could handle
-    # this in the provide a different form or push the user to some
-    # other state.
+    # Let the user appear to be in the locking state, but don't set
+    # the true state of the user. This means, that when the exam is
+    # e.g. reopened, the use can continue wherever he was.
     #
-    $ctx set_current_state $locking_state
+    $ctx set_current_state [dict get $exam_info locking_state]
   }
 }
 
+Action instproc activate {obj} {
+  ns_log notice "... activate [self] $obj"
+
+  set ctx [:wf_context]
+  set exam_info [[$ctx wf_container] exam_info $obj]
+
+  if {![dict get $exam_info open]} {
+    #
+    # If the exam is not open, provide a user message
+    #
+    set locking_msg(initial) "#xowf.online-exam-not-published#"
+    set locking_msg(done) "#xowf.online-exam-finished#"
+    set locking_state [dict get $exam_info locking_state]
+    if {$locking_state ne [:get_next_state]} {    
+      util_user_message -message "$locking_msg($locking_state)"
+      return 0
+    }
+  }
+  return 1
+}
+  
 Action instproc goto_page {position} {
   :set_property position $position
 }
@@ -85,53 +100,54 @@ Action instproc set_page {obj increment} {
   :goto_page $position
 }
 
-Action prevQuestion \
+Action create prevQuestion \
+    -state_safe true \
     -next_state working \
     -label #xowf.previous_question# \
-    -proc activate {obj} {:set_page $obj -1}
+    -proc activate {obj} {if {[next]} {:set_page $obj -1}}
 
-Action nextQuestion \
+Action create nextQuestion \
+    -state_safe true \
     -next_state working \
     -label #xowf.next_question# \
-    -proc activate {obj} {:set_page $obj 1}
+    -proc activate {obj} {if {[next]} {set_page $obj 1}}
 
-Action review \
+Action create review \
     -next_state done \
     -label #xowf.online-exam-review# \
     -proc activate {obj} {
       [[$obj wf_context ] wf_container] addSignature $obj
     }
 
-Action save \
+Action create save \
+    -state_safe true \
     -label #xowf.online-exam-save#
 
-Action logout \
+Action create logout \
+    -state_safe true \
     -next_state done \
     -label #xowf.inclass-exam-submit# \
     -extra_css_class "logout" \
     -proc activate {obj} {
       [[$obj wf_context ] wf_container] addSignature $obj
-      #set pid [$obj package_id]
-      #set try_out_mode [$obj property try_out_mode 0]
       set return_url [$obj property return_url .]
-      #:msg "tryout $try_out_mode return_url $return_url"
 
       #ad_returnredirect $return_url
       #ad_script_abort
     }
 
-Action start \
-    -next_state working \
-    -label #xowf.online-exam-start# \
-    -proc activate {obj} {
-      $obj set_property position 0
-    }
+# Action start \
+#     -next_state working \
+#     -label #xowf.online-exam-start# \
+#     -proc activate {obj} {
+#       $obj set_property position 0
+#     }
 
-Action start_again \
-    -label #xowf.first_question# \
-    -next_state working -proc activate {obj} {
-      $obj set_property position 0
-    }
+# Action start_again \
+#     -label #xowf.first_question# \
+#     -next_state working -proc activate {obj} {
+#       $obj set_property position 0
+#     }
 
 ########################################################################
 #
@@ -377,15 +393,17 @@ proc done_form_loader {ctx form_name} {
   return $sha256
 }
 
-:proc exam_is_open {obj} {
+:proc exam_info {obj} {
   #
   # Don't allow a student to enter values when the state of the parent
   # workflow is not published (the teacher has not published the exam,
   # or closed it already). But allow always usage in try-out-mode.
   #
   set parent_obj [::xo::db::CrClass get_instance_from_db -item_id [$obj parent_id]]
-
-  return [expr {[$parent_obj state] eq "published" || [$obj property try_out_mode 0] == 1}]
+  set parent_state [$parent_obj state]
+  set open [expr {$parent_state eq "published" || [$obj property try_out_mode 0] == 1}]
+  set locking_state [expr {$parent_state eq "initial" ? "initial" : "done"}]
+  return [list state $parent_state open $open locking_state $locking_state]
 }
 
 ########################################################################
@@ -437,10 +455,13 @@ proc done_form_loader {ctx form_name} {
       for {set count 1} {$count <= $question_count} {incr count} {
         ${container}::Action create ${container}::$count \
             -label "$count" \
+            -state_safe true \
             -next_state working \
             -extra_css_class [expr {$current_position == $count - 1 ? "current" : ""}] \
-            -proc activate {obj} \
-            [list :goto_page [expr {$count -1}]]
+            -proc activate {obj} [subst {
+              next
+              :goto_page [expr {$count -1}]
+            }]
         lappend actions $count
       }
       if { ${:state} in {initial working}
@@ -462,8 +483,8 @@ proc done_form_loader {ctx form_name} {
     #
     # Reject autosave in case the exam was closed already.
     #
-    set is_open [[[:wf_context] wf_container] exam_is_open [self]]
-    if {$is_open} {
+    set exam_info [[[:wf_context] wf_container] exam_info [self]]
+    if {[dict get $exam_info open]} {
       next
     } else {
       ns_log notice "INCLASS inclass-exam autosave rejected"
