@@ -110,7 +110,7 @@ Action create nextQuestion \
     -state_safe true \
     -next_state working \
     -label #xowf.next_question# \
-    -proc activate {obj} {if {[next]} {set_page $obj 1}}
+    -proc activate {obj} {if {[next]} {:set_page $obj 1}}
 
 Action create review \
     -next_state done \
