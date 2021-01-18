@@ -35,7 +35,7 @@ namespace eval ::xowiki::formfield {
   Class create TestItemField -superclass FormGeneratorField -parameter {
     {feedback_level full}
     {auto_correct:boolean false}
-    {nr_attachments 15}    
+    {nr_attachments 15}
   } -ad_doc {
 
     Abstract class for defining common attributes for all Test Item
@@ -47,27 +47,42 @@ namespace eval ::xowiki::formfield {
   TestItemField set abstract 1
 
   TestItemField instproc text_attachments {} {
-    set attachments_html ""
+    set html ""
     if {[:exists_named_sub_component attachments]} {
       set attachments_ff [:get_named_sub_component attachments]
       set attachments_count [$attachments_ff count_values [$attachments_ff value]]
-      
+      set attachments_label [expr {$attachments_count > 1
+                                   ? "#general-comments.Attachments# ($attachments_count)"
+                                   : "#attachments.Attachment#"}]
+
       for {set i 1} {$i <= $attachments_count} {incr i} {
-        set attachment_label [lindex [dict get [:get_named_sub_component_value -from_repeat attachments $i] name] 0]
-        set encoded_label [ns_urlencode $attachment_label] 
+        set label [lindex [dict get [:get_named_sub_component_value -from_repeat attachments $i] name] 0]
+        set encoded_label [ns_urlencode $label]
         append attachments_links \
             {<div class='attachment'>} \
-            [subst -nocommands {[[file:question.interaction.attachments.$i|$attachment_label|-query filename=$encoded_label]]}] \
+            [subst -nocommands {[[file:question.interaction.attachments.$i|$label|-query filename=$encoded_label]]}] \
             </div>
       }
       if {$attachments_count > 0} {
-        append attachments_html "<div class='question_attachments'>[$attachments_ff label] $attachments_links</div><br>"
+        append html "<div class='question_attachments'>$attachments_label $attachments_links</div><br>"
       }
     }
     #ns_log notice text_attachments=>$attachments_html
-    return $attachments_html
+    return $html
   }
-  
+
+  TestItemField instproc attachments_widget {nr_attachments} {
+
+    dict set attachments_dict repeat 0..${:nr_attachments}
+    dict set attachments_dict repeat_add_label #xowiki.form-repeatable-add-file#
+    dict set attachments_dict label #general-comments.Attachments#
+
+    # {attachments {file,0..${:nr_attachments},label=#general-comments.Attachments#}}
+    # {attachments {bootstrap_file_input,multiple=true,label=#general-comments.Attachments#}}
+    # {attachments {file,multiple=true,label=#general-comments.Attachments#}}
+    return [:dict_to_fc -type file $attachments_dict]
+  }
+
   Class create test_item_name -superclass text \
       -extend_slot_default validator name -ad_doc {
         Name sanitizer for test items
@@ -80,7 +95,7 @@ namespace eval ::xowiki::formfield {
     return $valid
   }
 
-  
+
   ###########################################################
   #
   # ::xowiki::formfield::test_item
@@ -148,6 +163,7 @@ namespace eval ::xowiki::formfield {
       return
     }
     set options ""
+    set typeSpecificComponentSpec ""
     #
     # Provide some settings for name short-cuts
     #
@@ -197,6 +213,7 @@ namespace eval ::xowiki::formfield {
         set options ""
         set auto_correct false
         set can_shuffle false
+        set typeSpecificComponentSpec {{max_nr_submission_files {number,form_item_wrapper_CSSclass=form-inline,min=1,default=1,label=Maximale Anzahl von Abgaben}}}
       }
 
       default {error "unknown question type: ${:question_type}"}
@@ -242,6 +259,7 @@ namespace eval ::xowiki::formfield {
       {points number,form_item_wrapper_CSSclass=form-inline,min=0.0,step=0.1,label=#xowf.Points#}
       $shuffleSpec
       $gradingSpec
+      $typeSpecificComponentSpec
       {interaction {$interaction_class,$options,feedback_level=${:feedback_level},auto_correct=${:auto_correct},label=}}
       [:feed_back_definition]
     }]
@@ -533,6 +551,7 @@ namespace eval ::xowiki::formfield {
 
     :create_components [subst {
       {text  {$widget,height=100px,label=#xowf.exercise-text#,plugins=OacsFs}}
+      {attachments {[:attachments_widget ${:nr_attachments}]}}
       {answer {short_text_field,repeat=1..${:nr},label=}}
     }]
     set :__initialized 1
@@ -855,14 +874,26 @@ namespace eval ::xowiki::formfield {
     set widget [test_item set richtextWidget]
     :create_components  [subst {
       {text        {$widget,height=150px,label=#xowf.exercise-text#,plugins=OacsFs}}
-      {attachments {file,repeat=0..${:nr_attachments},label=#general-comments.Attachments#}}
+      {attachments {[:attachments_widget ${:nr_attachments}]}}
     }]
+
     set :__initialized 1
   }
 
   upload_interaction instproc convert_to_internal {} {
     next
     set intro_text [:get_named_sub_component_value text]
+    set max_nr_submission_files [${:parent_field} get_named_sub_component_value max_nr_submission_files]
+    #dict set file_dict choose_file_label "Datei hochladen"
+
+    if {$max_nr_submission_files > 1} {
+      dict set file_dict repeat 1..$max_nr_submission_files
+      dict set file_dict repeat_add_label #xowiki.form-repeatable-add-another-file#
+      dict set file_dict label #xowf.online-exam-submission_files#
+    } else {
+      dict set file_dict label #xowf.online-exam-submission_file#
+    }
+
     append intro_text [:text_attachments]
     append form \
         "<form>\n" \
@@ -873,7 +904,8 @@ namespace eval ::xowiki::formfield {
         "</form>\n"
     append fc \
         "@categories:off @cr_fields:hidden\n" \
-        "answer:file"
+        "{answer:[:dict_to_fc -type file $file_dict]}"
+
     ${:object} set_property -new 1 form $form
     ${:object} set_property -new 1 form_constraints $fc
     set anon_instances true ;# TODO make me configurable
@@ -1313,7 +1345,7 @@ namespace eval ::xowf::test_item {
       # supported here.
       #
       foreach fc $form_constraints {
-        #ns_log notice "... fc_to_dict works on <$fc>"        
+        #ns_log notice "... fc_to_dict works on <$fc>"
         if {[regexp {^([^:]+):(.*)$} $fc _ field_name definition]} {
           if {[string match @* $field_name]} continue
           set elements [split $definition ,]
@@ -1334,7 +1366,7 @@ namespace eval ::xowf::test_item {
           dict set result $field_name definition $definition
         }
       }
-      return $result      
+      return $result
     }
 
     :method get_label_from_options {value options} {
@@ -1377,7 +1409,7 @@ namespace eval ::xowf::test_item {
       -recutil:object,required
     } {
       #
-      # Export the provided question and answer in GNU rectuil format. 
+      # Export the provided question and answer in GNU rectuil format.
       #
       #ns_log notice "answers: [$user_answers serialize]"
 
@@ -1402,21 +1434,21 @@ namespace eval ::xowf::test_item {
       set user [$user_answers set creation_user]
       if {![info exists ::__running_ids]} {
          set ::__running_ids ""
-      }      
+      }
       if {![dict exists $::__running_ids $user]} {
         dict set ::__running_ids $user [incr ::__running_id]
       }
-      
+
       set seeds [$user_answers property seeds]
       set instance_attributes [$user_answers set instance_attributes]
       set answer_attributes [lmap a $instance_attributes {
         if {![string match *_ $a]} {continue}
         set a
       }]
-      
+
       #ns_log notice "export_answers: combined_form_info: $combined_form_info"
       #set title_infos [dict get $combined_form_info title_infos]
-      
+
       #
       # Get the question dict, which is a mapping between question
       # names and form_obj_ids.
@@ -1424,7 +1456,7 @@ namespace eval ::xowf::test_item {
       set question_dict [renaming_form_loader name_to_question_obj_dict \
                              [dict get $combined_form_info question_objs]]
       # ns_log notice "export_answers: question_dict: $question_dict"
-      
+
       set form_constraints [lsort -unique [dict get $combined_form_info form_constraints]]
       set fc_dict [:fc_to_dict $form_constraints]
       #ns_log notice "... form_constraints ([llength $form_constraints]) $form_constraints"
@@ -1438,7 +1470,7 @@ namespace eval ::xowf::test_item {
         foreach {alternative_id answer} [dict get $instance_attributes $a] {
           set alt_value [lindex [split $alternative_id .] 1]
           set form_obj [dict get $question_dict $a]
-          
+
           #set ff [dict get $form_fields $a]
           #ns_log notice "answer $a: [dict get $instance_attributes $a] [$ff serialize]"
           #ns_log notice "answer $a: form_obj [$form_obj serialize]"
@@ -1461,7 +1493,7 @@ namespace eval ::xowf::test_item {
           dict set export_dict question_minutes [dict get $fc_dict $a test_item_minutes]
           dict set export_dict question_points [dict get $fc_dict $a test_item_points]
           dict set export_dict question_text [ns_striphtml [:get_label_from_options $alt_value [dict get $fc_dict $a options]]]
-          #dict set export_dict options [dict get $fc_dict $a options]        
+          #dict set export_dict options [dict get $fc_dict $a options]
           dict set export_dict answer $answer
 
           ns_log notice "answer $a: DICT $export_dict"
@@ -1470,7 +1502,7 @@ namespace eval ::xowf::test_item {
         }
       }
     }
-    
+
     ########################################################################
 
     :method time_window_setup {parentObj:object {-time_window:required}} {

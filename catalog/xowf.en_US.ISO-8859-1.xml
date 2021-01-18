@@ -60,6 +60,8 @@
 
   <msg key="online-exam-actual_signature">Actual Signature</msg>
   <msg key="online-exam-submission_signature">Submission Signature</msg>
+  <msg key="online-exam-submission_file">Submission File</msg>
+  <msg key="online-exam-submission_files">Submission Files</msg>  
 
   <msg key="Signature">Signature</msg>
   <msg key="Signature_help_text">Provide a digital finger print of submitted answers as proof of submitted content</msg>

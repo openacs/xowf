@@ -86,10 +86,12 @@ div.exam-preview div.question_text {
 div.question_text {
     /*background-color: #fafafa;*/
 }
+
+/* keep display for div.upload_interaction div.form-label */
+
 div.mc_interaction div.form-label,
 div.sc_interaction div.form-label,
-div.text_interaction div.form-label,
-div.upload_interaction div.form-label
+div.text_interaction div.form-label
 {
     display: none;
 }
@@ -225,6 +227,13 @@ form button.current {
     border-top: 2px solid #999;
     border-bottom: 2px solid #999;
     border-style: groove;
+}
+
+/*
+ * Attachments styling
+ */
+div.question_text div.question_attachments div.attachment {
+    margin-left: 20px;
 }
 
 /*

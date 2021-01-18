@@ -36,3 +36,8 @@
 .xowiki-content fieldset div.form-inline div input[type=checkbox] {
     position: relative;    
 }
+
+.xowiki-content fieldset div.repeatable div.file-control div {
+    display: inline;
+    margin-right: 6px;
+}
