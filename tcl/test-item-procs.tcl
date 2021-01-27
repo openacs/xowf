@@ -1384,6 +1384,11 @@ namespace eval ::xowf::test_item {
       {-fn "answers.rec"}
       -clear:switch
     } {
+      #
+      # Create recfile
+      #
+      # @see http://www.gnu.org/software/recutils/
+      #
       set export_dir [acs_root_dir]/log/exam-exports/$exam_id/
       if {![file isdirectory $export_dir]} {
         file mkdir $export_dir
