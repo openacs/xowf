@@ -357,7 +357,7 @@ namespace eval ::xowiki::formfield {
       # skip empty entries
       if {$value(text) eq ""} continue
 
-      regsub -all {[.:]} [${:object} name] "" form_name
+      regsub -all -- {[.:]} [${:object} name] "" form_name
       set input_field_name $form_name-[lindex [split $input_field_name .] end]
       #
       # fill values into form
@@ -452,7 +452,7 @@ namespace eval ::xowiki::formfield {
       # We are in a single-choice item; provide for editing a single
       # radio group spanning all entries.  Use as name for grouping
       # the form-field name minus the last segment.
-      regsub -all {[.][^.]+$} ${:name} "" groupname
+      regsub -all -- {[.][^.]+$} ${:name} "" groupname
       :create_components [subst {
         {text  {$widget,$text_config}}
         {correct {radio,label=#xowf.correct#,forced_name=$groupname.correct,options={"" ${:name}}}}
@@ -497,7 +497,7 @@ namespace eval ::xowiki::formfield {
   }
 
   text_interaction instproc convert_to_internal {} {
-    set intro_text [:get_named_sub_component_value text]
+    set intro_text    [:get_named_sub_component_value text]
 
     dict set fc_dict rows [:get_named_sub_component_value lines]
     dict set fc_dict cols [:get_named_sub_component_value columns]
@@ -559,8 +559,8 @@ namespace eval ::xowiki::formfield {
 
   short_text_interaction instproc convert_to_internal {} {
 
-    set intro_text   [:get_named_sub_component_value text]
-    set answerFields [:get_named_sub_component_value -from_repeat answer]
+    set intro_text    [:get_named_sub_component_value text]
+    set answerFields  [:get_named_sub_component_value -from_repeat answer]
 
     set options {}
     set render_hints {}
@@ -1105,7 +1105,7 @@ namespace eval ::xowf::test_item {
       # input fields of this form.
       #
       set strippedName [lindex [split $formName :] end]
-      regsub -all {[-]} $strippedName _ stem
+      regsub -all -- {[-]} $strippedName _ stem
       return ${stem}_
     }
 
@@ -1189,7 +1189,7 @@ namespace eval ::xowf::test_item {
       #
       set newName [:form_name_based_attribute_stem [$form_obj name]]
 
-      regsub -all {@answer} $form @$newName form
+      regsub -all -- {@answer} $form @$newName form
       set fc [:map_form_constraints $fc "answer" $newName]
       set disabled_fc [lmap f $fc {
         if {[string match "$newName*" $f]} { append f ,disabled=true }
@@ -1394,12 +1394,12 @@ namespace eval ::xowf::test_item {
         file mkdir $export_dir
       }
       if {$clear && [file exists $export_dir$fn]} {
-        file delete $export_dir$fn
+        file delete -- $export_dir$fn
       }
       #
       # If we have no recutils, create for the time being a stub
       #
-      if {![ns::is class ::xo::recutil]} {
+      if {![nsf::is class ::xo::recutil]} {
         ns_log warning "no recutil class available"
         set r [::xotcl::Object new -proc ins args {;}]
         return $r
