@@ -395,9 +395,20 @@ Action instproc unpublish_link {obj} {
   }
 
   ${container}::Property return_url -default "" -allow_query_parameter true
-  ${container}::done actions {republish open_submission_review}
-  ${container}::done in_role swa {
-    -actions {republish open_submission_review restart}
+
+  if {${:state} eq "done"} {
+    set done_actions republish
+    set combined_form_info [::xowf::test_item::question_manager combined_question_form [self]]
+
+    if {[dict get $combined_form_info autograde]} {
+      lappend done_actions open_submission_review
+    }
+    set swa_done_actions [concat $done_actions restart]
+
+    ${container}::done actions $done_actions
+    ${container}::done in_role swa [subst {
+      -actions {$swa_done_actions}
+    }]
   }
 
   #
@@ -516,7 +527,7 @@ Action instproc unpublish_link {obj} {
     set filter_id     [:query_parameter id:integer ""]
     set creation_user [:query_parameter creation_user:integer ""]
     set revision_id   [:query_parameter rid:integer ""]
-    set export        [:query_parameter export:boolean 0]    
+    set export        [:query_parameter export:boolean 0]
 
     set combined_form_info [::xowf::test_item::question_manager combined_question_form [self]]
     set autograde   [dict get $combined_form_info autograde]
@@ -561,7 +572,7 @@ Action instproc unpublish_link {obj} {
       set examTitle ${:title}
       set do_stream [expr {[llength [$items children]] > 100}]
 
-      # 
+      #
       # Add a simple print button for the unaware that makes it easy
       # to print the exam protocol to PDF and use e.g. a pdf-tool to
       # annotate free text answers.
@@ -578,7 +589,7 @@ Action instproc unpublish_link {obj} {
           -preventdefault=false \
           -script "window.print();"
       append HTML [template::collect_body_scripts]
-      
+
       ::xo::cc set_parameter template_file view-plain-master
       ::xo::cc set_parameter MenuBar 0
       template::head::add_link -rel stylesheet -href /resources/xowf/test-item.css

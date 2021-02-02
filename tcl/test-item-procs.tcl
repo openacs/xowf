@@ -56,7 +56,12 @@ namespace eval ::xowiki::formfield {
                                    : "#attachments.Attachment#"}]
 
       for {set i 1} {$i <= $attachments_count} {incr i} {
+        ns_log notice "get attachments $i (of $attachments_count)"
+        ns_log notice "get value $i '[:get_named_sub_component_value -from_repeat attachments $i]'"
+        ns_log notice "get value $i '[:get_named_sub_component_value attachments $i]'"
+        set label [:get_named_sub_component_value -from_repeat attachments $i]
         set label [lindex [dict get [:get_named_sub_component_value -from_repeat attachments $i] name] 0]
+        ns_log notice "get value $i '[:get_named_sub_component_value attachments $i]' -> '$label'"        
         set encoded_label [ns_urlencode $label]
         append attachments_links \
             {<div class='attachment'>} \
@@ -489,6 +494,7 @@ namespace eval ::xowiki::formfield {
 
     :create_components  [subst {
       {text  {$widget,label=#xowf.exercise-text#,plugins=OacsFs}}
+      {answer {short_text_field,repeat=1..${:nr},label=}}
       {lines {number,form_item_wrapper_CSSclass=form-inline,min=1,default=10,label=#xowf.answer_lines#}}
       {columns {number,form_item_wrapper_CSSclass=form-inline,min=1,max=80,default=60,label=#xowf.answer_columns#}}
       $autoCorrectSpec
@@ -498,6 +504,7 @@ namespace eval ::xowiki::formfield {
 
   text_interaction instproc convert_to_internal {} {
     set intro_text    [:get_named_sub_component_value text]
+    append intro_text [:text_attachments]
 
     dict set fc_dict rows [:get_named_sub_component_value lines]
     dict set fc_dict cols [:get_named_sub_component_value columns]
@@ -554,12 +561,18 @@ namespace eval ::xowiki::formfield {
       {attachments {[:attachments_widget ${:nr_attachments}]}}
       {answer {short_text_field,repeat=1..${:nr},label=}}
     }]
+    ns_log notice [subst {
+      {text  {$widget,height=100px,label=#xowf.exercise-text#,plugins=OacsFs}}
+      {attachments {[:attachments_widget ${:nr_attachments}]}}
+      {answer {short_text_field,repeat=1..${:nr},label=}}
+    }]
     set :__initialized 1
   }
 
   short_text_interaction instproc convert_to_internal {} {
 
     set intro_text    [:get_named_sub_component_value text]
+    append intro_text [:text_attachments]
     set answerFields  [:get_named_sub_component_value -from_repeat answer]
 
     set options {}
