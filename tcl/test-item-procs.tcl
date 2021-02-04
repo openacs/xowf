@@ -569,10 +569,39 @@ namespace eval ::xowiki::formfield {
     set count 0
 
     foreach {fieldName value} $answerFields {
-      #ns_log notice ...fieldName=$fieldName->$value
+      # ns_log notice ...fieldName=$fieldName->$value
       set af answer[incr count]
       lappend options [list [dict get $value $fieldName.text] $af]
-      lappend answer [dict get $value $fieldName.correct_when]
+
+      set correct_whens {}
+      set raw_correct_whens [dict get $value $fieldName.correct_when]
+      foreach {compound_key compound_entries} $raw_correct_whens {
+        if {![string match "*.0" $compound_key]} {
+          # ns_log notice "key $compound_key, value $compound_entries"
+          set d {}
+          foreach {entry_key entry_value} $compound_entries {
+            set tail [lindex [split $entry_key .] end]
+            # ns_log notice "... entry_key $tail, entry_value $entry_value"
+            dict set d $tail $entry_value
+          }
+          set text [string trim [dict get $d text]]
+          if {$text ne ""} {
+            set correct_when "[dict get $d operator] "
+            append correct_when [expr {[dict get $d nocase] ? "-nocase " : ""}]
+            append correct_when $text
+            lappend correct_whens $correct_when
+          } else {
+            set correct_when ""
+          }
+        }
+      }
+      if {[llength $correct_whens] < 2} {
+        set correct_when [lindex $correct_whens 0]
+      } else {
+        set correct_when "AND $correct_whens"
+      }
+      ns_log notice FINAL-correct_when='$correct_when'
+      lappend answer $correct_when
       lappend solution [dict get $value $fieldName.solution]
       lappend render_hints [list \
                                   words [dict get $value $fieldName.options] \
@@ -641,7 +670,12 @@ namespace eval ::xowiki::formfield {
     #:log "[:name] auto_correct ${:auto_correct}"
 
     if {${:auto_correct}} {
-      set autoCorrectSpec {{correct_when {correct_when,label=#xowf.correct_when#}}}
+      set dict ""
+      dict set dict repeat 0..10
+      dict set dict repeat_add_label #xowiki.form-repeatable-add-condition#
+      dict set dict help_text #xowiki.formfield-comp_correct_when-help_text#
+      dict set dict label #xowf.correct_when#
+      set autoCorrectSpec [list [list correct_when [:dict_to_fc -type comp_correct_when $dict]]]
     } else {
       set autoCorrectSpec ""
     }

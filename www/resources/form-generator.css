@@ -41,3 +41,13 @@
     display: inline;
     margin-right: 6px;
 }
+
+.xowiki-content fieldset fieldset.comp_correct_when div.form-inline {
+    padding: 0 0 0 0;
+}
+.xowiki-content fieldset fieldset.comp_correct_when div.form-inline div.form-label {
+    padding: 0 0 0 0;
+}
+.xowiki-content fieldset fieldset.comp_correct_when div.form-inline label.nocase {
+    margin: 0 2px 0 6px;
+}
