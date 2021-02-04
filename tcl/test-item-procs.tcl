@@ -83,6 +83,59 @@ namespace eval ::xowiki::formfield {
     return [:dict_to_fc -type file $attachments_dict]
   }
 
+  TestItemField instproc comp_correct_when_from_value {value} {
+    set correct_whens {}
+    foreach {compound_key compound_entries} $value {
+      if {![string match "*.0" $compound_key]} {
+        # ns_log notice "key $compound_key, value $compound_entries"
+        set d {}
+        foreach {entry_key entry_value} $compound_entries {
+          set tail [lindex [split $entry_key .] end]
+          # ns_log notice "... entry_key $tail, entry_value $entry_value"
+          dict set d $tail $entry_value
+        }
+        set text [string trim [dict get $d text]]
+        if {$text ne ""} {
+          set correct_when "[dict get $d operator] "
+          append correct_when [expr {[dict get $d nocase] ? "-nocase " : ""}]
+          append correct_when $text
+          lappend correct_whens $correct_when
+        } else {
+          set correct_when ""
+        }
+      }
+    }
+    if {[llength $correct_whens] < 2} {
+      set correct_when [lindex $correct_whens 0]
+    } else {
+      set correct_when "AND $correct_whens"
+    }
+    #ns_log notice FINAL-correct_when='$correct_when'
+    return $correct_when
+  }
+
+  TestItemField instproc correct_when_widget {{-nr 10}} {
+    set dict ""
+    dict set dict repeat 1..10
+    dict set dict repeat_add_label #xowiki.form-repeatable-add-condition#
+    dict set dict help_text #xowiki.formfield-comp_correct_when-help_text#
+    dict set dict label #xowf.correct_when#
+
+    return [:dict_to_fc -type comp_correct_when $dict]
+  }
+
+  TestItemField instproc correct_when_spec {{-nr 10}} {
+    if {${:auto_correct}} {
+      return [list [list correct_when [:correct_when_widget -nr $nr]]]
+    }
+    return ""
+  }
+
+  ###########################################################
+  #
+  # ::xowiki::formfield::test_item_name
+  #
+  ###########################################################
   Class create test_item_name -superclass text \
       -extend_slot_default validator name -ad_doc {
         Name sanitizer for test items
@@ -476,28 +529,23 @@ namespace eval ::xowiki::formfield {
 
   text_interaction instproc initialize {} {
     if {${:__state} ne "after_specs"} return
+
     #
     # Create component structure.
     #
     set widget [test_item set richtextWidget]
 
-    if {${:auto_correct}} {
-      set autoCorrectSpec {{correct_when {correct_when,label=#xowf.correct_when#}}}
-    } else {
-      set autoCorrectSpec ""
-    }
-
     :create_components  [subst {
       {text  {$widget,label=#xowf.exercise-text#,plugins=OacsFs}}
       {lines {number,form_item_wrapper_CSSclass=form-inline,min=1,default=10,label=#xowf.answer_lines#}}
       {columns {number,form_item_wrapper_CSSclass=form-inline,min=1,max=80,default=60,label=#xowf.answer_columns#}}
-      $autoCorrectSpec
+      [:correct_when_spec]
     }]
     set :__initialized 1
   }
 
   text_interaction instproc convert_to_internal {} {
-    set intro_text    [:get_named_sub_component_value text]
+    set intro_text [:get_named_sub_component_value text]
 
     dict set fc_dict rows [:get_named_sub_component_value lines]
     dict set fc_dict cols [:get_named_sub_component_value columns]
@@ -506,7 +554,7 @@ namespace eval ::xowiki::formfield {
     dict set fc_dict autosave true
 
     if {${:auto_correct}} {
-      dict set fc_dict correct_when [:get_named_sub_component_value correct_when]
+      dict set fc_dict correct_when [:comp_correct_when_from_value [:get_named_sub_component_value correct_when]]
     }
 
     append form \
@@ -571,37 +619,8 @@ namespace eval ::xowiki::formfield {
     foreach {fieldName value} $answerFields {
       # ns_log notice ...fieldName=$fieldName->$value
       set af answer[incr count]
-      lappend options [list [dict get $value $fieldName.text] $af]
-
-      set correct_whens {}
-      set raw_correct_whens [dict get $value $fieldName.correct_when]
-      foreach {compound_key compound_entries} $raw_correct_whens {
-        if {![string match "*.0" $compound_key]} {
-          # ns_log notice "key $compound_key, value $compound_entries"
-          set d {}
-          foreach {entry_key entry_value} $compound_entries {
-            set tail [lindex [split $entry_key .] end]
-            # ns_log notice "... entry_key $tail, entry_value $entry_value"
-            dict set d $tail $entry_value
-          }
-          set text [string trim [dict get $d text]]
-          if {$text ne ""} {
-            set correct_when "[dict get $d operator] "
-            append correct_when [expr {[dict get $d nocase] ? "-nocase " : ""}]
-            append correct_when $text
-            lappend correct_whens $correct_when
-          } else {
-            set correct_when ""
-          }
-        }
-      }
-      if {[llength $correct_whens] < 2} {
-        set correct_when [lindex $correct_whens 0]
-      } else {
-        set correct_when "AND $correct_whens"
-      }
-      ns_log notice FINAL-correct_when='$correct_when'
-      lappend answer $correct_when
+      lappend options  [list [dict get $value $fieldName.text] $af]
+      lappend answer   [:comp_correct_when_from_value [dict get $value $fieldName.correct_when]]
       lappend solution [dict get $value $fieldName.solution]
       lappend render_hints [list \
                                   words [dict get $value $fieldName.options] \
@@ -667,18 +686,7 @@ namespace eval ::xowiki::formfield {
       set :auto_correct [$p set auto_correct]
       break
     }
-    #:log "[:name] auto_correct ${:auto_correct}"
 
-    if {${:auto_correct}} {
-      set dict ""
-      dict set dict repeat 0..10
-      dict set dict repeat_add_label #xowiki.form-repeatable-add-condition#
-      dict set dict help_text #xowiki.formfield-comp_correct_when-help_text#
-      dict set dict label #xowf.correct_when#
-      set autoCorrectSpec [list [list correct_when [:dict_to_fc -type comp_correct_when $dict]]]
-    } else {
-      set autoCorrectSpec ""
-    }
     set render_hints [join {
       "{#xowiki.number# number}"
       "{#xowiki.single_word# single_word}"
@@ -691,10 +699,9 @@ namespace eval ::xowiki::formfield {
       {lines {number,form_item_wrapper_CSSclass=form-inline,default=1,min=1,label=#xowf.lines#}}
     }]
 
-    #:msg autoCorrectSpec=$autoCorrectSpec
     :create_components  [subst {
       {text  {$widget,height=100px,label=#xowf.sub_question#,plugins=OacsFs}}
-      $textEntryConfigSpec $autoCorrectSpec
+      $textEntryConfigSpec [:correct_when_spec]
       {solution {textarea,rows=2,label=#xowf.Solution#}}
     }]
     set :__initialized 1
@@ -872,12 +879,6 @@ namespace eval ::xowiki::formfield {
     #
     set widget [test_item set richtextWidget]
 
-    if {${:auto_correct}} {
-      set autoCorrectSpec {{correct_when {correct_when,label=#xowf.correct_when#}}}
-    } else {
-      set autoCorrectSpec ""
-    }
-    #:msg autoCorrectSpec=$autoCorrectSpec
     # {correct {boolean_checkbox,horizontal=true,label=#xowf.Correct#,form_item_wrapper_CSSclass=form-inline}}
     :create_components  [subst {
       {text  {$widget,height=50px,label=#xowf.choice_option#,plugins=OacsFs}}
