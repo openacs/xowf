@@ -16,9 +16,10 @@ namespace eval ::xowf::test {
         }
 
     aa_register_case -init_classes {xowf_require_test_instance} -cats {web} -procs {
+        "::xo::Package instproc reply_to_user"
         "::xowf::Package instproc initialize"
         "::xowiki::Package instproc invoke"
-        "::xo::Package instproc reply_to_user"
+        "::xowiki::require_parameter_page"
     } create_folder_with_page {
 
         Create a folder in an xowf instance with a form page and edit this
@@ -110,6 +111,7 @@ namespace eval ::xowf::test {
         "::xowf::WorkflowPage instproc www-edit"
         "::xowf::WorkflowPage instproc www-view"
         "::xowiki::Package instproc invoke"
+        "::xowiki::FormPage instproc www-edit"
     } create_workflow_with_instance {
 
         Create an xowf workflow and a instance in a folder.
