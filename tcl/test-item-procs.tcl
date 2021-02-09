@@ -1263,6 +1263,39 @@ namespace eval ::xowf::test_item {
 
 namespace eval ::xowf::test_item {
 
+  ad_proc -private fc_to_dict {form_constraints} {
+    #
+    # Convert from form_constraint syntax to a dict. This is just a
+    # partial implementation, since form constraints are interprted
+    # from left to right, changing types, etc., which is not
+    # supported here.
+    #
+    foreach fc $form_constraints {
+      #ns_log notice "... fc_to_dict works on <$fc>"
+      if {[regexp {^([^:]+):(.*)$} $fc _ field_name definition]} {
+        if {[string match @* $field_name]} continue
+        set elements [split $definition ,]
+        dict set result $field_name type [lindex $elements 0]
+        foreach s [lrange $elements 1 end] {
+          switch -glob -- $s {
+            *=* {
+              set p [string first = $s]
+              set attribute [string range $s 0 $p-1]
+              set value [::xowiki::formfield::FormField fc_decode [string range $s $p+1 end]]
+              dict set result $field_name $attribute $value
+            }
+            default {
+              ns_log notice "... fc_to_dict ignores <$s>"
+            }
+          }
+        }
+        dict set result $field_name definition $definition
+      }
+    }
+    return $result
+  }
+
+
   nx::Class create Answer_manager -superclass AssessmentInterface {
 
     #
@@ -1372,38 +1405,6 @@ namespace eval ::xowf::test_item {
 
     ########################################################################
 
-    :method fc_to_dict {form_constraints} {
-      #
-      # Convert from form_constraint syntax to a dict. This is just a
-      # partial implementation, since form constraints are interprted
-      # from left to right, changing types, etc., which is not
-      # supported here.
-      #
-      foreach fc $form_constraints {
-        #ns_log notice "... fc_to_dict works on <$fc>"
-        if {[regexp {^([^:]+):(.*)$} $fc _ field_name definition]} {
-          if {[string match @* $field_name]} continue
-          set elements [split $definition ,]
-          dict set result $field_name type [lindex $elements 0]
-          foreach s [lrange $elements 1 end] {
-            switch -glob -- $s {
-              *=* {
-                set p [string first = $s]
-                set attribute [string range $s 0 $p-1]
-                set value [::xowiki::formfield::FormField fc_decode [string range $s $p+1 end]]
-                dict set result $field_name $attribute $value
-              }
-              default {
-                ns_log notice "... fc_to_dict ignores <$s>"
-              }
-            }
-          }
-          dict set result $field_name definition $definition
-        }
-      }
-      return $result
-    }
-
     :method get_label_from_options {value options} {
       foreach option $options {
         if {[lindex $option 1] eq $value} {
@@ -1498,7 +1499,7 @@ namespace eval ::xowf::test_item {
       # ns_log notice "export_answers: question_dict: $question_dict"
 
       set form_constraints [lsort -unique [dict get $combined_form_info form_constraints]]
-      set fc_dict [:fc_to_dict $form_constraints]
+      set fc_dict [fc_to_dict $form_constraints]
       #ns_log notice "... form_constraints ([llength $form_constraints]) $form_constraints"
       #ns_log notice ".... dict $fc_dict"
       #
@@ -3001,9 +3002,41 @@ namespace eval ::xowf::test_item {
           # or a question, where every alternative is exactly provided.
           #
           if {[dict exists $qd question.grading]} {
+            #
             # autograde ok on the question level
+            #
           } elseif {[dict exists $formAttributes auto_correct] && [dict get $formAttributes auto_correct]} {
+            #
             # autograde ok on the form level
+            #
+            # Check, if the correct_when specification of a short text
+            # question is suited for autocorrection. On the longer
+            # range, this function should be moved to a different
+            # place.
+            #
+            if {[dict exists $formAttributes item_type] && [dict get $formAttributes item_type] eq "ShortText"} {
+              set dict [lindex [fc_to_dict [dict get $formAttributes form_constraints]] 1]
+              foreach a [dict get $dict answer] {
+                set op ""
+                regexp {^(\S+)\s} $a . op
+                if {$op ni {eq lt le gt ge AND}} {
+                  ns_log notice "question_info: not suited for autoGrade: '$a'"
+                  set autoGrade 0
+                  break
+                }
+                if {$op eq "AND"} {
+                  foreach c [lrange $a 1 end] {
+                    set op ""
+                    regexp {^(\S+)\s} $c . op
+                    if {$op ni {eq lt le gt ge}} {
+                      ns_log notice "question_info: not suited for autoGrade: AND clause '$c'"
+                      set autoGrade 0
+                      break
+                    }
+                  }
+                }
+              }
+            }
           } elseif [dict exists $qd question.interaction question.interaction.answer] {
             set answer [dict get $qd question.interaction question.interaction.answer]
             foreach k [dict keys $answer] {
@@ -3014,7 +3047,7 @@ namespace eval ::xowf::test_item {
           } else {
             set autoGrade 0
           }
-          #ns_log notice "question_info [$form_obj name] [$form_obj title] autoGrade $autoGrade"
+          ns_log notice "question_info [$form_obj name] [$form_obj title] autoGrade $autoGrade"
         }
       }
 
