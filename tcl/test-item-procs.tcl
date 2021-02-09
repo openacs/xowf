@@ -2935,6 +2935,20 @@ namespace eval ::xowf::test_item {
           ns_log notice "[$form_obj name]: NO POINTS, default to minutes $minutes"
           set points $minutes
         }
+        set time_budget [$obj property time_budget]
+        ns_log notice "[$form_obj name]: TIME BUDGET '$time_budget'"
+        if {$time_budget ni {"" 100}} {
+          set minutes [expr {$time_budget*$minutes/100.0}]
+          ns_log notice "[$form_obj name]: TIME BUDGET '$time_budget' -> minutes set to $minutes"
+          ns_log notice "[$form_obj name]: [$obj instance_attributes]"
+        }
+        set mapping {show_points with_points show_minutes with_minutes}
+        foreach property {show_points show_minutes} {
+          if {[$obj property $property] ne ""} {
+            set [dict get $mapping $property] [$obj property $property]
+            ns_log notice "[$form_obj name]: override flag via exam setting: '$property' -> [$obj property $property]"
+          }
+        }
         set title ""
         if {$number ne ""} {
           append title "#xowf.question# $number:"
@@ -3237,7 +3251,7 @@ namespace eval ::xowf::test_item {
         set base_clock [clock scan [::xo::db::tcl_date $base_time tz]]
         set secfrac 0
       }
-      set target_time [clock format [expr {$base_clock + $total_minutes * 60}] \
+      set target_time [clock format [expr {int($base_clock + $total_minutes * 60)}] \
                            -format %Y-%m-%dT%H:%M:%S]
       ns_log notice "exam_target_time $base_time base clock $base_clock + total_minutes $total_minutes = ${target_time}.$secfrac"
       return ${target_time}.$secfrac
@@ -3294,7 +3308,7 @@ namespace eval ::xowf::test_item {
     :public method current_question_number {obj:object} {
       #
       # Translate the position of an object into its question number
-      # (as e.g. used by current_question_title)
+      # (as e.g. used by current_question_title).
       #
       return [expr {[$obj property position] + 1}]
     }
@@ -3302,7 +3316,7 @@ namespace eval ::xowf::test_item {
     :public method current_question_title {{-with_numbers:switch false} obj:object} {
       #
       # In case, with_numbers is provided, return a internationalized
-      # title for the question, such as "Question 1"
+      # title for the question, such as "Question 1".
       #
       if {$with_numbers} {
         return "#xowf.question# [:current_question_number $obj]"

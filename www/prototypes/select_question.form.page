@@ -8,7 +8,7 @@
         @question@
         <h4>#xowf.Detail_configuration#</h4>
         <p><button type="button" class="btn btn-small" data-toggle="collapse" data-target="#question_management"><span class="glyphicon glyphicon-chevron-down">&nbsp;</span>#xowf.Question_management#</button><div id="question_management" class="collapse">        
-        @shuffle_items@ @max_items@ @allow_paste@
+        @shuffle_items@ @max_items@ @allow_paste@ @show_minutes@ @show_points@ @time_budget@
         </div>
         <p><button type="button" class="btn btn-small" data-toggle="collapse" data-target="#time_management"><span class="glyphicon glyphicon-chevron-down">&nbsp;</span>#xowf.Time_management#</button><div id="time_management" class="collapse">
         @synchronized@ @time_window@
@@ -27,6 +27,9 @@
 	{shuffle_items:boolean,horizontal=true,label=#xowf.randomized_items#,help_text=#xowf.randomized_items_help_text#}
 	{max_items:number,min=1,label=#xowf.Max_items#,help_text=#xowf.Max_items_help_text#}
 	{allow_paste:boolean,horizontal=true,default=t,label=#xowf.Allow_paste#,help_text=#xowf.Allow_paste_help_text#}
+        {show_minutes:boolean,horizontal=true,default=t,label=#xowf.Show_minutes#,help_text=#xowf.Show_minutes_help_text#}
+        {show_points:boolean,horizontal=true,default=t,label=#xowf.Show_points#,help_text=#xowf.Show_points_help_text#}
+        {time_budget:range,default=100,min=100,max=300,step=10,with_output=t,form_item_wrapper_CSSclass=form-inline,output_suffix=%,label=#xowf.Time_budget#,help_text=#xowf.Time_budget_help_text#}
 	{synchronized:boolean,horizontal=true,default=f,label=#xowf.Synchronized#,help_text=#xowf.Synchronized_help_text#}
 	{time_window:time_span,label=#xowf.Exam_time_window#,help_text=#xowf.Exam_time_window_help_text#}
 	{signature:boolean,horizontal=true,default=f,label=#xowf.Signature#,help_text=#xowf.Signature_help_text#}
