@@ -3019,7 +3019,7 @@ namespace eval ::xowf::test_item {
               foreach a [dict get $dict answer] {
                 set op ""
                 regexp {^(\S+)\s} $a . op
-                if {$op ni {eq lt le gt ge AND}} {
+                if {$op ni {eq lt le gt ge btwn AND}} {
                   ns_log notice "question_info: not suited for autoGrade: '$a'"
                   set autoGrade 0
                   break
@@ -3028,7 +3028,7 @@ namespace eval ::xowf::test_item {
                   foreach c [lrange $a 1 end] {
                     set op ""
                     regexp {^(\S+)\s} $c . op
-                    if {$op ni {eq lt le gt ge}} {
+                    if {$op ni {eq lt le gt ge btwn}} {
                       ns_log notice "question_info: not suited for autoGrade: AND clause '$c'"
                       set autoGrade 0
                       break
