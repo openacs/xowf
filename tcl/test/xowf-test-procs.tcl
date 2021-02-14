@@ -16,10 +16,20 @@ namespace eval ::xowf::test {
         }
 
     aa_register_case -init_classes {xowf_require_test_instance} -cats {web} -procs {
+        "::lang::system::locale"
         "::xo::Package instproc reply_to_user"
         "::xowf::Package instproc initialize"
         "::xowiki::Package instproc invoke"
         "::xowiki::require_parameter_page"
+        "::xowiki::test::create_form_page"
+        "::xowiki::test::edit_form_page"
+        "::xowiki::test::require_test_folder"        
+        ::acs::test::form_get_fields
+        ::acs::test::form_reply
+        ::acs::test::get_form
+        ::acs::test::get_url_from_location
+        ::acs::test::xpath::get_form
+        ::acs::test::xpath::get_form_values
     } create_folder_with_page {
 
         Create a folder in an xowf instance with a form page and edit this
@@ -95,6 +105,9 @@ namespace eval ::xowf::test {
     }
 
     aa_register_case -init_classes {xowf_require_test_instance} -cats {web} -procs {
+        ::acs::test::form_get_fields
+        ::acs::test::form_set_fields
+        "::lang::system::locale"
         "::xo::Package instproc reply_to_user"
         "::xowf::Package instproc destroy"
         "::xowf::Package instproc initialize"
@@ -110,8 +123,12 @@ namespace eval ::xowf::test {
         "::xowf::WorkflowPage instproc wf_context"
         "::xowf::WorkflowPage instproc www-edit"
         "::xowf::WorkflowPage instproc www-view"
-        "::xowiki::Package instproc invoke"
         "::xowiki::FormPage instproc www-edit"
+        "::xowiki::Package instproc invoke"
+        "::xowiki::test::create_form"
+        "::xowiki::test::create_form_page"
+        "::xowiki::test::edit_form_page"
+        "::xowiki::test::require_test_folder"
     } create_workflow_with_instance {
 
         Create an xowf workflow and a instance in a folder.
