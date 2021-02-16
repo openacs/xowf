@@ -23,13 +23,35 @@ namespace eval ::xowf::test {
         "::xowiki::require_parameter_page"
         "::xowiki::test::create_form_page"
         "::xowiki::test::edit_form_page"
-        "::xowiki::test::require_test_folder"        
+        "::xowiki::test::require_test_folder"
         ::acs::test::form_get_fields
         ::acs::test::form_reply
         ::acs::test::get_form
         ::acs::test::get_url_from_location
         ::acs::test::xpath::get_form
         ::acs::test::xpath::get_form_values
+
+        "::acs::test::dom_html"
+        "::ad_log"
+        "::ad_return_complaint"
+        "::ad_script_abort"
+        "::ad_urlencode_query"
+        "::xo::Context instproc invoke_object"
+        "::xo::PackageMgr instproc require"
+        "::xo::db::CrClass instproc get_instance_from_db"
+        "::xo::db::CrClass proc lookup"
+        "::xo::db::sql::content_item proc set_live_revision"
+        "::xotcl::Class instproc instmixin"
+        "::xowiki::Includelet proc html_encode"
+        "::xowiki::BootstrapNavbarDropdownMenu instproc render"
+        "::xowiki::BootstrapNavbarDropdownMenuItem instproc render"
+        "::xowiki::MenuItem instproc init"
+        "::xowiki::BootstrapNavbar instproc render"
+        "::xowiki::BootstrapNavbarDropzone instproc render"
+        "::xo::db::CrItem instproc is_package_root_folder"
+        "::xowiki::FormPage instproc set_live_revision"
+        "::xo::db::CrItem instproc set_live_revision"
+
     } create_folder_with_page {
 
         Create a folder in an xowf instance with a form page and edit this
@@ -129,6 +151,34 @@ namespace eval ::xowf::test {
         "::xowiki::test::create_form_page"
         "::xowiki::test::edit_form_page"
         "::xowiki::test::require_test_folder"
+
+        "::ad_log"
+        "::ad_return_complaint"
+        "::ad_script_abort"
+        "::export_vars"
+        "::security::csrf::validate"
+        "::xo::ConnectionContext instproc form_parameter"
+        "::xo::ConnectionContext instproc mobile"
+        "::xo::ConnectionContext instproc set_parameter"
+        "::xo::ConnectionContext instproc url"
+        "::xo::ConnectionContext instproc user_id"
+        "::xo::Context instproc invoke_object"
+        "::xo::Page proc requireCSS"
+        "::xo::db::CrClass proc get_instance_from_db"
+        "::xo::require_html_procs"
+        "::xotcl::Class instproc instmixin"
+        "::xowf::Context proc require"
+        "::xowiki::Includelet proc html_encode"
+        "::xowiki::autoname proc basename"
+        "::xowiki::autoname proc new"
+        "::xowiki::BootstrapNavbarDropdownMenu instproc render"
+        "::xowiki::BootstrapNavbarDropdownMenuItem instproc render"
+        "::xowiki::MenuItem instproc init"
+        "::xowiki::BootstrapNavbar instproc render"
+        "::xowiki::BootstrapNavbarDropzone instproc render"
+        "::xo::db::CrItem instproc is_package_root_folder"
+        "::xowiki::FormPage instproc set_live_revision"
+        "::xo::db::CrItem instproc set_live_revision"
     } create_workflow_with_instance {
 
         Create an xowf workflow and a instance in a folder.
