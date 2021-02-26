@@ -76,14 +76,14 @@ Action instproc activate {obj} {
     set locking_msg(initial) "#xowf.online-exam-not-published#"
     set locking_msg(done) "#xowf.online-exam-finished#"
     set locking_state [dict get $exam_info locking_state]
-    if {$locking_state ne [:get_next_state]} {    
+    if {$locking_state ne [:get_next_state]} {
       util_user_message -message "$locking_msg($locking_state)"
       return 0
     }
   }
   return 1
 }
-  
+
 Action instproc goto_page {position} {
   :set_property position $position
 }
@@ -305,9 +305,10 @@ proc done_form_loader {ctx form_name} {
     set titleString [dict get $title_info full_title]
     set title [list [string trim $titleString]]
   }
-  lappend title \
-      [$parent_obj title] \
-      "IP: [$obj property ip]"
+  lappend title [$parent_obj title]
+  if {[$parent_obj property show_ip t]} {
+    lappend title "IP: [$obj property ip]"
+  }
   #ns_log notice "SETTING $obj title [join $title { · }]"
   $obj title [join $title " · "]
 

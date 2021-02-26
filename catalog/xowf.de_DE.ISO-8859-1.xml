@@ -168,6 +168,8 @@
   <msg key="Show_points_help_text">Zeige Studierenden während der Prüfung die erreichbaren Punkte pro Beispiel</msg>
   <msg key="Show_minutes">Minutenanzeige</msg>
   <msg key="Show_minutes_help_text">Zeige Studierenden während der Prüfung die vorgesehen Bearbeitsdauer pro Beispiel</msg>
+  <msg key="Show_IP">Anzeige der IP-Adresse</msg>
+  <msg key="Show_IP_help_text">Zeige Studierenden während der Prüfung eigene IP-Adresse</msg>
   <msg key="Time_budget">Zeitbudget</msg>
   <msg key="Time_budget_help_text">Erhöhe die Bearbeitungsdauer auf den angeführen relativen Wert</msg>
 
