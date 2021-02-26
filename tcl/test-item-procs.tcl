@@ -2547,7 +2547,8 @@ namespace eval ::xowf::test_item {
 
         setInterval(function () {
           var current_date = new Date().getTime();
-          var seconds_left = (countdown_target_date - current_date) / 1000;
+          var absolute_seconds_left = (countdown_target_date - current_date) / 1000;
+          var seconds_left = absolute_seconds_left
           var HTML = '';
 
           countdown_days = parseInt(seconds_left / 86400);
@@ -2559,7 +2560,7 @@ namespace eval ::xowf::test_item {
 
           var alarmseconds = countdown.parentNode.dataset.alarmseconds;
           if (typeof alarmseconds !== 'undefined') {
-            var full_seconds = Math.trunc(seconds_left);
+            var full_seconds = Math.trunc(absolute_seconds_left);
             // for testing purposes, use: (full_seconds % 5 == 0)
             if (alarmseconds.includes(full_seconds)) {
               beep(200);
