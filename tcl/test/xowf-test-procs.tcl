@@ -182,6 +182,7 @@ namespace eval ::xowf::test {
         "::xowiki::autoname proc basename"
         "::xowiki::autoname proc new"
         "::xowiki::test::edit_form_page"
+        rp_internal_redirect
     } create_workflow_with_instance {
 
         Create an xowf workflow and a instance in a folder.
