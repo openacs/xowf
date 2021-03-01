@@ -531,7 +531,7 @@ Action instproc unpublish_link {obj} {
 
     set combined_form_info [::xowf::test_item::question_manager combined_question_form [self]]
     set autograde   [dict get $combined_form_info autograde]
-    set totalPoints [::xowf::test_item::question_manager total_minutes \
+    set totalPoints [::xowf::test_item::question_manager total_points \
                          -max_items [:property max_items ""] \
                          $combined_form_info]
     #
