@@ -20,7 +20,7 @@
 # table (an to download the results via csv), or the lecturer can
 # produce a printer friendly version of the answers.
 #
-# An admin might with to add the following entries to the folder to ease
+# An admin might wish to add the following entries to the folder to ease
 # creation of exercises and exams
 #
 #   {clear_menu -menu New}
