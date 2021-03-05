@@ -94,9 +94,7 @@ State created \
   ${container}::initial form $form_name
   ${container}::created form $form_name
   ${container}::created actions {save tryout}
-  ${container}::created in_role swa {
-    -actions {save view tryout}
-  }
+  #${container}::created in_role swa { -actions {save view tryout} }
 }
 
 #
