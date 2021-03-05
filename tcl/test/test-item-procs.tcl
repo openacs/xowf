@@ -20,9 +20,24 @@ namespace eval ::xowf::test {
         "::xowiki::test::create_form_page"
         "::xowiki::test::require_test_folder"
         "::xowiki::Page instproc www-create-new"
-        
-        "::xowiki::formfield::FormField instproc dict_to_fc"
+
+        "::xowf::WorkflowPage instproc get_revision_sets"
+        "::xowf::test_item::Answer_manager instproc create_workflow"
+        "::xowf::test_item::Answer_manager instproc get_answer_wf"
+        "::xowf::test_item::Answer_manager instproc get_answers"
+        "::xowf::test_item::Answer_manager instproc get_wf_instances"
+        "::xowf::test_item::Answer_manager instproc state_periods"
+        "::xowf::test_item::Question_manager instproc combined_question_form"
+        "::xowf::test_item::Question_manager instproc question_info"
+        "::xowf::test_item::Question_manager instproc question_objs"
+        "::xowf::test_item::Question_manager instproc question_property"
+        "::xowf::test_item::Question_manager instproc total_minutes"
+        "::xowf::test_item::Question_manager instproc total_points"
+        "::xowf::test_item::Renaming_form_loader instproc form_name_based_attribute_stem"
+        "::xowf::test_item::Renaming_form_loader instproc rename_attributes"
+        "::xowiki::FormPage instproc get_property"
         "::xowiki::formfield::CompoundField instproc get_named_sub_component_value"
+        "::xowiki::formfield::FormField instproc dict_to_fc"
     } create_test_items {
 
         Create a folder in various test-items and an exam with one item.
@@ -96,13 +111,13 @@ namespace eval ::xowf::test {
                     question.interaction.answer.2.text "Green"
                     question.interaction.answer.2.correct "t"
                     question.interaction.answer.3.text "Blue"
-                    question.interaction.answer.3.correct ""
+                    question.interaction.answer.3.correct "f"
                 }]
 
             ###########################################################
             aa_section "Create an inclass-exam"
             ###########################################################
-            
+
             set d [::xowiki::test::create_form_page \
                 -user_id $user_id \
                 -instance $instance \
@@ -114,9 +129,23 @@ namespace eval ::xowf::test {
                     _nls_language $locale
                     question $testfolder/en:sample_mc_0
                 }]]
-            aa_log "inlclass exam created d=[ns_quotehtml $d]"
+            aa_log "inclass exam created d=[ns_quotehtml $d]"
 
-            
+            ###########################################################
+            aa_section "Create an exam with the selected question"
+            ###########################################################
+
+            set page_name [dict get $d page_info stripped_name]
+            set d [::xowiki::test::edit_form_page \
+                       -user_id $user_id \
+                       -instance $instance \
+                       -path $testfolder/$page_name \
+                       -update {
+                           __action_select ""
+                       }]
+            aa_log "inclass exam edited d=[ns_quotehtml $d]"
+
+
         } on error {errorMsg} {
             aa_true "Error msg: $errorMsg" 0
         } finally {
