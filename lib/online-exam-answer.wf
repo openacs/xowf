@@ -331,13 +331,13 @@ proc working_form_loader {ctx form_name} {
     set count 0
     foreach question $question_names {
       incr count
-      ${container}::Action create ${container}::$count \
+      ${container}::Action create ${container}::q.$count \
           -label "$count" \
           -next_state working \
           -extra_css_class [expr {$current_position == $count - 1 ? "current" : ""}] \
           -proc activate {obj} \
           [list :goto_page [expr {$count -1}]]
-      lappend actions $count
+      lappend actions q.$count
     }
     if { ${:state} eq "working"
          && [::xowf::test_item::question_manager more_ahead -position $current_position $parent_obj]

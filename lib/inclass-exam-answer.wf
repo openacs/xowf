@@ -419,7 +419,7 @@ proc done_form_loader {ctx form_name} {
   #
   set ctx [:wf_context]
   set container [$ctx wf_container]
-  ${container}::Property ip -default [expr {[ns_conn isconnected] ? [ad_conn peeraddr] : "nowhere"}]
+   ${container}::Property ip -default [expr {[ns_conn isconnected] ? [ad_conn peeraddr] : "nowhere"}]
 
   #:log "inclass-exam-answer state ${:state}"
   set ctx [:wf_context]
@@ -453,17 +453,19 @@ proc done_form_loader {ctx form_name} {
     #}
     if {${:state} ne "done"} {
 
-      for {set count 1} {$count <= $question_count} {incr count} {
-        ${container}::Action create ${container}::$count \
-            -label "$count" \
-            -state_safe true \
-            -next_state working \
-            -extra_css_class [expr {$current_position == $count - 1 ? "current" : ""}] \
-            -proc activate {obj} [subst {
-              next
-              :goto_page [expr {$count -1}]
-            }]
-        lappend actions $count
+      if {$question_count > 1} {
+        for {set count 1} {$count <= $question_count} {incr count} {
+          ${container}::Action create ${container}::q.$count \
+              -label "$count" \
+              -state_safe true \
+              -next_state working \
+              -extra_css_class [expr {$current_position == $count - 1 ? "current" : ""}] \
+              -proc activate {obj} [subst {
+                next
+                :goto_page [expr {$count -1}]
+              }]
+          lappend actions q.$count
+        }
       }
       if { ${:state} in {initial working}
            && [::xowf::test_item::question_manager more_ahead -position $current_position $parent_obj]
