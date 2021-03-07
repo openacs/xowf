@@ -38,6 +38,30 @@ namespace eval ::xowf::test {
         "::xowiki::FormPage instproc get_property"
         "::xowiki::formfield::CompoundField instproc get_named_sub_component_value"
         "::xowiki::formfield::FormField instproc dict_to_fc"
+        "::xowf::test_item::Answer_manager instproc answers_panel"
+        "::xowf::test_item::Question_manager instproc exam_target_time"
+        "::xowf::test_item::Answer_manager instproc countdown_timer"
+        "::xowf::test_item::Question_manager instproc total_minutes_for_exam"
+        "::xowf::test_item::Answer_manager instproc delete_all_answer_data"
+        "::xowf::test_item::Answer_manager instproc marked_results"
+        "::xowiki::Page instproc www-create-or-use"
+        "::xowf::test_item::Question_manager instproc question_count"
+        "::xowf::test_item::Question_manager instproc add_seeds"
+        "::xowf::test_item::Question_manager instproc more_ahead"
+        "::xowf::test_item::Question_manager instproc shuffled_index"
+        "::xowf::test_item::Question_manager instproc nth_question_obj"
+        "::xowf::test_item::Question_manager instproc nth_question_form"
+        "::xowf::test_item::Question_manager instproc disallow_paste"
+        "::xowf::test_item::Renaming_form_loader instproc answer_attributes"
+        "::xo::ConnectionContext instproc eval_as_user"
+        "::xowf::test_item::Renaming_form_loader instproc name_to_question_obj_dict"
+        "::xowf::test_item::Answer_manager instproc achieved_points"
+        "::xowf::test_item::Answer_manager instproc runtime_panel"
+        "::xowf::test_item::Answer_manager instproc revisions_up_to"
+        "::xowf::test_item::Answer_manager instproc last_time_in_state"
+        "::xowf::test_item::Answer_manager instproc get_duration"
+        "::xowf::test_item::Answer_manager instproc get_IPs"
+        "::xowf::test_item::Answer_manager instproc grading_table"
     } create_test_items {
 
         Create a folder in various test-items and an exam with one item.
@@ -132,19 +156,85 @@ namespace eval ::xowf::test {
             aa_log "inclass exam created d=[ns_quotehtml $d]"
 
             ###########################################################
-            aa_section "Create an exam with the selected question"
+            aa_section "Create exam with the selected question"
             ###########################################################
 
             set page_name [dict get $d page_info stripped_name]
             set d [::xowiki::test::edit_form_page \
-                       -user_id $user_id \
-                       -instance $instance \
+                       -last_request $d \
                        -path $testfolder/$page_name \
                        -update {
                            __action_select ""
                        }]
             aa_log "inclass exam edited d=[ns_quotehtml $d]"
 
+            ###########################################################
+            aa_section "Publish exam"
+            ###########################################################
+
+            set d [::xowiki::test::edit_form_page \
+                       -last_request $d \
+                       -path $testfolder/$page_name \
+                       -update {
+                           __action_publish ""
+                       }]
+            aa_log "inclass exam edited d=[ns_quotehtml $d]"
+
+            set response [dict get $d body]
+            set answer_link ""
+
+            acs::test::dom_html root $response {
+                set answer_link [::acs::test::xpath::get_text $root \
+                                     [subst {//form\[contains(@class,'Form-inclass-exam')\]//a}]]
+                aa_log "answer link is '$answer_link'"
+                aa_true "answer link is non empty '$answer_link'" {[string length $answer_link] > 0}
+            }
+
+            ###########################################################
+            aa_section "Go to answer page"
+            ###########################################################
+
+            set d1 [acs::test::follow_link -last_request $d -label $answer_link]
+            aa_log "inclass exam answer page d=[ns_quotehtml $d]"
+            acs::test::reply_has_status_code $d1 302
+            set location /[::acs::test::get_url_from_location $d1]
+            aa_log "fill-out page=[ns_quotehtml $location]"
+
+            set d1 [acs::test::http -last_request $d $location]
+            acs::test::reply_has_status_code $d1 200
+
+            set path [string range $location [string length $instance] end]
+            set url_info [ns_parseurl $path]
+            set d [::xowiki::test::edit_form_page \
+                       -last_request $d \
+                       -path [dict get $url_info path]/[dict get $url_info tail] \
+                       -update {
+                           __action_logout ""
+                           sample_mc_0_ 1
+                           sample_mc_0_ 2
+                       }]
+
+            ###########################################################
+            aa_section "Close exam"
+            ###########################################################
+
+            set d [::xowiki::test::edit_form_page \
+                       -last_request $d \
+                       -path $testfolder/$page_name \
+                       -update {
+                           __action_unpublish ""
+                       }]
+            aa_log "inclass exam edited d=[ns_quotehtml $d]"
+
+            ###########################################################
+            aa_section "Visit exam protocl"
+            ###########################################################
+            set d [acs::test::http \
+                       -last_request $d \
+                       [export_vars -base $instance/$testfolder/$page_name {{m print-answers}}]]
+            acs::test::reply_has_status_code $d 200
+
+            aa_log "inclass exam edited d=[ns_quotehtml $d]"
 
         } on error {errorMsg} {
             aa_true "Error msg: $errorMsg" 0
