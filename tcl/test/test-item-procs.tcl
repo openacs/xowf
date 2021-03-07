@@ -227,7 +227,7 @@ namespace eval ::xowf::test {
             aa_log "inclass exam edited d=[ns_quotehtml $d]"
 
             ###########################################################
-            aa_section "Visit exam protocl"
+            aa_section "Visit exam protocol"
             ###########################################################
             set d [acs::test::http \
                        -last_request $d \
