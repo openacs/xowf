@@ -5,7 +5,7 @@
 
 <h3>#xowf.Created_Assessments#:</h3>
 
-<p>{{form-usages -title "Online Exams" -with_form_link 0 -form en:online-exam.wf|en:inclass-quiz.wf|en:inclass-exam.wf -buttons "edit delete" -field_names "_title,_state,_last_modified,_creation_user" -date_format "pretty-age" -csv false}}<br />
+<p>{{form-usages -title "Online Exams" -with_form_link 0 -form en:online-exam.wf|en:inclass-quiz.wf|en:inclass-exam.wf|en:topic-assignment.wf -buttons "edit delete" -field_names "_title,_state,_last_modified,_creation_user" -date_format "pretty-age" -csv false}}<br />
 <br />
 {{set-parameter __no_footer 1}}</p>
 
