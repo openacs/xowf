@@ -293,6 +293,7 @@ namespace eval ::xowiki::formfield {
       }
       dict set grading_dict form_item_wrapper_CSSclass form-inline
       dict set grading_dict label #xowf.Grading-Scheme#
+      dict set grading_dict required true
       set gradingSpec [list [list grading [:dict_to_fc -type select $grading_dict]]]
     } else {
       set gradingSpec ""
@@ -757,7 +758,7 @@ namespace eval ::xowiki::formfield {
     dict set fc_dict label ""
     dict set fc_dict options $options
     dict set fc_dict answer $answer
-    dict set fc_dict grading exact
+    dict set fc_dict grading [${:parent_field} get_named_sub_component_value grading]
 
     append form \
         "<form>\n" \
@@ -882,7 +883,7 @@ namespace eval ::xowiki::formfield {
     # {correct {boolean_checkbox,horizontal=true,label=#xowf.Correct#,form_item_wrapper_CSSclass=form-inline}}
     :create_components  [subst {
       {text  {$widget,height=50px,label=#xowf.choice_option#,plugins=OacsFs}}
-      {correct {boolean_checkbox,horizontal=true,label=#xowf.Correct#,form_item_wrapper_CSSclass=form-inline}}
+      {correct {boolean_checkbox,horizontal=true,default=f,label=#xowf.Correct#,form_item_wrapper_CSSclass=form-inline}}
       {solution {textarea,rows=2,label=#xowf.Solution#,form_item_wrapper_CSSclass=form-inline}}
     }]
     set :__initialized 1
@@ -1861,13 +1862,13 @@ namespace eval ::xowf::test_item {
       #
       set all_form_fields [::xowiki::formfield::FormField info instances -closure]
       set totalPoints 0
-      set achieveableTotalPoints 0
+      set achievableTotalPoints 0
       set details {}
       foreach a [dict keys $answer_attributes] {
         set f [$answer_object lookup_form_field -name $a $all_form_fields]
         set points {}
-        set achieveablePoints [$f set test_item_points]
-        set achieveableTotalPoints [expr {$achieveableTotalPoints + $achieveablePoints}]
+        set achievablePoints [$f set test_item_points]
+        set achievableTotalPoints [expr {$achievableTotalPoints + $achievablePoints}]
         if {[$f exists correction_data]} {
           set cd [$f set correction_data]
           #ns_log notice "FOO: $a <$f> $cd"
@@ -1881,12 +1882,12 @@ namespace eval ::xowf::test_item {
         lappend details [dict create \
                                    attributeName $a \
                                    achieved $points \
-                                   achieveable $achieveablePoints]
+                                   achievable $achievablePoints]
       }
       return [list achievedPoints $totalPoints \
                   details $details \
                   achievedPointsRounded [format %.0f $totalPoints] \
-                  achieveablePoints $achieveableTotalPoints]
+                  achievablePoints $achievableTotalPoints]
     }
 
     ########################################################################
@@ -2264,7 +2265,7 @@ namespace eval ::xowf::test_item {
           set final_score [expr {$total_score/$total_points}]
           $p set_property -new 1 _online-exam-total-score $final_score
 
-          set d [list achievedPoints $total_score achieveablePoints $total_score totalPoints $total_point]
+          set d [list achievedPoints $total_score achievablePoints $total_score totalPoints $total_point]
           set grade [$grading_scheme grade -achieved_points $d]
           dict incr grade_count $grade
           $p set_property -new 1 _online-exam-grade $grade
@@ -2768,7 +2769,7 @@ namespace eval ::xowf::test_item {
     :method load_question_objs {obj:object names} {
       #
       # Load the question objects for the provided question names and
-      # return the quesion objs.
+      # return the question objs.
       #
       set questions [lmap ref $names {
         if {![string match "*/*" $ref]} {
@@ -3426,7 +3427,7 @@ namespace eval ::xowf::test_item::grading {
       # Return a numeric grade based on achieved_points dict and
       # percentage_mapping. On invalid data, return 0.
       #
-      #     achieved_points:    {achievedPoints 4.0 achieveablePoints 4 totalPoints 4}
+      #     achieved_points:    {achievedPoints 4.0 achievablePoints 4 totalPoints 4}
       #     percentage_mapping: {50.0 60.0 70.0 80.0}
       #
       if {[dict exists $achieved_points totalPoints] && [dict get $achieved_points totalPoints] > 0} {
