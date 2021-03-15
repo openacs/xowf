@@ -58,10 +58,10 @@ namespace eval ::xowf::test {
 
     } {
         #
-        # Run the test under the current user_id.
+        # Setup of test user_id
         #
-        set user_id [ad_conn user_id]
-        ns_log notice USER=$user_id
+        set d [::acs::test::user::create -email xowf@acs-testing.test -admin]
+        set user_id [dict get $d user_id]
 
         set instance $_xowf_test_instance_name
         set testfolder .testfolder
@@ -191,9 +191,10 @@ namespace eval ::xowf::test {
         interface.
     } {
         #
-        # Run the test under the current user_id.
+        # Setup of test user_id
         #
-        set user_id [ad_conn user_id]
+        set d [::acs::test::user::create -email xowf@acs-testing.test -admin]
+        set user_id [dict get $d user_id]
 
         set instance $_xowf_test_instance_name
         set testfolder .testfolder
