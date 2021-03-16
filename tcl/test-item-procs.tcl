@@ -598,10 +598,17 @@ namespace eval ::xowiki::formfield {
     set widget [test_item set richtextWidget]
     ns_log notice "[self] [:info class] auto_correct=${:auto_correct}"
 
+    if {[acs_user::site_wide_admin_p]} {
+      set substvalues "{substvalues {textarea,label=Substitution Values}}"
+    } else {
+      set substvalues ""
+    }
+    #{substvalues {textarea,label=Substitution Values}}
     :create_components [subst {
       {text  {$widget,height=100px,label=#xowf.exercise-text#,plugins=OacsFs}}
       {attachments {[:attachments_widget ${:nr_attachments}]}}
       {answer {short_text_field,repeat=1..${:nr},label=}}
+      $substvalues
     }]
     set :__initialized 1
   }
@@ -610,6 +617,11 @@ namespace eval ::xowiki::formfield {
 
     set intro_text    [:get_named_sub_component_value text]
     set answerFields  [:get_named_sub_component_value -from_repeat answer]
+    if {[acs_user::site_wide_admin_p]} {
+      set substvalues   [:get_named_sub_component_value substvalues]
+    } else {
+      set substvalues ""
+    }
 
     set options {}
     set render_hints {}
@@ -657,6 +669,7 @@ namespace eval ::xowiki::formfield {
     ${:object} set_property -new 1 anon_instances $anon_instances
     ${:object} set_property -new 1 auto_correct ${:auto_correct}
     ${:object} set_property -new 1 has_solution false
+    ${:object} set_property -new 1 substvalues $substvalues
   }
 
   #
@@ -773,13 +786,14 @@ namespace eval ::xowiki::formfield {
         answer:[:dict_to_fc -type reorder_box $fc_dict] \
         @categories:off @cr_fields:hidden
 
-    ns_log notice "reorder_interaction $form\n$fc"
+    #ns_log notice "reorder_interaction $form\n$fc"
     ${:object} set_property -new 1 form $form
     ${:object} set_property -new 1 form_constraints $fc
     set anon_instances true ;# TODO make me configurable
     ${:object} set_property -new 1 anon_instances $anon_instances
     ${:object} set_property -new 1 auto_correct ${:auto_correct}
     ${:object} set_property -new 1 has_solution false
+    #ns_log notice "${:name} FINAL FC $fc"
   }
 }
 
@@ -2877,6 +2891,86 @@ namespace eval ::xowf::test_item {
       return $result
     }
 
+    :method percent_substitute {-verbose:switch -substvalues -seed text} {
+      set result ""
+      set start 0
+      foreach {p0 p1 p2} [regexp -all -inline -indices {%([a-zA-Z0-9_]+)[.]?([a-zA-Z0-9_]*)%} $text] {
+        lassign $p0 first last
+        set match [string range $text $first $last]
+        set m1 [string range $text {*}$p1]
+        set m2 [string range $text {*}$p2]
+        if {[dict exists $substvalues $m1]} {
+          set values [dict get $substvalues $m1]
+          if {[info exists seed]} {
+            set index [::xowiki::randomized_index -seed $seed [llength $values]]
+            ns_log notice "XXX percent_substitute called with seed <$seed> -> index $index <[llength $values]>"
+            set value [lindex $values $index]
+          } else {
+            set value [lindex $values 0]
+          }
+          if {$m2 ne "" && [dict exists $value $m2]} {
+            set value [dict get $value $m2]
+            if {$verbose} {
+              ns_log notice "XXX percent_substitute chooses '$value' for $m2 from <$values>"
+            }
+          }
+          set replacement $value
+        } else  {
+          set replacement '$match'
+        }
+        append result \
+            [string range $text $start $first-1] \
+            $replacement
+        set start [incr last]
+      }
+      append result [string range $text $start [string length $text]]
+      return $result
+    }
+
+    :public method item_substitute_markup {
+      -obj:object
+      {-position:integer 0}
+      -form_obj:object
+    } {
+      #
+      # Substitute everything item-specific in the text, including
+      # markup (handling e.g. images resolving in the context of the
+      # original question) and also percent-substitutions
+      #
+      :assert_answer_instance $obj
+      set html [$obj substitute_markup \
+                    -context_obj $form_obj \
+                    [$form_obj property form]]
+      set fc [$form_obj property form_constraints]
+      set dfc [$form_obj property disabled_form_constraints]
+      set form_name [$form_obj name]
+      ns_log notice "CHECK-AA $form_name obj $obj [$obj name] form_obj $form_obj form $html seeds [$obj property seeds] pos $position"
+      #ns_log notice "CHECK-AA $form_name fc <[$form_obj property form_constraints]>"
+      set seed [lindex [$obj property seeds] $position]
+
+      ns_log notice "CHECK-AA $form_name seed <$seed> // seeds <[$obj property seeds]>"
+      if {$seed eq ""} {
+        ns_log warning "item_substitute_markup cannot substitute percent variables in $form_name"        
+      } else {
+        set substvalues [$form_obj property substvalues]
+        if {$substvalues ne ""} {
+          set html [:percent_substitute \
+                        -seed $seed \
+                        -substvalues $substvalues \
+                        $html]
+          set fc [:percent_substitute \
+                      -seed $seed \
+                      -substvalues $substvalues \
+                      $fc]
+          set dfc [:percent_substitute -verbose \
+                       -seed $seed \
+                       -substvalues [$form_obj property substvalues] \
+                       $dfc]
+        }
+      }
+      return [list form $html form_constraints $fc disabled_form_constraints $dfc]
+    }
+
     :public method disallow_paste {form_obj:object} {
       #
       # This function changes the form_constraints of the provided
@@ -2912,15 +3006,22 @@ namespace eval ::xowf::test_item {
       }]
     }
 
-    :method question_info {
+    :public method question_info {
       {-numbers ""}
       {-with_title:switch false}
       {-with_minutes:switch false}
       {-with_points:switch false}
       {-titleless_form:switch false}
       {-obj:object}
+      {-user_answers:object:object,0..1 ""}
       form_objs
     } {
+      #
+      # Returns a dict containing "form", "title_infos",
+      # "form_constraints" "disabled_form_constraints"
+      # "randomization_for_exam" "autograde" and "question_objs". This
+      # information is obtained from the provided "form_objs".
+      #
       set full_form {}
       set full_fc {}
       set full_disabled_fc {}
@@ -2938,17 +3039,15 @@ namespace eval ::xowf::test_item {
           set points $minutes
         }
         set time_budget [$obj property time_budget]
-        ns_log notice "[$form_obj name]: TIME BUDGET '$time_budget'"
         if {$time_budget ni {"" 100}} {
           set minutes [expr {$time_budget*$minutes/100.0}]
           ns_log notice "[$form_obj name]: TIME BUDGET '$time_budget' -> minutes set to $minutes"
-          ns_log notice "[$form_obj name]: [$obj instance_attributes]"
         }
         set mapping {show_points with_points show_minutes with_minutes}
         foreach property {show_points show_minutes} {
           if {[$obj property $property] ne ""} {
             set [dict get $mapping $property] [$obj property $property]
-            ns_log notice "[$form_obj name]: override flag via exam setting: '$property' -> [$obj property $property]"
+            #ns_log notice "[$form_obj name]: override flag via exam setting: '$property' -> [$obj property $property]"
           }
         }
         set title ""
@@ -2967,15 +3066,24 @@ namespace eval ::xowf::test_item {
 
         if {!$titleless_form} {
           append full_form \
-              "<h3>$title</h3>\n"
+              "<h4>$title</h4>\n"
         }
         #
         # Resolve links in the context of the resolve_object
         #
-        append full_form \
-            [$obj substitute_markup \
-                 -context_obj $form_obj \
-                 [$form_obj property form]]
+
+        #ns_log notice "CHECK 0 user_answers <$user_answers> (obj is the inclass exam [$obj name])"
+        if {$user_answers eq ""} {
+          set user_answers $obj
+        }
+        set d [:item_substitute_markup \
+                   -obj $user_answers \
+                   -position $position \
+                   -form_obj $form_obj]
+        append full_form [dict get $d form]
+
+        #ns_log notice "CHECK [$obj serialize]"
+        #ns_log notice "CHECK obj $obj form_obj $form_obj parent_obj [$obj parent_id]"
 
         #append full_form \
         #    [$form_obj substitute_markup -context_obj $form_obj [$form_obj property form]]
@@ -2988,12 +3096,12 @@ namespace eval ::xowf::test_item {
                                  points $points \
                                  number $number]
         lappend full_fc [:add_to_fc \
-                             -fc [$form_obj property form_constraints] \
+                             -fc [dict get $d form_constraints] \
                              -minutes $minutes \
                              -points $points \
                              -position $position]
         lappend full_disabled_fc [:add_to_fc \
-                                      -fc [$form_obj property disabled_form_constraints] \
+                                      -fc [dict get $d disabled_form_constraints] \
                                       -minutes $minutes \
                                       -points $points \
                                       -position $position]
@@ -3125,6 +3233,7 @@ namespace eval ::xowf::test_item {
       {-with_points:switch false}
       {-user_specific:switch false}
       {-shuffle_id:integer -1}
+      {-user_answers:object:object,0..1 ""}
       obj:object
     } {
       #
@@ -3134,7 +3243,12 @@ namespace eval ::xowf::test_item {
       # information etc. depending on the provided parameters.
       #
       # @param shuffle_id used only for selecting form_objs
-      #
+      # @param obj is the exam
+      # @param user_answers instance of the answer-wf.
+      #        Needed for user-specific percent substitutions.
+
+      #ns_log notice "combined_question_form called with user_answers <$user_answers>"
+      #if {$user_answers eq ""} {xo::show_stack}
       set form_objs [:question_objs -shuffle_id $shuffle_id $obj]
       if {$user_specific} {
         set max_items [$obj property max_items ""]
@@ -3157,6 +3271,7 @@ namespace eval ::xowf::test_item {
                   -with_points=$with_points \
                   {*}$extra_flags \
                   -obj $obj \
+                  -user_answers $user_answers \
                   $form_objs]
     }
 
@@ -3374,7 +3489,7 @@ namespace eval ::xowiki::formfield {
         # original spec (here in $options)
         #
         foreach s [split ${:spec} ,] {
-          ns_log warning "s=$s"
+          #ns_log warning "s=$s"
           if {[regexp {^options=(.*)$} $s . options]} {
             break
           }
