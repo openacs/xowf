@@ -62,29 +62,31 @@ namespace eval ::xowf::test {
         "::xowf::test_item::Answer_manager instproc get_duration"
         "::xowf::test_item::Answer_manager instproc get_IPs"
         "::xowf::test_item::Answer_manager instproc grading_table"
+        "::xowf::test_item::Question_manager instproc item_substitute_markup"
+        "::xowiki::formfield::enumeration instproc scores"
     } create_test_items {
 
         Create a folder in various test-items and an exam with one item.
 
     } {
-        #
-        # Setup of test user_id
-        #
-        set d [::acs::test::user::create -email xowf@acs-testing.test -admin]
-        set user_id [dict get $d user_id]
-
         set instance $_xowf_test_instance_name
         set testfolder .testfolder
         set locale [lang::system::locale]
         set lang [string range $locale 0 1]
 
+        #
+        # Setup of test user_id and login
+        #
+        set user_info [::acs::test::user::create -email xowf@acs-testing.test -admin]
+        set d [::acs::test::login $user_info]
+
         try {
             ###########################################################
             aa_section "Make sure we have a fresh test folder"
             ############################################################
-
+            #-user_id $user_id
             set folder_info [::xowiki::test::require_test_folder \
-                                 -user_id $user_id \
+                                 -last_request $d \
                                  -instance $instance \
                                  -folder_name $testfolder \
                                  -fresh \
@@ -100,7 +102,7 @@ namespace eval ::xowf::test {
             ###########################################################
 
             ::xowiki::test::create_form_page \
-                -user_id $user_id \
+                -last_request $d \
                 -instance $instance \
                 -path $testfolder \
                 -parent_id $folder_id \
@@ -119,7 +121,7 @@ namespace eval ::xowf::test {
             ###########################################################
 
             ::xowiki::test::create_form_page \
-                -user_id $user_id \
+                -last_request $d \
                 -instance $instance \
                 -path $testfolder \
                 -parent_id $folder_id \
@@ -145,16 +147,16 @@ namespace eval ::xowf::test {
             ###########################################################
 
             set d [::xowiki::test::create_form_page \
-                -user_id $user_id \
-                -instance $instance \
-                -path $testfolder \
-                -parent_id $folder_id \
-                -form_name en:inclass-exam.wf \
-                -update [subst {
-                    _title "Sample Inclass Exam"
-                    _nls_language $locale
-                    question $testfolder/en:sample_mc_0
-                }]]
+                       -last_request $d \
+                       -instance $instance \
+                       -path $testfolder \
+                       -parent_id $folder_id \
+                       -form_name en:inclass-exam.wf \
+                       -update [subst {
+                           _title "Sample Inclass Exam"
+                           _nls_language $locale
+                           question $testfolder/en:sample_mc_0
+                       }]]
             aa_log "inclass exam created d=[ns_quotehtml $d]"
 
             ###########################################################
