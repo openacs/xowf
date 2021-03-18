@@ -4,6 +4,8 @@
   <msg key="Exercise">Ejercicio</msg>
   <msg key="Grading-Scheme">Sistema de calificación</msg>
   <msg key="Grading-Score">Puntuación</msg>
+  <msg key="Grade">Nota</msg>
+  <msg key="Total-Score">Puntuación total</msg>
   <msg key="Shuffle">Mezclar</msg>
   <msg key="Days">Días</msg>
   <msg key="Day">Día</msg>
@@ -28,6 +30,7 @@
   <msg key="feedback_incorrect">Retroalimentación incorrecta</msg>
   <msg key="lines">Líneas</msg>
   <msg key="menu-New-Extra-Workflow">Nuevo Workflow</msg>
+  <msg key="menu-New-Item-ExamFolder">Nueva carpeta de examen</msg>
   <msg key="answer">Respuesta</msg>
   <msg key="answers">Respuestas</msg>
   <msg key="submitted_answers">Respuestas enviadas</msg>
@@ -48,6 +51,7 @@
   <msg key="testrun">Prueba de funcionamiento</msg>
   <msg key="please_answer">Conteste, por favor</msg>
   <msg key="participant">Participante</msg>
+  <msg key="Participants">Participantes</msg>
   <msg key="participants_answered_question">participantes contestaron esta pregunta</msg>
   <msg key="results">Resultados</msg>
   <msg key="show_results">Mostrar resultados</msg>
@@ -55,9 +59,11 @@
 
   <msg key="online-exam-actual_signature">Firma actual</msg>
   <msg key="online-exam-submission_signature">Firma de entrega</msg>
+  <msg key="online-exam-submission_file">Fichero de entrega</msg>
+  <msg key="online-exam-submission_files">Ficheros de entrega</msg>
 
-  <msg key="signature">Firma</msg>
-  <msg key="signature_help_text">Proporcionar una huella digital de las respuestas ya enviadas como prueba del contenido enviado</msg>
+  <msg key="Signature">Firma</msg>
+  <msg key="Signature_help_text">Proporcionar una huella digital de las respuestas ya enviadas como prueba del contenido enviado</msg>
 
   <msg key="online-exam-select">Crear Examen</msg>
   <msg key="online-exam-review">Revisar Examen</msg>
@@ -81,10 +87,16 @@
   <msg key="online-exam-finished">El examen está terminado</msg>
   <msg key="online-exam-protocol">Informe del examen</msg>
   <msg key="online-exam-results-table">Resultados</msg>
+  <msg key="online-exam-review-protocol">Informe de revisión del examen</msg>
   <msg key="online-exam-submitted_exams_heading">Exámenes enviados</msg>
   <msg key="online-exam-submitted_exams_msg">Personas han enviado el examen</msg>
   <msg key="online-exam-name">Nombre del examen</msg>
   <msg key="online-exam-default_name">Examen ...</msg>
+
+  <msg key="open_submission_review">Abrir revisión de los envíos de los estudiantes</msg>
+  <msg key="open_submission_review_title">Abrir revisión de los envíos de los estudiantes</msg>
+  <msg key="close_submission_review">Cerrar revisión de los envíos de los estudiantes</msg>
+  <msg key="close_submission_review_title">Cerrar revisión de los envíos de los estudiantes</msg>
 
   <msg key="inclass-quiz-not-published">El cuestionario no ha sido publicado</msg>
   <msg key="inclass-quiz-open">El cuestionario está abierto</msg>
@@ -116,10 +128,14 @@
   <msg key="sc_question">Pregunta de elección única</msg>
   <msg key="mc_question">Pregunta de elección múltiple</msg>
   <msg key="text_question">Pregunta de texto</msg>
+  <msg key="code_question">Pregunta de código</msg>
   <msg key="ul_question">Pregunta de subida de archivo</msg>
   <msg key="sub_question">Sub-pregunta</msg>
-+  <msg key="reorder_question">Pregunta de ordenación</msg>
-+  <msg key="reorder_question_elements">Elementos a ordenar</msg>
+  <msg key="sub_questions">Sub-preguntas</msg>
+  <msg key="choice_option">Opción de respuesta</msg>
+  <msg key="choice_options">Opciones de respuesta</msg>
+  <msg key="reorder_question">Pregunta de ordenación</msg>
+  <msg key="reorder_question_elements">Elementos a ordenar</msg>
 
   <msg key="show_max">Mostrar máximo</msg>
 
@@ -131,6 +147,7 @@
   <msg key="menu-New-Item-ShortTextInteraction">Interacción de texto corto</msg>
   <msg key="menu-New-Item-MCInteraction">Interacción MC</msg>
   <msg key="menu-New-Item-SCInteraction">Interacción SC</msg>
+  <msg key="menu-New-Item-CodeInteraction">Interacción de código</msg>
   <msg key="menu-New-Item-UploadInteraction">Interacción de subida</msg>
   <msg key="menu-New-Item-ReorderInteraction">Interacción de ordenación</msg>
 
@@ -139,9 +156,71 @@
   <msg key="menu-New-App-InclassExam">Examen en clase</msg>
 
   <msg key="inclass-exam-draft_exam">Borrador de examen en clase (no publicado)</msg>
-  <msg key="inclass-exam-open">Exame en clase abierto (publicado)</msg>
+  <msg key="inclass-exam-open">Examen en clase abierto (publicado)</msg>
   <msg key="inclass-exam-closed">Examen en clase cerrado</msg>
+  <msg key="inclass-exam-review">Examen en clase cerrado (revisión abierta)</msg>
+  <msg key="Exam-review-not-open">La revisión para este examen no está abierta</msg>
 
   <msg key="Created_Questions">Preguntas creadas</msg>
   <msg key="Created_Assessments">Evaluaciones creadas</msg>
+  <msg key="nr_changes">Número de cambios</msg>
+  <msg key="Duration">Duración</msg>
+  <msg key="not_submitted">no enviado</msg>
+  <msg key="submitted">enviado</msg>
+  <msg key="Status">Estado</msg>
+  <msg key="Make_live_revision">Usar revisión mostrada como entrega</msg>
+  <msg key="Goto_this_revision">Ir a esta revisión</msg>
+  <msg key="Displayed_revision">Revisión mostrada</msg>
+  <msg key="Live_revision">Revisión entregada</msg>
+  <msg key="Solution">Solución</msg>
+  <msg key="Proctoring">Proctoring</msg>
+  <msg key="Proctoring_help_text">Usar E-Proctoring en este examen</msg>
+  <msg key="Synchronized">Examen sincronizado</msg>
+  <msg key="Synchronized_help_text">¿La duración del examen es controlada estrictamente por el profesor, o cada estudiante puede ver su propio tiempo, independientemente de su tiempo de comienzo?</msg>
+  <msg key="Allow_paste">Permitir cortar y pegar</msg>
+  <msg key="Allow_paste_help_text">¿Se le permite al estudiante cortar y pegar en campos de texto de múltiples líneas?</msg>
+  <msg key="Cut_and_paste_allowed">Cortar y pegar se permite en campos de texto de múltiples líneas</msg>
+  <msg key="Cut_and_paste_not_allowed">Cortar y pegar no se permite en campos de texto de múltiples líneas</msg>
+  <msg key="Show_points">Mostrar puntos</msg>
+  <msg key="Show_points_help_text">Mostrar puntos del estudiante durante el examen</msg>
+  <msg key="Show_minutes">Mostrar minutos</msg>
+  <msg key="Show_minutes_help_text">Mostrar minutos del estudiante durante el examen</msg>
+  <msg key="Show_IP">Mostrar dirección IP</msg>
+  <msg key="Show_IP_help_text">Mostrar dirección IP del estudiante durante el examen</msg>
+  <msg key="Time_budget">Tiempo a su disposición</msg>
+  <msg key="Time_budget_help_text">Incrementar el tiempo hasta el valor relativo especificado</msg>
+
+  <msg key="Max_items">Número limitado de preguntas</msg>
+  <msg key="Max_items_help_text">Limitar el número de preguntas a este valor. Útil en combinación con el orden aleatorio de las preguntas, cada estudiante ve potencialmente diferentes X de Y preguntas. Restricción: Todas las preguntas deben tener la misma duración/puntos.</msg>
+  <msg key="Max_items_ok">Limitar a %n% preguntas correcto, %n% de </msg>
+  <msg key="Max_items_not_ok_duration">Limitar a %n% preguntas incorrecto (la duración es distinta), </msg>
+  <msg key="Max_items_not_ok_number">Limitar a %n% preguntas incorrecto (no hay suficientes preguntas), </msg>
+
+  <msg key="Automatically_published_from_to">Publicado automáticamente desde %from% a %to%</msg>
+  <msg key="Exam_time_window">Horario del examen</msg>
+  <msg key="Exam_time_window_help_text">Horario del examen opcional, para exámenes que comienzan/acaban automáticamente. Cuando estos valores son especificados, el comienzo/final del examen de forma manual es aún posible.</msg>
+
+  <msg key="Exam_published">Examen publicado</msg>
+  <msg key="since_published">desde la publicación</msg>
+  <msg key="Achieved_points">Puntos conseguidos</msg>
+  <msg key="Point">Punto</msg>
+  <msg key="Points">Puntos</msg>
+
+  <msg key="Correct">Correcto</msg>
+  <msg key="exam_review_possible">revisión automática del examen posible</msg>
+  <msg key="exam_review_not_possible">revisión automática del examen imposible</msg>
+  <msg key="randomization_for_exam_ok">aleatorización para el examen correcta</msg>
+  <msg key="randomization_for_exam_not_ok">aleatorización para el examen incorrecta ("siempre" no debería usarse)</msg>
+
+  <msg key="panel_achievied_points_wi1">%achievedPoints% (redondeado%rounded%) de %totalPoints% puntos posibles, %percentage%%, nota: %grade%</msg>
+  <msg key="panel_achievied_points_wi1_noround">%achievedPoints% de %totalPoints% puntos posibles, %percentage%%, nota: %grade%</msg>
+  <msg key="test_item_name-validate_name">Nombre contiene al menos un carácter inválido</msg>
+
+  <msg key="Detail_configuration">Configuración detallada</msg>
+  <msg key="Time_management">Gestión del tiempo</msg>
+  <msg key="Question_management">Gestión de preguntas</msg>
+  <msg key="Security">Seguridad</msg>
+  <msg key="Proctoring_options">Opciones de Proctoring</msg>
+  <msg key="Proctoring_options_help_text">Opciones de Proctoring que se utilizarán</msg>
+  <msg key="Preview">Vista previa</msg>
 </message_catalog>
