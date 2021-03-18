@@ -226,7 +226,7 @@ proc working_form_loader {ctx form_name} {
   #
   set d [::xowf::test_item::question_manager item_substitute_markup \
              -obj $obj \
-             -position $position \
+             -position $item_nr \
              -form_obj $form_obj]
   $form_obj set_property form [dict get $d form]
   
