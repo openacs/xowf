@@ -201,10 +201,6 @@
   <msg key="Exam_time_window">Exam Time Window</msg>
   <msg key="Exam_time_window_help_text">Optional time window for automatically open/close exam. When these values are set, manual opening and closing of the exam is still possible.</msg>
 
-  <msg key="Allow_paste_help_text">Is the student allowed to use cut and paste in multiline text fields?</msg>
-  <msg key="Cut_and_paste_allowed">Cut and Paste is allowed in multi-line text fields</msg>
-  <msg key="Cut_and_paste_not_allowed">Cut and Paste is not allowed in multi-line text fields</msg>
-
   <msg key="Exam_published">Exam Published</msg>
   <msg key="since_published">since published</msg>
   <msg key="Achieved_points">Achieved Points</msg>
