@@ -12,6 +12,7 @@
 set :autoname 1   ;# to avoid editable name field
 set :policy ::xowf::test_item::test-item-policy-answer
 set :debug 0
+set :prevent_multiple_tabs 1
 
 ########################################################################
 #
@@ -350,7 +351,14 @@ proc done_form_loader {ctx form_name} {
   #template::set_css_property -querySelector ".context a" -property pointerEvents -value none
   template::set_css_property -class pagetitle -property display -value none
   template::set_css_property -class sidebar -property display -value none
+
+  ns_log notice "!!! check prevent_multiple_tabs [self] [info exists :prevent_multiple_tabs]"
+  if {[info exists :prevent_multiple_tabs] && ${:prevent_multiple_tabs}} {
+    ns_log notice "!!! prevent multiple tabs"
+    xowf::test_item::answer_manager prevent_multiple_tabs -cookie_name "tab_counter_[$obj item_id]"
+  }
 }
+
 #
 # Form loader for summary (shows all submission data of a user)
 #

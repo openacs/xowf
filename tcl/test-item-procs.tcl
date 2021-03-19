@@ -2534,6 +2534,35 @@ namespace eval ::xowf::test_item {
       return $answerStatus
     }
 
+    :public method prevent_multiple_tabs {
+      {-cookie_name multiple_tabs}
+    } {
+      #
+      # Prevent answering the same survey from multiple, concurrently
+      # open tabs.
+      #
+      template::add_body_script -script [subst {
+        var cookieLine = document.cookie.split('; ').find(row => row.startsWith('$cookie_name='));
+        var cookieValue = (cookieLine === undefined) ? 1 : parseInt(cookieLine.split('=')\[1\]) + 1;
+        // console.log("cookie $cookie_name " + cookieValue);
+        if (cookieValue > 1) {
+          alert('Already open!');
+          document.cookie = "$cookie_name=1";
+          window.open("about:blank", "_self").close();
+        } else {
+          document.cookie = "$cookie_name=" + cookieValue;
+        }
+        // console.log("START finished -> " + document.cookie);
+
+        window.onunload = function () {
+          var cookieLine = document.cookie.split('; ').find(row => row.startsWith('$cookie_name='));
+          var cookieValue = (cookieLine === undefined) ? 0 : parseInt(cookieLine.split('=')\[1\]) - 1;
+          document.cookie = "$cookie_name=" + cookieValue;
+          //console.log("UNLOAD finished -> " + document.cookie);
+        };
+      }]
+    }
+
     :public method countdown_timer {
       {-target_time:required}
       {-id:required}
@@ -2903,7 +2932,7 @@ namespace eval ::xowf::test_item {
           set values [dict get $substvalues $m1]
           if {[info exists seed]} {
             set index [::xowiki::randomized_index -seed $seed [llength $values]]
-            ns_log notice "XXX percent_substitute called with seed <$seed> -> index $index <[llength $values]>"
+            #ns_log notice "XXX percent_substitute called with seed <$seed> -> index $index <[llength $values]>"
             set value [lindex $values $index]
           } else {
             set value [lindex $values 0]
@@ -2911,7 +2940,7 @@ namespace eval ::xowf::test_item {
           if {$m2 ne "" && [dict exists $value $m2]} {
             set value [dict get $value $m2]
             if {$verbose} {
-              ns_log notice "XXX percent_substitute chooses '$value' for $m2 from <$values>"
+              #ns_log notice "XXX percent_substitute chooses '$value' for $m2 from <$values>"
             }
           }
           set replacement $value
@@ -2937,6 +2966,7 @@ namespace eval ::xowf::test_item {
       # markup (handling e.g. images resolving in the context of the
       # original question) and also percent-substitutions
       #
+      #ns_log notice "XXX item_substitute_markup -position $position"
       :assert_answer_instance $obj
       set html [$obj substitute_markup \
                     -context_obj $form_obj \
@@ -2944,13 +2974,13 @@ namespace eval ::xowf::test_item {
       set fc [$form_obj property form_constraints]
       set dfc [$form_obj property disabled_form_constraints]
       set form_name [$form_obj name]
-      ns_log notice "CHECK-AA $form_name obj $obj [$obj name] form_obj $form_obj form $html seeds [$obj property seeds] pos $position"
+      #ns_log notice "CHECK-AA $form_name obj $obj [$obj name] form_obj $form_obj form $html seeds [$obj property seeds] pos $position"
       #ns_log notice "CHECK-AA $form_name fc <[$form_obj property form_constraints]>"
       set seed [lindex [$obj property seeds] $position]
 
       ns_log notice "CHECK-AA $form_name seed <$seed> // seeds <[$obj property seeds]>"
       if {$seed eq ""} {
-        ns_log warning "item_substitute_markup cannot substitute percent variables in $form_name"        
+        ns_log warning "item_substitute_markup cannot substitute percent variables in $form_name"
       } else {
         set substvalues [$form_obj property substvalues]
         if {$substvalues ne ""} {
