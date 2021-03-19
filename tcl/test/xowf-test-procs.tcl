@@ -199,7 +199,7 @@ namespace eval ::xowf::test {
         # Setup of test user_id and login
         #
         set user_info [::acs::test::user::create -email xowf@acs-testing.test -admin]
-        set d [::acs::test::login $user_info]        
+        set d [::acs::test::login $user_info]
 
         try {
 
