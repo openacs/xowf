@@ -57,16 +57,16 @@ namespace eval ::xowf::test {
         Create a folder in an xowf instance with a form page and edit this
 
     } {
-        #
-        # Setup of test user_id
-        #
-        set d [::acs::test::user::create -email xowf@acs-testing.test -admin]
-        set user_id [dict get $d user_id]
-
         set instance $_xowf_test_instance_name
         set testfolder .testfolder
         set locale [lang::system::locale]
         set lang [string range $locale 0 1]
+
+        #
+        # Setup of test user_id and login
+        #
+        set user_info [::acs::test::user::create -email xowf@acs-testing.test -admin]
+        set d [::acs::test::login $user_info]
 
         try {
             ###########################################################
@@ -74,7 +74,7 @@ namespace eval ::xowf::test {
             ############################################################
 
             set folder_info [::xowiki::test::require_test_folder \
-                                 -user_id $user_id \
+                                 -last_request $d \
                                  -instance $instance \
                                  -folder_name $testfolder \
                                  -fresh \
@@ -90,7 +90,7 @@ namespace eval ::xowf::test {
             ###########################################################
 
             ::xowiki::test::create_form_page \
-                -user_id $user_id \
+                -last_request $d \
                 -instance $instance \
                 -path $testfolder \
                 -parent_id $folder_id \
@@ -108,7 +108,7 @@ namespace eval ::xowf::test {
             ###########################################################
 
             ::xowiki::test::edit_form_page \
-                -user_id $user_id \
+                -last_request $d \
                 -instance $instance \
                 -path $testfolder/hello \
                 -update [subst {
@@ -190,16 +190,16 @@ namespace eval ::xowf::test {
         The procs list contains the public methods called via the web
         interface.
     } {
-        #
-        # Setup of test user_id
-        #
-        set d [::acs::test::user::create -email xowf@acs-testing.test -admin]
-        set user_id [dict get $d user_id]
-
         set instance $_xowf_test_instance_name
         set testfolder .testfolder
         set locale [lang::system::locale]
         set lang [string range $locale 0 1]
+
+        #
+        # Setup of test user_id and login
+        #
+        set user_info [::acs::test::user::create -email xowf@acs-testing.test -admin]
+        set d [::acs::test::login $user_info]        
 
         try {
 
@@ -208,7 +208,7 @@ namespace eval ::xowf::test {
             ###########################################################
 
             set folder_info [::xowiki::test::require_test_folder \
-                                 -user_id $user_id \
+                                 -last_request $d \
                                  -instance $instance \
                                  -folder_name $testfolder \
                                  -fresh \
@@ -221,7 +221,7 @@ namespace eval ::xowf::test {
             set locale [lang::system::locale]
             set lang [string range $locale 0 1]
             ::xowiki::test::create_form \
-                -user_id $user_id \
+                -last_request $d \
                 -instance $instance \
                 -path $testfolder \
                 -parent_id $folder_id \
@@ -247,7 +247,7 @@ namespace eval ::xowf::test {
             ###########################################################
 
             ::xowiki::test::create_form_page \
-                -user_id $user_id \
+                -last_request $d \
                 -instance $instance \
                 -path $testfolder \
                 -parent_id $folder_id \
@@ -298,7 +298,7 @@ namespace eval ::xowf::test {
             ###########################################################
 
             ::xowiki::test::create_form_page \
-                -user_id $user_id \
+                -last_request $d \
                 -instance $instance \
                 -path $testfolder \
                 -parent_id $folder_id \
@@ -319,7 +319,7 @@ namespace eval ::xowf::test {
             ###########################################################
 
             ::xowiki::test::edit_form_page \
-                -user_id $user_id \
+                -last_request $d \
                 -instance $instance \
                 -path $testfolder/tip1 \
                 -update {
