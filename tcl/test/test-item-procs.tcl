@@ -84,7 +84,6 @@ namespace eval ::xowf::test {
             ###########################################################
             aa_section "Make sure we have a fresh test folder"
             ############################################################
-            #-user_id $user_id
             set folder_info [::xowiki::test::require_test_folder \
                                  -last_request $d \
                                  -instance $instance \
