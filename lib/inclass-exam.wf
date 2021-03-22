@@ -400,9 +400,15 @@ Action instproc unpublish_link {obj} {
     set done_actions republish
     set combined_form_info [::xowf::test_item::question_manager combined_question_form [self]]
 
-    if {[dict get $combined_form_info autograde]} {
-      lappend done_actions open_submission_review
-    }
+    #
+    # We could allow open_submission_review only when autograde is
+    # possible, but apparently, it makes as well sense for other
+    # open text answers
+    #
+    lappend done_actions open_submission_review
+    #if {[dict get $combined_form_info autograde]} {
+    #  lappend done_actions open_submission_review
+    #}
     set swa_done_actions [concat $done_actions restart]
 
     ${container}::done actions $done_actions
