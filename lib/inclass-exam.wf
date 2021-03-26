@@ -926,6 +926,11 @@ Action instproc unpublish_link {obj} {
       }
       set preview_p [expr {$desktop_p || $camera_p || $audio_p}]
 
+      #
+      # Set the max interval between screen captures to 30s (default is 60s)
+      #
+      set max_ms_interval 30000
+
       ${:package_id} return_page -adp $proctoring_template -variables {
         object_id
         object_url
@@ -933,6 +938,7 @@ Action instproc unpublish_link {obj} {
         desktop_p
         camera_p
         audio_p
+        max_ms_interval
         examination_statement_p
         {check_active_p false}
       }
