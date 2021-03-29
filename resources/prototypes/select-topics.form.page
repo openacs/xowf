@@ -1,0 +1,22 @@
+# -*- tcl-*-
+::xowiki::Form new \
+    -name select-topic.form \
+    -title "Select Topics" \
+    -anon_instances f \
+    -text {} \
+    -form {{<form>
+        @question@
+        @with_team_preferences@        
+        <p><button type="button" class="btn btn-small" data-toggle="collapse" data-target="#time_management"><span class="glyphicon glyphicon-chevron-down">&nbsp;</span>#xowf.Time_management#</button><div id="time_management" class="collapse">
+        @synchronized@
+        </div><p>
+        </form>
+    } text/html} \
+    -form_constraints {
+	@cr_fields:hidden _description:omit _page_order:omit
+	{_title:text,label=#xowiki.title#,default=Topic Assignment for Course ...}
+	{question:form_page,multiple=true,keep_order=true,form=en:edit-interaction.wf,parent_id=.,required,help_text=Select Topic List via Drag and Drop,label=Topics}
+        {with_team_preferences:boolean,horizontal=true,default=f,label=Team preferences,help_text=Allow students to select team preferences}
+	{synchronized:boolean,horizontal=true,default=f,label=#xowf.Synchronized#,help_text=#xowf.Synchronized_help_text#}
+    }
+

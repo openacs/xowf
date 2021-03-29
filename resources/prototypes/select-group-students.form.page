@@ -1,0 +1,20 @@
+# -*- tcl-*-
+::xowiki::Package require_site_wide_pages -pages form.form
+set page_template [::xowiki::Package lookup_side_wide_page -name en:form.form]
+::xo::db::CrClass get_instance_from_db -item_id $page_template
+
+::xowiki::FormPage new \
+    -name select-group-students.form \
+    -title "Select Students from Community" \
+    -page_template $page_template \
+    -text {} \
+    -instance_attributes {
+        anon_instances t
+        form {<form>@members@</form>}
+        form_constraints {
+            @cr_fields:hidden _description:omit _page_order:omit
+            {members:role_member,role=student,multiple=true,keep_order=true,except=current_user_id,help_text=Select preferred group members via Drag and Drop. Only reciprocal preferences are honored.,label=Preferred group members}
+        }        
+    }
+
+
