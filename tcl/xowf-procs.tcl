@@ -64,9 +64,12 @@ namespace eval ::xowf {
     inclass-exam.wf
     edit-interaction.wf
     answer-single-question.wf
+    topic-assignment.wf
 
     quiz-select_question.form
     select_question.form
+    select-topics.form
+    select-group-members.form    
   }
 
   Package default_package_parameters {
@@ -749,7 +752,7 @@ namespace eval ::xowf {
       $ctx destroy
     }
 
-    if {[info commands $ctx] eq ""} {
+    if {![nsf::is object $ctx]} {
       set wfContextClass [$obj wf_property workflow_context_class [self]]
 
       regsub -all \r\n [$obj wf_property workflow_definition] \n workflow_definition
@@ -906,7 +909,7 @@ namespace eval ::xowf {
       append result "  state_[$s name] \[label=\"[$s label]\"$color\];\n"
     }
     set initializeObj [:wf_definition_object initialize]
-    if {[info commands $initializeObj] ne ""} {
+    if {[nsf::is object $initializeObj]} {
       append result "start->state_initial \[label=\"[$initializeObj label]\"\];\n"
     } else {
       append result "start->state_initial;\n"
@@ -921,8 +924,8 @@ namespace eval ::xowf {
       }
       foreach role [$s set handled_roles] {
         set role_ctx [self]-$role
-        #:msg exists?role=$role->[self]-$role->[info commands [self]-$role]
-        if {[info commands ${role_ctx}::[$s name]] ne ""} {
+        #:msg exists?role=$role->[self]-$role->[nsf::is object ${role_ctx}]
+        if {[nsf::is object ${role_ctx}::[$s name]]} {
           foreach a [${role_ctx}::[$s name] get_actions] {
             append result [:draw_transition $s ${role_ctx}::$a "$role:"]
           }
@@ -1004,7 +1007,7 @@ namespace eval ::xowf {
     if {![info exists :in_role]} {
       foreach role [array names :handled_roles] {
         set role_ctx [self]-$role
-        if {[info commands $role_ctx] ne ""} {
+        if {[nsf::is object $role_ctx]} {
           array set "" [$role_ctx check]
           if {$(rc) == 1} {return [array get ""]}
           array set :forms [$role_ctx array get forms]
@@ -1081,7 +1084,7 @@ namespace eval ::xowf {
     # of workflow instances. Maybe we should define a developer-mode
     # defining this and more other calls via mxin classes.
     #
-    if {[info commands ::${:name}] ne ""} {
+    if {[nsf::is object ::${:name}]} {
       set ctx [:wf_context]
       if {[nsf::is object $ctx]} {
         set obj [$ctx object]
@@ -2276,7 +2279,7 @@ namespace eval ::xowf {
       return $actionObj
     }
     error "No state-safe action '$action' available in workflow instance [self] of \
-    [${:page_template} name] in state [$ctx get_current_state]\n\ 
+    [${:page_template} name] in state [$ctx get_current_state]\n\
     Available actions: [[$ctx current_state] get_actions]"
   }
 
