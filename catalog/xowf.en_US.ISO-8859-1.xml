@@ -125,7 +125,8 @@
   <msg key="inclass-exam-submit">Submit and Finish Exam</msg>
   <msg key="inclass-exam-already_answered">You have finished this exam.</msg>
 
-  <msg key="short_text_question">Short Text Question</msg>
+  <msg key="composite_question">Composite Question</msg>
+  <msg key="short_text_question">Short Text Question</msg>  
   <msg key="sc_question">Single Choice Question</msg>
   <msg key="mc_question">Multiple Choice Question</msg>
   <msg key="text_question">Text Question</msg>
@@ -151,10 +152,13 @@
   <msg key="menu-New-Item-CodeInteraction">Code Interaction</msg>
   <msg key="menu-New-Item-UploadInteraction">Upload Interaction</msg>
   <msg key="menu-New-Item-ReorderInteraction">Ordering Interaction</msg>
+  <msg key="menu-New-Item-CompositeInteraction">Composite Interaction 2</msg>
 
   <msg key="menu-New-App-OnlineExam">Online Exam</msg>
   <msg key="menu-New-App-InclassQuiz">Inclass Quiz</msg>
   <msg key="menu-New-App-InclassExam">Inclass Exam</msg>
+
+  <msg key="menu-New-Assignment-TopicAssignment">Topic Assignment</msg>  
 
   <msg key="inclass-exam-draft_exam">Draft Inclass Exam (not published)</msg>
   <msg key="inclass-exam-open">Inclass Exam open (published)</msg>

@@ -2821,7 +2821,7 @@ namespace eval ::xowf::test_item {
       set questions [lmap ref $names {
         if {![string match "*/*" $ref]} {
           #
-          # In case, '$ref' rfers to a site-wide page, a prefix with
+          # In case, '$ref' refers to a site-wide page, a prefix with
           # the parent name would not help. In these cases, we expect
           # to have the parent obj not instantiated.
           #
@@ -2972,7 +2972,7 @@ namespace eval ::xowf::test_item {
       -obj:object
       {-position:integer 0}
       -form_obj:object
-      {-do_substitutions:switch 1}      
+      {-do_substitutions:switch 1}
     } {
       #
       # Substitute everything item-specific in the text, including
