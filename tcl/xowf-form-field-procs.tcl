@@ -104,7 +104,13 @@ namespace eval ::xo::role {
   Role instproc get_object_id {object} {
     return [$object package_id]
   }
-
+  Role instproc except_clause {{-lhs} except} {
+    if {[llength $except] == 0} {
+      return true
+    } else {
+      return [subst {$lhs NOT IN ([ns_dbquotelist $except])}]
+    }
+  }
   Role create all
   all proc is_member {-user_id:required -package_id} {
     return 1
@@ -119,10 +125,14 @@ namespace eval ::xo::role {
   registered_user proc is_member {-user_id:required -package_id} {
     return [expr {$user_id != 0}]
   }
-  registered_user proc get_members {-object_id:required} {
+  registered_user proc get_members {-object_id:required {-except ""}} {
     # return just the users with an @ sign, to avoid the users created by automated testing
-    set members [::xo::dc list_of_lists get_users \
-                     "select distinct username, user_id from registered_users where username like '%@%'"]
+    set members [::xo::dc list_of_lists get_users [subst {
+      select distinct username, user_id
+      from registered_users
+      where username like '%@%'
+      and   [:except_clause -lhs user_id $except]
+    }]]
     return $members
   }
 
@@ -135,12 +145,11 @@ namespace eval ::xo::role {
   admin proc is_member {-user_id:required -package_id:required} {
     return [::xo::cc permission -object_id $package_id -privilege admin -party_id $user_id]
   }
-  admin proc get_members {-object_id:required} {
+  admin proc get_members {-object_id:required {-except ""}} {
     set members [permission::get_parties_with_permission \
                      -privilege admin \
                      -object_id $object_id]
-    #:msg members=$members
-    return $members
+    return [::xowiki::filter_option_list $members $except]
   }
 
   Role create creator
@@ -149,13 +158,16 @@ namespace eval ::xo::role {
     return [expr {$creation_user == $user_id}]
   }
   creator proc get_object_id {object} {return [$object item_id]}
-  creator proc get_members {-object_id:required} {
-    set creator_id [xo::dc get_value get_owner {
-      select o.creation_user from acs_objects o where object_id = :object_id
-    }]
+  creator proc get_members {-object_id:required  {-except ""}} {
+    set creator_id [xo::dc get_value get_owner [subst {
+      select o.creation_user from acs_objects o
+      where object_id = :object_id
+      and   [:except_clause -lhs o.creation_user $except]
+    }]]
     return [list [list [::xo::get_user_name $creator_id] $creator_id]]
   }
-
+}
+namespace eval ::xo::role {
   Role create app_group_member
   app_group_member proc is_member {-user_id:required -package_id} {
     return [::xo::cc cache [list application_group::contains_party_p \
@@ -176,6 +188,79 @@ namespace eval ::xo::role {
     return 0
   }
 
+  #
+  # RelTypeRole (role definitions based on rel types)
+  #
+  Class create RelTypeRole -superclass Role -parameter {{rel_type ""}}
+  RelTypeRole instproc rel_type_clause {} {  
+    if {${:rel_type} ne ""} {
+      return {r.rel_type = :rel_type}
+    } else {
+      return {r.rel_type <> 'composition_rel'}      
+    }
+  }
+  RelTypeRole instproc filtered_member_list {-group_id:required {-except ""}} {
+    set rel_type ${:rel_type}
+    set query [subst {
+      select r.object_id_two as user_id from acs_rels r, membership_rels mr
+      where r.object_id_one = :group_id
+      and   [:rel_type_clause]
+      and   r.rel_id = mr.rel_id
+      and   mr.member_state = 'approved'
+      and   [:except_clause -lhs r.object_id_two $except]
+    }]
+    set member_list [xo::dc list get_group_members $query]
+    #ns_log notice "FILTERED member list $member_list"
+    return [lmap p $member_list {list [person::name -person_id $p] $p}]
+  }
+  RelTypeRole instproc filtered_member_p {-group_id:required -user_id:required -rel_type} {
+    set rel_type ${:rel_type}
+    set query [subst {
+      select r.object_id_two as user_id from acs_rels r, membership_rels mr
+      where r.object_id_one = :group_id
+      and   r.object_id_two = :user_id
+      and   [:rel_type_clause]
+      and   r.rel_id = mr.rel_id
+      and   mr.member_state = 'approved'        
+    }]
+    return [xo::dc 0or1row check_membership $query]
+  }
+  RelTypeRole instproc get_group_from_package_id {package_id} {
+    #
+    # Designed to work as well without connection. If we have dotlrn
+    # installed, return the community group. Otherwise, return the
+    # subsite application group.
+    #
+    if {[info commands ::dotlrn_community::get_community_id] ne ""} {
+      set group_id [search::dotlrn::get_community_id -package_id $package_id]
+    } else {
+      set subsite_node_id [site_node::closest_ancestor_package \
+                               -node_id [site_node_object_map::get_node_id -object_id $package_id] \
+                               -package_key [subsite::package_keys] \
+                               -include_self \
+                               -element "node_id"]
+      set subsite_id [site_node::get_object_id  -node_id $subsite_node_id]
+      set group_id [application_group::group_id_from_package_id -package_id $subsite_id]
+    }
+    return $group_id
+  }
+  RelTypeRole instproc get_object_id {object} {
+    return [:get_group_from_package_id [$object package_id]]
+  }
+
+  RelTypeRole instproc get_members {-object_id:required {-except ""}} {
+    return [:filtered_member_list -group_id $object_id -except $except]
+  }
+  RelTypeRole instproc is_member {-user_id:required -package_id} {
+    set group_id [:get_group_from_package_id $package_id]
+    #ns_log notice "IS MEMBER user_id $user_id -package_id $package_id group_id $group_id"
+    return [:filtered_member_p -group_id $object_id -user_id $user_id]
+  }
+ 
+  RelTypeRole create member
+  RelTypeRole create student -rel_type dotlrn_student_rel
+  RelTypeRole create instructor -rel_type dotlrn_instructor_rel
+  RelTypeRole create ta -rel_type dotlrn_ta_rel
 }
 
 
@@ -191,6 +276,7 @@ namespace eval ::xowiki::formfield {
 
   Class create role_member -superclass candidate_box_select -parameter {
     role
+    {except ""}
     {online_state off}
   }
   role_member instproc initialize {} {
@@ -200,12 +286,15 @@ namespace eval ::xowiki::formfield {
   role_member instproc render_input {} {
     #:msg role=${:role},obj=${:object}
     if {[nsf::is object ::xo::role::${:role}]} {
-      set object_id [::xo::role::${:role} get_object_id ${:object}]
-      set :options [::xo::role::${:role} get_members -object_id $object_id]
+      set arguments [list -object_id [::xo::role::${:role} get_object_id ${:object}]]
+      if {${:except} eq "current_user_id"} {
+        lappend arguments -except [::xo::cc user_id]
+      }
+      set :options [lsort -index 0 [::xo::role::${:role} get_members {*}$arguments]]
     } elseif {[set gid [group::get_id -group_name ${:role}]] ne ""} {
-      set :options [list]
-      foreach m [group::get_members -group_id $gid] {
-        :lappend options [list [::xo::get_user_name $m] $m] }
+      set :options [lsort -index 0 [lmap m [group::get_members -group_id $gid] {
+        list [::xo::get_user_name $m] $m
+      }]]
     } else {
       error "no such role or group '${:role}'"
     }
