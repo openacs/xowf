@@ -1707,7 +1707,7 @@ namespace eval ::xowf::test_item {
 
     ########################################################################
 
-    :public method get_answers {{-state ""} wf:object} {
+    :public method get_answers {{-state ""} {-extra_attributes {}} wf:object} {
       #
       # Extracts wf instances as answers (e.g. extracting their
       # answer-specific attributes)
@@ -1726,6 +1726,10 @@ namespace eval ::xowf::test_item {
         }
         set answerAttributes [xowf::test_item::renaming_form_loader answer_attributes \
                                   [$i instance_attributes]]
+        foreach extra $extra_attributes {
+          lappend answerAttributes $extra [$i property $extra]
+        }
+        #ns_log notice "GETANSWERS $i: <$answerAttributes> ALL [$i instance_attributes]"
         lappend results [list item $i answerAttributes $answerAttributes state [$i state]]
       }
       return $results
@@ -2816,7 +2820,15 @@ namespace eval ::xowf::test_item {
       #
       set questions [lmap ref $names {
         if {![string match "*/*" $ref]} {
-          set ref [[$obj parent_id] name]/$ref
+          #
+          # In case, '$ref' rfers to a site-wide page, a prefix with
+          # the parent name would not help. In these cases, we expect
+          # to have the parent obj not instantiated.
+          #
+          set parent_id [$obj parent_id]
+          if {[nsf::is object ::$parent_id]} {
+            set ref [::$parent_id name]/$ref
+          }
         }
         set ref
       }]
@@ -2960,14 +2972,15 @@ namespace eval ::xowf::test_item {
       -obj:object
       {-position:integer 0}
       -form_obj:object
+      {-do_substitutions:switch 1}      
     } {
       #
       # Substitute everything item-specific in the text, including
       # markup (handling e.g. images resolving in the context of the
       # original question) and also percent-substitutions
       #
-      #ns_log notice "XXX item_substitute_markup -position $position"
       :assert_answer_instance $obj
+      $obj do_substitutions $do_substitutions
       set html [$obj substitute_markup \
                     -context_obj $form_obj \
                     [$form_obj property form]]
