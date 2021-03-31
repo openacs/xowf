@@ -853,6 +853,23 @@ Action instproc unpublish_link {obj} {
   }
 
   ########################################################################
+  # web-callable method "proctoring-display"
+  #
+  :proc www-proctoring-display {} {
+    #
+    # Display the proctoring files collected for this exam using the
+    # UI by the proctoring-support package.
+    #
+    # By this is also possible to delete the proctoring files, either
+    # for the whole exam or for the single participant.
+    #
+
+    ${:package_id} return_page -adp /packages/proctoring-support/lib/proctoring-display -variables {
+        {object_id ${:item_id}}
+    }
+  }
+
+  ########################################################################
   # web-callable method "answer"
   #
   :proc www-answer {} {

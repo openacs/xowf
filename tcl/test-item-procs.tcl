@@ -3754,6 +3754,7 @@ namespace eval ::xowf::test_item {
       send-participant-message admin
       edit           admin
       print-answers  admin
+      proctoring-display admin
       print-answer-table admin
       print-participants admin
       delete         admin
