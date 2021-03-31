@@ -614,6 +614,7 @@ namespace eval ::xowiki::formfield {
   }
 
   short_text_interaction instproc convert_to_internal {} {
+    next
 
     set intro_text    [:get_named_sub_component_value text]
     append intro_text [:text_attachments]
