@@ -616,6 +616,7 @@ namespace eval ::xowiki::formfield {
   short_text_interaction instproc convert_to_internal {} {
 
     set intro_text    [:get_named_sub_component_value text]
+    append intro_text [:text_attachments]
     set answerFields  [:get_named_sub_component_value -from_repeat answer]
     if {[acs_user::site_wide_admin_p]} {
       set substvalues   [:get_named_sub_component_value substvalues]
