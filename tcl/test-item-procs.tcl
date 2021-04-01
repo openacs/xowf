@@ -2514,11 +2514,11 @@ namespace eval ::xowf::test_item {
 
       if {$polling} {
         #
-        # auto refresh: when in $parent_obj 'state' or 'position' changes,
-        # do automatically a reload of the current page.
+        # Auto refresh of number of participants and submissions when
+        # polling is on.
         #
         set url [$manager_obj pretty_link -query m=poll]
-        template::add_body_script -script [subst {
+        template::add_body_script -script [subst -nocommands {
           (function poll() {
             setTimeout(function() {
               var xhttp = new XMLHttpRequest();
@@ -2529,6 +2529,14 @@ namespace eval ::xowf::test_item {
                   var el = document.querySelector('#answer-status');
                   el.innerHTML = data;
                   poll();
+                  //activate links if a users started the exam
+                  var answers = data.split('/');
+                  if (answers.length == 2 && answers[1] > 0) {
+                    var disabledLinkItems = document.querySelectorAll(".list-group-item.link-disabled");
+                    disabledLinkItems.forEach(function(linkItem) {
+                          linkItem.classList.remove("link-disabled");
+                    });
+                  }
                 }
               };
               xhttp.send();

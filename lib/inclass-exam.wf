@@ -267,25 +267,30 @@ Action instproc unpublish_link {obj} {
       #
     }
 
-    #
-    # If there are answers, include the full menu.
-    #
     set answers [xowf::test_item::answer_manager get_answers $wf]
-    if {[llength $answers] > 0} {
 
-      set lLink "$wf_pretty_link?m=list"
-      set pLink1 [$obj pretty_link -query m=print-answers]
-      set pLink2 [$obj pretty_link -query m=print-answer-table]
-      set pLink3 [$obj pretty_link -query m=print-participants]
+    #
+    # Per default, the entries are disabled. when there are answers,
+    # these will be enabled.
+    #
+    set link_disabled [expr {[llength $answers] == 0 ? "link-disabled" : ""}]
+    set md [subst {
+      listing      {obj $wf  m list label #xowf.online-exam-exam_instances# glyph list}
+      participants {obj $obj m print-participants label #xowf.Participants# glyph user}
+      protocol     {obj $obj m print-answers label #xowf.online-exam-protocol# glyph list-alt}
+      results      {obj $obj m print-answer-table label #xowf.online-exam-results-table# glyph th-list}
+    }]
 
-      set menu "\["
-      if {[acs_user::site_wide_admin_p -user_id [::xo::cc user_id]]} {
-        append menu "<a href='[ns_quotehtml $lLink]'>#xowf.online-exam-exam_instances#</a>, "
-      }
-      append menu \
-          "<a href='[ns_quotehtml $pLink3]'>#xowf.Participants#</a>, " \
-          "<a href='[ns_quotehtml $pLink1]'>#xowf.online-exam-protocol#</a>, " \
-          "<a href='[ns_quotehtml $pLink2]'>#xowf.online-exam-results-table#</a>\]"
+    if {![acs_user::site_wide_admin_p -user_id [::xo::cc user_id]]} {
+      dict unset md listing
+    }
+    dict unset md results
+
+    set menu ""
+    dict for {name d} $md {
+      set href [[dict get $d obj] pretty_link -query m=[dict get $d m]]
+      append menu "<a class='list-group-item $link_disabled' href='[ns_quotehtml $href]'>" \
+          "<span class='glyphicon glyphicon-[dict get $d glyph]'></span> [dict get $d label]</a>\n"
     }
   }
 
@@ -328,7 +333,8 @@ Action instproc unpublish_link {obj} {
   } else {
     set answerStatus ""
     set marked ""
-    if {$state in {published done submission_review} } {
+
+    if {$state in {published done submission_review} || [llength $answers] > 0 } {
       if {$state eq "done"} {
         [$ctx object] setCSSDefaults
         set marked [xowf::test_item::answer_manager marked_results -obj $obj -wf $wf $combined_form_info]
@@ -340,6 +346,7 @@ Action instproc unpublish_link {obj} {
                             -polling=[expr {${:live_updates} && $state ni {initial created done}}] \
                             -manager_obj $obj \
                             -target_state done \
+                            -extra_text $menu \
                             -wf $wf]
     }
 
@@ -359,15 +366,15 @@ Action instproc unpublish_link {obj} {
 
     append text [subst {
       <div class='container-fluid'><div class='row'>
-      <div class="col-sm-12">$answerStatus</div>
+      <div class="col-sm-9">$answerStatus</div>
+      <div class="col-sm-3">$qrCode</div>      
       <div class="col-sm-9 quiz-preview">$fullQuestionForm</div>
-      <div class="col-sm-3">$qrCode</div>
       <div class="col-sm-6">$countdownHTML</div>
       </div></div>
     }]
   }
 
-  set footer "$menu $extraAction"
+  set footer " $extraAction"
 
   #-form [subst {<form>$text<div class='exam-preview'>$fullQuestionForm</div>$report</form> text/html}]
   set f [::xowiki::Form new \
