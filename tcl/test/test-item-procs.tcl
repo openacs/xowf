@@ -1,19 +1,19 @@
 namespace eval ::xowf::test {
 
-    aa_register_init_class \
-        xowf_require_test_instance {
-            Make sure the test instance is there and create it if necessary.
-        } {
-            aa_export_vars {_xowf_test_instance_name}
-            set _xowf_test_instance_name /xowf-test
-            ::acs::test::require_package_instance \
-                -package_key xowf \
-                -instance_name $_xowf_test_instance_name
-        } {
-            # Here one might unmount the package afterwards. Right now
-            # we decide to keep it so it is possible to e.g. inspect
-            # the results or test further in the mounted instance.
-        }
+    # aa_register_init_class \
+    #     xowf_require_test_instance {
+    #         Make sure the test instance is there and create it if necessary.
+    #     } {
+    #         aa_export_vars {_xowf_test_instance_name}
+    #         set _xowf_test_instance_name /xowf-test
+    #         ::acs::test::require_package_instance \
+    #             -package_key xowf \
+    #             -instance_name $_xowf_test_instance_name
+    #     } {
+    #         # Here one might unmount the package afterwards. Right now
+    #         # we decide to keep it so it is possible to e.g. inspect
+    #         # the results or test further in the mounted instance.
+    #     }
 
     aa_register_case -init_classes {xowf_require_test_instance} -cats {web} -procs {
         "::lang::system::locale"
@@ -181,15 +181,16 @@ namespace eval ::xowf::test {
                        -update {
                            __action_publish ""
                        }]
-            aa_log "inclass exam edited d=[ns_quotehtml $d]"
+            #aa_log "inclass exam edited d=[ns_quotehtml $d]"
+            acs::test::reply_has_status_code $d 200
 
             set response [dict get $d body]
             set answer_link ""
 
             acs::test::dom_html root $response {
-                set answer_link [::acs::test::xpath::get_text $root \
-                                     [subst {//form\[contains(@class,'Form-inclass-exam')\]//a}]]
-                aa_log "answer link is '$answer_link'"
+                set answer_link_info [$root selectNodes {//a[@class='answer']/@href}]
+                aa_log "answer link info is '$answer_link_info'"
+                set answer_link [lindex $answer_link_info 0 1]
                 aa_true "answer link is non empty '$answer_link'" {[string length $answer_link] > 0}
             }
 
