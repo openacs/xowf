@@ -14,6 +14,14 @@ set :policy ::xowf::test_item::test-item-policy-answer
 set :debug 0
 set :prevent_multiple_tabs 1
 
+#
+# Most of the generic functionality of this workflow is based on the
+# question manager. Use a different delegation instance in case of
+# strong customization.
+#
+set :QM ::xowf::test_item::question_manager
+
+
 ########################################################################
 #
 # Properties
@@ -90,7 +98,7 @@ Action instproc goto_page {position} {
 }
 Action instproc set_page {obj increment} {
   set parent_obj [::xo::db::CrClass  get_instance_from_db -item_id [$obj parent_id]]
-  set pages [::xowf::test_item::question_manager question_names $parent_obj]
+  set pages [:{$QM} question_names $parent_obj]
   set position [:property position 0]
   incr position $increment
   if {$position < 0} {
@@ -211,26 +219,25 @@ proc working_form_loader {ctx form_name} {
   # In case shuffling is required, fetch via the shuffled position.
   #
   set shuffle_id [expr {[$parent_obj property shuffle_items 0] ? [$obj creation_user] : -1}]
-  set position [::xowf::test_item::question_manager shuffled_index \
-                    -shuffle_id $shuffle_id \
-                    $parent_obj $item_nr]
+  set position [${:QM} shuffled_index -shuffle_id $shuffle_id $parent_obj $item_nr]
   #ns_log notice "============ working_form_loader load form on pos $position"
+
   #
   # Load the form.
   #
-  set form_obj [::xowf::test_item::question_manager nth_question_obj $parent_obj $position]
+  set form_obj [${:QM} nth_question_obj $parent_obj $position]
   #
   # Substitute markup in the constant part of the form in the context
   # of the original form object, setting the resolve context in the
   # background to be able to refer to links relative to the from, when
   # it was created.
   #
-  set d [::xowf::test_item::question_manager item_substitute_markup \
+  set d [${:QM} item_substitute_markup \
              -obj $obj \
              -position $item_nr \
              -form_obj $form_obj]
   $form_obj set_property form [dict get $d form]
-  
+
   #
   # Update IP address each time the form is loaded.
   #
@@ -247,7 +254,7 @@ proc working_form_loader {ctx form_name} {
   # Disallow paste if required
   #
   if {![$parent_obj property allow_paste true]} {
-    ::xowf::test_item::question_manager disallow_paste $form_obj
+    ${:QM} disallow_paste $form_obj
   }
 
   return $form_obj
@@ -297,7 +304,7 @@ proc done_form_loader {ctx form_name} {
   set parent_obj [::xo::db::CrClass get_instance_from_db -item_id [$obj parent_id]]
   if {$for_question && [$obj state] in {initial working}} {
     if {$form_info eq ""} {
-    set form_info [::xowf::test_item::question_manager nth_question_form \
+    set form_info [${:QM} nth_question_form \
                        -with_numbers \
                        -with_title=false \
                        -with_minutes=$with_minutes \
@@ -321,7 +328,7 @@ proc done_form_loader {ctx form_name} {
 
   if {[$parent_obj state] eq "published" && [$obj state] ne "done"} {
     set synchronized [$parent_obj property synchronized 0]
-    set target_time [::xowf::test_item::question_manager exam_target_time \
+    set target_time [${:QM} exam_target_time \
                          -manager $parent_obj \
                          -base_time [expr { $synchronized
                                             ? [$parent_obj last_modified]
@@ -371,7 +378,7 @@ proc done_form_loader {ctx form_name} {
   #:msg "summary_form_loader $form_title [$obj instance_attributes]"
 
   set shuffle_id [expr {[$parent_obj property shuffle_items 0] ? [$obj creation_user] : -1}]
-  set form_info [::xowf::test_item::question_manager combined_question_form \
+  set form_info [${:QM} combined_question_form \
                      -with_numbers \
                      -with_title \
                      -with_points \
@@ -431,7 +438,8 @@ proc done_form_loader {ctx form_name} {
   #
   set ctx [:wf_context]
   set container [$ctx wf_container]
-   ${container}::Property ip -default [expr {[ns_conn isconnected] ? [ad_conn peeraddr] : "nowhere"}]
+  ${container}::Property ip -default [expr {[ns_conn isconnected] ? [ad_conn peeraddr] : "nowhere"}]
+  set :QM [$container set QM]
 
   #:log "inclass-exam-answer state ${:state}"
   set ctx [:wf_context]
@@ -445,9 +453,9 @@ proc done_form_loader {ctx form_name} {
 
   if {${:state} in {initial working done}} {
     set parent_obj [::xo::db::CrClass  get_instance_from_db -item_id [:parent_id]]
-    set question_count [::xowf::test_item::question_manager question_count $parent_obj]
+    set question_count [${:QM} question_count $parent_obj]
     if {${:state} eq "initial" && [:property seeds] eq ""} {
-      ::xowf::test_item::question_manager add_seeds \
+      ${:QM} add_seeds \
           -obj [self] \
           -seed ${:creation_user} \
           -number $question_count
@@ -480,7 +488,7 @@ proc done_form_loader {ctx form_name} {
         }
       }
       if { ${:state} in {initial working}
-           && [::xowf::test_item::question_manager more_ahead -position $current_position $parent_obj]
+           && [${:QM} more_ahead -position $current_position $parent_obj]
          } {
         lappend actions nextQuestion
       }
