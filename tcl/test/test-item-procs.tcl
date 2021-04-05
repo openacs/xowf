@@ -1,19 +1,19 @@
 namespace eval ::xowf::test {
 
-    # aa_register_init_class \
-    #     xowf_require_test_instance {
-    #         Make sure the test instance is there and create it if necessary.
-    #     } {
-    #         aa_export_vars {_xowf_test_instance_name}
-    #         set _xowf_test_instance_name /xowf-test
-    #         ::acs::test::require_package_instance \
-    #             -package_key xowf \
-    #             -instance_name $_xowf_test_instance_name
-    #     } {
-    #         # Here one might unmount the package afterwards. Right now
-    #         # we decide to keep it so it is possible to e.g. inspect
-    #         # the results or test further in the mounted instance.
-    #     }
+    aa_register_init_class \
+        xowf_require_test_instance {
+            Make sure the test instance is there and create it if necessary.
+        } {
+            aa_export_vars {_xowf_test_instance_name}
+            set _xowf_test_instance_name /xowf-test
+            ::acs::test::require_package_instance \
+                -package_key xowf \
+                -instance_name $_xowf_test_instance_name
+        } {
+            # Here one might unmount the package afterwards. Right now
+            # we decide to keep it so it is possible to e.g. inspect
+            # the results or test further in the mounted instance.
+        }
 
     aa_register_case -init_classes {xowf_require_test_instance} -cats {web} -procs {
         "::lang::system::locale"
@@ -64,6 +64,11 @@ namespace eval ::xowf::test {
         "::xowf::test_item::Answer_manager instproc grading_table"
         "::xowf::test_item::Question_manager instproc item_substitute_markup"
         "::xowiki::formfield::enumeration instproc scores"
+        "::xowf::WorkflowPage instproc is_wf"
+        "::xowf::WorkflowPage instproc is_wf_instance"
+        "::xowf::Package instproc destroy"
+        "::xowf::WorkflowPage instproc www-view"
+
     } create_test_items {
 
         Create a folder in various test-items and an exam with one item.
