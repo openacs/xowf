@@ -97,7 +97,7 @@ Action instproc goto_page {position} {
   :set_property position $position
 }
 Action instproc set_page {obj increment} {
-  set parent_obj [::xo::db::CrClass  get_instance_from_db -item_id [$obj parent_id]]
+  set parent_obj [::xo::db::CrClass get_instance_from_db -item_id [$obj parent_id]]
   set pages [:{$QM} question_names $parent_obj]
   set position [:property position 0]
   incr position $increment
@@ -109,7 +109,7 @@ Action instproc set_page {obj increment} {
   :goto_page $position
 }
 
-Action create prevQuestion \
+Action create previousQuestion \
     -state_safe true \
     -next_state working \
     -label #xowf.previous_question# \
@@ -131,6 +131,23 @@ Action create review \
 Action create save \
     -state_safe true \
     -label #xowf.online-exam-save#
+
+Action create flag \
+    -state_safe true \
+    -proc activate {obj} {
+      #
+      # In case, the current question is flagged, remove flag,
+      # otherwise add flag.
+      #
+      set flagged [:property flagged {}]
+      set i [lsearch $flagged [:property position 0]]
+      if {$i > -1} {
+        set flagged [lreplace $flagged $i $i]
+      } else {
+        lappend flagged $position
+      }
+      $obj set_property -new 1 flagged $flagged
+    }
 
 Action create logout \
     -state_safe true \
@@ -466,33 +483,27 @@ proc done_form_loader {ctx form_name} {
     # questions due to shuffling.
     #
     set current_position [:property position]
-
     set actions {}
-    #if {$current_position > 0 && ${:state} eq "working"} {
-    #  lappend actions prevQuestion
-    #}
-    if {${:state} ne "done"} {
 
-      if {$question_count > 1} {
-        for {set count 1} {$count <= $question_count} {incr count} {
-          ${container}::Action create ${container}::q.$count \
-              -label "$count" \
-              -state_safe true \
-              -next_state working \
-              -extra_css_class [expr {$current_position == $count - 1 ? "current" : ""}] \
-              -proc activate {obj} [subst {
-                next
-                :goto_page [expr {$count -1}]
-              }]
-          lappend actions q.$count
-        }
+    if {${:state} ne "done"} {
+      set revision_sets [expr {[info exists :item_id] ? [:get_revision_sets -with_instance_attributes] : ""}]
+      set positions {}
+      foreach revision_set $revision_sets {
+        dict set positions [dict get [ns_set get $revision_set instance_attributes] position] 1
       }
-      if { ${:state} in {initial working}
-           && [${:QM} more_ahead -position $current_position $parent_obj]
-         } {
-        lappend actions nextQuestion
-      }
+      set pagination [${:QM} pagination_actions \
+                          -container $container \
+                          -visited [dict keys $positions] \
+                          -flagged [:property flagged {}] \
+                          -question_count $question_count \
+                          -current_position $current_position \
+                         ]
+
+      set actions $pagination
       if {${:state} in {initial working} } {
+        if {$question_count > 1} {
+          lappend actions flag
+        }
         lappend actions save
       }
       lappend actions logout

@@ -41,30 +41,30 @@ div.panel a.link-disabled {
     opacity: 0.6;
 }
 
-@media print{    
+@media print{
     div {
-	font-size: 11px;
+        font-size: 11px;
     }
     div.single_exam {
-	page-break-after: always;
+        page-break-after: always;
     }
     div.single_exam h2 {
-	font-size: 12px;
+        font-size: 12px;
     }
     div.single_exam h3 {
-	font-size: 12px;
+        font-size: 12px;
     }
     div.single_exam div.form-label {
-	display: none;
+        display: none;
     }
     div.xowiki-content a.btn {
-	display: none;
+        display: none;
     }
     div.header {
-	display: none;
+        display: none;
     }
     #print-button {
-	display: none;        
+        display: none;
     }
 }
 
@@ -114,7 +114,7 @@ div.mc_interaction label,
 div.sc_interaction label {
     font-weight: normal;
     /*margin: 0px 0px 10px 0px;*/
-    padding: 0px 0px 4px 0px;    
+    padding: 0px 0px 4px 0px;
 }
 label div.richtext-label {
     /*display: inline-block;*/
@@ -242,6 +242,19 @@ form button.current {
     border-bottom: 2px solid #999;
     border-style: groove;
 }
+form div.pagination button.visited {
+    background-color: #E6F4D6;
+}
+form div.pagination button span.text-danger {
+    color: #a94442;
+    background-color: transparent;
+}
+
+/*form div.pagination button.bookmark::after {
+    font-family: 'Glyphicons Halflings';
+    content: "\e034";
+}*/
+
 
 /*
  * Attachments styling
@@ -264,7 +277,7 @@ div.text_interaction .modal
 div.short_text_interaction .modal.fade.in,
 div.text_interaction .modal.fade.in
 {
-  height: auto;         /* let the content decide it  */ 
+  height: auto;         /* let the content decide it  */
 }
 
 
@@ -279,7 +292,7 @@ div.xowiki-content div.countdown-timer {
     float: right;
     margin-top: 10px;
     margin-bottom: 10px;
-    vertical-align: text-bottom;    
+    vertical-align: text-bottom;
 }
 div.xowiki-content div.countdown-timer span.glyphicon-volume-off {
     color: red;

@@ -710,8 +710,11 @@ namespace eval ::xowiki::formfield {
       "{#xowiki.multiple_lines# multiple_lines}"
       "{#xowiki.file_upload# file_upload}"
     } " "]
+    #
+    # The options field is made "required" to avoid deselecting.
+    #
     set textEntryConfigSpec [subst {
-      {options {radio,horizontal=true,form_item_wrapper_CSSclass=form-inline,options=$render_hints,default=single_word,label=#xowf.answer#}}
+      {options {radio,horizontal=true,form_item_wrapper_CSSclass=form-inline,options=$render_hints,default=single_word,required,label=#xowf.answer#}}
       {lines {number,form_item_wrapper_CSSclass=form-inline,default=1,min=1,label=#xowf.lines#}}
     }]
 
@@ -2784,6 +2787,7 @@ namespace eval ::xowf::test_item {
     #
     #   - goto_page
     #   - more_ahead
+    #   - pagination_actions
     #
     #   - current_question_form
     #   - current_question_obj
@@ -2821,6 +2825,81 @@ namespace eval ::xowf::test_item {
       }
       set questions [dict get [$obj instance_attributes] question]
       return [expr {$position + 1 < [:question_count $obj]}]
+    }
+
+    :method pagination_button_css {
+      {-CSSclass "btn-sm"}
+      {-cond:boolean,required}
+      {-extra ""}
+    } {
+      if {$cond} {
+        append CSSclass " " $extra
+      }
+      return $CSSclass
+    }
+
+    :public method pagination_actions {
+      -container:object
+      -question_count:integer
+      {-visited:integer,0..n {}}
+      {-flagged:integer,0..n {}}
+      -current_position:integer
+      {-CSSclass "btn-sm"}
+    } {
+      #
+      # Create actions used for pagination.
+      #
+      set actions ""
+
+      if {$question_count > 1} {
+        set extra_css [:pagination_button_css \
+                           -CSSclass $CSSclass \
+                           -cond [expr {$current_position == 0}] \
+                           -extra "disabled"]
+        ${container}::previousQuestion configure \
+            -extra_css_class $extra_css \
+            -label "&laquo;" \
+            -label_noquote true \
+            -wrapper_CSSclass "pagination"
+        lappend actions previousQuestion
+
+        for {set count 1} {$count <= $question_count} {incr count} {
+          set visited_css [expr {($count - 1) in $visited ? "visited" : ""}]
+          set flag_label [expr {($count - 1) in $flagged
+                                    ? " <span class='glyphicon glyphicon-flag text-danger'></span>" : ""}]
+          set extra_css [:pagination_button_css \
+                             -CSSclass "$CSSclass $visited_css" \
+                             -cond [expr {$current_position == $count - 1 }] \
+                             -extra "active current"]
+          ${container}::Action create ${container}::q.$count \
+              -label "$count$flag_label" \
+              -label_noquote true \
+              -state_safe true \
+              -next_state working \
+              -wrapper_CSSclass "pagination" \
+              -extra_css_class $extra_css \
+              -proc activate {obj} [subst {
+                next
+                :goto_page [expr {$count - 1}]
+              }]
+          lappend actions q.$count
+        }
+        set extra_css [:pagination_button_css \
+                           -CSSclass $CSSclass \
+                           -cond [expr {$current_position+2 > $question_count}] \
+                           -extra "disabled"]
+        ${container}::nextQuestion configure \
+            -extra_css_class $extra_css \
+            -label "&raquo;" \
+            -label_noquote true \
+            -wrapper_CSSclass "pagination"
+
+        set flag_state [expr {$current_position in $flagged ? "delete" : "set"}]
+        ${container}::flag label "#xowf.flag_$flag_state#"
+
+        lappend actions nextQuestion
+      }
+      return $actions
     }
 
     :method load_question_objs {obj:object names} {

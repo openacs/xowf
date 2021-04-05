@@ -209,4 +209,8 @@
   <msg key="Proctoring_options">Optionen für Online-Beaufsichtigung</msg>
   <msg key="Proctoring_options_help_text">Detailangaben, welche Funktionen der Online-Beaufsichtigung genutzt werden sollen</msg>
   <msg key="Preview">Vorschau</msg>
+
+  <msg key="flag_set">Frage markieren</msg>
+  <msg key="flag_delete">Makierung löschen</msg>    
+
 </message_catalog>

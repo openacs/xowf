@@ -69,7 +69,7 @@ namespace eval ::xowf {
     quiz-select_question.form
     select_question.form
     select-topics.form
-    select-group-members.form    
+    select-group-members.form
   }
 
   Package default_package_parameters {
@@ -579,7 +579,7 @@ namespace eval ::xowf {
                            -form_constraints ""]
     }
 
-    set :form_obj $form_object    
+    set :form_obj $form_object
     return $form_object
   }
   ::nsf::method::property Context form_object returns object
@@ -1194,6 +1194,8 @@ namespace eval ::xowf {
     {roles all}
     {state_safe false}
     {extra_css_class ""}
+    {wrapper_CSSclass ""}
+    {label_noquote false}
     {title}
   }
   Action instproc activate {obj} {;}
@@ -1390,13 +1392,27 @@ namespace eval ::xowf {
   } {
     if {[llength $buttons] > 0} {
       #
-      # Take the form_button_wrapper_CSSclass from the first button.
+      # Build button groups based on "form_button_wrapper_CSSclass".
       #
-      set wrapper_CSSclass [[lindex $buttons 0] form_button_wrapper_CSSclass]
+      set previous_wrapper_class "NONE"
+      set wrapper_groups {}
+      set group_num 0
+      foreach f $buttons {
+        set wrapper_class [$f form_button_wrapper_CSSclass]
+        if {$wrapper_class eq $previous_wrapper_class} {
+          dict lappend wrapper_groups [list $wrapper_class $group_num] $f
+          continue
+        }
+        incr group_num
+        dict lappend wrapper_groups [list $wrapper_class $group_num] $f
+        set previous_wrapper_class $wrapper_class
+      }
 
-      ::html::div -class $wrapper_CSSclass {
-        foreach f $buttons {
-          $f render_input
+      foreach wrapper_group [dict keys $wrapper_groups] {
+        ::html::div -class [lindex $wrapper_group 0] {
+          foreach f [dict get $wrapper_groups $wrapper_group] {
+            $f render_input
+          }
         }
       }
     }
@@ -1421,9 +1437,13 @@ namespace eval ::xowf {
         if {$success} {
           set f [$formfieldButtonClass new -destroy_on_cleanup \
                      -name __action_[namespace tail $action] \
-                     -CSSclass $CSSclass]
+                     -form_button_wrapper_CSSclass [$action wrapper_CSSclass] \
+                     -label_noquote [$action label_noquote] \
+                     -CSSclass $CSSclass \
+                    ]
           if {[$action extra_css_class] ne ""} {
-            $f append form_button_CSSclass " " [$action extra_css_class]
+            #$f append form_button_CSSclass " " [$action extra_css_class]
+            $f CSSclass_list_add form_button_CSSclass [$action extra_css_class]
           }
           #ns_log notice "RENDER BUTTON has CSSclass [$f CSSclass] // [$f form_button_CSSclass]"
           if {[$action exists title]} {
@@ -2326,10 +2346,10 @@ namespace eval ::xowf {
   }
 
   WorkflowPage ad_instproc schedule_job {-time:required -party_id cmd} {
-    
+
     Schedule the specified Tcl command for the current package
     instance at the given time.
-    
+
   } {
     :log "-at $time"
     set j [::xowf::atjob new \
@@ -2357,7 +2377,7 @@ namespace eval ::xowf {
       lassign $atts state assignee instance_attributes xowiki_form_page_id
       if {[dict exists $instance_attributes wf_current_state]
           && [dict get $instance_attributes wf_current_state] ne $state} {
-        
+
         #Object msg "must update state $state for $xowiki_form_page_id to [dict get $instance_attributes wf_current_state]"
 
         xo::db dml update_state "update xowiki_form_page \

@@ -228,4 +228,7 @@
   <msg key="Proctoring_options">Proctoring Options</msg>
   <msg key="Proctoring_options_help_text">Options to tailor proctoring behavior</msg>
   <msg key="Preview">Preview</msg>
+
+  <msg key="flag_set">Flag this Question</msg>
+  <msg key="flag_delete">Remove Flag</msg>    
 </message_catalog>
