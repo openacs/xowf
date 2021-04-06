@@ -124,6 +124,7 @@
   <msg key="inclass-exam-submit">Enviar y terminar examen</msg>
   <msg key="inclass-exam-already_answered">Ya ha terminado este examen.</msg>
 
+  <msg key="composite_question">Pregunta compuesta</msg>
   <msg key="short_text_question">Pregunta de texto corto</msg>
   <msg key="sc_question">Pregunta de elección única</msg>
   <msg key="mc_question">Pregunta de elección múltiple</msg>
@@ -150,10 +151,13 @@
   <msg key="menu-New-Item-CodeInteraction">Interacción de código</msg>
   <msg key="menu-New-Item-UploadInteraction">Interacción de subida</msg>
   <msg key="menu-New-Item-ReorderInteraction">Interacción de ordenación</msg>
+  <msg key="menu-New-Item-CompositeInteraction">Interacción compuesta 2</msg>
 
   <msg key="menu-New-App-OnlineExam">Examen en línea</msg>
   <msg key="menu-New-App-InclassQuiz">Cuestionario en clase</msg>
   <msg key="menu-New-App-InclassExam">Examen en clase</msg>
+
+  <msg key="menu-New-Assignment-TopicAssignment">Asignación temática</msg>
 
   <msg key="inclass-exam-draft_exam">Borrador de examen en clase (no publicado)</msg>
   <msg key="inclass-exam-open">Examen en clase abierto (publicado)</msg>
@@ -223,4 +227,7 @@
   <msg key="Proctoring_options">Opciones de Proctoring</msg>
   <msg key="Proctoring_options_help_text">Opciones de Proctoring que se utilizarán</msg>
   <msg key="Preview">Vista previa</msg>
+
+  <msg key="flag_set">Marcar esta pregunta</msg>
+  <msg key="flag_delete">Quitar marca</msg>
 </message_catalog>
