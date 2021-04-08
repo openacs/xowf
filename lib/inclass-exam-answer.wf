@@ -98,7 +98,7 @@ Action instproc goto_page {position} {
 }
 Action instproc set_page {obj increment} {
   set parent_obj [::xo::db::CrClass get_instance_from_db -item_id [$obj parent_id]]
-  set pages [:{$QM} question_names $parent_obj]
+  set pages [[$obj set QM] question_names $parent_obj]
   set position [:property position 0]
   incr position $increment
   if {$position < 0} {
@@ -140,7 +140,8 @@ Action create flag \
       # otherwise add flag.
       #
       set flagged [:property flagged {}]
-      set i [lsearch $flagged [:property position 0]]
+      set position [:property position 0]
+      set i [lsearch $flagged $position 0]
       if {$i > -1} {
         set flagged [lreplace $flagged $i $i]
       } else {
