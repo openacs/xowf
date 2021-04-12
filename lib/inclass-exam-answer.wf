@@ -318,6 +318,7 @@ proc done_form_loader {ctx form_name} {
   {-for_question:switch false}
   {-with_minutes:switch false}
   {-form_info ""}
+  {-prevent_multiple_tabs:boolean true}
 } {
   set parent_obj [::xo::db::CrClass get_instance_from_db -item_id [$obj parent_id]]
   if {$for_question && [$obj state] in {initial working}} {
@@ -342,7 +343,7 @@ proc done_form_loader {ctx form_name} {
   $obj title [join $title " · "]
 
   #:msg set_title-set_parameter-MenuBar-[$obj state]
-  :plain_template $obj
+  :plain_template -prevent_multiple_tabs $prevent_multiple_tabs $obj
 
   if {[$parent_obj state] eq "published" && [$obj state] ne "done"} {
     set synchronized [$parent_obj property synchronized 0]
@@ -364,7 +365,7 @@ proc done_form_loader {ctx form_name} {
   }
 }
 
-:proc plain_template {obj} {
+:proc plain_template {{-prevent_multiple_tabs true} obj} {
   ::xo::cc set_parameter MenuBar 0
   ::xo::cc set_parameter template_file view-plain-master
   set parent_obj [$obj set parent_obj]
@@ -377,8 +378,11 @@ proc done_form_loader {ctx form_name} {
   template::set_css_property -class pagetitle -property display -value none
   template::set_css_property -class sidebar -property display -value none
 
-  ns_log notice "!!! check prevent_multiple_tabs [self] [info exists :prevent_multiple_tabs]"
-  if {[info exists :prevent_multiple_tabs] && ${:prevent_multiple_tabs}} {
+  #
+  # Is the per-call flag for dectivating multiple_tabs prevention
+  # active, and is the feature set in the workflow parameters?
+  #
+  if {$prevent_multiple_tabs && [info exists :prevent_multiple_tabs] && ${:prevent_multiple_tabs}} {
     ns_log notice "!!! prevent multiple tabs"
     xowf::test_item::answer_manager prevent_multiple_tabs -cookie_name "tab_counter_[$obj item_id]"
   }
@@ -410,7 +414,12 @@ proc done_form_loader {ctx form_name} {
   set summary_fc [dict get $form_info disabled_form_constraints]
   regsub -all {</?form[^>]*>} $summary_form {} summary_form
 
-  :set_title $obj
+  #
+  # For the exam-protocol, we never want prevent_multiple_tabs to be
+  # fired.
+  #
+  :set_title $obj -prevent_multiple_tabs false
+
   #ns_log notice summary_form=$summary_form
   #ns_log notice fc=$summary_fc
   return [::xowiki::Form new \
