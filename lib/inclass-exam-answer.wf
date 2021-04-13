@@ -141,7 +141,7 @@ Action create flag \
       #
       set flagged [:property flagged {}]
       set position [:property position 0]
-      set i [lsearch $flagged $position 0]
+      set i [lsearch $flagged $position]
       if {$i > -1} {
         set flagged [lreplace $flagged $i $i]
       } else {
