@@ -380,6 +380,11 @@ namespace eval ::xowf {
 
   Context instproc set_current_state {value} {
     set :current_state ${:wf_container}::$value
+    if {[info exists :form_obj] && [:isobject ::${:form_obj}]} {
+      # The form object in the cache is still that from the previous
+      # state, make sure we flush it.
+      ::${:form_obj} destroy
+    }
   }
 
   Context instproc get_current_state {} {
