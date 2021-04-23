@@ -380,11 +380,6 @@ namespace eval ::xowf {
 
   Context instproc set_current_state {value} {
     set :current_state ${:wf_container}::$value
-    if {[info exists :form_obj] && [:isobject ::${:form_obj}]} {
-      # The form object in the cache is still that from the previous
-      # state, make sure we flush it.
-      ::${:form_obj} destroy
-    }
   }
 
   Context instproc get_current_state {} {
@@ -482,6 +477,9 @@ namespace eval ::xowf {
       }
       set :form_id $form_id
     }
+  }
+  Context instproc flush_form_object {} {
+    unset -nocomplain :form_obj
   }
   Context instproc form_object {object} {
     set parent_id [$object parent_id]
@@ -1833,6 +1831,10 @@ namespace eval ::xowf {
       #
       set ctx [::xowf::Context require [self]]
       set :state [$ctx get_current_state]
+
+      # The form object in the cache is still that from the previous
+      # state, make sure we flush it.
+      $ctx flush_form_object
     }
     next
   }
