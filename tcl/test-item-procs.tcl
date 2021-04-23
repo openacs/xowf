@@ -2179,15 +2179,15 @@ namespace eval ::xowf::test_item {
         }
       }
 
-      if {0 && $autograde} {
-        lappend form_field_objs \
-            [$wf create_raw_form_field \
-               -name _online-exam-total-score \
-               -spec number,label=#xowf.Total-Score#] \
-            [$wf create_raw_form_field \
-                 -name _online-exam-grade \
-                 -spec number,label=#xowf.Grade#]
-      }
+      # if {0 && $autograde} {
+      #   lappend form_field_objs \
+      #       [$wf create_raw_form_field \
+      #          -name _online-exam-total-score \
+      #          -spec number,label=#xowf.Total-Score#] \
+      #       [$wf create_raw_form_field \
+      #            -name _online-exam-grade \
+      #            -spec number,label=#xowf.Grade#]
+      # }
 
       lappend form_field_objs \
           [$wf create_raw_form_field \
@@ -2284,15 +2284,15 @@ namespace eval ::xowf::test_item {
         $p set_property -new 1 _online-exam-seconds \
             [expr {[dict get $duration toClock] - [dict get $duration fromClock]}]
 
-        if {0 && $autograde && $total_points > 0} {
-          set final_score [expr {$total_score/$total_points}]
-          $p set_property -new 1 _online-exam-total-score $final_score
-
-          set d [list achievedPoints $total_score achievablePoints $total_score totalPoints $total_point]
-          set grade [$grading_scheme grade -achieved_points $d]
-          dict incr grade_count $grade
-          $p set_property -new 1 _online-exam-grade $grade
-        }
+        # if {0 && $autograde && $total_points > 0} {
+        #   set final_score [expr {$total_score/$total_points}]
+        #   $p set_property -new 1 _online-exam-total-score $final_score
+        #
+        #   set d [list achievedPoints $total_score achievablePoints $total_points totalPoints $total_points]
+        #   set grade [$grading_scheme grade -achieved_points $d]
+        #   dict incr grade_count $grade
+        #   $p set_property -new 1 _online-exam-grade $grade
+        # }
       }
 
       if {$state eq "done"} {
@@ -3669,7 +3669,7 @@ namespace eval ::xowf::test_item::grading {
   nx::Class create Grading {
     :property {percentage_boundaries {50.0 60.0 70.0 80.0}}
 
-    :method calc_grade {-points -achieved_points} {
+    :method calc_grade {-percentage -points -achieved_points} {
       #
       # Return a numeric grade based on achieved_points dict and
       # percentage_mapping. On invalid data, return 0.
@@ -3677,11 +3677,22 @@ namespace eval ::xowf::test_item::grading {
       #     achieved_points:    {achievedPoints 4.0 achievablePoints 4 totalPoints 4}
       #     percentage_mapping: {50.0 60.0 70.0 80.0}
       #
-      if {[dict exists $achieved_points totalPoints] && [dict get $achieved_points totalPoints] > 0} {
-        set percentage [format %.2f [expr {
-                                           ($points*100/
-                                            [dict get $achieved_points totalPoints]) + 0.00001
-                                         }]]
+      if {![dict exists $achieved_points achievablePoints] && [dict exists $achieved_points totalPoints]} {
+        ns_log warning "test_item::grading legacy call, use 'achievablePoints' instead of 'totalPoints'"
+        dict set achieved_points achievablePoints [dict get $achieved_points totalPoints]
+      }
+      if {![info exists percentage]} {
+        if {[dict exists $achieved_points achievablePoints] && [dict get $achieved_points achievablePoints] > 0} {
+          set percentage \
+              [format %.2f [expr {
+                                  ($points*100/
+                                   [dict get $achieved_points achievablePoints]) + 0.00001
+                                }]]
+        }
+      } else {
+        ns_log notice "USE PROVIDED percentage '$percentage'"
+      }
+      if {[info exists percentage]} {
         set grade 1
         set gradePos 0
         foreach boundary ${:percentage_boundaries} {
@@ -3705,47 +3716,98 @@ namespace eval ::xowf::test_item::grading {
         return [dict get $achieved_points achievedPoints]
       }
     }
+
+    :method complete_dict {achieved_points} {
+      #
+      # This is a transitional method, just for defensive programming
+      # to make sure, nobody elese uses the legacy field... should
+      # disappear soon.
+      #
+      if {![dict exists $achieved_points achievablePoints] && [dict exists $achieved_points totalPoints]} {
+        ns_log warning "test_item::grading legacy call, use 'achievablePoints' instead of 'totalPoints'"
+        dict set achieved_points achievablePoints [dict get $achieved_points totalPoints]
+      }
+      foreach key {
+        achievedPoints
+        achievablePoints
+      } {
+        if {![dict exists $achieved_points $key]} {
+          ns_log warning "test_item::grading dict without $key: $achieved_points"
+          ::xo::show_stack
+          dict set achieved_points $key 0
+        }
+      }
+      dict with achieved_points {
+        dict set achieved_points achievedPointsRounded [format %.0f $achievedPoints]
+        set achievablePoints [format %.2f $achievablePoints]
+        set achievedPoints   [format %.2f $achievedPoints]
+        set percentage  [format %.2f [expr {$achievablePoints > 0 ? ($achievedPoints*100.0/$achievablePoints) : 0}]]
+        dict set achieved_points percentage $percentage
+        dict set achieved_points percentageRounded [format %.0f $percentage]
+      }
+      #ns_log notice "R=$achieved_points"
+      return $achieved_points
+    }
+
   }
 
   Grading create ::xowf::test_item::grading::wi1 -percentage_boundaries {50.0 60.0 70.0 80.0} {
 
     :public object method print {-achieved_points:required} {
-      if {[dict exists $achieved_points achievedPoints]} {
-        set totalPoints    [format %.2f [dict get $achieved_points totalPoints]]
-        set achievedPoints [format %.2f [dict get $achieved_points achievedPoints]]
-        set rounded        [dict get $achieved_points achievedPointsRounded]
-        set percentage     [format %.2f [expr {$totalPoints > 0 ? ($achievedPoints*100.0/$totalPoints) : 0}]]
-        set grade          [:grade -achieved_points $achieved_points]
-        set panelHTML      [_ xowf.panel_achievied_points_wi1]
-        return [list panel $panelHTML csv [subst {$achievedPoints\t$rounded\t$percentage%\t$grade}]]
+      set achieved_points  [:complete_dict $achieved_points]
+      set grade            [:grade -achieved_points $achieved_points]
+      dict with achieved_points {
+        set panelHTML [_ xowf.panel_achievied_points_wi1]
+        return [list panel $panelHTML csv [subst {$achievedPoints\t$achievedPointsRounded\t$percentage%\t$grade}]]
       }
     }
     :public object method grade {-achieved_points:required} {
+      set achieved_points [:complete_dict $achieved_points]
       if {[dict exists $achieved_points achievedPoints]} {
-        set achieved [dict get $achieved_points achievedPoints]
-        set rounded [dict get $achieved_points achievedPointsRounded]
-        return [:calc_grade -points $rounded -achieved_points $achieved_points]
+        dict with achieved_points {
+          return [:calc_grade -points $achievedPointsRounded -achieved_points $achieved_points]
+        }
       }
     }
   }
 
+  Grading create ::xowf::test_item::grading::wi1p -percentage_boundaries {50.0 60.0 70.0 80.0} {
+
+    :public object method print {-achieved_points:required} {
+      set achieved_points  [:complete_dict $achieved_points]
+      set grade            [:grade -achieved_points $achieved_points]
+      dict with achieved_points {
+        set panelHTML [_ xowf.panel_achievied_points_wi1p]
+        return [list panel $panelHTML csv [subst {$achievedPoints\t$percentage%\t$percentageRounded%\t$grade}]]
+      }
+    }
+    :public object method grade {-achieved_points:required} {
+      set achieved_points [:complete_dict $achieved_points]
+      if {[dict exists $achieved_points achievedPoints]} {
+        dict with achieved_points {
+          return [:calc_grade -percentage $percentageRounded -achieved_points $achieved_points]
+        }
+      }
+    }
+  }
+
+  
   Grading create ::xowf::test_item::grading::wi1_noround -percentage_boundaries {50.0 60.0 70.0 80.0} {
 
     :public object method print {-achieved_points:required} {
       if {[dict exists $achieved_points achievedPoints]} {
-        set totalPoints    [format %.2f [dict get $achieved_points totalPoints]]
-        set achievedPoints [format %.2f [dict get $achieved_points achievedPoints]]
-        set percentage     [format %.2f [expr {$totalPoints > 0 ? ($achievedPoints*100.0/$totalPoints) : 0}]]
-        set grade          [:grade -achieved_points $achieved_points]
-        set panelHTML      [_ xowf.panel_achievied_points_wi1_noround]
-        return [list panel $panelHTML csv [subst {$achievedPoints\t$percentage%\t$grade}]]
+        set achieved_points  [:complete_dict $achieved_points]
+        set grade            [:grade -achieved_points $achieved_points]        
+        dict with achieved_points {
+          set panelHTML [_ xowf.panel_achievied_points_wi1_noround]          
+          return [list panel $panelHTML csv [subst {$achievedPoints\t$percentage%\t$grade}]]
+        }
       }
     }
     :public object method grade {-achieved_points:required} {
       if {[dict exists $achieved_points achievedPoints]} {
-        set achieved [format %.2f [dict get $achieved_points achievedPoints]]
-        #ns_log notice "XXXX $achieved_points -> [list calc_grade -points $achieved -achieved_points $achieved_points]"
-        return [:calc_grade -points $achieved -achieved_points $achieved_points]
+        set achieved_points [:complete_dict $achieved_points]        
+        return [:calc_grade -points $achievedPoints -achieved_points $achieved_points]
       }
     }
   }
@@ -3826,6 +3888,7 @@ namespace eval ::xowf::test_item {
   #
   ::xowiki::policy1 copy ::xowf::test_item::test-item-policy-publish
   ::xowiki::policy1 copy ::xowf::test_item::test-item-policy-answer
+  ::xowiki::policy1 copy ::xowf::test_item::test-item-policy-edit
 
   #
   # Add policy rules as used in two demo workflows. We are permissive
@@ -3855,6 +3918,12 @@ namespace eval ::xowf::test_item {
       edit            {{item_id read}}
       message-poll    {{item_id read}}
       message-dismiss {{item_id read}}
+    }
+  }
+  test-item-policy-edit contains {
+    Class create FormPage -array set require_permission {
+      revisions       admin
+      diff            admin
     }
   }
 

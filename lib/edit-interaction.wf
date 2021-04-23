@@ -10,6 +10,8 @@
 # {entry -name New.Item.TextInteraction -form en:edit-interaction.wf -query p.item_type=Text}
 #
 
+set :policy ::xowf::test_item::test-item-policy-edit
+
 Action initialize -proc activate {obj} {
     set name [$obj name]
     if {[$obj is_new_entry $name]} {
