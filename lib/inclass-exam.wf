@@ -541,6 +541,7 @@ Action instproc unpublish_link {obj} {
     set creation_user [:query_parameter creation_user:integer ""]
     set revision_id   [:query_parameter rid:integer ""]
     set export        [:query_parameter export:boolean 0]
+    set grading       [:query_parameter grading:alnum ""]
 
     set combined_form_info [::xowf::test_item::question_manager combined_question_form [self]]
     set autograde   [dict get $combined_form_info autograde]
@@ -551,15 +552,21 @@ Action instproc unpublish_link {obj} {
     # The management of the grading scheme has to be extended. For the
     # time being, we have a single grading scheme with the option to
     # round to full points or not. When an exam has less than 40
-    # points, we do not round, since this rounding could provide more
-    # than 1 percent of the result. This should be made configurable
-    # (also in www-print-answer-table, which is not used right now).
+    # points, we do not round per default, since this rounding could
+    # provide more than 1 percent of the result. This should be made
+    # configurable (also in www-print-answer-table, which is not used
+    # right now).
     #
-    set grading_scheme ::xowf::test_item::grading::wi1
-
-    if {$totalPoints < 40} {
-      append grading_scheme _noround
+    if {$grading eq ""} {
+      set grading [expr {$totalPoints < 40 ? "wi1_noround" : "wi1"}]
     }
+
+    set grading_scheme ::xowf::test_item::grading::$grading
+    if {[info commands $grading_scheme] eq ""} {
+      set grading_scheme ::xowf::test_item::grading::wi1
+    }
+    #ns_log notice "USE grading_scheme $grading_scheme"
+    
     set grade_dict {}
     set grade_csv ""
 

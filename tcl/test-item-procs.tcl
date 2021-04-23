@@ -1890,6 +1890,10 @@ namespace eval ::xowf::test_item {
       foreach a [dict keys $answer_attributes] {
         set f [$answer_object lookup_form_field -name $a $all_form_fields]
         set points {}
+        if {![$f exists test_item_points]} {
+          ns_log warning "question $f [$f name] [$f info precedence] HAS NO POINTS"
+          $f set test_item_points 0
+        }
         set achievablePoints [$f set test_item_points]
         set achievableTotalPoints [expr {$achievableTotalPoints + $achievablePoints}]
         if {[$f exists correction_data]} {
@@ -1909,7 +1913,6 @@ namespace eval ::xowf::test_item {
       }
       return [list achievedPoints $totalPoints \
                   details $details \
-                  achievedPointsRounded [format %.0f $totalPoints] \
                   achievablePoints $achievableTotalPoints]
     }
 
@@ -3791,23 +3794,25 @@ namespace eval ::xowf::test_item::grading {
     }
   }
 
-  
+
   Grading create ::xowf::test_item::grading::wi1_noround -percentage_boundaries {50.0 60.0 70.0 80.0} {
 
     :public object method print {-achieved_points:required} {
       if {[dict exists $achieved_points achievedPoints]} {
         set achieved_points  [:complete_dict $achieved_points]
-        set grade            [:grade -achieved_points $achieved_points]        
+        set grade            [:grade -achieved_points $achieved_points]
         dict with achieved_points {
-          set panelHTML [_ xowf.panel_achievied_points_wi1_noround]          
+          set panelHTML [_ xowf.panel_achievied_points_wi1_noround]
           return [list panel $panelHTML csv [subst {$achievedPoints\t$percentage%\t$grade}]]
         }
       }
     }
     :public object method grade {-achieved_points:required} {
       if {[dict exists $achieved_points achievedPoints]} {
-        set achieved_points [:complete_dict $achieved_points]        
-        return [:calc_grade -points $achievedPoints -achieved_points $achieved_points]
+        set achieved_points [:complete_dict $achieved_points]
+        dict with achieved_points {
+          return [:calc_grade -points $achievedPoints -achieved_points $achieved_points]
+        }
       }
     }
   }
