@@ -1830,11 +1830,14 @@ namespace eval ::xowf {
       # update the state in the workflow instance
       #
       set ctx [::xowf::Context require [self]]
+      set prev_state ${:state}
       set :state [$ctx get_current_state]
 
-      # The form object in the cache is still that from the previous
-      # state, make sure we flush it.
-      $ctx flush_form_object
+      if {$prev_state ne ${:state}} {
+        # The form object in the cache is still that from the previous
+        # state, make sure we flush it.
+        $ctx flush_form_object
+      }
     }
     next
   }
