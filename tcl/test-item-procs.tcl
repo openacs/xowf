@@ -2810,6 +2810,9 @@ namespace eval ::xowf::test_item {
     #   - total_minutes_for_exam
     #   - exam_target_time
     #
+    #   - describe_form
+    #   - exam_summary
+    #
     :public method goto_page {obj:object position} {
       #
       # Set the position (test item number) of the workflow
@@ -3410,7 +3413,7 @@ namespace eval ::xowf::test_item {
                   $form_objs]
     }
 
-    :public method describe_form {form_obj} {
+    :public method describe_form {{-asHTML:switch} form_obj} {
       #
       # Call for every form field of the form_obj the "describe"
       # method and return these infos in a form of a list.
@@ -3420,12 +3423,146 @@ namespace eval ::xowf::test_item {
       set form_fields [$form_obj create_form_fields_from_form_constraints \
                            -lookup \
                            [lsort -unique [$form_obj property form_constraints]]]
-      return [lmap form_field $form_fields {
+      set question_infos [lmap form_field $form_fields {
         $form_field describe
       }]
+
+      #ns_log notice "describe_form [$form_obj name]: $question_infos"
+      if {!$asHTML} {
+        return $question_infos
+      }
+
+      set msgList {}
+      foreach question_info $question_infos {
+        if {$question_info ne ""} {
+          #
+          # The handled metrics are currently hardcoded here. So, we can
+          # rely on having the returned value in the message keys. The
+          # list order is important, since it determines also the ordering
+          # in the message.
+          #
+          set msg ""
+          foreach metric { choice_options sub_questions nrcorrect Minutes Points shuffle } {
+            if {[dict exists $question_info $metric]} {
+              set m [dict get $question_info $metric]
+              switch $metric {
+                nrcorrect { append msg " (#xowf.Correct# $m) " }
+                shuffle   { append msg "<strong>#xowf.Shuffle#:</strong> #xowf.shuffle_$m# " }
+                default   { append msg "<strong>#xowf.$metric#:</strong> $m "}
+              }
+            }
+          }
+          #append  msg " <pre>$question_info</pre> "
+          lappend msgList "$msg\n"
+        }
+      }
+      return $msgList
     }
 
+    :public method exam_summary {obj} {
+      #
+      # Provide a summary of all questions of an exam.
+      #
+      set form_objs [:question_objs $obj]
+      set HTML [subst {
+        <div class="panel panel-default">
+        <div class="panel-heading">#xowf.exam_summary#</div>
+        <div class="panel-body">
+        [:exam_info_block $obj]
+        </div>
+        </div>
+      }]
 
+      append HTML [subst {
+        <div class="panel panel-default">
+        <div class="panel-heading">#xowf.question_summary#</div>
+        <div class="panel-body">
+        <div class='table-responsive'><table class='question_summary'>
+      }]
+      foreach form_obj $form_objs {
+        set chunk [:describe_form -asHTML $form_obj]
+        append HTML [subst {
+          <tr>
+          <td>[ns_quotehtml [$form_obj title]]</td>
+          <td>[join $chunk { }]</td>
+          </tr>
+        }]
+      }
+      append HTML "</table></div></div></div>\n"
+
+      set return_url [::xo::cc query_parameter local_return_url:localurl [$obj pretty_link]]
+      append HTML "<hr><p><a class='btn btn-default' href='$return_url'>#xowiki.back#</a></p>\n"
+
+      return $HTML
+    }
+
+    :public method exam_info_block {-combined_form_info obj} {
+      #
+      # Provide a summarive overview of an exam.
+      #
+      if {![info exists combined_form_info]} {
+        set combined_form_info [:combined_question_form -with_numbers $obj]
+      }
+      set proctoring   [$obj property proctoring 0]
+      set synchronized [$obj property synchronized 0]
+      set allow_paste  [$obj property allow_paste 1]
+      set max_items    [$obj property max_items ""]
+      set time_window  [$obj property time_window ""]
+
+      append text [subst {<p>
+        [expr {$synchronized ? "" : "Non-"}]Synchronized Exam
+        [expr {$proctoring ? " with Proctoring" : ""}]
+        </p>}]
+      set question_objs     [dict get $combined_form_info question_objs]
+      set nrQuestions       [llength $question_objs]
+      set randomizationOk   [dict get $combined_form_info randomization_for_exam]
+      set autograde         [dict get $combined_form_info autograde]
+      set revision_sets     [$obj get_revision_sets]
+      set published_periods [xowf::test_item::answer_manager state_periods $revision_sets -state published]
+      set review_periods    [xowf::test_item::answer_manager state_periods $revision_sets -state submission_review]
+      set total_minutes     [:total_minutes -max_items $max_items $combined_form_info]
+      set total_points      [:total_points -max_items $max_items $combined_form_info]
+      set max_items_msg     ""
+
+      if {$max_items ne ""} {
+        set all_minutes [lmap t [dict get $combined_form_info title_infos] {
+          dict get $t minutes
+        }]
+        if {[llength [lsort -unique $all_minutes]] != 1} {
+          set max_items_msg [_ xowf.Max_items_not_ok_duration [list n $max_items]]
+        } elseif {$max_items > [llength $all_minutes]} {
+          set max_items_msg [_ xowf.Max_items_not_ok_number [list n $max_items]]
+        } else {
+          set max_items_msg [_ xowf.Max_items_ok [list n $max_items]]
+        }
+      }
+
+      set time_window_msg ""
+      if {$time_window ne ""} {
+        set dtstart [dict get $time_window time_window.dtstart]
+        if {$dtstart ne ""} {
+          regsub -all T $dtstart " " dtstart
+          set dtend [dict get $time_window time_window.dtend]
+          set time_window_msg <br>[_ xowf.Automatically_published_from_to [list from $dtstart to $dtend]]
+          set time_window_msg "<br>Automatische Freischaltung der Prüfung von $dtstart bis $dtend"
+        }
+      }
+
+      append text [subst {
+        <p>
+        [expr {$max_items_msg ne "" ? "$max_items_msg" : ""}]
+        $nrQuestions [expr {$nrQuestions == 1 ? "#xowf.question#" : "#xowf.questions#"}],
+        $total_minutes #xowf.Minutes#, $total_points #xowf.Points#<br>
+        [expr {$autograde ? "#xowf.exam_review_possible#" : "#xowf.exam_review_not_possible#"}]<br>
+        [expr {$randomizationOk ? "#xowf.randomization_for_exam_ok#" : "#xowf.randomization_for_exam_not_ok#"}]<br>
+        [expr {$allow_paste ? "#xowf.Cut_and_paste_allowed#" : "#xowf.Cut_and_paste_not_allowed#"}]<br>
+        $time_window_msg
+        [expr {[llength $published_periods] > 0 ? "<br>#xowf.inclass-exam-open#: [join $published_periods {, }]<br>" : ""}]
+        [expr {[llength $review_periods] > 0 ? "#xowf.inclass-exam-review#: [join $review_periods {, }]<br>" : ""}]
+        </p>
+      }]
+      return $text
+    }
 
     :method total {-property:required title_infos} {
       set total 0
@@ -3594,6 +3731,16 @@ namespace eval ::xowiki::formfield {
     # The dict keys of the result should correspond as far as possible
     # to message keys to ease multi-language communication.
     #
+    set qa [${:object} property question]
+    foreach {key name} {
+      question.minutes Minutes
+      question.points Points
+      question.grading grading
+    } {
+      if {[dict exists $qa $key]} {
+        dict set d $name [dict get $qa $key]
+      }
+    }
     switch [:info class] {
       ::xowiki::formfield::checkbox {
         # mc interaction

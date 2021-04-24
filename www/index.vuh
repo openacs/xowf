@@ -9,7 +9,7 @@
   @cvs-id $Id$
 
 } -parameter {
-  {-m view}
+  {-m:token view}
   {-folder_id:integer 0}
 }
 ::$package_id log "--starting... [ns_conn url] [ns_conn query] (user_id [xo::cc user_id])"

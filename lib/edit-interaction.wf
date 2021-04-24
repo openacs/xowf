@@ -22,11 +22,11 @@ Action initialize -proc activate {obj} {
 }
 
 Action save -next_state created -label #xowiki.Form-submit_button#
-Action tryout -next_state created -label #xowf.Preview# -proc activate {obj} {
+Action preview -next_state created -label #xowf.Preview# -proc activate {obj} {
   #
-  # The action tryout renders the current test-item (question,
+  # The action preview renders the current test-item (question,
   # exercise, ...) the same was as it is shown in an quiz/exam. The
-  # tryout action uses the workflow "en:answer-single-question.wf" for
+  # preview action uses the workflow "en:answer-single-question.wf" for
   # rendering it. The instance for filling out the question is created
   # as a child object of the test-item.
   #
@@ -69,11 +69,11 @@ Action view -label #xowiki.view# -proc activate {obj} {
   ad_script_abort
 }
 
-State initial -actions {save tryout}
+State initial -actions {save preview}
 State created \
-    -actions {save tryout} \
+    -actions {save preview} \
     -in_role swa {
-      -actions {save view tryout}
+      -actions {save view preview}
     }
 
 :proc item_type {obj} {
@@ -95,8 +95,8 @@ State created \
   set form_name  [${container} form_name_from_item_type [self]]
   ${container}::initial form $form_name
   ${container}::created form $form_name
-  ${container}::created actions {save tryout}
-  #${container}::created in_role swa { -actions {save view tryout} }
+  ${container}::created actions {save preview}
+  #${container}::created in_role swa { -actions {save view preview} }
 }
 
 #

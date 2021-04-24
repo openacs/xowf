@@ -50,6 +50,7 @@
 #  - "print-answers" (for lecturers),
 #  - "print-answer-table" (for lecturers),
 #  - "print-participants" (for lecturers),
+#  - "exam-summary" (for lecturers),
 #  - "delete" (for lecturers),
 #  - "qrcode" (for lecturers)
 #
@@ -169,6 +170,7 @@ Action instproc unpublish_link {obj} {
 :proc load_form {ctx title} {
   set obj [$ctx object]
   set state [$obj property _state]
+  set proctoring [$obj property proctoring 0]
 
   set combined_form_info [::xowf::test_item::question_manager combined_question_form -with_numbers $obj]
   set fullQuestionForm [dict get $combined_form_info form]
@@ -177,72 +179,18 @@ Action instproc unpublish_link {obj} {
   #:log  fullQuestionForm=$fullQuestionForm
   set text "<h3>$title</h3>"
   set menu ""
-  set proctoring   [$obj property proctoring 0]
-  set synchronized [$obj property synchronized 0]
-  set allow_paste  [$obj property allow_paste 1]
-  set max_items    [$obj property max_items ""]
-  set time_window  [$obj property time_window ""]
 
-  append text [subst {<p>
-    [expr {$synchronized ? "" : "Non-"}]Synchronized Exam
-    [expr {$proctoring ? " with Proctoring" : ""}]
-    </p>}]
-  set question_objs     [dict get $combined_form_info question_objs]
-  set nrQuestions       [llength $question_objs]
-  set randomizationOk   [dict get $combined_form_info randomization_for_exam]
-  set autograde         [dict get $combined_form_info autograde]
-  set revision_sets     [$obj get_revision_sets]
-  set published_periods [xowf::test_item::answer_manager state_periods $revision_sets -state published]
-  set review_periods    [xowf::test_item::answer_manager state_periods $revision_sets -state submission_review]
-  set total_minutes     [xowf::test_item::question_manager total_minutes -max_items $max_items $combined_form_info]
-  set total_points      [xowf::test_item::question_manager total_points -max_items $max_items $combined_form_info]
-  set max_items_msg     ""
-
-  if {$max_items ne ""} {
-    set all_minutes [lmap t [dict get $combined_form_info title_infos] {
-      dict get $t minutes
-    }]
-    if {[llength [lsort -unique $all_minutes]] != 1} {
-      set max_items_msg [_ xowf.Max_items_not_ok_duration [list n $max_items]]
-    } elseif {$max_items > [llength $all_minutes]} {
-      set max_items_msg [_ xowf.Max_items_not_ok_number [list n $max_items]]
-    } else {
-      set max_items_msg [_ xowf.Max_items_ok [list n $max_items]]
-    }
-  }
-
-  set time_window_msg ""
-  if {$time_window ne ""} {
-    set dtstart [dict get $time_window time_window.dtstart]
-    if {$dtstart ne ""} {
-      regsub -all T $dtstart " " dtstart
-      set dtend [dict get $time_window time_window.dtend]
-      set time_window_msg <br>[_ xowf.Automatically_published_from_to [list from $dtstart to $dtend]]
-      set time_window_msg "<br>Automatische Freischaltung der Prüfung von $dtstart bis $dtend"
-    }
-  }
-
-  append text [subst {
-    <p>
-    [expr {$max_items_msg ne "" ? "$max_items_msg" : ""}]
-    $nrQuestions [expr {$nrQuestions == 1 ? "#xowf.question#" : "#xowf.questions#"}],
-    $total_minutes #xowf.Minutes#, $total_points #xowf.Points#<br>
-    [expr {$autograde ? "#xowf.exam_review_possible#" : "#xowf.exam_review_not_possible#"}]<br>
-    [expr {$randomizationOk ? "#xowf.randomization_for_exam_ok#" : "#xowf.randomization_for_exam_not_ok#"}]<br>
-    [expr {$allow_paste ? "#xowf.Cut_and_paste_allowed#" : "#xowf.Cut_and_paste_not_allowed#"}]<br>
-    $time_window_msg
-    [expr {[llength $published_periods] > 0 ? "<br>#xowf.inclass-exam-open#: [join $published_periods {, }]<br>" : ""}]
-    [expr {[llength $review_periods] > 0 ? "#xowf.inclass-exam-review#: [join $review_periods {, }]<br>" : ""}]
-    </p>
-  }]
+  set text [::xowf::test_item::question_manager exam_info_block \
+                -combined_form_info $combined_form_info \
+                $obj]
+  set detail_link [$obj pretty_link -query m=exam-summary]
+  append text "<p><a class='btn btn-default' href='$detail_link'>#xowf.detailed_summary#</a></p>"
 
   set wf [xowf::test_item::answer_manager get_answer_wf $obj]
   if {$wf eq ""} {
     :msg "cannot get current workflow for [$obj name]"
-    set lLink "."
     set tLink "."
     set aLink "."
-    set pLink "."
   } else {
     #
     # Always compute the test-run and answer link.
@@ -270,7 +218,7 @@ Action instproc unpublish_link {obj} {
     set answers [xowf::test_item::answer_manager get_answers $wf]
 
     #
-    # Per default, the entries are disabled. when there are answers,
+    # Per default, the entries are disabled. When there are answers,
     # these will be enabled.
     #
     set link_disabled [expr {[llength $answers] == 0 ? "link-disabled" : ""}]
@@ -531,6 +479,15 @@ Action instproc unpublish_link {obj} {
   }
 
   ########################################################################
+  # web-callable method "exam-summary"
+  #
+  # Print a summary of the exam-questions.
+  #
+  :proc www-exam-summary {} {
+    :www-view [::xowf::test_item::question_manager exam_summary [self]]
+  }
+
+  ########################################################################
   # web-callable method "print-answers"
   #
   # Print the answers in a somewhat printer friendly way.
@@ -566,7 +523,7 @@ Action instproc unpublish_link {obj} {
       set grading_scheme ::xowf::test_item::grading::wi1
     }
     #ns_log notice "USE grading_scheme $grading_scheme"
-    
+
     set grade_dict {}
     set grade_csv ""
 
@@ -850,7 +807,7 @@ Action instproc unpublish_link {obj} {
       }
 
       set return_url [:query_parameter local_return_url:localurl [:pretty_link]]
-      append HTML "<hr><p><a  class='btn btn-default' href='$return_url'>#xowiki.back#</a></p>\n"
+      append HTML "<hr><p><a class='btn btn-default' href='$return_url'>#xowiki.back#</a></p>\n"
     }
     #::xo::cc set_parameter template_file view-plain-master
     #::xo::cc set_parameter MenuBar 0

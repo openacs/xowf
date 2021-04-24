@@ -214,4 +214,8 @@
   <msg key="flag_set">Frage markieren</msg>
   <msg key="flag_delete">Makierung löschen</msg>    
 
+  <msg key="exam_summary">Zusammenfassung</msg>    
+  <msg key="question_summary">Fragenübersicht</msg>    
+  <msg key="detailed_summary">Detailübersicht</msg>
+  
 </message_catalog>
