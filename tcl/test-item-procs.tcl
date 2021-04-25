@@ -3413,7 +3413,7 @@ namespace eval ::xowf::test_item {
                   $form_objs]
     }
 
-    :public method describe_form {{-asHTML:switch} form_obj} {
+    :public method -debug describe_form {{-asHTML:switch} form_obj} {
       #
       # Call for every form field of the form_obj the "describe"
       # method and return these infos in a form of a list.
@@ -3426,8 +3426,8 @@ namespace eval ::xowf::test_item {
       set question_infos [lmap form_field $form_fields {
         $form_field describe
       }]
-
       #ns_log notice "describe_form [$form_obj name]: $question_infos"
+
       if {!$asHTML} {
         return $question_infos
       }
@@ -3441,6 +3441,18 @@ namespace eval ::xowf::test_item {
           # list order is important, since it determines also the ordering
           # in the message.
           #
+          if {[dict exists $question_info show_max]
+              && [dict get $question_info show_max] ne ""
+            } {
+            foreach key {choice_options sub_questions} {
+              if {[dict exists $question_info $key]
+                  && [dict get $question_info show_max] ne [dict get $question_info $key]
+                } {
+                set new "[dict get $question_info show_max] #xowf.out_of# [dict get $question_info $key]"
+                dict set question_info $key $new
+              }
+            }
+          }
           set msg ""
           foreach metric { choice_options sub_questions nrcorrect Minutes Points shuffle } {
             if {[dict exists $question_info $metric]} {
@@ -3736,6 +3748,7 @@ namespace eval ::xowiki::formfield {
       question.minutes Minutes
       question.points Points
       question.grading grading
+      question.show_max show_max
     } {
       if {[dict exists $qa $key]} {
         dict set d $name [dict get $qa $key]
@@ -3757,9 +3770,6 @@ namespace eval ::xowiki::formfield {
         dict set d choice_options [llength ${answer}]
         dict set d nrcorrect [llength [lsearch -exact -all ${answer} t]]
         dict set d shuffle ${:shuffle_kind}
-        if {[info exists :show_max]} {
-          dict set d show_max ${:show_max}
-        }
         #dict set d all [:serialize]
         #ns_log warning "describe: $d"
       }
