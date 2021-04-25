@@ -217,5 +217,6 @@
   <msg key="exam_summary">Zusammenfassung</msg>    
   <msg key="question_summary">Fragenübersicht</msg>    
   <msg key="detailed_summary">Detailübersicht</msg>
-  <msg key="out_of">aus</msg>    
+  <msg key="out_of">aus</msg>
+  <msg key="question_structure">Aufbau</msg>
 </message_catalog>

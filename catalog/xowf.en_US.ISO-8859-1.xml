@@ -236,5 +236,6 @@
   <msg key="exam_summary">Summary</msg>    
   <msg key="question_summary">Questions</msg>    
   <msg key="detailed_summary">Detailed summary</msg>
-  <msg key="out_of">of</msg>  
+  <msg key="out_of">of</msg>
+  <msg key="question_structure">Structure</msg>
 </message_catalog>

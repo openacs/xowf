@@ -2567,18 +2567,16 @@ namespace eval ::xowf::test_item {
         // console.log("cookie $cookie_name " + cookieValue);
         if (cookieValue > 1) {
           alert('Already open!');
-          document.cookie = "$cookie_name=1";
           window.open("about:blank", "_self").close();
-        } else {
-          document.cookie = "$cookie_name=" + cookieValue;
         }
+        document.cookie = "$cookie_name=" + cookieValue;
         // console.log("START finished -> " + document.cookie);
 
         window.onunload = function () {
           var cookieLine = document.cookie.split('; ').find(row => row.startsWith('$cookie_name='));
           var cookieValue = (cookieLine === undefined) ? 0 : parseInt(cookieLine.split('=')\[1\]) - 1;
           document.cookie = "$cookie_name=" + cookieValue;
-          //console.log("UNLOAD finished -> " + document.cookie);
+          // console.log("UNLOAD finished -> " + document.cookie);
         };
       }]
     }
@@ -3413,26 +3411,8 @@ namespace eval ::xowf::test_item {
                   $form_objs]
     }
 
-    :public method -debug describe_form {{-asHTML:switch} form_obj} {
-      #
-      # Call for every form field of the form_obj the "describe"
-      # method and return these infos in a form of a list.
-      #
-      # @result list of dicts describing the form fields.
-      #
-      set form_fields [$form_obj create_form_fields_from_form_constraints \
-                           -lookup \
-                           [lsort -unique [$form_obj property form_constraints]]]
-      set question_infos [lmap form_field $form_fields {
-        $form_field describe
-      }]
-      #ns_log notice "describe_form [$form_obj name]: $question_infos"
-
-      if {!$asHTML} {
-        return $question_infos
-      }
-
-      set msgList {}
+    :method pretty_nr_alternatives {question_infos} {
+      set result {}
       foreach question_info $question_infos {
         if {$question_info ne ""} {
           #
@@ -3449,17 +3429,67 @@ namespace eval ::xowf::test_item {
                   && [dict get $question_info show_max] ne [dict get $question_info $key]
                 } {
                 set new "[dict get $question_info show_max] #xowf.out_of# [dict get $question_info $key]"
-                dict set question_info $key $new
+                dict set question_info question_structure $new
               }
             }
           }
+          lappend result $question_info
+        }
+      }
+      return $result
+    }
+
+    :method pretty_ncorrect {m} {
+      return " (#xowf.Correct# $m) "
+    }
+    :method pretty_shuffle {m} {
+      if {$m ne ""} {
+        return #xowf.shuffle_$m#
+      }
+    }
+    :method dict_value {dict key {default ""}} {
+      expr {[dict exists $dict $key] ? [dict get $dict $key] : $default}
+    }
+
+    :public method describe_form {{-asHTML:switch} form_obj} {
+      #
+      # Call for every form field of the form_obj the "describe"
+      # method and return these infos in a form of a list.
+      #
+      # @result list of dicts describing the form fields.
+      #
+      set form_fields [$form_obj create_form_fields_from_form_constraints \
+                           -lookup \
+                           [lsort -unique [$form_obj property form_constraints]]]
+      set question_infos [lmap form_field $form_fields {
+        $form_field describe
+      }]
+
+      #ns_log notice "describe_form [$form_obj name]: $question_infos"
+      set question_infos [:pretty_nr_alternatives $question_infos]
+      if {!$asHTML} {
+        return $question_infos
+      }
+
+      set msgList {}
+      foreach question_info $question_infos {
+        if {$question_info ne ""} {
+          #
+          # The handled metrics are currently hardcoded here. So, we can
+          # rely on having the returned value in the message keys. The
+          # list order is important, since it determines also the ordering
+          # in the message.
+          #
           set msg ""
-          foreach metric { choice_options sub_questions nrcorrect Minutes Points shuffle } {
+          set hasStructure [dict exists $question_info question_structure]
+          set metrics [expr {$hasStructure ? "question_structure" : [list choice_options sub_questions]}]
+          lappend metrics nrcorrect Minutes Points shuffle
+          foreach metric $metrics {
             if {[dict exists $question_info $metric]} {
               set m [dict get $question_info $metric]
               switch $metric {
-                nrcorrect { append msg " (#xowf.Correct# $m) " }
-                shuffle   { append msg "<strong>#xowf.Shuffle#:</strong> #xowf.shuffle_$m# " }
+                nrcorrect { append msg [:pretty_ncorrect $m] }
+                shuffle   { append msg "<strong>#xowf.Shuffle#:</strong> [:pretty_shuffle $m]" }
                 default   { append msg "<strong>#xowf.$metric#:</strong> $m "}
               }
             }
@@ -3489,16 +3519,39 @@ namespace eval ::xowf::test_item {
         <div class="panel panel-default">
         <div class="panel-heading">#xowf.question_summary#</div>
         <div class="panel-body">
-        <div class='table-responsive'><table class='question_summary'>
+        <div class='table-responsive'><table class='question_summary table table-condensed'>
+        <tr><th></th><th>#xowf.question_structure#</th>
+        <th style='text-align: center;'>#xowf.Minutes#</th>
+        <th style='text-align: center;'>#xowf.Points#</th>
+        <th style='text-align: center;'>#xowf.Shuffle#</th>
+        <th style='text-align: center;'></th>
+        </tr>
       }]
       foreach form_obj $form_objs {
-        set chunk [:describe_form -asHTML $form_obj]
+        set chunk [lindex [:describe_form $form_obj] 0]
+        set structure ""
+        foreach att {question_structure choice_options sub_questions} {
+          if {[dict exists $chunk $att]} {
+            append structure [dict get $chunk $att]
+            break
+          }
+        }
+        if {[dict exists $chunk nrcorrect]} {
+          append structure " " [:pretty_ncorrect [dict get $chunk nrcorrect]]
+        }
+        set shuffle [:dict_value $chunk shuffle]
+        if {$shuffle ne ""} {
+          set shuffle
+        }
         append HTML [subst {
           <tr>
           <td>[ns_quotehtml [$form_obj title]]</td>
-          <td>[join $chunk { }]</td>
-          </tr>
-        }]
+          <td>$structure</td>
+          <td style='text-align: center;'>[:dict_value $chunk Minutes]</td>
+          <td style='text-align: center;'>[:dict_value $chunk Points]</td>
+          <td style='text-align: center;'>[:pretty_shuffle [:dict_value $chunk shuffle]]</td>
+          <td style='text-align: center;'>[:dict_value $chunk grading]</td>
+          </tr>}]
       }
       append HTML "</table></div></div></div>\n"
 
@@ -3744,6 +3797,7 @@ namespace eval ::xowiki::formfield {
     # to message keys to ease multi-language communication.
     #
     set qa [${:object} property question]
+
     foreach {key name} {
       question.minutes Minutes
       question.points Points
@@ -3755,6 +3809,7 @@ namespace eval ::xowiki::formfield {
       }
     }
     switch [:info class] {
+      ::xowiki::formfield::radio -
       ::xowiki::formfield::checkbox {
         # mc interaction
         #
