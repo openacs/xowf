@@ -3546,7 +3546,7 @@ namespace eval ::xowf::test_item {
         append HTML [subst {
           <tr>
           <td>[ns_quotehtml [$form_obj title]]</td>
-          <td>$structure</td>
+          <td>[:dict_value $chunk type]: $structure</td>
           <td style='text-align: center;'>[:dict_value $chunk Minutes]</td>
           <td style='text-align: center;'>[:dict_value $chunk Points]</td>
           <td style='text-align: center;'>[:pretty_shuffle [:dict_value $chunk shuffle]]</td>
@@ -3811,7 +3811,8 @@ namespace eval ::xowiki::formfield {
     switch [:info class] {
       ::xowiki::formfield::radio -
       ::xowiki::formfield::checkbox {
-        # mc interaction
+        # mc and sc interaction
+        set type [expr {[:info class] eq "::xowiki::formfield::checkbox" ? "MC" : "SC"}]
         #
         # The factual (displayed) answer is in ${:answer}, but we want
         # to see the list of possibilities, so use the data from the
@@ -3829,6 +3830,7 @@ namespace eval ::xowiki::formfield {
         #ns_log warning "describe: $d"
       }
       ::xowiki::formfield::text_fields {
+        set type ShortText
         # short text interaction
         #
         # The factual (displayed) answer is in ${:answer}, but we want
@@ -3847,9 +3849,11 @@ namespace eval ::xowiki::formfield {
         #ns_log warning "describe: $d"
       }
       default {
+        set type [:info class]
         ns_log warning "describe: class [:info class] not handled"
       }
     }
+    dict set d type $type
     return $d
   }
 }
