@@ -834,22 +834,7 @@ Action instproc unpublish_link {obj} {
     }
   }
 
-  ########################################################################
-  # web-callable method "proctoring-display"
-  #
-  :proc www-proctoring-display {} {
-    #
-    # Display the proctoring files collected for this exam using the
-    # UI by the proctoring-support package.
-    #
-    # By this is also possible to delete the proctoring files, either
-    # for the whole exam or for the single participant.
-    #
 
-    ${:package_id} return_page -adp /packages/proctoring-support/lib/proctoring-display -variables {
-        {object_id ${:item_id}}
-    }
-  }
 
   ########################################################################
   # web-callable method "answer"
@@ -878,6 +863,42 @@ Action instproc unpublish_link {obj} {
       }
     }
   }
+
+
+  ########################################################################
+  # web-callable function "qrcode", acts as responder
+  #
+  :proc www-qrcode {} {
+    #
+    # Produce a QR code with an answer link
+    #
+    set aLink [:pretty_link -absolute true -query m=answer]
+    set fn /tmp/qr-${:item_id}.png
+    exec qrencode -o $fn -l h $aLink
+    ns_returnfile 200 image/png $fn
+    ad_script_abort
+  }
+
+  ########################################################################
+  # web-callable method "proctoring-display"
+  #
+  :proc www-proctoring-display {} {
+    #
+    # Display the proctoring files collected for this exam using the
+    # UI by the proctoring-support package.
+    #
+    # By this is also possible to delete the proctoring files, either
+    # for the whole exam or for the single participant.
+    #
+
+    ${:package_id} return_page -adp /packages/proctoring-support/lib/proctoring-display -variables {
+        {object_id ${:item_id}}
+    }
+  }
+
+  ########################################################################
+  # web-callable function "proctor-answer"
+  #
   :proc www-proctor-answer {} {
     #
     # Start answering an exam in proctored mode
@@ -890,17 +911,9 @@ Action instproc unpublish_link {obj} {
     }
   }
 
-  :proc www-qrcode {} {
-    #
-    # Produce a QR code with an answer link
-    #
-    set aLink [:pretty_link -absolute true -query m=answer]
-    set fn /tmp/qr-${:item_id}.png
-    exec qrencode -o $fn -l h $aLink
-    ns_returnfile 200 image/png $fn
-    ad_script_abort
-  }
-
+  ########################################################################
+  # web-callable function "proctor"
+  #
   :proc www-proctor {} {
     #
     # Redirect the exam to an iframe for implementing proctoring.  The
@@ -953,6 +966,9 @@ Action instproc unpublish_link {obj} {
     }
   }
 
+  ########################################################################
+  # web-callable function "proctor-image", acts as responder
+  #
   :proc www-proctor-image {} {
     #
     # View a proctored image
@@ -992,7 +1008,7 @@ Action instproc unpublish_link {obj} {
 
 
   ########################################################################
-  # AJAX call "poll"
+  # AJAX call "poll", acts as responder
   #
   :proc www-poll {} {
     #
@@ -1007,7 +1023,7 @@ Action instproc unpublish_link {obj} {
   }
 
   ########################################################################
-  # AJAX call "send-participant-message"
+  # AJAX call "send-participant-message", acts as responder
   #
   :proc www-send-participant-message {} {
     #
