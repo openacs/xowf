@@ -497,6 +497,7 @@ Action instproc unpublish_link {obj} {
     set filter_id     [:query_parameter id:integer ""]
     set creation_user [:query_parameter creation_user:integer ""]
     set revision_id   [:query_parameter rid:integer ""]
+    set form_objs     [:query_parameter fos:integer ""]
     set export        [:query_parameter export:boolean 0]
     set grading       [:query_parameter grading:alnum ""]
 
@@ -505,6 +506,10 @@ Action instproc unpublish_link {obj} {
     set totalPoints [::xowf::test_item::question_manager total_points \
                          -max_items [:property max_items ""] \
                          $combined_form_info]
+    if {$form_objs ne "" && $form_objs ni [dict get $combined_form_info question_objs]} {
+      ns_log warning "inclass-exam: ignore invalid form_obj '$form_objs';" \
+          "valid [dict get $combined_form_info question_objs]"
+    }
     #
     # The management of the grading scheme has to be extended. For the
     # time being, we have a single grading scheme with the option to
@@ -571,7 +576,9 @@ Action instproc unpublish_link {obj} {
       ::xo::cc set_parameter MenuBar 0
       template::head::add_link -rel stylesheet -href /resources/xowf/test-item.css
 
-      if {$as_student} {
+      if {[llength $form_objs] > 0} {
+        append HTML "<h2>#xowf.question#: [ns_quotehtml [[lindex $form_objs 0] title]]</h2>\n"
+      } elseif {$as_student} {
         set userName [acs_user::get_element -user_id [ad_conn user_id] -element username]
         set fullName [::xo::get_user_name  [ad_conn user_id]]
         set heading "$userName - $fullName"
@@ -622,10 +629,9 @@ Action instproc unpublish_link {obj} {
       foreach i [$items children] {
         set userName [$i set online-exam-userName]
         set fullName [$i set online-exam-fullName]
-        set state [$i state]
 
-        #if {$state ne "done"} {
-        #  ns_log notice "online-exam: submission of $userName is not finished (state $state)"
+        #if {[$i state] ne "done"} {
+        #  ns_log notice "online-exam: submission of $userName is not finished (state [$i state])"
         #  #continue
         #}
 
@@ -654,6 +660,7 @@ Action instproc unpublish_link {obj} {
         set achieved_points {}
         xo::cc eval_as_user -user_id [$i creation_user] {
           $i set __feedback_mode 2
+          $i set __form_objs $form_objs
           set question_form [$i render_content]
 
           if {$export} {
@@ -756,23 +763,27 @@ Action instproc unpublish_link {obj} {
             </div>
           }]
         }
-        set view [expr {$as_student
-                        ? "student"
-                        : $filter_id ne ""
-                        ? "revision_overview"
-                        : "default"}]
-        set gradingInfo [$grading_scheme print -achieved_points $achieved_points]
-        set grandingPanel [expr {[dict exists  $gradingInfo panel] ? [dict get $gradingInfo panel] : ""}]
-        set runtime_panel [xowf::test_item::answer_manager runtime_panel \
-                               -revision_id $revision_id \
-                               -view $view \
-                               -grading_info $grandingPanel \
-                               $i]
-        if {$autograde} {
-          set grade [$grading_scheme grade -achieved_points $achieved_points]
-          ns_log notice "CSV $userName\t[dict get $gradingInfo csv]"
-          dict incr grade_dict $grade
-          append grade_csv $userName\t[dict get $gradingInfo csv]\n
+        if {[llength $form_objs] == 0} {
+          set view [expr {$as_student
+                          ? "student"
+                          : $filter_id ne ""
+                          ? "revision_overview"
+                          : "default"}]
+          set gradingInfo [$grading_scheme print -achieved_points $achieved_points]
+          set grandingPanel [expr {[dict exists  $gradingInfo panel] ? [dict get $gradingInfo panel] : ""}]
+          set runtime_panel [xowf::test_item::answer_manager runtime_panel \
+                                 -revision_id $revision_id \
+                                 -view $view \
+                                 -grading_info $grandingPanel \
+                                 $i]
+          if {$autograde} {
+            set grade [$grading_scheme grade -achieved_points $achieved_points]
+            ns_log notice "CSV $userName\t[dict get $gradingInfo csv]"
+            dict incr grade_dict $grade
+            append grade_csv $userName\t[dict get $gradingInfo csv]\n
+          }
+        } else {
+          set runtime_panel ""
         }
 
         set heading "$userName · $fullName · $pretty_date"
@@ -989,6 +1000,7 @@ Action instproc unpublish_link {obj} {
     ns_return 200 text/plain ok
     ad_script_abort
   }
+
 }
 
 #

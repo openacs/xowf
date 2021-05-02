@@ -2812,6 +2812,7 @@ namespace eval ::xowf::test_item {
     #   - exam_summary
     #
     :public method goto_page {obj:object position} {
+      #ns_log notice "===== goto_page $position"
       #
       # Set the position (test item number) of the workflow
       # (exam). This sets the question number shown to the user.
@@ -2883,7 +2884,9 @@ namespace eval ::xowf::test_item {
               -wrapper_CSSclass "pagination" \
               -extra_css_class $extra_css \
               -proc activate {obj} [subst {
+                #ns_log notice "===== NAVIGATE next"
                 next
+                #ns_log notice "===== NAVIGATE goto [expr {$count - 1}]"
                 :goto_page [expr {$count - 1}]
               }]
           lappend actions q.$count
@@ -3080,11 +3083,9 @@ namespace eval ::xowf::test_item {
       set fc [$form_obj property form_constraints]
       set dfc [$form_obj property disabled_form_constraints]
       set form_name [$form_obj name]
-      #ns_log notice "CHECK-AA $form_name obj $obj [$obj name] form_obj $form_obj form $html seeds [$obj property seeds] pos $position"
-      #ns_log notice "CHECK-AA $form_name fc <[$form_obj property form_constraints]>"
       set seed [lindex [$obj property seeds] $position]
 
-      ns_log notice "CHECK-AA $form_name seed <$seed> // seeds <[$obj property seeds]>"
+      #ns_log notice "CHECK-AA $form_name seed <$seed> // seeds <[$obj property seeds]>"
       if {$seed eq ""} {
         ns_log warning "item_substitute_markup cannot substitute percent variables in $form_name"
       } else {
@@ -3369,7 +3370,8 @@ namespace eval ::xowf::test_item {
       {-with_points:switch false}
       {-user_specific:switch false}
       {-shuffle_id:integer -1}
-      {-user_answers:object:object,0..1 ""}
+      {-user_answers:object,0..1 ""}
+      {-form_objs:object,0..1 ""}
       obj:object
     } {
       #
@@ -3385,7 +3387,8 @@ namespace eval ::xowf::test_item {
 
       #ns_log notice "combined_question_form called with user_answers <$user_answers>"
       #if {$user_answers eq ""} {xo::show_stack}
-      set form_objs [:question_objs -shuffle_id $shuffle_id $obj]
+      set all_form_objs [:question_objs -shuffle_id $shuffle_id $obj]
+
       if {$user_specific} {
         set max_items [$obj property max_items ""]
         if {$max_items ne ""} {
@@ -3394,11 +3397,26 @@ namespace eval ::xowf::test_item {
       }
       if {$with_numbers} {
         set numbers ""
-        for {set i 1} {$i <= [llength $form_objs]} {incr i} {
+        for {set i 1} {$i <= [llength $all_form_objs]} {incr i} {
           lappend numbers $i
+        }
+        if {[llength $form_objs] > 0} {
+          set new_numbers {}
+          set new_form_objs {}
+          foreach form_obj $all_form_objs number $numbers {
+            if {$form_obj in $form_objs} {
+              lappend new_numbers $number
+              lappend new_form_objs $form_obj
+            }
+          }
+          set numbers $new_numbers
+          set form_objs $new_form_objs
+        } else {
+          set form_objs $all_form_objs
         }
         set extra_flags [list -numbers $numbers]
       } else {
+        set form_objs $all_form_objs
         set extra_flags ""
       }
       return [:question_info \
@@ -3505,6 +3523,7 @@ namespace eval ::xowf::test_item {
       #
       # Provide a summary of all questions of an exam.
       #
+      set href [$obj pretty_link -query m=print-answers]
       set form_objs [:question_objs $obj]
       set HTML [subst {
         <div class="panel panel-default">
@@ -3539,13 +3558,14 @@ namespace eval ::xowf::test_item {
         if {[dict exists $chunk nrcorrect]} {
           append structure " " [:pretty_ncorrect [dict get $chunk nrcorrect]]
         }
-        set shuffle [:dict_value $chunk shuffle]
-        if {$shuffle ne ""} {
-          set shuffle
+        if {[$obj state] in {done submission_review}} {
+          set title_value "<a href='$href&fos=[$form_obj item_id]'>[ns_quotehtml [$form_obj title]]</a>"
+        } else {
+          set title_value [ns_quotehtml [$form_obj title]]
         }
         append HTML [subst {
           <tr>
-          <td>[ns_quotehtml [$form_obj title]]</td>
+          <td>$title_value</a></td>
           <td>[:dict_value $chunk type]: $structure</td>
           <td style='text-align: center;'>[:dict_value $chunk Minutes]</td>
           <td style='text-align: center;'>[:dict_value $chunk Points]</td>

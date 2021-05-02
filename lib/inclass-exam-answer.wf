@@ -230,7 +230,7 @@ proc working_form_loader {ctx form_name} {
   set item_nr [$obj property position]
 
   set parent_id [$obj parent_id]
-  #:msg "working_form_loader [$obj instance_attributes]"
+  #:msg "working_form_loader item_nr $item_nr [$obj instance_attributes]"
   set parent_obj [::xo::db::CrClass get_instance_from_db -item_id $parent_id]
 
   #
@@ -238,7 +238,7 @@ proc working_form_loader {ctx form_name} {
   #
   set shuffle_id [expr {[$parent_obj property shuffle_items 0] ? [$obj creation_user] : -1}]
   set position [${:QM} shuffled_index -shuffle_id $shuffle_id $parent_obj $item_nr]
-  #ns_log notice "============ working_form_loader load form on pos $position"
+  #:msg "============ working_form_loader load form on pos $position"
 
   #
   # Load the form.
@@ -288,7 +288,8 @@ proc done_form_loader {ctx form_name} {
   #
   set container [$ctx wf_container]
   if {[$obj exists __feedback_mode] && [$obj set __feedback_mode] > 0} {
-    set result [$container summary_form $ctx $form_name]
+    set form_objs [expr {[$obj exists __form_objs] ? [$obj set __form_objs] : ""}]
+    set result [$container summary_form $ctx $form_name $form_objs]
   } else {
     $container plain_template $obj
     set result [::xowiki::Form new \
@@ -341,7 +342,8 @@ proc done_form_loader {ctx form_name} {
   }
   #ns_log notice "SETTING $obj title [join $title { · }]"
   $obj title [join $title " · "]
-
+  #:msg title=[join $title " · "]
+  
   #:msg set_title-set_parameter-MenuBar-[$obj state]
   :plain_template -prevent_multiple_tabs $prevent_multiple_tabs $obj
 
@@ -394,10 +396,10 @@ proc done_form_loader {ctx form_name} {
 # The summary_form loader is e.g. called indirectly by www-print-answers of
 # oneline-exam.wf
 #
-:proc summary_form {ctx form_title} {
+:proc summary_form {ctx form_title {form_objs ""}} {
   set obj [$ctx object]
   set parent_obj [::xo::db::CrClass  get_instance_from_db -item_id [$obj parent_id]]
-  #:msg "summary_form_loader $form_title [$obj instance_attributes]"
+  #:msg "summary_form_loader $form_title /$form_objs/ [$obj instance_attributes]"
 
   set shuffle_id [expr {[$parent_obj property shuffle_items 0] ? [$obj creation_user] : -1}]
   set form_info [${:QM} combined_question_form \
@@ -407,6 +409,7 @@ proc done_form_loader {ctx form_name} {
                      -user_specific \
                      -shuffle_id $shuffle_id \
                      -user_answers $obj \
+                     -form_objs $form_objs \
                      $parent_obj]
   #ns_log notice "SUMMARY FORM shuffle_id $shuffle_id $form_info"
 
