@@ -971,6 +971,27 @@ Action instproc unpublish_link {obj} {
   }
 
   ########################################################################
+  # web-callable function "blank-inputs"
+  #
+  :proc www-blank-inputs {} {
+    #
+    # Analyze the student submissions an find situations, where input
+    # is "cleared" between revisions.
+    #
+    template::head::add_link -rel stylesheet -href /resources/xowf/test-item.css
+    set HTML [xowf::test_item::answer_manager render_answers_with_edit_history [self]]
+
+    if {$HTML eq ""} {
+      set HTML "#xowiki.no_data#"
+    }
+    set return_url [:query_parameter local_return_url:localurl [:pretty_link]]
+    append HTML "<hr><p><a class='btn btn-default' href='$return_url'>#xowiki.back#</a></p>\n"
+
+    :www-view $HTML
+  }
+
+
+  ########################################################################
   # AJAX call "poll"
   #
   :proc www-poll {} {

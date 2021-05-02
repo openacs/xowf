@@ -1328,6 +1328,7 @@ namespace eval ::xowf::test_item {
     #  - get_answers
     #
     #  - runtime_panel
+    #  - render_answers_with_edit_history
     #
     #  - marked_results
     #  - answers_panel
@@ -2041,6 +2042,147 @@ namespace eval ::xowf::test_item {
       return $HTML
     }
     ########################################################################
+
+    :public method render_answers_with_edit_history {
+      examWf:object
+    } {
+      #
+      # Analyze the student submissions an find situations, where input
+      # is "cleared" between revisions and return the HTML rendering.
+      #
+      # TODO: we should resolve this, move the exam protocol rendering
+      # (www-print-answers) also into the answer manager and make it
+      # configurable to provide this as an alternate item renderer.
+      # The current result is provided for all submission,s, but in
+      # general, this could be as well made available per question or
+      # per-student.
+      #
+      set wf [:get_answer_wf $examWf]
+      if {$wf eq ""} {
+        return ""
+      }
+      set HTML "<h2>Quick Submission Analysis</h2>\n"
+      set combined_form_info [::xowf::test_item::question_manager combined_question_form $examWf]
+      set nameToQuestionObj [xowf::test_item::renaming_form_loader \
+                                 name_to_question_obj_dict \
+                                 [dict get $combined_form_info question_objs]]
+
+      set items [:get_wf_instances $wf]
+      foreach i [$items children] {
+        $i set online-exam-userName [acs_user::get_element -user_id [$i creation_user] -element username]
+        $i set online-exam-fullName [::xo::get_user_name [$i creation_user]]
+      }
+
+      append HTML [subst {
+        <table class='table table-condensed'>
+        <tr><th></th><th>Name</th><th>Revisions</th></tr>
+      }]
+      $items orderby online-exam-userName
+      foreach i [$items children] {
+        set last_answers {}
+        set rev_nr 1
+        set q_nr 0
+        set qnames ""
+        set report ""
+        set student_href [$examWf pretty_link -query m=print-answers&id=[$i set item_id]]
+
+        set revision_sets [$i get_revision_sets -with_instance_attributes]
+        foreach s $revision_sets {
+          set msgs {}
+          set ia [ns_set get $s instance_attributes]
+          foreach key [dict keys $ia *_] {
+            if {![dict exists $qnames $key]} {
+              dict set qnames $key [incr q_nr]
+            }
+            set value [dict get $ia $key]
+            #
+            # Determine the question type
+            #
+            set form_obj [dict get $nameToQuestionObj $key]
+            set template_obj [$form_obj page_template]
+            if {[$template_obj name] eq "en:edit-interaction.wf"} {
+              set item_type [dict get [$form_obj instance_attributes] item_type]
+            } else {
+              switch [$template_obj name] {
+                en:TestItemShortText.form {set item_type ShortText}
+                en:TestItemText.form {set item_type Text}
+                default {set item_type unknown}
+              }
+            }
+            #ns_log notice "Template name = [$template_obj name] -> item_type '$item_type'"
+
+            #
+            # For the time being, compute the differences just for short text questions
+            #
+            if {$item_type in {ShortText}} {
+              foreach answer_key [dict keys $value] {
+                set answer_value [string trim [dict get $value $answer_key]]
+                set what ""
+                if {[dict exists $last_answers $answer_key]} {
+                  set last_value [dict get $last_answers $answer_key]
+                } else {
+                  set last_value ""
+                }
+                if {$last_value ne ""} {
+                  if {$answer_value eq ""} {
+                    set what cleared
+                    ns_log notice "  ==> $answer_key: answer_value '$last_value' cleared in revision $rev_nr"
+                  } elseif {$answer_value ne $last_value} {
+                    set what updated
+                  }
+                } else {
+                  # last answer was empty
+                  if {$answer_value ne ""} {
+                    set what added
+                  }
+                }
+                #
+                # Remember last answer values
+                #
+                dict set last_answers $answer_key $answer_value
+                if {$what ne ""} {
+                  if {$what eq "cleared"} {
+                    set answer_value $last_value
+                  }
+                  lappend msgs [subst {
+                    <span class='alert-[dict get {cleared warning added success updated info "" ""} $what]'>
+                    q[string map [list answer "" {*}$qnames] $answer_key] $what [ns_quotehtml '$answer_value']
+                    </span>
+                  }]
+                }
+              }
+            } else {
+              #
+              # Show the full content of the field
+              #
+              if {$value ne ""} {
+                lappend msgs [subst {
+                  <span class=''>q[string map [list answer "" {*}$qnames] $key]:
+                  [ns_quotehtml '$value']</span>
+                }]
+              }
+            }
+          }
+          append report [subst {
+            <a href='$student_href&rid=[ns_set get $s revision_id]'>[format %02d $rev_nr]</a>:
+            [join $msgs {; }]<br>
+          }]
+          incr rev_nr
+        }
+
+        append HTML [subst {
+          <tr>
+          <td><a href='$student_href'>[$i set online-exam-userName]</td><td>[$i set online-exam-fullName]</td>
+          <td>$report</td>
+          </tr>
+        }]
+
+      }
+      append HTML "</table>\n"
+
+      return $HTML
+    }
+
 
     :method participant_result {
       -obj:object
