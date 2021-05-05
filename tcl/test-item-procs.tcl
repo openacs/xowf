@@ -1115,6 +1115,9 @@ namespace eval ::xowf::test_item {
       }
     }
 
+    :method dict_value {dict key {default ""}} {
+      expr {[dict exists $dict $key] ? [dict get $dict $key] : $default}
+    }
   }
 }
 namespace eval ::xowf::test_item {
@@ -1329,6 +1332,7 @@ namespace eval ::xowf::test_item {
     #
     #  - runtime_panel
     #  - render_answers_with_edit_history
+    #  - render_answers
     #
     #  - marked_results
     #  - answers_panel
@@ -1344,6 +1348,10 @@ namespace eval ::xowf::test_item {
     #  - state_periods
     #
 
+    #----------------------------------------------------------------------
+    # Class:  Answer_manager
+    # Method: create_workflow
+    #----------------------------------------------------------------------
     :public method create_workflow {
       {-answer_workflow /packages/xowf/lib/online-exam-answer.wf}
       {-master_workflow en:Workflow.form}
@@ -1424,8 +1432,10 @@ namespace eval ::xowf::test_item {
       }
     }
 
-    ########################################################################
-
+    #----------------------------------------------------------------------
+    # Class:  Answer_manager
+    # Method: get_label_from_options
+    #----------------------------------------------------------------------
     :method get_label_from_options {value options} {
       foreach option $options {
         if {[lindex $option 1] eq $value} {
@@ -1435,7 +1445,10 @@ namespace eval ::xowf::test_item {
       return ""
     }
 
-
+    #----------------------------------------------------------------------
+    # Class:  Answer_manager
+    # Method: recutil_create
+    #----------------------------------------------------------------------
     :public method recutil_create {
       -exam_id:integer
       {-fn "answers.rec"}
@@ -1464,19 +1477,23 @@ namespace eval ::xowf::test_item {
       return [::xo::recutil new -file $export_dir$fn]
     }
 
+    #----------------------------------------------------------------------
+    # Class:  Answer_manager
+    # Method: export_answer
+    #----------------------------------------------------------------------
     :public method export_answer {
-      -user_answers:object
-      -html:required
       -combined_form_info
+      -html:required
       -recutil:object,required
+      -submission:object
     } {
       #
       # Export the provided question and answer in GNU rectuil format.
       #
-      #ns_log notice "answers: [$user_answers serialize]"
+      #ns_log notice "answers: [$submission serialize]"
 
-      if {[$user_answers exists __form_fields]} {
-        set form_fields [$user_answers set __form_fields]
+      if {[$submission exists __form_fields]} {
+        set form_fields [$submission set __form_fields]
       } else {
         #
         # We do not have the newest version of xowiki, so locate the
@@ -1493,7 +1510,7 @@ namespace eval ::xowf::test_item {
       }
 
       set export_dict ""
-      set user [$user_answers set creation_user]
+      set user [$submission set creation_user]
       if {![info exists ::__running_ids]} {
          set ::__running_ids ""
       }
@@ -1501,8 +1518,8 @@ namespace eval ::xowf::test_item {
         dict set ::__running_ids $user [incr ::__running_id]
       }
 
-      set seeds [$user_answers property seeds]
-      set instance_attributes [$user_answers set instance_attributes]
+      set seeds [$submission property seeds]
+      set instance_attributes [$submission set instance_attributes]
       set answer_attributes [lmap a $instance_attributes {
         if {![string match *_ $a]} {continue}
         set a
@@ -1565,8 +1582,10 @@ namespace eval ::xowf::test_item {
       }
     }
 
-    ########################################################################
-
+    #----------------------------------------------------------------------
+    # Class:  Answer_manager
+    # Method: time_window_setup
+    #----------------------------------------------------------------------
     :method time_window_setup {parentObj:object {-time_window:required}} {
       #
       # Check the provided time_window values, adjust it if necessary,
@@ -1631,8 +1650,10 @@ namespace eval ::xowf::test_item {
       }
     }
 
-    ########################################################################
-
+    #----------------------------------------------------------------------
+    # Class:  Answer_manager
+    # Method: last_time_in_state
+    #----------------------------------------------------------------------
     :public method delete_all_answer_data {obj:object} {
       #
       # Delete all instances of the answer workflow
@@ -1645,7 +1666,10 @@ namespace eval ::xowf::test_item {
       return $wf
     }
 
-    ########################################################################
+    #----------------------------------------------------------------------
+    # Class:  Answer_manager
+    # Method: last_time_in_state
+    #----------------------------------------------------------------------
     :public method delete_scheduled_atjobs {obj:object} {
       #
       # Delete previously scheduled atjobs
@@ -1667,10 +1691,10 @@ namespace eval ::xowf::test_item {
       }
     }
 
-
-
-    ########################################################################
-
+    #----------------------------------------------------------------------
+    # Class:  Answer_manager
+    # Method: last_time_in_state
+    #----------------------------------------------------------------------
     :public method get_answer_wf {obj:object} {
       #
       # return the workflow denoted by the property wfName in obj
@@ -1681,8 +1705,10 @@ namespace eval ::xowf::test_item {
                   -forms        [$obj property wfName]]
     }
 
-    ########################################################################
-
+    #----------------------------------------------------------------------
+    # Class:  Answer_manager
+    # Method: last_time_in_state
+    #----------------------------------------------------------------------
     :public method get_wf_instances {
       {-initialize false}
       {-orderby ""}
@@ -1711,8 +1737,10 @@ namespace eval ::xowf::test_item {
                   -package_id                [$wf package_id]]
     }
 
-    ########################################################################
-
+    #----------------------------------------------------------------------
+    # Class:  Answer_manager
+    # Method: last_time_in_state
+    #----------------------------------------------------------------------
     :public method get_answers {{-state ""} {-extra_attributes {}} wf:object} {
       #
       # Extracts wf instances as answers (e.g. extracting their
@@ -1741,8 +1769,10 @@ namespace eval ::xowf::test_item {
       return $results
     }
 
-    ########################################################################
-
+    #----------------------------------------------------------------------
+    # Class:  Answer_manager
+    # Method: last_time_in_state
+    #----------------------------------------------------------------------
     :public method get_duration {{-exam_published_time ""} revision_sets} {
       #
       # Get the duration from a set of revisions and return a dict
@@ -1769,8 +1799,10 @@ namespace eval ::xowf::test_item {
       return $r
     }
 
-    ########################################################################
-
+    #----------------------------------------------------------------------
+    # Class:  Answer_manager
+    # Method: last_time_in_state
+    #----------------------------------------------------------------------
     :public method get_IPs {revision_sets} {
       #
       # Get the IP addresses for the given revision set. Should be
@@ -1786,8 +1818,10 @@ namespace eval ::xowf::test_item {
       return [dict keys $IPs]
     }
 
-    ########################################################################
-
+    #----------------------------------------------------------------------
+    # Class:  Answer_manager
+    # Method: last_time_in_state
+    #----------------------------------------------------------------------
     :public method revisions_up_to {revision_sets revision_id} {
       #
       # Return the revisions of the provided revision set up the
@@ -1803,7 +1837,10 @@ namespace eval ::xowf::test_item {
       }]
     }
 
-    ########################################################################
+    #----------------------------------------------------------------------
+    # Class:  Answer_manager
+    # Method: last_time_in_state
+    #----------------------------------------------------------------------
     :public method last_time_in_state {revision_sets -state:required -with_until:switch } {
       #
       # Loops through revision sets and retrieves the latest date
@@ -1824,7 +1861,10 @@ namespace eval ::xowf::test_item {
       return $result
     }
 
-    ########################################################################
+    #----------------------------------------------------------------------
+    # Class:  Answer_manager
+    # Method: pretty_period
+    #----------------------------------------------------------------------
     :method pretty_period {{-dayfmt %q} {-timefmt %H:%M} from to} {
       set from_day [lc_time_fmt $from $dayfmt]
       set from_time [lc_time_fmt $from $timefmt]
@@ -1845,7 +1885,10 @@ namespace eval ::xowf::test_item {
       return $period
     }
 
-    ########################################################################
+    #----------------------------------------------------------------------
+    # Class:  Answer_manager
+    # Method: state_periods
+    #----------------------------------------------------------------------
     :public method state_periods {revision_sets -state:required} {
       #
       # Return for the provided revision_sets the time ranges the
@@ -1878,8 +1921,11 @@ namespace eval ::xowf::test_item {
       return $periods
     }
 
-    ########################################################################
-    :public method achieved_points {-answer_object:object -answer_attributes:required } {
+    #----------------------------------------------------------------------
+    # Class:  Answer_manager
+    # Method: achieved_points
+    #----------------------------------------------------------------------
+    :public method achieved_points {-submission:object -answer_attributes:required } {
       #
       # This method has to be called after the instance was rendered,
       # since it uses the produced form_fields.
@@ -1889,7 +1935,7 @@ namespace eval ::xowf::test_item {
       set achievableTotalPoints 0
       set details {}
       foreach a [dict keys $answer_attributes] {
-        set f [$answer_object lookup_form_field -name $a $all_form_fields]
+        set f [$submission lookup_form_field -name $a $all_form_fields]
         set points {}
         if {![$f exists test_item_points]} {
           ns_log warning "question $f [$f name] [$f info precedence] HAS NO POINTS"
@@ -1917,7 +1963,10 @@ namespace eval ::xowf::test_item {
                   achievablePoints $achievableTotalPoints]
     }
 
-    ########################################################################
+    #----------------------------------------------------------------------
+    # Class:  Answer_manager
+    # Method: runtime_panel
+    #----------------------------------------------------------------------
     :public method runtime_panel {
       {-revision_id ""}
       {-view default}
@@ -2041,8 +2090,147 @@ namespace eval ::xowf::test_item {
       }]
       return $HTML
     }
-    ########################################################################
 
+    #----------------------------------------------------------------------
+    # Class:  Answer_manager
+    # Method: render_submission=edit_history
+    #----------------------------------------------------------------------
+    :method render_submission=edit_history {
+      {-submission:object}
+      {-examWf:object}
+      {-nameToQuestionObj}
+    } {
+      set last_answers {}
+      set rev_nr 1
+      set q_nr 0
+      set qnames ""
+      set report ""
+      set student_href [$examWf pretty_link -query m=print-answers&id=[$submission set item_id]]
+
+      set revision_sets [$submission get_revision_sets -with_instance_attributes]
+      foreach s $revision_sets {
+        set msgs {}
+        set ia [ns_set get $s instance_attributes]
+        foreach key [dict keys $ia *_] {
+          if {![dict exists $qnames $key]} {
+            dict set qnames $key [incr q_nr]
+          }
+          set value [dict get $ia $key]
+          #
+          # Determine the question type
+          #
+          set form_obj [dict get $nameToQuestionObj $key]
+          set template_obj [$form_obj page_template]
+          if {[$template_obj name] eq "en:edit-interaction.wf"} {
+            set item_type [dict get [$form_obj instance_attributes] item_type]
+          } else {
+            switch [$template_obj name] {
+              en:TestItemShortText.form {set item_type ShortText}
+              en:TestItemText.form {set item_type Text}
+              default {set item_type unknown}
+            }
+          }
+          #ns_log notice "Template name = [$template_obj name] -> item_type '$item_type'"
+
+          #
+          # For the time being, compute the differences just for short text questions
+          #
+          if {$item_type in {ShortText}} {
+            foreach answer_key [dict keys $value] {
+              set answer_value [string trim [dict get $value $answer_key]]
+              set what ""
+              set last_value [:dict_value $last_answers $answer_key ""]
+              if {$last_value ne ""} {
+                if {$answer_value eq ""} {
+                  set what cleared
+                  ns_log notice "  ==> $answer_key: answer_value '$last_value' cleared in revision $rev_nr"
+                } elseif {$answer_value ne $last_value} {
+                  set what updated
+                }
+              } else {
+                # last answer was empty
+                if {$answer_value ne ""} {
+                  set what added
+                }
+              }
+              #
+              # Remember last answer values
+              #
+              dict set last_answers $answer_key $answer_value
+              if {$what ne ""} {
+                if {$what eq "cleared"} {
+                  set answer_value $last_value
+                }
+                lappend msgs [subst {
+                  <span class='alert-[dict get {cleared warning added success updated info "" ""} $what]'>
+                  q[string map [list answer "" {*}$qnames] $answer_key] $what [ns_quotehtml '$answer_value']
+                  </span>
+                }]
+              }
+            }
+          } else {
+            #
+            # Show the full content of the field
+            #
+            if {$value ne ""} {
+              lappend msgs [subst {
+                <span class=''>q[string map [list answer "" {*}$qnames] $key]:
+                [ns_quotehtml '$value']</span>
+              }]
+            }
+          }
+        }
+        append report [subst {
+          <a href='$student_href&rid=[ns_set get $s revision_id]'>[format %02d $rev_nr]</a>:
+          [join $msgs {; }]<br>
+        }]
+        incr rev_nr
+      }
+
+      append HTML [subst {
+        <tr>
+        <td><a href='$student_href'>[$submission set online-exam-userName]</td>
+        <td>[$submission set online-exam-fullName]</td>
+        <td>$report</td>
+        </tr>
+      }]
+
+      return $HTML
+    }
+
+    #----------------------------------------------------------------------
+    # Class:  Answer_manager
+    # Method: render_submissions=edit_history
+    #----------------------------------------------------------------------
+    :method render_submissions=edit_history {
+      {-examWf:object}
+      {-submissions:object}
+    } {
+      set combined_form_info [::xowf::test_item::question_manager combined_question_form $examWf]
+      set nameToQuestionObj [xowf::test_item::renaming_form_loader \
+                                 name_to_question_obj_dict \
+                                 [dict get $combined_form_info question_objs]]
+      #
+      # Sort items by user name
+      #
+      $submissions orderby online-exam-userName
+
+      return [subst {
+        <h2>Quick Submission Analysis</h2>
+        <table class='table table-condensed'>
+        <tr><th></th><th>Name</th><th>Revisions</th></tr>
+        [join [lmap submission [$submissions children] {
+          :render_submission=edit_history \
+              -submission $submission -examWf $examWf \
+              -nameToQuestionObj $nameToQuestionObj}]]
+        </table>
+      }]
+    }
+
+    #----------------------------------------------------------------------
+    # Class:  Answer_manager
+    # Method: render_answers_with_edit_history
+    #----------------------------------------------------------------------
     :public method render_answers_with_edit_history {
       examWf:object
     } {
@@ -2061,129 +2249,477 @@ namespace eval ::xowf::test_item {
       if {$wf eq ""} {
         return ""
       }
-      set HTML "<h2>Quick Submission Analysis</h2>\n"
-      set combined_form_info [::xowf::test_item::question_manager combined_question_form $examWf]
-      set nameToQuestionObj [xowf::test_item::renaming_form_loader \
-                                 name_to_question_obj_dict \
-                                 [dict get $combined_form_info question_objs]]
 
-      set items [:get_wf_instances $wf]
-      foreach i [$items children] {
-        $i set online-exam-userName [acs_user::get_element -user_id [$i creation_user] -element username]
-        $i set online-exam-fullName [::xo::get_user_name [$i creation_user]]
-      }
-
-      append HTML [subst {
-        <table class='table table-condensed'>
-        <tr><th></th><th>Name</th><th>Revisions</th></tr>
-      }]
-      $items orderby online-exam-userName
-      foreach i [$items children] {
-        set last_answers {}
-        set rev_nr 1
-        set q_nr 0
-        set qnames ""
-        set report ""
-        set student_href [$examWf pretty_link -query m=print-answers&id=[$i set item_id]]
-
-        set revision_sets [$i get_revision_sets -with_instance_attributes]
-        foreach s $revision_sets {
-          set msgs {}
-          set ia [ns_set get $s instance_attributes]
-          foreach key [dict keys $ia *_] {
-            if {![dict exists $qnames $key]} {
-              dict set qnames $key [incr q_nr]
-            }
-            set value [dict get $ia $key]
-            #
-            # Determine the question type
-            #
-            set form_obj [dict get $nameToQuestionObj $key]
-            set template_obj [$form_obj page_template]
-            if {[$template_obj name] eq "en:edit-interaction.wf"} {
-              set item_type [dict get [$form_obj instance_attributes] item_type]
-            } else {
-              switch [$template_obj name] {
-                en:TestItemShortText.form {set item_type ShortText}
-                en:TestItemText.form {set item_type Text}
-                default {set item_type unknown}
-              }
-            }
-            #ns_log notice "Template name = [$template_obj name] -> item_type '$item_type'"
-
-            #
-            # For the time being, compute the differences just for short text questions
-            #
-            if {$item_type in {ShortText}} {
-              foreach answer_key [dict keys $value] {
-                set answer_value [string trim [dict get $value $answer_key]]
-                set what ""
-                if {[dict exists $last_answers $answer_key]} {
-                  set last_value [dict get $last_answers $answer_key]
-                } else {
-                  set last_value ""
-                }
-                if {$last_value ne ""} {
-                  if {$answer_value eq ""} {
-                    set what cleared
-                    ns_log notice "  ==> $answer_key: answer_value '$last_value' cleared in revision $rev_nr"
-                  } elseif {$answer_value ne $last_value} {
-                    set what updated
-                  }
-                } else {
-                  # last answer was empty
-                  if {$answer_value ne ""} {
-                    set what added
-                  }
-                }
-                #
-                # Remember last answer values
-                #
-                dict set last_answers $answer_key $answer_value
-                if {$what ne ""} {
-                  if {$what eq "cleared"} {
-                    set answer_value $last_value
-                  }
-                  lappend msgs [subst {
-                    <span class='alert-[dict get {cleared warning added success updated info "" ""} $what]'>
-                    q[string map [list answer "" {*}$qnames] $answer_key] $what [ns_quotehtml '$answer_value']
-                    </span>
-                  }]
-                }
-              }
-            } else {
-              #
-              # Show the full content of the field
-              #
-              if {$value ne ""} {
-                lappend msgs [subst {
-                  <span class=''>q[string map [list answer "" {*}$qnames] $key]:
-                  [ns_quotehtml '$value']</span>
-                }]
-              }
-            }
-          }
-          append report [subst {
-            <a href='$student_href&rid=[ns_set get $s revision_id]'>[format %02d $rev_nr]</a>:
-            [join $msgs {; }]<br>
-          }]
-          incr rev_nr
-        }
-
-        append HTML [subst {
-          <tr>
-          <td><a href='$student_href'>[$i set online-exam-userName]</td><td>[$i set online-exam-fullName]</td>
-          <td>$report</td>
-          </tr>
-        }]
-
-      }
-      append HTML "</table>\n"
+      set submissions [:student_submissions -wf $wf]
+      set HTML [:render_submissions=edit_history -examWf $examWf -submissions $submissions]
 
       return $HTML
     }
 
+    ########################################################################
+    :method render_proctor_images {
+      {-submission:object}
+      {-examWf:object}
+      {-revision_id}
+    } {
+      #
+      # Render for the submission i the proctor images.
+      #
 
+      set user_id [$submission creation_user]
+      set img_url [$examWf pretty_link -query m=proctor-image&user_id=$user_id]
+
+      set proctoring_dir [proctoring::folder \
+                              -object_id [$examWf item_id] \
+                              -user_id $user_id]
+      set files [glob -nocomplain -directory $proctoring_dir *.*]
+      #ns_log notice "proctoring_dir $proctoring_dir files $files"
+
+      if {$revision_id ne ""} {
+        set filtered_revisions [:revisions_up_to $revisions $revision_id]
+      } else {
+        set filtered_revisions $revisions
+      }
+
+      set start_date  [ns_set get [lindex $filtered_revisions 0] creation_date]
+      set end_date    [ns_set get [lindex $filtered_revisions end] creation_date]
+      set start_clock [clock scan [::xo::db::tcl_date $start_date tz_var]]
+      set end_clock   [clock scan [::xo::db::tcl_date $end_date tz_var]]
+
+      set image ""
+      #ns_log notice "start date $start_date end_date $end_date / $start_clock $end_clock"
+      foreach f $files {
+        #ns_log notice "check: $f"
+        if {[regexp {/([^/]+)-(\d+)[.](webm|png|jpeg)$} $f . type stamp ext]} {
+          set inWindow [expr {$stamp >= $start_clock && $stamp <= $end_clock}]
+          ns_log notice "parsed $type $stamp $ext $inWindow $stamp " \
+              [clock format $stamp -format {%m-%d %H:%M:%S}] >= \
+              $start_clock ([expr {$stamp >= $start_clock}]) \
+              && $stamp <= $end_clock ([expr {$stamp <= $end_clock}])
+          if {$inWindow} {
+            dict set image $stamp $type $ext
+          }
+        }
+      }
+      set markup ""
+      foreach ts [lsort -integer [dict keys $image]] {
+        #ns_log notice "ts $ts [dict get $image $ts]"
+        append markup [subst {<div>[clock format $ts -format {%Y-%m-%d %H:%M:%S}]</div>}]
+        append markup {<div style="display: flex">}
+        foreach type {camera-image desktop-image} {
+          if {[dict exists $image $ts $type]} {
+            set ext [dict get $image $ts $type]
+            append markup [subst {<img height="240" src="$img_url&type=$type&ts=$ts&e=$ext">}]
+          }
+        }
+        if {[dict exists $image $ts camera-audio]} {
+          set ext [dict get $image $ts camera-audio]
+          append markup [subst {<audio controls src="$img_url&type=camera-audio&ts=$ts&e=$ext" type="video/webm"></audio>}]
+        }
+        append markup </div>\n
+      }
+      return $markup
+    }
+
+    #----------------------------------------------------------------------
+    # Class:  Answer_manager
+    # Method: student_submissions
+    #----------------------------------------------------------------------
+    :method student_submissions {
+      {-creation_user:integer,0..1 ""}
+      {-filter_id:integer,0..1 ""}
+      {-revision_id:integer,0..1 ""}
+      {-wf:object}
+    } {
+      #
+      # Return an ordered composite built form all student submission,
+      # potentially filtered via the provided values.
+      #
+      if {$revision_id ne ""} {
+        #
+        # In case we have a revision_id, return this single
+        # revision.
+        #
+        set r [::xowiki::FormPage get_instance_from_db -revision_id $revision_id]
+        set submissions [::xo::OrderedComposite new -destroy_on_cleanup]
+        $submissions add $r
+      } else {
+        set submissions [:get_wf_instances \
+                             {*}[expr {$creation_user ne "" ? "-creation_user $creation_user" : ""}] \
+                             {*}[expr {$filter_id ne "" ? "-item_id $filter_id" : ""}] \
+                             $wf]
+      }
+
+      #
+      # Provide additional attributes to the instances such as the
+      # userName and fullName.
+      #
+      foreach submission [$submissions children] {
+        $submission set online-exam-userName \
+            [acs_user::get_element \
+                 -user_id [$submission creation_user] \
+                 -element username]
+        $submission set online-exam-fullName \
+            [::xo::get_user_name [$submission creation_user]]
+      }
+
+      return $submissions
+    }
+    
+    #----------------------------------------------------------------------
+    # Class:  Answer_manager
+    # Method: render_print_button
+    #----------------------------------------------------------------------
+    :method render_print_button {} {
+      #
+      # Render a simple print button for the unaware that makes it
+      # easy to print the exam protocol to PDF and use e.g. a pdf-tool
+      # to annotate free text answers. The function is designed to
+      # work with streaming HTML output.
+      #
+      # @return HTML rendering
+      #
+
+      template::add_event_listener \
+          -id print-button \
+          -event click \
+          -preventdefault=false \
+          -script "window.print();"
+
+      return [subst {
+        <button id="print-button">
+        <span class='glyphicon glyphicon-print' aria-hidden='true'></span> print
+        </button>
+        [template::collect_body_scripts]
+      }]
+    }
+    
+    #----------------------------------------------------------------------
+    # Class:  Answer_manager
+    # Method: render_submission=exam_protocol
+    #----------------------------------------------------------------------
+    :method render_submission=exam_protocol {
+      {-autograde:boolean false}
+      {-combined_form_info}
+      {-examWf:object}
+      {-filter_id:integer,0..1 ""}
+      {-form_objs:integer,0..n ""}
+      {-grading_scheme:object}
+      {-recutil:object,0..1 ""}
+      {-revision_id:integer,0..1 ""}
+      {-submission:object}
+      {-totalPoints:double}
+      {-runtime_panel_view default}
+      {-wf:object}
+      {-with_signature:boolean false}
+      {-with_exam_heading:boolean true}
+    } {
+
+      set userName [$submission set online-exam-userName]
+      set fullName [$submission set online-exam-fullName]
+
+      #if {[$submission state] ne "done"} {
+      #  ns_log notice "online-exam: submission of $userName is not finished (state [$submission state])"
+      #  return ""
+      #}
+
+      set revisions [$submission get_revision_sets]
+      if {[llength $revisions] <=1 } {
+        # just an initial revision
+        ns_log notice "online-exam: submission of $userName is empty. Ignoring."
+        return ""
+      }
+
+      #
+      # The call to "render_content" calls actually the
+      # "summary_form" of online/inclass-exam-answer.wf when the submit
+      # instance is in state "done". We set the __feedback_mode to
+      # get the auto-correction included.
+      #
+      foreach f [::xowiki::formfield::FormField info instances -closure] {
+        #ns_log notice "FF could DESTROY $f [$f name]"
+        if {[string match *_ [$f name]]} {
+          #ns_log notice "FF DESTROY $f [$f name]"
+          $f destroy
+        }
+      }
+      $wf form_field_flush_cache
+
+      set achieved_points {}
+      xo::cc eval_as_user -user_id [$submission creation_user] {
+        $submission set __feedback_mode 2
+        $submission set __form_objs $form_objs
+        set question_form [$submission render_content]
+      }
+      #
+      # Now, the question_form contains the rendered answer of the
+      # student.
+      #
+
+      if {$recutil ne ""} {
+        :export_answer \
+            -submission $submission \
+            -html $question_form \
+            -combined_form_info $combined_form_info \
+            -recutil $recutil
+      }
+      if {$with_signature || $autograde} {
+        set answerAttributes [xowf::test_item::renaming_form_loader \
+                                  answer_attributes [$submission instance_attributes]]
+        if {$autograde} {
+          set achieved_points [:achieved_points \
+                                   -submission $submission \
+                                   -answer_attributes $answerAttributes]
+          dict set achieved_points totalPoints $totalPoints
+        }
+      }
+
+      if {$with_signature} {
+        set sha256 [ns_md string -digest sha256 $answerAttributes]
+        set signatureString "<div class='signature'>online-exam-actual_signature: $sha256</div>\n"
+        set submissionSignature [$submission property signature ""]
+        if {$submissionSignature ne ""} {
+          append signatureString "<div>#xowf.online-exam-submission_signature#: $submissionSignature</div>\n"
+        }
+      } else {
+        set signatureString ""
+      }
+
+      set time [::xo::db::tcl_date [$submission property _last_modified] tz_var]
+      set pretty_date [clock format [clock scan $time] -format "%Y-%m-%d"]
+
+      #
+      # If we filter by student and the exam is proctored, display
+      # the procoring images as well.
+      #
+      if {$filter_id ne "" && [$examWf property proctoring] eq "t"} {
+        set markup [:render_proctor_images \
+                        -submission $submission \
+                        -examWf $examWf \
+                        -revision_id $revision_id]
+        set question_form [subst {
+          <div class="container">
+            <div class="row">
+              <div class="col-md-6">$question_form</div>
+              <div class="col-md-6">$markup</div>
+            </div>
+          </div>
+        }]
+      }
+
+      if {$runtime_panel_view ne ""} {
+        set gradingInfo [$grading_scheme print -achieved_points $achieved_points]
+        set gradingPanel [:dict_value $gradingInfo panel ""]
+        set runtime_panel [:runtime_panel \
+                               -revision_id $revision_id \
+                               -view $runtime_panel_view \
+                               -grading_info $gradingPanel \
+                               $submission]
+        if {$autograde} {
+          set grade [$grading_scheme grade -achieved_points $achieved_points]
+          ns_log notice "CSV $userName\t[dict get $gradingInfo csv]"
+          dict incr :grade_dict $grade
+          append :grade_csv $userName\t[dict get $gradingInfo csv]\n
+        }
+      } else {
+        set runtime_panel ""
+      }
+
+      set heading "$userName · $fullName · $pretty_date"
+      append HTML [subst {
+        <div class='single_exam'>
+        <div class='runtime-data'>
+        [expr {$with_exam_heading ? "<h2>$heading</h2>" : ""}]
+        $runtime_panel
+        </div>
+        $signatureString
+        $question_form
+        </div>
+      }]
+
+      return $HTML
+    }
+
+    #----------------------------------------------------------------------
+    # Class:  Answer_manager
+    # Method: render_answers
+    #----------------------------------------------------------------------
+    :public method render_answers {
+      {-as_student:boolean false}
+      {-filter_id:integer,0..1 ""}
+      {-creation_user:integer,0..1 ""}
+      {-revision_id:integer,0..1 ""}
+      {-form_objs:integer,0..n ""}
+      {-export:boolean false}
+      {-grading:alnum,0..n ""}
+      {-with_grading_table:boolean false}
+      examWf:object
+    } {
+      #
+      # Return the answers in HTML format in a somewhat printer
+      # friendly way, e.g. as the exam protocol.
+      #
+      set combined_form_info [::xowf::test_item::question_manager combined_question_form $examWf]
+      set autograde   [dict get $combined_form_info autograde]
+      set totalPoints [::xowf::test_item::question_manager total_points \
+                           -max_items [$examWf property max_items ""] \
+                           $combined_form_info]
+
+      set withSignature [$examWf property signature 0]
+      set examTitle [$examWf title]
+      set ctx [::xowf::Context require $examWf]
+
+      set wf [:get_answer_wf $examWf]
+      if {$wf eq ""} {
+        return [list do_stream 0 HTML ""]
+      }
+
+      if {$form_objs ne "" && $form_objs ni [dict get $combined_form_info question_objs]} {
+        ns_log warning "inclass-exam: ignore invalid form_obj '$form_objs';" \
+            "valid [dict get $combined_form_info question_objs]"
+        set form_objs ""
+      }
+      #
+      # The management of the grading scheme has to be extended. For the
+      # time being, we have a single grading scheme with the option to
+      # round to full points or not. When an exam has less than 40
+      # points, we do not round per default, since this rounding could
+      # provide more than 1 percent of the result. This should be made
+      # configurable (also in www-print-answer-table, which is not used
+      # right now).
+      #
+      if {$grading eq ""} {
+        set grading [expr {$totalPoints < 40 ? "wi1_noround" : "wi1"}]
+      }
+
+      set grading_scheme ::xowf::test_item::grading::$grading
+      if {[info commands $grading_scheme] eq ""} {
+        set grading_scheme ::xowf::test_item::grading::wi1
+      }
+      #ns_log notice "USE grading_scheme $grading_scheme"
+
+      set :grade_dict {}
+      set :grade_csv ""
+
+      set items [:student_submissions \
+                     -creation_user $creation_user \
+                     -filter_id $filter_id \
+                     -revision_id $revision_id \
+                     -wf $wf]
+      #
+      # In case we have many items to render (which might take a
+      # while), use streaming mode.
+      #
+      set do_stream [expr {[llength [$items children]] > 100}]
+
+      set HTML [:render_print_button]
+      ::xo::cc set_parameter template_file view-plain-master
+      ::xo::cc set_parameter MenuBar 0
+
+      if {[llength $form_objs] > 0} {
+        #
+        # Filter by questions. For the time being, we allow only a
+        # single question, ... and we take the first ones.
+        #
+        append HTML "<h2>#xowf.question#: [ns_quotehtml [[lindex $form_objs 0] title]]</h2>\n"
+        set runtime_panel_view ""
+
+      } elseif {$as_student} {
+        #
+        # Show the student his own submission
+        #
+        set userName [acs_user::get_element -user_id [ad_conn user_id] -element username]
+        set fullName [::xo::get_user_name  [ad_conn user_id]]
+        set heading "$userName - $fullName"
+        append HTML "<h2>#xowf.online-exam-review-protocol# - $heading</h2>\n"
+        set runtime_panel_view "student"
+
+      } else {
+        #
+        # Provide the full protocol (or a subset of it)
+        #
+        append HTML "<h2>#xowf.online-exam-protocol#</h2>\n"
+        if {$filter_id ne ""} {
+          set runtime_panel_view "revision_overview"
+        } else {
+          set runtime_panel_view "default"
+        }
+      }
+      
+      if {$do_stream} {
+        # ns_log notice STREAM-[info level]-$::template::parse_level
+        #
+        # The following line is tricky: set on the parsing level the
+        # title of and context of the page, since this is needed by
+        # the streaming template.
+        #
+        uplevel #$::template::parse_level [subst {set title "$examTitle"; set context .}]
+        ad_return_top_of_page [ad_parse_template \
+                                   -params [list context title] \
+                                   [template::streaming_template]]
+        ns_write [subst {
+          <div class=''main-content>
+          <div class='xowiki-content' style='padding-left:15px;'>
+          <h1>[ns_quotehtml $examTitle]</h1>
+          [lang::util::localize $HTML]
+        }]
+        set HTML ""
+      }
+
+      if {$export} {
+        set recutil [xowf::test_item::answer_manager recutil_create \
+                         -clear \
+                         -exam_id [$wf parent_id] \
+                         -fn [expr {$filter_id eq "" ? "all.rec" : "$filter_id.rec"}]
+                    ]
+      } else {
+        set recutil ""
+      }
+
+      #
+      # Iterate over the items sorted by userName.
+      #
+      $items orderby online-exam-userName
+      foreach submission [$items children] {
+       
+        set html [:render_submission=exam_protocol \
+                      -submission $submission \
+                      -wf $wf \
+                      -examWf $examWf \                      
+                      -autograde $autograde \
+                      -combined_form_info $combined_form_info \
+                      -filter_id $filter_id \
+                      -form_objs $form_objs \
+                      -grading_scheme $grading_scheme \
+                      -recutil $recutil \
+                      -revision_id $revision_id \
+                      -totalPoints $totalPoints \
+                      -runtime_panel_view $runtime_panel_view \
+                      -with_exam_heading [expr {!$as_student}] \
+                      -with_signature $withSignature]
+
+        if {$do_stream && $html ne ""} {
+          ns_write [lang::util::localize $html]
+        } else {
+          append HTML $html
+        }
+      }
+
+      if {$export} {
+        $recutil destroy
+      }
+
+      if {$with_grading_table && $autograde} {
+        append HTML <p>[:grading_table -csv ${:grade_csv} ${:grade_dict}]</p>
+      }
+
+      return [list do_stream $do_stream HTML $HTML]
+    }
+
+    #----------------------------------------------------------------------
+    # Class:  Answer_manager
+    # Method: participant_result
+    #----------------------------------------------------------------------
     :method participant_result {
       -obj:object
       answerObj:object
@@ -2228,6 +2764,10 @@ namespace eval ::xowf::test_item {
       return $answer
     }
 
+    #----------------------------------------------------------------------
+    # Class:  Answer_manager
+    # Method: answer_form_field_objs
+    #----------------------------------------------------------------------
     :method answer_form_field_objs {-clear:switch -wf:object form_info} {
       set key ::__test_item_answer_form_fields
       if {$clear} {
@@ -2254,6 +2794,10 @@ namespace eval ::xowf::test_item {
       }
     }
 
+    #----------------------------------------------------------------------
+    # Class:  Answer_manager
+    # Method: grading_table
+    #----------------------------------------------------------------------
     :public method grading_table {{-csv ""} grade_dict} {
       #
       # Produce HTML markup based on a dict with grades as keys and
@@ -2279,6 +2823,10 @@ namespace eval ::xowf::test_item {
       return $gradingTable
     }
 
+    #----------------------------------------------------------------------
+    # Class:  Answer_manager
+    # Method: results_table
+    #----------------------------------------------------------------------
     :public method results_table {
       -package_id:integer
       -items:object,required
@@ -2288,6 +2836,11 @@ namespace eval ::xowf::test_item {
       {-grading_scheme ::xowf::test_item::grading::wi1}
       wf:object
     } {
+      #
+      # Render the results in forma of a table and return HTML.
+      # Currently deactivated.
+      #
+
       #set form_info [:combined_question_form -with_numbers $wf]
       set form_info [::xowf::test_item::question_manager combined_question_form $wf]
       set answer_form_field_objs [:answer_form_field_objs -wf $wf $form_info]
@@ -2486,6 +3039,10 @@ namespace eval ::xowf::test_item {
       return $HTML
     }
 
+    #----------------------------------------------------------------------
+    # Class:  Answer_manager
+    # Method: participants_table
+    #----------------------------------------------------------------------
     :public method participants_table {
       -package_id:integer
       -items:object,required
@@ -2598,6 +3155,10 @@ namespace eval ::xowf::test_item {
       return $dialogs$HTML
     }
 
+    #----------------------------------------------------------------------
+    # Class:  Answer_manager
+    # Method: marked_results
+    #----------------------------------------------------------------------
     :public method marked_results {-obj:object -wf:object form_info} {
       #
       # Return for every participant the individual results for an exam
@@ -2617,6 +3178,10 @@ namespace eval ::xowf::test_item {
       return $results
     }
 
+    #----------------------------------------------------------------------
+    # Class:  Answer_manager
+    # Method: answers_panel
+    #----------------------------------------------------------------------
     :public method answers_panel {
       {-polling:switch false}
       {-heading #xowf.submitted_answers#}
@@ -2696,6 +3261,10 @@ namespace eval ::xowf::test_item {
       return $answerStatus
     }
 
+    #----------------------------------------------------------------------
+    # Class:  Answer_manager
+    # Method: prevent_multiple_tabs
+    #----------------------------------------------------------------------
     :public method prevent_multiple_tabs {
       {-cookie_name multiple_tabs}
     } {
@@ -2723,6 +3292,10 @@ namespace eval ::xowf::test_item {
       }]
     }
 
+    #----------------------------------------------------------------------
+    # Class:  Answer_manager
+    # Method: countdown_timer
+    #----------------------------------------------------------------------
     :public method countdown_timer {
       {-target_time:required}
       {-id:required}
@@ -2739,7 +3312,8 @@ namespace eval ::xowf::test_item {
       # client browser is set incorrectly.
       #
       set nowMs [clock milliseconds]
-      set nowIsoTime [clock format [expr {$nowMs/1000}] -format "%Y-%m-%dT%H:%M:%S"].[format %.3d [expr {$nowMs % 1000}]]
+      set nowIsoTime [clock format [expr {$nowMs/1000}] \
+                          -format "%Y-%m-%dT%H:%M:%S"].[format %.3d [expr {$nowMs % 1000}]]
 
       template::add_body_script -script [subst {
         var countdown_target_date = new Date('$target_time').getTime();
@@ -3408,7 +3982,7 @@ namespace eval ::xowf::test_item {
             #
             # autograde ok on the question level
             #
-          } elseif {[dict exists $formAttributes auto_correct] && [dict get $formAttributes auto_correct]} {
+          } elseif {[:dict_value $formAttributes auto_correct 0]} {
             #
             # autograde ok on the form level
             #
@@ -3581,9 +4155,7 @@ namespace eval ::xowf::test_item {
           # list order is important, since it determines also the ordering
           # in the message.
           #
-          if {[dict exists $question_info show_max]
-              && [dict get $question_info show_max] ne ""
-            } {
+          if {[:dict_value $question_info show_max ""] ne ""} {
             foreach key {choice_options sub_questions} {
               if {[dict exists $question_info $key]
                   && [dict get $question_info show_max] ne [dict get $question_info $key]
@@ -3607,10 +4179,6 @@ namespace eval ::xowf::test_item {
         return #xowf.shuffle_$m#
       }
     }
-    :method dict_value {dict key {default ""}} {
-      expr {[dict exists $dict $key] ? [dict get $dict $key] : $default}
-    }
-
     :public method describe_form {{-asHTML:switch} form_obj} {
       #
       # Call for every form field of the form_obj the "describe"

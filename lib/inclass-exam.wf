@@ -493,336 +493,31 @@ Action instproc unpublish_link {obj} {
   # Print the answers in a somewhat printer friendly way.
   #
   :proc www-print-answers {} {
-    set as_student    [:query_parameter as_student:boolean 0]
-    set filter_id     [:query_parameter id:integer ""]
-    set creation_user [:query_parameter creation_user:integer ""]
-    set revision_id   [:query_parameter rid:integer ""]
-    set form_objs     [:query_parameter fos:integer ""]
-    set export        [:query_parameter export:boolean 0]
-    set grading       [:query_parameter grading:alnum ""]
+    template::head::add_link -rel stylesheet -href /resources/xowf/test-item.css
+    
+    set as_student [:query_parameter as_student:boolean false]
+    set d [xowf::test_item::answer_manager render_answers \
+               -as_student    $as_student \
+               -filter_id     [:query_parameter id:integer ""] \
+               -creation_user [:query_parameter creation_user:integer ""] \
+               -revision_id   [:query_parameter rid:integer ""] \
+               -form_objs     [:query_parameter fos:integer ""] \
+               -export        [:query_parameter export:boolean 0] \
+               -grading       [:query_parameter grading:alnum ""] \
+               -with_grading_table [expr {!$as_student}] \
+               [self]]
 
-    set combined_form_info [::xowf::test_item::question_manager combined_question_form [self]]
-    set autograde   [dict get $combined_form_info autograde]
-    set totalPoints [::xowf::test_item::question_manager total_points \
-                         -max_items [:property max_items ""] \
-                         $combined_form_info]
-    if {$form_objs ne "" && $form_objs ni [dict get $combined_form_info question_objs]} {
-      ns_log warning "inclass-exam: ignore invalid form_obj '$form_objs';" \
-          "valid [dict get $combined_form_info question_objs]"
+    set do_stream [dict get $d do_stream]
+    set HTML [dict get $d HTML]    
+    
+    if {$do_stream == 0 && $HTML eq ""} {
+      set HTML "#xowiki.no_data#"
     }
-    #
-    # The management of the grading scheme has to be extended. For the
-    # time being, we have a single grading scheme with the option to
-    # round to full points or not. When an exam has less than 40
-    # points, we do not round per default, since this rounding could
-    # provide more than 1 percent of the result. This should be made
-    # configurable (also in www-print-answer-table, which is not used
-    # right now).
-    #
-    if {$grading eq ""} {
-      set grading [expr {$totalPoints < 40 ? "wi1_noround" : "wi1"}]
-    }
-
-    set grading_scheme ::xowf::test_item::grading::$grading
-    if {[info commands $grading_scheme] eq ""} {
-      set grading_scheme ::xowf::test_item::grading::wi1
-    }
-    #ns_log notice "USE grading_scheme $grading_scheme"
-
-    set grade_dict {}
-    set grade_csv ""
-
-    #
-    # Provide quick mapping from the mangled attribute name to the question obj.
-    #
-    set nameToQuestionObj [xowf::test_item::renaming_form_loader \
-                               name_to_question_obj_dict \
-                               [dict get $combined_form_info question_objs]]
-
-    set ctx [::xowf::Context require [self]]
-    set wf [xowf::test_item::answer_manager get_answer_wf [self]]
-
-    if {$wf ne ""} {
-
-      set items [xowf::test_item::answer_manager get_wf_instances \
-                     {*}[expr {$creation_user ne "" ? "-creation_user $creation_user" : ""}] \
-                     {*}[expr {$filter_id ne "" ? "-item_id $filter_id" : ""}] \
-                     $wf]
-      set withSignature [expr {[dict exists ${:instance_attributes} signature]
-                               ? [dict get ${:instance_attributes} signature]
-                               : 0 }]
-      set examTitle ${:title}
-      set do_stream [expr {[llength [$items children]] > 100}]
-
-      #
-      # Add a simple print button for the unaware that makes it easy
-      # to print the exam protocol to PDF and use e.g. a pdf-tool to
-      # annotate free text answers.
-      #
-      set HTML {
-        <button id="print-button">
-          <span class='glyphicon glyphicon-print' aria-hidden='true'></span> print
-        </button>
-      }
-
-      template::add_event_listener \
-          -id print-button \
-          -event click \
-          -preventdefault=false \
-          -script "window.print();"
-      append HTML [template::collect_body_scripts]
-
-      ::xo::cc set_parameter template_file view-plain-master
-      ::xo::cc set_parameter MenuBar 0
-      template::head::add_link -rel stylesheet -href /resources/xowf/test-item.css
-
-      if {[llength $form_objs] > 0} {
-        append HTML "<h2>#xowf.question#: [ns_quotehtml [[lindex $form_objs 0] title]]</h2>\n"
-      } elseif {$as_student} {
-        set userName [acs_user::get_element -user_id [ad_conn user_id] -element username]
-        set fullName [::xo::get_user_name  [ad_conn user_id]]
-        set heading "$userName - $fullName"
-        append HTML "<h2>#xowf.online-exam-review-protocol# - $heading</h2>\n"
-      } else {
-        append HTML "<h2>#xowf.online-exam-protocol#</h2>\n"
-      }
-
-      if {$do_stream} {
-        # ns_log notice STREAM-[info level]-$::template::parse_level
-        uplevel #$::template::parse_level [subst {set title "${:title}"; set context .}]
-        ad_return_top_of_page [ad_parse_template \
-                                   -params [list context title] \
-                                   [template::streaming_template]]
-        ns_write [subst {
-          <div class=''main-content>
-          <div class='xowiki-content' style='padding-left:15px;'>
-          <h1>[ns_quotehtml ${:title}]</h1>
-          [lang::util::localize $HTML]
-        }]
-        set HTML ""
-      }
-
-      if {$revision_id ne ""} {
-        set r [::xowiki::FormPage get_instance_from_db -revision_id $revision_id]
-        if {[$r item_id] ni [lmap i [$items children] {$i item_id}]} {
-          error "invalid revision id '$revision_id' provided"
-        }
-        $items destroy
-        set items [::xo::OrderedComposite new -destroy_on_cleanup]
-        $items add $r
-      }
-
-      if {$export} {
-        set recutil [xowf::test_item::answer_manager recutil_create \
-                         -clear \
-                         -exam_id [$wf parent_id] \
-                         -fn [expr {$filter_id eq "" ? "all.rec" : "$filter_id.rec"}]
-                    ]
-      }
-
-      foreach i [$items children] {
-        $i set online-exam-userName [acs_user::get_element -user_id [$i creation_user] -element username]
-        $i set online-exam-fullName [::xo::get_user_name [$i creation_user]]
-      }
-
-      $items orderby online-exam-userName
-      foreach i [$items children] {
-        set userName [$i set online-exam-userName]
-        set fullName [$i set online-exam-fullName]
-
-        #if {[$i state] ne "done"} {
-        #  ns_log notice "online-exam: submission of $userName is not finished (state [$i state])"
-        #  #continue
-        #}
-
-        set revisions [$i get_revision_sets]
-        if {[llength $revisions] <=1 } {
-          # just an initial revision
-          ns_log notice "online-exam: submission of $userName is empty. Ignoring."
-          continue
-        }
-
-        #
-        # The call to "render_content" calls actually the
-        # "summary_form" of online/inclass-exam-answer.wf when the submit
-        # instance is in state "done". We set the __feedback_mode to
-        # get the auto-correction included.
-        #
-        foreach f [::xowiki::formfield::FormField info instances -closure] {
-          #ns_log notice "FF could DESTROY $f [$f name]"
-          if {[string match *_ [$f name]]} {
-            #ns_log notice "FF DESTROY $f [$f name]"
-            $f destroy
-          }
-        }
-        $wf form_field_flush_cache
-
-        set achieved_points {}
-        xo::cc eval_as_user -user_id [$i creation_user] {
-          $i set __feedback_mode 2
-          $i set __form_objs $form_objs
-          set question_form [$i render_content]
-
-          if {$export} {
-            xowf::test_item::answer_manager export_answer \
-                -user_answers $i \
-                -html $question_form \
-                -combined_form_info $combined_form_info \
-                -recutil $recutil
-          }
-          if {$withSignature || $autograde} {
-            set answerAttributes [xowf::test_item::renaming_form_loader \
-                                      answer_attributes [$i instance_attributes]]
-            if {$autograde} {
-              set achieved_points [xowf::test_item::answer_manager achieved_points \
-                                       -answer_object $i -answer_attributes $answerAttributes]
-              dict set achieved_points totalPoints $totalPoints
-              #ns_log notice "==== www-print-answers: $userName achieved_points $achieved_points"
-              #foreach detailInfo [dict get $achieved_points details] {
-              #  set questionObj [dict get $nameToQuestionObj [dict get $detailInfo attributeName]]
-              #  ns_log notice ".... $detailInfo item_id [$questionObj item_id]"
-              #}
-            }
-          }
-        }
-
-        if {$withSignature} {
-          set sha256 [ns_md string -digest sha256 $answerAttributes]
-          set signatureString "<div class='signature'>online-exam-actual_signature: $sha256</div>\n"
-          set submissionSignature [$i property signature ""]
-          if {$submissionSignature ne ""} {
-            append signatureString "<div>#xowf.online-exam-submission_signature#: $submissionSignature</div>\n"
-          }
-        } else {
-          set signatureString ""
-        }
-
-        set time [::xo::db::tcl_date [$i property _last_modified] tz_var]
-        set pretty_date [clock format [clock scan $time] -format "%Y-%m-%d"]
-
-        if {$filter_id ne "" && [:property proctoring] eq "t"} {
-          set user_id [$i creation_user]
-          set img_url [:pretty_link -query m=proctor-image&user_id=$user_id]
-
-          set proctoring_dir [proctoring::folder \
-                                  -object_id ${:item_id} \
-                                  -user_id $user_id]
-          set files [glob -nocomplain -directory $proctoring_dir *.*]
-          #ns_log notice "proctoring_dir $proctoring_dir files $files"
-
-          if {$revision_id ne ""} {
-            set filtered_revisions [xowf::test_item::answer_manager revisions_up_to $revisions $revision_id]
-          } else {
-            set filtered_revisions $revisions
-          }
-
-          set start_date  [ns_set get [lindex $filtered_revisions 0] creation_date]
-          set end_date    [ns_set get [lindex $filtered_revisions end] creation_date]
-          set start_clock [clock scan [::xo::db::tcl_date $start_date tz_var]]
-          set end_clock   [clock scan [::xo::db::tcl_date $end_date tz_var]]
-
-          set image ""
-          #ns_log notice "start date $start_date end_date $end_date / $start_clock $end_clock"
-          foreach f $files {
-            #ns_log notice "check: $f"
-            if {[regexp {/([^/]+)-(\d+)[.](webm|png|jpeg)$} $f . type stamp ext]} {
-              set inWindow [expr {$stamp >= $start_clock && $stamp <= $end_clock}]
-              ns_log notice "parsed $type $stamp $ext $inWindow $stamp \
-                [clock format $stamp -format {%m-%d %H:%M:%S}] >= \
-                $start_clock ([expr {$stamp >= $start_clock}]) \
-                && $stamp <= $end_clock ([expr {$stamp <= $end_clock}])"
-              if {$inWindow} {
-                dict set image $stamp $type $ext
-              }
-            }
-          }
-          set markup ""
-          foreach ts [lsort -integer [dict keys $image]] {
-            #ns_log notice "ts $ts [dict get $image $ts]"
-            append markup [subst {<div>[clock format $ts -format {%Y-%m-%d %H:%M:%S}]</div>}]
-            append markup {<div style="display: flex">}
-            foreach type {camera-image desktop-image} {
-              if {[dict exists $image $ts $type]} {
-                set ext [dict get $image $ts $type]
-                append markup [subst {<img height="240" src="$img_url&type=$type&ts=$ts&e=$ext">}]
-              }
-            }
-            if {[dict exists $image $ts camera-audio]} {
-              set ext [dict get $image $ts camera-audio]
-              append markup [subst {<audio controls src="$img_url&type=camera-audio&ts=$ts&e=$ext" type="video/webm"></audio>}]
-            }
-            append markup </div>\n
-          }
-
-          set question_form [subst {
-            <div class="container">
-              <div class="row">
-                <div class="col-md-6">$question_form</div>
-                <div class="col-md-6">$markup</div>
-              </div>
-            </div>
-          }]
-        }
-        if {[llength $form_objs] == 0} {
-          set view [expr {$as_student
-                          ? "student"
-                          : $filter_id ne ""
-                          ? "revision_overview"
-                          : "default"}]
-          set gradingInfo [$grading_scheme print -achieved_points $achieved_points]
-          set grandingPanel [expr {[dict exists  $gradingInfo panel] ? [dict get $gradingInfo panel] : ""}]
-          set runtime_panel [xowf::test_item::answer_manager runtime_panel \
-                                 -revision_id $revision_id \
-                                 -view $view \
-                                 -grading_info $grandingPanel \
-                                 $i]
-          if {$autograde} {
-            set grade [$grading_scheme grade -achieved_points $achieved_points]
-            ns_log notice "CSV $userName\t[dict get $gradingInfo csv]"
-            dict incr grade_dict $grade
-            append grade_csv $userName\t[dict get $gradingInfo csv]\n
-          }
-        } else {
-          set runtime_panel ""
-        }
-
-        set heading "$userName · $fullName · $pretty_date"
-        append HTML [subst {
-          <div class='single_exam'>
-          <div class='runtime-data'>
-          [expr {$as_student ? "" : "<h2>$heading</h2>"}]
-          $runtime_panel
-          </div>
-          $signatureString
-          $question_form
-          </div>
-        }]
-
-        if {$do_stream} {
-          ns_write [lang::util::localize $HTML]
-          set HTML " "
-        }
-      }
-      if {$export} {
-        $recutil destroy
-      }
-    }
-
-    if {$HTML eq ""} {
-      append HTML "#xowiki.no_data#"
-    }
-
+    
     if {!$as_student} {
-      if {$autograde} {
-        append HTML <p>[xowf::test_item::answer_manager grading_table -csv $grade_csv $grade_dict]</p>
-      }
-
       set return_url [:query_parameter local_return_url:localurl [:pretty_link]]
       append HTML "<hr><p><a class='btn btn-default' href='$return_url'>#xowiki.back#</a></p>\n"
     }
-    #::xo::cc set_parameter template_file view-plain-master
-    #::xo::cc set_parameter MenuBar 0
-    #xo::Page requireCSS /resources/xowf/test-item.css
 
     if {$do_stream} {
       ns_write [lang::util::localize $HTML]
@@ -933,7 +628,9 @@ Action instproc unpublish_link {obj} {
       set object_url $link
       set examination_statement_p [expr {![string match *p.try_out_mode=1* $link]}]
       set proctoring_options [:property proctoring_options "d c a s"]
-      foreach proctoring_parm {d c a s} flag {desktop_p camera_p audio_p examination_statement_p} {
+      foreach \
+          proctoring_parm {d c a s} \
+          flag {desktop_p camera_p audio_p examination_statement_p} {
         set $flag [expr {$proctoring_parm in $proctoring_options}]
       }
       set preview_p [expr {$desktop_p || $camera_p || $audio_p}]
@@ -1032,12 +729,13 @@ Action instproc unpublish_link {obj} {
     ::xowiki::includelet::personal-notification-messages message_add \
         -notification_id ${:item_id} \
         -to_user_id [${:package_id} query_parameter user_id:integer ""] \
-        -payload [list msg [ns_queryget msg] from [xo::cc user_id] urgency [ns_queryget urgency]]
+        -payload [list msg [ns_queryget msg] \
+                      from [xo::cc user_id] \
+                      urgency [ns_queryget urgency]]
 
     ns_return 200 text/plain ok
     ad_script_abort
   }
-
 }
 
 #
