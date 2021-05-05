@@ -1759,6 +1759,7 @@ namespace eval ::xowf {
           }
         }
       }
+      ns_log notice "===== get_form_data returns [list $validation_errors $category_ids]"
       return [list $validation_errors $category_ids]
     } else {
       next
@@ -2499,7 +2500,7 @@ namespace eval ::xowf {
     if {![string match "/packages/*/lib/*" $wfName]} {
       error "path leading to workflow name must look like /packages/*/lib/*"
     }
-    set fname [acs_root_dir]$wfName
+    set fname $::acs::rootdir/$wfName
 
     if {![ad_file readable $fname]} {
       error "file '$fname' not found"
