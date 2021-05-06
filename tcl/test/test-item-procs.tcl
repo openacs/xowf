@@ -159,7 +159,7 @@ namespace eval ::xowf::test {
                        -update [subst {
                            _title "Sample Inclass Exam"
                            _nls_language $locale
-                           question $testfolder/en:sample_mc_0
+                           question $testfolder/${lang}:sample_mc_0
                        }]]
             aa_log "inclass exam created d=[ns_quotehtml $d]"
 
