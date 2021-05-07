@@ -115,7 +115,7 @@ namespace eval ::xowf::test {
                 -update [subst {
                     _title "Sample Text Interaction"
                     _name sample_text_0
-                    _nls_language $locale
+                    _nls_language en_US
                     question.points 4
                     question.interaction.text "Given is a very complex situation.<p> How can this be solved?"
                 }]
@@ -134,7 +134,7 @@ namespace eval ::xowf::test {
                 -update [subst {
                     _title "Sample MC Interaction"
                     _name sample_mc_0
-                    _nls_language $locale
+                    _nls_language en_US
                     question.points 3
                     question.shuffle peruser
                     question.interaction.text "Which of the following colors are used in a traffic lights?"
@@ -158,8 +158,8 @@ namespace eval ::xowf::test {
                        -form_name en:inclass-exam.wf \
                        -update [subst {
                            _title "Sample Inclass Exam"
-                           _nls_language $locale
-                           question $testfolder/${lang}:sample_mc_0
+                           _nls_language en_US
+                           question $testfolder/en:sample_mc_0
                        }]]
             aa_log "inclass exam created d=[ns_quotehtml $d]"
 
@@ -167,7 +167,8 @@ namespace eval ::xowf::test {
             aa_section "Create exam with the selected question"
             ###########################################################
 
-            set page_name [dict get $d page_info stripped_name]
+            #set page_name [dict get $d page_info stripped_name]
+            set page_name [dict get $d page_info link]
             set d [::xowiki::test::edit_form_page \
                        -last_request $d \
                        -path $testfolder/$page_name \
