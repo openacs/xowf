@@ -188,15 +188,15 @@ div.reorder_interaction li.incorrect
 div.text_interaction div.textarea span.match-contains,
 div.short_text_interaction div.textarea span.match-contains,
 div.short_text_interaction div.text span.match-contains {
-    background: #DDFF99; /*#FFFFAA;*/
-    margin: 0px 2px;  /* otherwise two spans separated by space merge visually */
+    background: #DDFF99 !important; /* Needed for printing, bootstrap.css clears background otherwise */
+    margin: 0px 2px;                /* Otherwise two spans separated by space merge visually */
 }
 
 div.text_interaction div.textarea span.match-contains-not,
 div.short_text_interaction div.textarea span.match-contains-not,
 div.short_text_interaction div.text span.match-contains-not {
-    background: #FFDDA0; /*#FFFFAA;*/
-    margin: 0px 2px;  /* otherwise two spans separated by space merge visually */
+    background: #FFDDA0 !important; /* Needed for printing, bootstrap.css clears background otherwise */
+    margin: 0px 2px;                /* Otherwise two spans separated by space merge visually */
 }
 
 div.short_text_interaction div.description {
