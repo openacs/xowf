@@ -2365,7 +2365,7 @@ namespace eval ::xowf::test_item {
 
       return $submissions
     }
-    
+
     #----------------------------------------------------------------------
     # Class:  Answer_manager
     # Method: render_print_button
@@ -2393,7 +2393,7 @@ namespace eval ::xowf::test_item {
         [template::collect_body_scripts]
       }]
     }
-    
+
     #----------------------------------------------------------------------
     # Class:  Answer_manager
     # Method: render_submission=exam_protocol
@@ -2645,7 +2645,7 @@ namespace eval ::xowf::test_item {
           set runtime_panel_view "default"
         }
       }
-      
+
       if {$do_stream} {
         # ns_log notice STREAM-[info level]-$::template::parse_level
         #
@@ -2681,11 +2681,11 @@ namespace eval ::xowf::test_item {
       #
       $items orderby online-exam-userName
       foreach submission [$items children] {
-       
+
         set html [:render_submission=exam_protocol \
                       -submission $submission \
                       -wf $wf \
-                      -examWf $examWf \                      
+                      -examWf $examWf \
                       -autograde $autograde \
                       -combined_form_info $combined_form_info \
                       -filter_id $filter_id \
