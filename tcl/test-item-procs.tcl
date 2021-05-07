@@ -540,13 +540,17 @@ namespace eval ::xowiki::formfield {
       {text  {$widget,label=#xowf.exercise-text#,plugins=OacsFs}}
       {lines {number,form_item_wrapper_CSSclass=form-inline,min=1,default=10,label=#xowf.answer_lines#}}
       {columns {number,form_item_wrapper_CSSclass=form-inline,min=1,max=80,default=60,label=#xowf.answer_columns#}}
+      {attachments {[:attachments_widget ${:nr_attachments}]}}
       [:correct_when_spec]
     }]
     set :__initialized 1
   }
 
   text_interaction instproc convert_to_internal {} {
+    next
+
     set intro_text [:get_named_sub_component_value text]
+    append intro_text [:text_attachments]
 
     dict set fc_dict rows [:get_named_sub_component_value lines]
     dict set fc_dict cols [:get_named_sub_component_value columns]
