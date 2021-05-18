@@ -2263,6 +2263,7 @@ namespace eval ::xowf::test_item {
     ########################################################################
     :method render_proctor_images {
       {-submission:object}
+      {-revisions}
       {-examWf:object}
       {-revision_id}
     } {
@@ -2499,6 +2500,7 @@ namespace eval ::xowf::test_item {
       if {$filter_id ne "" && [$examWf property proctoring] eq "t"} {
         set markup [:render_proctor_images \
                         -submission $submission \
+                        -revisions $revisions \
                         -examWf $examWf \
                         -revision_id $revision_id]
         set question_form [subst {
@@ -4582,6 +4584,10 @@ namespace eval ::xowiki::formfield {
         dict set d shuffle ${:shuffle_kind}
         #ns_log warning "describe: $d"
       }
+      ::xowiki::formfield::textarea {
+        set type Text
+      }
+      
       default {
         set type [:info class]
         ns_log warning "describe: class [:info class] not handled"
