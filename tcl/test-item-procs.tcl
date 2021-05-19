@@ -4302,6 +4302,8 @@ namespace eval ::xowf::test_item {
           </tr>}]
       }
       append HTML "</table></div></div></div>\n"
+
+      return $HTML
     }
 
     :public method exam_info_block {-combined_form_info obj} {
