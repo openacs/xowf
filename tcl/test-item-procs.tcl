@@ -4239,8 +4239,6 @@ namespace eval ::xowf::test_item {
       #
       # Provide a summary of all questions of an exam.
       #
-      set href [$obj pretty_link -query m=print-answers]
-      set form_objs [:question_objs $obj]
       set HTML [subst {
         <div class="panel panel-default">
         <div class="panel-heading">#xowf.exam_summary#</div>
@@ -4250,6 +4248,20 @@ namespace eval ::xowf::test_item {
         </div>
       }]
 
+      append HTML [:question_info_block $obj]
+      set return_url [::xo::cc query_parameter local_return_url:localurl [$obj pretty_link]]
+      append HTML "<hr><p><a class='btn btn-default' href='$return_url'>#xowiki.back#</a></p>\n"
+
+      return $HTML
+    }
+
+
+    :public method question_info_block {obj} {
+      #
+      # Provide question info block.
+      #
+      set href [$obj pretty_link -query m=print-answers]
+      set form_objs [:question_objs $obj]
       append HTML [subst {
         <div class="panel panel-default">
         <div class="panel-heading">#xowf.question_summary#</div>
@@ -4290,11 +4302,6 @@ namespace eval ::xowf::test_item {
           </tr>}]
       }
       append HTML "</table></div></div></div>\n"
-
-      set return_url [::xo::cc query_parameter local_return_url:localurl [$obj pretty_link]]
-      append HTML "<hr><p><a class='btn btn-default' href='$return_url'>#xowiki.back#</a></p>\n"
-
-      return $HTML
     }
 
     :public method exam_info_block {-combined_form_info obj} {
