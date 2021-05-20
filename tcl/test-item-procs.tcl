@@ -3532,6 +3532,7 @@ namespace eval ::xowf::test_item {
     #
     #   - describe_form
     #   - exam_summary
+    #   - question_info_block 
     #
     :public method goto_page {obj:object position} {
       #ns_log notice "===== goto_page $position"
