@@ -3532,7 +3532,7 @@ namespace eval ::xowf::test_item {
     #
     #   - describe_form
     #   - exam_summary
-    #   - question_info_block 
+    #   - question_info_block
     #
     :public method goto_page {obj:object position} {
       #ns_log notice "===== goto_page $position"
@@ -3657,6 +3657,15 @@ namespace eval ::xowf::test_item {
                              -forms $questionNames]
 
       #ns_log notice "load_question_objs called with $obj $names -> $questionForms"
+      if {[llength $questionForms] < [llength $questions]} {
+        if {[llength $questions] == 1} {
+          ns_log warning "load_question_objs: question '$questions' could not be loaded"
+        } else {
+          set loaded [llength $questionForms]
+          set out_of [llength $questions]
+          ns_log warning "load_question_objs: only $loaded out of $out_of from '$questions' could be loaded"
+        }
+      }
       return $questionForms
     }
 
@@ -3809,10 +3818,10 @@ namespace eval ::xowf::test_item {
       set seed [lindex [$obj property seeds] $position]
 
       #ns_log notice "CHECK-AA $form_name seed <$seed> // seeds <[$obj property seeds]>"
-      if {$seed eq ""} {
+      set substvalues [$form_obj property substvalues]
+      if {$seed eq "" && $substvalues ne ""} {
         ns_log warning "item_substitute_markup cannot substitute percent variables in $form_name"
       } else {
-        set substvalues [$form_obj property substvalues]
         if {$substvalues ne ""} {
           set html [:percent_substitute \
                         -seed $seed \
@@ -3895,7 +3904,7 @@ namespace eval ::xowf::test_item {
         set minutes [:question_property $form_obj minutes]
         set points [:question_property $form_obj points]
         if {$points eq ""} {
-          ns_log notice "[$form_obj name]: NO POINTS, default to minutes $minutes"
+          #ns_log notice "[$form_obj name]: NO POINTS, default to minutes $minutes"
           set points $minutes
         }
         set time_budget [$obj property time_budget]
@@ -4453,7 +4462,7 @@ namespace eval ::xowf::test_item {
       }
       set target_time [clock format [expr {int($base_clock + $total_minutes * 60)}] \
                            -format %Y-%m-%dT%H:%M:%S]
-      ns_log notice "exam_target_time $base_time base clock $base_clock + total_minutes $total_minutes = ${target_time}.$secfrac"
+      #ns_log notice "exam_target_time $base_time base clock $base_clock + total_minutes $total_minutes = ${target_time}.$secfrac"
       return ${target_time}.$secfrac
     }
 
@@ -4597,7 +4606,7 @@ namespace eval ::xowiki::formfield {
       ::xowiki::formfield::textarea {
         set type Text
       }
-      
+
       default {
         set type [:info class]
         ns_log warning "describe: class [:info class] not handled"
