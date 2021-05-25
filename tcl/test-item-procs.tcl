@@ -2215,7 +2215,7 @@ namespace eval ::xowf::test_item {
                                  name_to_question_obj_dict \
                                  [dict get $combined_form_info question_objs]]
       #
-      # Sort items by user name
+      # Sort items by username
       #
       $submissions orderby online-exam-userName
 
