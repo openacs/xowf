@@ -275,7 +275,7 @@ Action instproc unpublish_link {obj} {
     }
   }
 
-  set www_method [xo::cc query_parameter m]
+  set www_method [xo::cc query_parameter m:token]
   if {$www_method ni {edit view}} {
     set marked ""
   } else {
@@ -498,10 +498,10 @@ Action instproc unpublish_link {obj} {
     set as_student [:query_parameter as_student:boolean false]
     set d [xowf::test_item::answer_manager render_answers \
                -as_student    $as_student \
-               -filter_id     [:query_parameter id:integer ""] \
-               -creation_user [:query_parameter creation_user:integer ""] \
-               -revision_id   [:query_parameter rid:integer ""] \
-               -form_objs     [:query_parameter fos:integer ""] \
+               -filter_id     [:query_parameter id:int32 ""] \
+               -creation_user [:query_parameter creation_user:int32 ""] \
+               -revision_id   [:query_parameter rid:int32 ""] \
+               -form_objs     [:query_parameter fos:int32 ""] \
                -export        [:query_parameter export:boolean 0] \
                -grading       [:query_parameter grading:alnum ""] \
                -with_grading_table [expr {!$as_student}] \
@@ -673,7 +673,7 @@ Action instproc unpublish_link {obj} {
     set type [${:package_id} query_parameter type:ascii ""]
     set ts   [${:package_id} query_parameter ts:integer ""]
     set ext  [${:package_id} query_parameter e:wordchar ""]
-    set user_id [${:package_id} query_parameter user_id:integer ""]
+    set user_id [${:package_id} query_parameter user_id:int32 ""]
     set proctoring_dir [proctoring::folder \
                             -object_id ${:item_id} \
                             -user_id $user_id]
@@ -728,7 +728,7 @@ Action instproc unpublish_link {obj} {
     #
     ::xowiki::includelet::personal-notification-messages message_add \
         -notification_id ${:item_id} \
-        -to_user_id [${:package_id} query_parameter user_id:integer ""] \
+        -to_user_id [${:package_id} query_parameter user_id:int32 ""] \
         -payload [list msg [ns_queryget msg] \
                       from [xo::cc user_id] \
                       urgency [ns_queryget urgency]]
