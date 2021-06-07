@@ -3101,6 +3101,7 @@ namespace eval ::xowf::test_item {
       # dialogs.
       #
       set dialogs ""
+      set user_list {}
       foreach p [$items children] {
 
         #foreach ff_obj $answer_form_field_objs {
@@ -3118,6 +3119,7 @@ namespace eval ::xowf::test_item {
                                modal_message_dialog -to_user_id [$p creation_user]]
           append dialogs [dict get $dialog_info dialog] \n
           set notification_dialog_button [dict get $dialog_info link]
+          lappend user_list [$p creation_user]
         } else {
           set notification_dialog_button ""
         }
@@ -3139,8 +3141,18 @@ namespace eval ::xowf::test_item {
 
       if {$state eq "done"} {
         set uc {tcl {[$p state] ne "done"}}
+        set bulk_notification_HTML ""
       } else {
         set uc {tcl {false}}
+
+        #
+        # Provide bulk notification message dialog to send message to all users
+        #
+        set dialog_info [::xowiki::includelet::personal-notification-messages \
+                            modal_message_dialog -to_user_id $user_list]
+        append dialogs [dict get $dialog_info dialog] \n
+        set notification_dialog_button [dict get $dialog_info link]
+        set bulk_notification_HTML "<div class='bulk-personal-notification-message'>$notification_dialog_button #xowiki.Send_message_to# [llength $user_list] #xowf.Participants#</div>"
       }
       #
       # Render table widget with extended properties.
@@ -3158,7 +3170,7 @@ namespace eval ::xowf::test_item {
                     -return_url_att local_return_url \
                    ]
       $table_widget destroy
-      return $dialogs$HTML
+      return $dialogs$HTML$bulk_notification_HTML
     }
 
     #----------------------------------------------------------------------

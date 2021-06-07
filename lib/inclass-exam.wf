@@ -728,10 +728,10 @@ Action instproc unpublish_link {obj} {
     #
     ::xowiki::includelet::personal-notification-messages message_add \
         -notification_id ${:item_id} \
-        -to_user_id [${:package_id} query_parameter user_id:int32 ""] \
-        -payload [list msg [ns_queryget msg] \
+        -to_user_id [${:package_id} form_parameter to_user_id ""] \
+        -payload [list msg [${:package_id} form_parameter msg] \
                       from [xo::cc user_id] \
-                      urgency [ns_queryget urgency]]
+                      urgency [${:package_id} form_parameter urgency]]
 
     ns_return 200 text/plain ok
     ad_script_abort
