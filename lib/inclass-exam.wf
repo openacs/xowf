@@ -522,6 +522,7 @@ Action instproc unpublish_link {obj} {
     if {$do_stream} {
       ns_write [lang::util::localize $HTML]
       set HTML ""
+      set wf [xowf::test_item::answer_manager get_answer_wf [self]]
        [$wf package_id] set __continuation ad_progress_bar_end
       return ""
     } else {
