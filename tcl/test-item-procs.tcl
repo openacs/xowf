@@ -3894,7 +3894,7 @@ namespace eval ::xowf::test_item {
       {-with_points:switch false}
       {-titleless_form:switch false}
       {-obj:object}
-      {-user_answers:object:object,0..1 ""}
+      {-user_answers:object,0..1 ""}
       form_objs
     } {
       #
