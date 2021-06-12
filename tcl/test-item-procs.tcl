@@ -1782,11 +1782,11 @@ namespace eval ::xowf::test_item {
       # Get the duration from a set of revisions and return a dict
       # containing "from", "fromClock","to", "toClock", and "duration"
       #
-
       set first [lindex $revision_sets 0]
       set last [lindex $revision_sets end]
       set fromClock [clock scan [::xo::db::tcl_date [ns_set get $first creation_date] tz]]
-      set toClock [clock scan [::xo::db::tcl_date [ns_set get $last creation_date] tz]]
+      #set toClock0 [clock scan [::xo::db::tcl_date [ns_set get $last creation_date] tz]]
+      set toClock [clock scan [::xo::db::tcl_date [ns_set get $last last_modified] tz]]
       dict set r fromClock $fromClock
       dict set r toClock $toClock
       dict set r from [clock format $fromClock -format "%H:%M:%S"]
@@ -1859,7 +1859,7 @@ namespace eval ::xowf::test_item {
       set result ""
       foreach ps $revision_sets {
         if {$state eq [ns_set get $ps state]} {
-          set result [ns_set get $ps creation_date]
+          set result [ns_set get $ps last_modified]
         }
       }
       return $result
@@ -1911,7 +1911,7 @@ namespace eval ::xowf::test_item {
           set from [ns_set get $ps creation_date]
           set until ""
         } elseif {$until eq "" && $current_state ne $state && $from ne ""} {
-          set until [ns_set get $ps creation_date]
+          set until [ns_set get $ps last_modified]
           set last_from $from
           set from ""
         }
@@ -2287,7 +2287,7 @@ namespace eval ::xowf::test_item {
       }
 
       set start_date  [ns_set get [lindex $filtered_revisions 0] creation_date]
-      set end_date    [ns_set get [lindex $filtered_revisions end] creation_date]
+      set end_date    [ns_set get [lindex $filtered_revisions end] last_modified]
       set start_clock [clock scan [::xo::db::tcl_date $start_date tz_var]]
       set end_clock   [clock scan [::xo::db::tcl_date $end_date tz_var]]
 

@@ -2152,7 +2152,8 @@ namespace eval ::xowf {
     set item_id ${:item_id}
     if {$with_instance_attributes} {
       set revision_sets [::xo::dc sets -prepare integer wf_revisions {
-        SELECT revision_id, creation_date, creation_user, creation_ip, state, assignee, instance_attributes
+        SELECT revision_id, creation_date, last_modified, creation_user,
+               creation_ip, state, assignee, instance_attributes
         FROM cr_revisions cr, acs_objects o, xowiki_form_page x, xowiki_page_instance pi
         WHERE cr.item_id = :item_id
         AND   o.object_id = cr.revision_id
@@ -2162,7 +2163,7 @@ namespace eval ::xowf {
       }]
     } else {
       set revision_sets [::xo::dc sets -prepare integer wf_revisions {
-        SELECT revision_id, creation_date, creation_user, creation_ip, state, assignee
+        SELECT revision_id, creation_date, last_modified, creation_user, creation_ip, state, assignee
         FROM cr_revisions cr, acs_objects o, xowiki_form_page x
         WHERE cr.item_id = :item_id
         AND   o.object_id = cr.revision_id
