@@ -107,7 +107,17 @@ select proc activate {obj} {
 # publish user participation link.
 #
 publish proc activate {obj} {
-  xowf::test_item::answer_manager delete_all_answer_data $obj
+  #
+  # On the first activation of "publish", older data (e.g. from
+  # testruns) is removed. When the exam was already published before -
+  # e.g. a manual publish operation before an automatic one - NO
+  # cleanup is performed to avoid potential loss of submission data.
+  #
+  set revision_sets     [$obj get_revision_sets]
+  set published_periods [xowf::test_item::answer_manager state_periods $revision_sets -state published]
+  if {[llength $published_periods] == 0} {
+    xowf::test_item::answer_manager delete_all_answer_data $obj
+  }
   :publish_link $obj
 }
 
@@ -494,7 +504,7 @@ Action instproc unpublish_link {obj} {
   #
   :proc www-print-answers {} {
     template::head::add_link -rel stylesheet -href /resources/xowf/test-item.css
-    
+
     set as_student [:query_parameter as_student:boolean false]
     set d [xowf::test_item::answer_manager render_answers \
                -as_student    $as_student \
@@ -508,12 +518,12 @@ Action instproc unpublish_link {obj} {
                [self]]
 
     set do_stream [dict get $d do_stream]
-    set HTML [dict get $d HTML]    
-    
+    set HTML [dict get $d HTML]
+
     if {$do_stream == 0 && $HTML eq ""} {
       set HTML "#xowiki.no_data#"
     }
-    
+
     if {!$as_student} {
       set return_url [:query_parameter local_return_url:localurl [:pretty_link]]
       append HTML "<hr><p><a class='btn btn-default' href='$return_url'>#xowiki.back#</a></p>\n"
