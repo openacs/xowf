@@ -76,7 +76,7 @@
   <msg key="online-exam-unpublish">Close Exam</msg>
   <msg key="online-exam-republish">Open Exam again</msg>
   <msg key="online-exam-title-republish">Publish exam again, existing answers are NOT deleted.</msg>
-  <msg key="online-exam-title-publish">Publish exam (already existing answers will be deleted)</msg>
+  <msg key="online-exam-title-publish">Publish exam (clean testrun data on first publish operation)</msg>
   <msg key="online-exam-title-restart">Go back to start where questions can be selected (existing anwers will be deleted).</msg>
   <msg key="online-exam-title-select">Create a fresh Exam (will delete all answers to this exam)</msg>
 

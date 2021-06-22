@@ -1780,12 +1780,12 @@ namespace eval ::xowf::test_item {
     :public method get_duration {{-exam_published_time ""} revision_sets} {
       #
       # Get the duration from a set of revisions and return a dict
-      # containing "from", "fromClock","to", "toClock", and "duration"
+      # containing "from", "fromClock","to", "toClock", "seconds", and
+      # "duration".
       #
       set first [lindex $revision_sets 0]
       set last [lindex $revision_sets end]
       set fromClock [clock scan [::xo::db::tcl_date [ns_set get $first creation_date] tz]]
-      #set toClock0 [clock scan [::xo::db::tcl_date [ns_set get $last creation_date] tz]]
       set toClock [clock scan [::xo::db::tcl_date [ns_set get $last last_modified] tz]]
       dict set r fromClock $fromClock
       dict set r toClock $toClock
@@ -1793,12 +1793,14 @@ namespace eval ::xowf::test_item {
       dict set r to [clock format $toClock -format "%H:%M:%S"]
       set timeDiff [expr {$toClock - $fromClock}]
       dict set r duration "[expr {$timeDiff/60}]m [expr {$timeDiff%60}]s"
+      dict set r seconds $timeDiff
       if {$exam_published_time ne ""} {
         set examPublishedClock [clock scan [::xo::db::tcl_date $exam_published_time tz]]
         dict set r examPublishedClock $examPublishedClock
         dict set r examPublished [clock format $examPublishedClock -format "%H:%M:%S"]
         set epTimeDiff [expr {$toClock - $examPublishedClock}]
         dict set r examPublishedDuration "[expr {$epTimeDiff/60}]m [expr {$epTimeDiff%60}]s"
+        dict set r examPublishedSeconds $epTimeDiff
       }
       return $r
     }
@@ -2429,10 +2431,18 @@ namespace eval ::xowf::test_item {
       #}
 
       set revisions [$submission get_revision_sets]
-      if {[llength $revisions] <=1 } {
-        # just an initial revision
-        ns_log notice "online-exam: submission of $userName is empty. Ignoring."
-        return ""
+      if {[llength $revisions] == 1 } {
+        #
+        # We have always an initial revision. This revision might be
+        # already updated via autosave, in which case we show the
+        # content.
+        #
+        set rev [lindex $revisions 0]
+        set unmodified [string equal [ns_set get $rev last_modified] [ns_set get $rev creation_date]]
+        if {$unmodified} {
+          ns_log notice "online-exam: submission of $userName is empty. Ignoring."
+          return ""
+        }
       }
 
       #
@@ -2985,8 +2995,7 @@ namespace eval ::xowf::test_item {
         }
 
         set duration [:get_duration [$p get_revision_sets]]
-        $p set_property -new 1 _online-exam-seconds \
-            [expr {[dict get $duration toClock] - [dict get $duration fromClock]}]
+        $p set_property -new 1 _online-exam-seconds [dict get $duration seconds]
 
         # if {0 && $autograde && $total_points > 0} {
         #   set final_score [expr {$total_score/$total_points}]
@@ -3129,9 +3138,7 @@ namespace eval ::xowf::test_item {
         # "_online-exam-*" values to ease rendering:
         #
         set duration [:get_duration [$p get_revision_sets]]
-        $p set_property -new 1 _online-exam-seconds \
-            [expr {[dict get $duration toClock] - [dict get $duration fromClock]}]
-
+        $p set_property -new 1 _online-exam-seconds [dict get $duration seconds]
         $p set online-exam-fullName "$notification_dialog_button [$p set online-exam-fullName]"
       }
 
@@ -3544,6 +3551,7 @@ namespace eval ::xowf::test_item {
     #   - total_points
     #   - total_minutes_for_exam
     #   - exam_target_time
+    #   - exam_base_time
     #
     #   - describe_form
     #   - exam_summary
@@ -4479,6 +4487,21 @@ namespace eval ::xowf::test_item {
                            -format %Y-%m-%dT%H:%M:%S]
       #ns_log notice "exam_target_time $base_time base clock $base_clock + total_minutes $total_minutes = ${target_time}.$secfrac"
       return ${target_time}.$secfrac
+    }
+
+    :public method exam_base_time {-manager:object -answer_obj:object} {
+      #
+      # Calculate the exam base time for a student. This is the time
+      # reference, when the timer starts. Depending on whether the
+      # exam is synchronous, the time start is either the time when
+      # the exam is opened, or when the student starts the exam.
+      #
+      # @return time string as returned from the database
+      #
+      set synchronized [$manager property synchronized 0]
+      return [expr { $synchronized
+                     ? [$parent_obj last_modified]
+                     : [$answer_obj creation_date]}]
     }
 
     :public method current_question_form {

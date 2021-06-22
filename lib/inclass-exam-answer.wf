@@ -366,12 +366,10 @@ proc done_form_loader {ctx form_name} {
   :plain_template -prevent_multiple_tabs $prevent_multiple_tabs $obj
 
   if {[$parent_obj state] eq "published" && [$obj state] ne "done"} {
-    set synchronized [$parent_obj property synchronized 0]
+    set base_time [${:QM} exam_base_time -manager $parent_obj -answer_obj $obj]
     set target_time [${:QM} exam_target_time \
                          -manager $parent_obj \
-                         -base_time [expr { $synchronized
-                                            ? [$parent_obj last_modified]
-                                            : [$obj creation_date]}] \
+                         -base_time $base_time \
                         ]
     set url_poll [$obj pretty_link -query m=message-poll]
     set url_dismiss [$obj pretty_link -query m=message-dismiss]
@@ -460,7 +458,7 @@ proc done_form_loader {ctx form_name} {
     # by the instance attributes might deviate from the position,
     # based on which the actual form data was generated. So, for
     # validating and updating one has to change the position to the
-    # one from the form data (when this differs). Note, that the
+    # one from the form data (when this differs). Note that the
     # randomizer depends on property "position" as well.
     #
     set current_item_nr [$obj form_parameter __current_item_nr]
@@ -536,7 +534,8 @@ proc done_form_loader {ctx form_name} {
     #
     set current_position0 [:property position]
     set current_position [$container current_position [self]]
-    ns_log notice "============ object-specific old current_position $current_position0 new current_position $current_position"
+    #ns_log notice "============ object-specific old " \
+        "current_position $current_position0 new current_position $current_position"
     set actions {}
 
     if {${:state} ne "done"} {
@@ -572,10 +571,26 @@ proc done_form_loader {ctx form_name} {
     # Reject autosave in case the exam was closed already.
     #
     set exam_info [[[:wf_context] wf_container] exam_info [self]]
-    if {[dict get $exam_info open]} {
+    set autosaveAllowed [dict get $exam_info open]
+    if {$autosaveAllowed} {
+      set parent_obj [::xo::db::CrClass get_instance_from_db -item_id ${:parent_id}]
+      set base_time [${:QM} exam_base_time -manager $parent_obj -answer_obj [self]]
+      set base_clock [clock scan [::xo::db::tcl_date $base_time tz secfrac]]
+
+      set seconds_working [expr {[clock seconds] - $base_clock}]
+      set total_minutes [${:QM} total_minutes_for_exam -manager $parent_obj]
+      set timeLeft [expr {$total_minutes*60 - $seconds_working}]
+      if {$timeLeft < 0} {
+        set autosaveAllowed 0
+        set reason "time used up (time left $timeLeft seconds)"
+      }
+    } else {
+      set reason "exam closed"
+    }
+    if {$autosaveAllowed} {
       next
     } else {
-      ns_log notice "INCLASS inclass-exam autosave rejected"
+      ns_log notice "inclass-exam autosave rejected: $reason"
       ns_return 200 text/plain "not ok"
       ad_script_abort
     }
