@@ -4690,19 +4690,24 @@ namespace eval ::xowf::test_item::grading {
       # Return a numeric grade based on achieved_points dict and
       # percentage_mapping. On invalid data, return 0.
       #
+      # Important dict members of "achieved_points":
+      #  - achievedPoints: points that the student has achieved in her exam
+      #  - achievablePoints: points that the student could have achieved so far
+      #  - totalPoints: points that the student can achieve when finishing the exam
+      #
       #     achieved_points:    {achievedPoints 4.0 achievablePoints 4 totalPoints 4}
       #     percentage_mapping: {50.0 60.0 70.0 80.0}
       #
-      if {![dict exists $achieved_points achievablePoints] && [dict exists $achieved_points totalPoints]} {
-        ns_log warning "test_item::grading legacy call, use 'achievablePoints' instead of 'totalPoints'"
-        dict set achieved_points achievablePoints [dict get $achieved_points totalPoints]
-      }
+      #if {![dict exists $achieved_points achievablePoints] && [dict exists $achieved_points totalPoints]} {
+      #  ns_log warning "test_item::grading legacy call, use 'achievablePoints' instead of 'totalPoints'"
+      #  dict set achieved_points achievablePoints [dict get $achieved_points totalPoints]
+      #}
       if {![info exists percentage]} {
-        if {[dict exists $achieved_points achievablePoints] && [dict get $achieved_points achievablePoints] > 0} {
+        if {[dict exists $achieved_points totalPoints] && [dict get $achieved_points totalPoints] > 0} {
           set percentage \
               [format %.2f [expr {
                                   ($points*100/
-                                   [dict get $achieved_points achievablePoints]) + 0.00001
+                                   [dict get $achieved_points totalPoints]) + 0.00001
                                 }]]
         }
       } else {
@@ -4746,6 +4751,7 @@ namespace eval ::xowf::test_item::grading {
       foreach key {
         achievedPoints
         achievablePoints
+        totalPoints
       } {
         if {![dict exists $achieved_points $key]} {
           ns_log warning "test_item::grading dict without $key: $achieved_points"
@@ -4757,7 +4763,7 @@ namespace eval ::xowf::test_item::grading {
         dict set achieved_points achievedPointsRounded [format %.0f $achievedPoints]
         set achievablePoints [format %.2f $achievablePoints]
         set achievedPoints   [format %.2f $achievedPoints]
-        set percentage  [format %.2f [expr {$achievablePoints > 0 ? ($achievedPoints*100.0/$achievablePoints) : 0}]]
+        set percentage  [format %.2f [expr {$totalPoints > 0 ? ($achievedPoints*100.0/$totalPoints) : 0}]]
         dict set achieved_points percentage $percentage
         dict set achieved_points percentageRounded [format %.0f $percentage]
       }
@@ -4773,7 +4779,7 @@ namespace eval ::xowf::test_item::grading {
       set achieved_points  [:complete_dict $achieved_points]
       set grade            [:grade -achieved_points $achieved_points]
       dict with achieved_points {
-        set panelHTML [_ xowf.panel_achievied_points_wi1]
+        set panelHTML [_ xowf.panel_achieved_points_wi1]
         return [list panel $panelHTML csv [subst {$achievedPoints\t$achievedPointsRounded\t$percentage%\t$grade}]]
       }
     }
@@ -4793,7 +4799,7 @@ namespace eval ::xowf::test_item::grading {
       set achieved_points  [:complete_dict $achieved_points]
       set grade            [:grade -achieved_points $achieved_points]
       dict with achieved_points {
-        set panelHTML [_ xowf.panel_achievied_points_wi1p]
+        set panelHTML [_ xowf.panel_achieved_points_wi1p]
         return [list panel $panelHTML csv [subst {$achievedPoints\t$percentage%\t$percentageRounded%\t$grade}]]
       }
     }
@@ -4815,7 +4821,7 @@ namespace eval ::xowf::test_item::grading {
         set achieved_points  [:complete_dict $achieved_points]
         set grade            [:grade -achieved_points $achieved_points]
         dict with achieved_points {
-          set panelHTML [_ xowf.panel_achievied_points_wi1_noround]
+          set panelHTML [_ xowf.panel_achieved_points_wi1_noround]
           return [list panel $panelHTML csv [subst {$achievedPoints\t$percentage%\t$grade}]]
         }
       }

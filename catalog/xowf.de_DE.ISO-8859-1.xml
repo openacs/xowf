@@ -197,9 +197,9 @@
   <msg key="exam_review_not_possible">automatische Einsicht nicht möglich</msg>
   <msg key="randomization_for_exam_ok">Randomisierung für Prüfung geeignet</msg>
   <msg key="randomization_for_exam_not_ok">Randomisierung für Prüfung nicht geeignet (keine Zufallsauswahl "immer" verwenden)</msg>
-  <msg key="panel_achievied_points_wi1">%achievedPoints% (gerundet %achievedPointsRounded%) von möglichen %achievablePoints% Punkten, %percentage%%, Note: %grade%</msg>
-  <msg key="panel_achievied_points_wi1p">%achievedPoints% von möglichen %achievablePoints% Punkten, %percentage%% (gerundet %percentageRounded%%), Note: %grade%</msg>
-  <msg key="panel_achievied_points_wi1_noround">%achievedPoints% von möglichen %achievablePoints% Punkten, %percentage%%, Note: %grade%</msg>
+  <msg key="panel_achieved_points_wi1">%achievedPoints% (gerundet %achievedPointsRounded%) von möglichen %totalPoints% Punkten, %percentage%%, Note: %grade%</msg>
+  <msg key="panel_achieved_points_wi1p">%achievedPoints% von möglichen %totalPoints% Punkten, %percentage%% (gerundet %percentageRounded%%), Note: %grade%</msg>
+  <msg key="panel_achieved_points_wi1_noround">%achievedPoints% von möglichen %totalPoints% Punkten, %percentage%%, Note: %grade%</msg>
 
   <msg key="test_item_name-validate_name">Name enthält zumindest ein ungültiges Zeichen</msg>
 

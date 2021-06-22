@@ -217,9 +217,9 @@
   <msg key="randomization_for_exam_ok">randomization for exam ok</msg>
   <msg key="randomization_for_exam_not_ok">randomization for exam NOT ok ("always" should not be used)</msg>
 
-  <msg key="panel_achievied_points_wi1">%achievedPoints% (rounded %achievedPointsRounded%) of possible %achievablePoints% points, %percentage%%, grade: %grade%</msg>
-  <msg key="panel_achievied_points_wi1p">%achievedPoints% of possible %achievablePoints% points, %percentage%% (rounded %percentageRounded%%), grade: %grade%</msg>
-  <msg key="panel_achievied_points_wi1_noround">%achievedPoints% of possible %achievablePoints% points, %percentage%%, grade: %grade%</msg>
+  <msg key="panel_achieved_points_wi1">%achievedPoints% (rounded %achievedPointsRounded%) of possible %totalPoints% points, %percentage%%, grade: %grade%</msg>
+  <msg key="panel_achieved_points_wi1p">%achievedPoints% of possible %totalPoints% points, %percentage%% (rounded %percentageRounded%%), grade: %grade%</msg>
+  <msg key="panel_achieved_points_wi1_noround">%achievedPoints% of possible %totalPoints% points, %percentage%%, grade: %grade%</msg>
   <msg key="test_item_name-validate_name">Name contains at least one invalid character</msg>
 
   <msg key="Detail_configuration">Detailed Configuration</msg>

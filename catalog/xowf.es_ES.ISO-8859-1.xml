@@ -216,8 +216,8 @@
   <msg key="randomization_for_exam_ok">aleatorización para el examen correcta</msg>
   <msg key="randomization_for_exam_not_ok">aleatorización para el examen incorrecta ("siempre" no debería usarse)</msg>
 
-  <msg key="panel_achievied_points_wi1">%achievedPoints% (redondeado%rounded%) de %totalPoints% puntos posibles, %percentage%%, nota: %grade%</msg>
-  <msg key="panel_achievied_points_wi1_noround">%achievedPoints% de %totalPoints% puntos posibles, %percentage%%, nota: %grade%</msg>
+  <msg key="panel_achieved_points_wi1">%achievedPoints% (redondeado%rounded%) de %totalPoints% puntos posibles, %percentage%%, nota: %grade%</msg>
+  <msg key="panel_achieved_points_wi1_noround">%achievedPoints% de %totalPoints% puntos posibles, %percentage%%, nota: %grade%</msg>
   <msg key="test_item_name-validate_name">Nombre contiene al menos un carácter inválido</msg>
 
   <msg key="Detail_configuration">Configuración detallada</msg>
