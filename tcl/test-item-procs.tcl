@@ -2605,7 +2605,7 @@ namespace eval ::xowf::test_item {
       # right now).
       #
       if {$grading eq ""} {
-        set grading [expr {$totalPoints < 40 ? "wi1_noround" : "wi1"}]
+        set grading [expr {$totalPoints < 40 ? "wi1_noround" : "wi1p"}]
       }
 
       set grading_scheme ::xowf::test_item::grading::$grading
