@@ -201,7 +201,7 @@ namespace eval ::xowf::test {
             }
 
             ###########################################################
-            aa_section "Go to answer page"
+            aa_section "Go to answer page and fill out exam"
             ###########################################################
 
             set d1 [acs::test::follow_link -last_request $d -label $answer_link]
@@ -225,6 +225,17 @@ namespace eval ::xowf::test {
                        }]
 
             ###########################################################
+            aa_section "Check participants during exam"
+            ###########################################################
+
+            set d1 [acs::test::http \
+                       -last_request $d \
+                       [export_vars -base $instance/$testfolder/$page_name {{m print-participants}}]]
+            acs::test::reply_has_status_code $d1 200
+            aa_log "check participants d=[ns_quotehtml $d1]"
+            #ns_log notice "participants [dict get $d1 body]"
+
+            ###########################################################
             aa_section "Close exam"
             ###########################################################
 
@@ -245,6 +256,17 @@ namespace eval ::xowf::test {
             acs::test::reply_has_status_code $d 200
 
             aa_log "inclass exam edited d=[ns_quotehtml $d]"
+
+            ###########################################################
+            aa_section "Check participants after exam"
+            ###########################################################
+
+            set d [acs::test::http \
+                       -last_request $d \
+                       [export_vars -base $instance/$testfolder/$page_name {{m print-participants}}] \
+                      ]
+            aa_log "inclass exam edited d=[ns_quotehtml $d]"
+            acs::test::reply_has_status_code $d1 200
 
         } on error {errorMsg} {
             aa_true "Error msg: $errorMsg" 0
