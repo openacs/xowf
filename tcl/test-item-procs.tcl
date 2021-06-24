@@ -4498,10 +4498,13 @@ namespace eval ::xowf::test_item {
       #
       # @return time string as returned from the database
       #
-      set synchronized [$manager property synchronized 0]
-      return [expr { $synchronized
-                     ? [$parent_obj last_modified]
-                     : [$answer_obj creation_date]}]
+      if {[$manager property synchronized 0]} {
+        set parent_obj [::xo::db::CrClass get_instance_from_db -item_id [$answer_obj parent_id]]
+        set base_time [$parent_obj last_modified]
+      } else {
+        set base_time [$answer_obj creation_date]
+      }
+      return $base_time
     }
 
     :public method current_question_form {
