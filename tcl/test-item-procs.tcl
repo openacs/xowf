@@ -2403,6 +2403,51 @@ namespace eval ::xowf::test_item {
 
     #----------------------------------------------------------------------
     # Class:  Answer_manager
+    # Method: render_full_submission_form
+    #----------------------------------------------------------------------
+    :method render_full_submission_form {
+      -wf:object
+      -submission:object
+      -form_objs
+    } {
+      #
+      # Compute the HTML of the full submission with all form fields
+      # instantiated according to randomization.
+      #
+      # @param form_objs used for filtering questions
+      # @returns HTML of question form object containing all (wanted) questions
+      #
+
+      #
+      # Flush all form fields, since their contents depends on
+      # randomization. In later versions, we should introduce a more
+      # intelligent caching respecting randomization.
+      #
+      foreach f [::xowiki::formfield::FormField info instances -closure] {
+        #ns_log notice "FF could DESTROY $f [$f name]"
+        if {[string match *_ [$f name]]} {
+          #ns_log notice "FF DESTROY $f [$f name]"
+          $f destroy
+        }
+      }
+      $wf form_field_flush_cache
+
+      #
+      # The call to "render_content" calls actually the
+      # "summary_form" of online/inclass-exam-answer.wf when the submit
+      # instance is in state "done". We set the __feedback_mode to
+      # get the auto-correction included.
+      #
+      xo::cc eval_as_user -user_id [$submission creation_user] {
+        $submission set __feedback_mode 2
+        $submission set __form_objs $form_objs
+        set question_form [$submission render_content]
+      }
+      return $question_form
+    }
+
+    #----------------------------------------------------------------------
+    # Class:  Answer_manager
     # Method: render_submission=exam_protocol
     #----------------------------------------------------------------------
     :method render_submission=exam_protocol {
@@ -2445,27 +2490,10 @@ namespace eval ::xowf::test_item {
         }
       }
 
-      #
-      # The call to "render_content" calls actually the
-      # "summary_form" of online/inclass-exam-answer.wf when the submit
-      # instance is in state "done". We set the __feedback_mode to
-      # get the auto-correction included.
-      #
-      foreach f [::xowiki::formfield::FormField info instances -closure] {
-        #ns_log notice "FF could DESTROY $f [$f name]"
-        if {[string match *_ [$f name]]} {
-          #ns_log notice "FF DESTROY $f [$f name]"
-          $f destroy
-        }
-      }
-      $wf form_field_flush_cache
-
-      set achieved_points {}
-      xo::cc eval_as_user -user_id [$submission creation_user] {
-        $submission set __feedback_mode 2
-        $submission set __form_objs $form_objs
-        set question_form [$submission render_content]
-      }
+      set question_form [:render_full_submission_form \
+                             -wf $wf \
+                             -submission $submission \
+                             -form_objs $form_objs]
       #
       # Now, the question_form contains the rendered answer of the
       # student.
@@ -2478,6 +2506,8 @@ namespace eval ::xowf::test_item {
             -combined_form_info $combined_form_info \
             -recutil $recutil
       }
+
+      set achieved_points {}
       if {$with_signature || $autograde} {
         set answerAttributes [xowf::test_item::renaming_form_loader \
                                   answer_attributes [$submission instance_attributes]]
