@@ -2415,7 +2415,7 @@ namespace eval ::xowf::test_item {
       # instantiated according to randomization.
       #
       # @param form_objs used for filtering questions
-      # @returns HTML of question form object containing all (wanted) questions
+      # @return HTML of question form object containing all (wanted) questions
       #
 
       #
