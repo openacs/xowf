@@ -513,6 +513,7 @@ Action instproc unpublish_link {obj} {
                -revision_id   [:query_parameter rid:int32 ""] \
                -form_objs     [:query_parameter fos:int32 ""] \
                -export        [:query_parameter export:boolean 0] \
+               -orderby       [:query_parameter orderby:token "online-exam-userName"] \
                -grading       [:query_parameter grading:alnum ""] \
                -with_grading_table [expr {!$as_student}] \
                [self]]

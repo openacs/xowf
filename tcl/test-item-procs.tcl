@@ -2597,6 +2597,7 @@ namespace eval ::xowf::test_item {
       {-revision_id:integer,0..1 ""}
       {-form_objs:integer,0..n ""}
       {-export:boolean false}
+      {-orderby:token "online-exam-userName"}
       {-grading:alnum,0..n ""}
       {-with_grading_table:boolean false}
       examWf:object
@@ -2723,9 +2724,9 @@ namespace eval ::xowf::test_item {
       }
 
       #
-      # Iterate over the items sorted by userName.
+      # Iterate over the items sorted by orderby.
       #
-      $items orderby online-exam-userName
+      $items orderby $orderby
       foreach submission [$items children] {
 
         set html [:render_submission=exam_protocol \
