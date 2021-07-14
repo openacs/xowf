@@ -321,3 +321,12 @@ table.grading .progress-bar {
 form.Form-inclass-exam div.collapse {
     margin-left: 2em;
 }
+
+
+/*
+ * Download file submission from potentially multiple exams
+ */
+
+div.xowiki-content .download-submissions {
+    margin-top: 2em;
+}

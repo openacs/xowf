@@ -139,7 +139,7 @@ namespace eval ::xowiki::formfield {
   Class create test_item_name -superclass text \
       -extend_slot_default validator name -ad_doc {
         Name sanitizer for test items
-  }
+      }
   test_item_name instproc check=name {value} {
     set valid [regexp {^[[:alnum:]:/_-]+$} $value]
     if {!$valid} {
@@ -441,7 +441,7 @@ namespace eval ::xowiki::formfield {
       if {[string is true -strict $correct]} {
         lappend if_fc "answer=t" "options={{} $input_field_name}"
       } else {
-         lappend if_fc "answer=f"
+        lappend if_fc "answer=f"
       }
       if {$value(feedback_correct) ne ""} {
         lappend if_fc "feedback_answer_correct=[::xowiki::formfield::FormField fc_encode $value(feedback_correct)]"
@@ -642,8 +642,8 @@ namespace eval ::xowiki::formfield {
       lappend answer   [:comp_correct_when_from_value [dict get $value $fieldName.correct_when]]
       lappend solution [dict get $value $fieldName.solution]
       lappend render_hints [list \
-                                  words [dict get $value $fieldName.options] \
-                                  lines [dict get $value $fieldName.lines]]
+                                words [dict get $value $fieldName.options] \
+                                lines [dict get $value $fieldName.lines]]
     }
 
     dict set fc_dict shuffle_kind [${:parent_field} get_named_sub_component_value shuffle]
@@ -1516,7 +1516,7 @@ namespace eval ::xowf::test_item {
       set export_dict ""
       set user [$submission set creation_user]
       if {![info exists ::__running_ids]} {
-         set ::__running_ids ""
+        set ::__running_ids ""
       }
       if {![dict exists $::__running_ids $user]} {
         dict set ::__running_ids $user [incr ::__running_id]
@@ -1960,9 +1960,9 @@ namespace eval ::xowf::test_item {
           }
         }
         lappend details [dict create \
-                                   attributeName $a \
-                                   achieved $points \
-                                   achievable $achievablePoints]
+                             attributeName $a \
+                             achieved $points \
+                             achievable $achievablePoints]
       }
       return [list achievedPoints $totalPoints \
                   details $details \
@@ -2448,6 +2448,66 @@ namespace eval ::xowf::test_item {
 
     #----------------------------------------------------------------------
     # Class:  Answer_manager
+    # Method: get_non_empty_file_formfields
+    #----------------------------------------------------------------------
+    :method get_non_empty_file_formfields {
+      {-submission:object}
+    } {
+      set objs [lmap {name obj} [$submission set __form_fields] {set obj}]
+
+      #
+      # Filter out the form-fields, which have a nonempty
+      # revision_id.
+      #
+      return [::xowiki::formfield::child_components \
+                  -filter {[$_ hasclass "::xowiki::formfield::file"]
+                    && [dict exists [$_ value] revision_id]
+                    && [dict get [$_ value] revision_id] ne ""} \
+                  $objs]
+    }
+
+    #----------------------------------------------------------------------
+    # Class:  Answer_manager
+    # Method: pretty_formfield_name
+    #----------------------------------------------------------------------
+    :method pretty_formfield_name {f_obj} {
+      regsub {_[.]answer([0-9]+)} [$f_obj name] {-\1} exercise_name
+      #ns_log notice "PRETTY '[$f_obj name]' -> '$exercise_name'"
+      return $exercise_name
+    }
+
+    #----------------------------------------------------------------------
+    # Class:  Answer_manager
+    # Method: export_file_submission
+    #----------------------------------------------------------------------
+    :method export_file_submission {
+      {-submission:object}
+      {-zipFile:object}
+      {-check_for_file_submission_exists:boolean false}
+    } {
+      #
+      # Get all nonempty file form-fields and add these to a zip
+      # file.  The filename is composed of the user, the exercise and
+      # the provided file-name.
+      #
+      foreach f_obj [:get_non_empty_file_formfields -submission $submission] {
+        set exercise_name [:pretty_formfield_name $f_obj]
+        foreach file_revision_id  [dict get [$f_obj value] revision_id] {
+          set file_object [::xo::db::CrClass get_instance_from_db -revision_id $file_revision_id]
+          set download_file_name ""
+          append download_file_name \
+              [$submission set online-exam-userName] "-" \
+              $exercise_name "-" \
+              [$file_object title]
+          $zipFile addFile \
+              [$file_object full_file_name] \
+              [$zipFile cget -name]/[ad_sanitize_filename $download_file_name]
+        }
+      }
+    }
+
+    #----------------------------------------------------------------------
+    # Class:  Answer_manager
     # Method: render_submission=exam_protocol
     #----------------------------------------------------------------------
     :method render_submission=exam_protocol {
@@ -2458,6 +2518,7 @@ namespace eval ::xowf::test_item {
       {-form_objs:integer,0..n ""}
       {-grading_scheme:object}
       {-recutil:object,0..1 ""}
+      {-zipFile:object,0..1 ""}
       {-revision_id:integer,0..1 ""}
       {-submission:object}
       {-totalPoints:double}
@@ -2507,6 +2568,10 @@ namespace eval ::xowf::test_item {
             -recutil $recutil
       }
 
+      if {$zipFile ne ""} {
+        :export_file_submission -submission $submission -zipFile $zipFile
+      }
+
       set achieved_points {}
       if {$with_signature || $autograde} {
         set answerAttributes [xowf::test_item::renaming_form_loader \
@@ -2545,10 +2610,10 @@ namespace eval ::xowf::test_item {
                         -revision_id $revision_id]
         set question_form [subst {
           <div class="container">
-            <div class="row">
-              <div class="col-md-6">$question_form</div>
-              <div class="col-md-6">$markup</div>
-            </div>
+          <div class="row">
+          <div class="col-md-6">$question_form</div>
+          <div class="col-md-6">$markup</div>
+          </div>
           </div>
         }]
       }
@@ -2724,6 +2789,32 @@ namespace eval ::xowf::test_item {
       }
 
       #
+      # Create zip file from file submissions
+      #
+      set create_zip_file [::xo::cc query_parameter create-file-submission-zip-file:boolean 0]
+      if {$create_zip_file} {
+        package req nx::zip
+
+        [$examWf package_id] get_lang_and_name -name [$examWf set name] lang stripped_name
+
+        if {[string equal [nx::zip::Archive info lookup parameters create name] -name]} {
+          set zipFile [nx::zip::Archive new -name [ad_sanitize_filename $stripped_name]]
+        } else {
+          set zipFile [::nx::zip::Archive new]
+          #
+          # Post-register property, since it is not yet available in
+          # this version of nx.
+          #
+          $zipFile object property name
+          $zipFile configure -name [ad_sanitize_filename $stripped_name]
+        }
+      } else {
+        set zipFile ""
+      }
+
+      set file_submission_exists 0
+
+      #
       # Iterate over the items sorted by orderby.
       #
       $items orderby $orderby
@@ -2739,6 +2830,7 @@ namespace eval ::xowf::test_item {
                       -form_objs $form_objs \
                       -grading_scheme $grading_scheme \
                       -recutil $recutil \
+                      -zipFile $zipFile \
                       -revision_id $revision_id \
                       -totalPoints $totalPoints \
                       -runtime_panel_view $runtime_panel_view \
@@ -2750,6 +2842,16 @@ namespace eval ::xowf::test_item {
         } else {
           append HTML $html
         }
+
+        #
+        # Check if we have found a file submission
+        #
+        if {!$file_submission_exists
+            && [llength [:get_non_empty_file_formfields -submission $submission]] > 0
+          } {
+          set file_submission_exists 1
+        }
+
       }
 
       if {$export} {
@@ -2758,6 +2860,38 @@ namespace eval ::xowf::test_item {
 
       if {$with_grading_table && $autograde} {
         append HTML <p>[:grading_table -csv ${:grade_csv} ${:grade_dict}]</p>
+      }
+
+      if {$create_zip_file} {
+        $zipFile ns_returnZipFile [$zipFile cget -name].zip
+        $zipFile destroy
+        ad_script_abort
+      }
+
+      #
+      # If we have already some file submission we are showing a link
+      # for bulk-downloading the submissions
+      #
+      if {$file_submission_exists} {
+        #
+        # Avoid empty entries for query parameters
+        #
+        if {[llength $form_objs] > 0} {
+          set fos $form_objs
+        }
+        foreach value {revision_id filter_id} var {rid id} {
+          if {[set $value] ne ""} {
+            set $var [set $value]
+          }
+        }
+        set href [$examWf pretty_link -query [export_vars {
+          {m print-answers} {create-file-submission-zip-file 1}
+          fos rid id
+        }]]
+        append HTML \
+            "<a href='$href'>" \
+            "<span class='download-submissions glyphicon glyphicon-download' aria-hidden='true'>" \
+            "</span> #xowf.Download_file_submissions#</a>"
       }
 
       return [list do_stream $do_stream HTML $HTML]
@@ -2796,10 +2930,11 @@ namespace eval ::xowf::test_item {
           $f make_correct
           #ns_log notice "FIELD $f [$f name] [$f info class] -> VALUE [$f set value]"
           if {[$f exists correction]} {
-             set correction [$f set correction]
+            set correction [$f set correction]
           } else {
-             set correction ""
-             ns_log warning "form-field [$f name] of type [$f info class] does not provide variable correction via 'make_correct'"
+            set correction ""
+            ns_log warning "form-field [$f name] of type [$f info class] " \
+                "does not provide variable correction via 'make_correct'"
           }
           lappend answer \
               [list name $att \
@@ -2926,12 +3061,12 @@ namespace eval ::xowf::test_item {
 
       # if {0 && $autograde} {
       #   lappend form_field_objs \
-      #       [$wf create_raw_form_field \
-      #          -name _online-exam-total-score \
-      #          -spec number,label=#xowf.Total-Score#] \
-      #       [$wf create_raw_form_field \
-      #            -name _online-exam-grade \
-      #            -spec number,label=#xowf.Grade#]
+          #       [$wf create_raw_form_field \
+          #          -name _online-exam-total-score \
+          #          -spec number,label=#xowf.Total-Score#] \
+          #       [$wf create_raw_form_field \
+          #            -name _online-exam-grade \
+          #            -spec number,label=#xowf.Grade#]
       # }
 
       lappend form_field_objs \
@@ -3189,7 +3324,7 @@ namespace eval ::xowf::test_item {
           # Provide bulk notification message dialog to send message to all users
           #
           set dialog_info [::xowiki::includelet::personal-notification-messages \
-                              modal_message_dialog -to_user_id $user_list]
+                               modal_message_dialog -to_user_id $user_list]
           append dialogs [dict get $dialog_info dialog] \n
           set notification_dialog_button [dict get $dialog_info link]
           set bulk_notification_HTML "<div class='bulk-personal-notification-message'>$notification_dialog_button #xowiki.Send_message_to# [llength $user_list] #xowf.Participants#</div>"
@@ -3306,7 +3441,7 @@ namespace eval ::xowf::test_item {
                   if (answers.length == 2 && answers[1] > 0) {
                     var disabledLinkItems = document.querySelectorAll(".list-group-item.link-disabled");
                     disabledLinkItems.forEach(function(linkItem) {
-                          linkItem.classList.remove("link-disabled");
+                      linkItem.classList.remove("link-disabled");
                     });
                   }
                 }
@@ -3406,20 +3541,20 @@ namespace eval ::xowf::test_item {
 
           if (countdown_days != 0) {
             HTML += '<span class="days">' + countdown_days + ' <b> '
-                 + (countdown_days != 1 ? '[_ xowf.Days]' : '[_ xowf.Day]')
-                 + '</b></span> ';
+            + (countdown_days != 1 ? '[_ xowf.Days]' : '[_ xowf.Day]')
+            + '</b></span> ';
           }
           if (countdown_hours != 0 || countdown_days != 0) {
             HTML += '<span class="hours">' + countdown_hours + ' <b> '
-                 + (countdown_hours != 1 ? '[_ xowf.Hours]' : '[_ xowf.Hour]')
-                 + '</b></span> ';
+            + (countdown_hours != 1 ? '[_ xowf.Hours]' : '[_ xowf.Hour]')
+            + '</b></span> ';
           }
           HTML += '<span class="minutes">' + countdown_minutes + ' <b> '
-               + (countdown_minutes != 1 ? '[_ xowf.Minutes]' : '[_ xowf.Minute]')
-               + '</b></span> '
-               + '<span class="seconds">' + countdown_seconds + ' <b> '
-               + (countdown_seconds != 1 ? '[_ xowf.Seconds]' : '[_ xowf.Second]')
-               + '</b></span> [_ xowf.remaining]' ;
+          + (countdown_minutes != 1 ? '[_ xowf.Minutes]' : '[_ xowf.Minute]')
+          + '</b></span> '
+          + '<span class="seconds">' + countdown_seconds + ' <b> '
+          + (countdown_seconds != 1 ? '[_ xowf.Seconds]' : '[_ xowf.Second]')
+          + '</b></span> [_ xowf.remaining]' ;
 
           countdown.innerHTML = HTML;
         }, 1000);
@@ -3648,7 +3783,7 @@ namespace eval ::xowf::test_item {
         for {set count 1} {$count <= $question_count} {incr count} {
           set visited_css [expr {($count - 1) in $visited ? "visited" : ""}]
           set flag_label [expr {($count - 1) in $flagged
-                                    ? " <span class='glyphicon glyphicon-flag text-danger'></span>" : ""}]
+                                ? " <span class='glyphicon glyphicon-flag text-danger'></span>" : ""}]
           set extra_css [:pagination_button_css \
                              -CSSclass "$CSSclass $visited_css" \
                              -cond [expr {$current_position == $count - 1 }] \
@@ -4009,7 +4144,7 @@ namespace eval ::xowf::test_item {
         #ns_log notice "CHECK obj $obj form_obj $form_obj parent_obj [$obj parent_id]"
 
         #append full_form \
-        #    [$form_obj substitute_markup -context_obj $form_obj [$form_obj property form]]
+            #    [$form_obj substitute_markup -context_obj $form_obj [$form_obj property form]]
 
         #ns_log notice "FORM=$full_form"
 
@@ -4441,15 +4576,15 @@ namespace eval ::xowf::test_item {
     :method total {-property:required title_infos} {
       set total 0
       foreach title_info $title_infos {
-          if {[dict exists $title_info $property]} {
-            set value [dict get $title_info  $property]
-            if {$value eq ""} {
-              ns_log notice "missing $property in '$title_info'"
-              set value 0
-            }
-            set total [expr {$total + $value}]
+        if {[dict exists $title_info $property]} {
+          set value [dict get $title_info  $property]
+          if {$value eq ""} {
+            ns_log notice "missing $property in '$title_info'"
+            set value 0
           }
+          set total [expr {$total + $value}]
         }
+      }
       return $total
     }
 

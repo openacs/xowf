@@ -238,4 +238,5 @@
   <msg key="detailed_summary">Detailed summary</msg>
   <msg key="out_of">of</msg>
   <msg key="question_structure">Structure</msg>
+  <msg key="Download_file_submissions">Download all displayed file submissions</msg>
 </message_catalog>
