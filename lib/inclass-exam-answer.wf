@@ -581,9 +581,9 @@ proc done_form_loader {ctx form_name} {
       set total_minutes [${:QM} total_minutes_for_exam -manager $parent_obj]
       set timeLeft [expr {$total_minutes*60 - $seconds_working}]
       #
-      # The autosave operation has a 10 secs delay. To allow save
-      # operations up to the last second, we accept an 10 secs overdue
-      # on autosave.
+      # The autosave operation has a 10 secs delay. To allow save operations
+      # up to the last second, we accept an 10
+      # secs overdue on autosave.
       #
       if {$timeLeft < -10} {
         set autosaveAllowed 0
