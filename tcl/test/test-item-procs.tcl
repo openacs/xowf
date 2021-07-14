@@ -157,6 +157,28 @@ namespace eval ::xowf::test {
                 }]
 
             ###########################################################
+            aa_section "Create a ShortText interaction with a file submission"
+            ###########################################################
+
+            ::xowiki::test::create_form_page \
+                -last_request $d \
+                -instance $instance \
+                -path $testfolder \
+                -parent_id $folder_id \
+                -form_name en:edit-interaction.wf \
+                -extra_url_parameter {{p.item_type ShortText}} \
+                -update [subst {
+                    _title "Sample ShortText Interaction"
+                    _name sample_st_0
+                    _nls_language en_US
+                    question.points 2
+                    question.shuffle none
+                    question.interaction.text "Write a program, which loops forever"
+                    question.interaction.answer.1.text "Please, upload your submission"
+                    question.interaction.answer.1.options "file_upload"
+                }]
+
+            ###########################################################
             aa_section "Create an inclass-exam"
             ###########################################################
 
@@ -169,7 +191,11 @@ namespace eval ::xowf::test {
                        -update [subst {
                            _title "Sample Inclass Exam"
                            _nls_language en_US
-                           question $testfolder/en:sample_mc_0
+                           question {
+                               $testfolder/en:sample_mc_0
+                               $testfolder/en:sample_st_0
+                               $testfolder/sample_text_0
+                           }
                        }]]
             aa_log "inclass exam created d=[ns_quotehtml $d]"
 
@@ -223,17 +249,37 @@ namespace eval ::xowf::test {
             set d1 [acs::test::http -last_request $d $location]
             acs::test::reply_has_status_code $d1 200
 
+            aa_section "... fill out question 1 (MC)"
+
             set path [string range $location [string length $instance] end]
             set url_info [ns_parseurl $path]
-            set d [::xowiki::test::edit_form_page \
-                       -last_request $d \
-                       -path [dict get $url_info path]/[dict get $url_info tail] \
-                       -update {
-                           __action_logout ""
-                           sample_mc_0_ 1
-                           sample_mc_0_ 2
-                       }]
+            set d2 [::xowiki::test::edit_form_page \
+                        -last_request $d \
+                        -path [dict get $url_info path]/[dict get $url_info tail] \
+                        -next_page_must_contain "#xowf.question# 2" \
+                        -update {
+                            __action_q.2 ""
+                            sample_mc_0_ 1
+                            sample_mc_0_ 2
+                        }]
+            acs::test::reply_has_status_code $d2 200
 
+            aa_section "... fill out question 2 (Short text with file submission)"
+
+            set tmpfile [ad_tmpnam]
+            file copy $::acs::rootdir/packages/xowf/tcl/test/test-item-procs.tcl $tmpfile
+            set d3 [::xowiki::test::edit_form_page \
+                        -last_request $d2 \
+                        -path [dict get $url_info path]/[dict get $url_info tail] \
+                        -next_page_must_contain "#xowf.question# 3" \
+                        -update [subst {
+                            __action_q.3 ""
+                            sample_st_0_.answer1 test-item-procs.tcl
+                            sample_st_0_.answer1.content-type text/plain
+                            sample_st_0_.answer1.tmpfile $tmpfile
+                        }]]
+            acs::test::reply_has_status_code $d3 200
+            set d $d3
             ###########################################################
             aa_section "Check participants during exam"
             ###########################################################
