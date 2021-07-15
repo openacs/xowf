@@ -131,6 +131,12 @@ namespace eval ::xowiki::formfield {
     return ""
   }
 
+  TestItemField instproc twocol_layout {} {
+    return [expr {[${:parent_field} get_named_sub_component_value -default 0 twocol]
+                  ? "col-sm-6" : ""}]
+  }
+
+
   ###########################################################
   #
   # ::xowiki::formfield::test_item_name
@@ -313,6 +319,7 @@ namespace eval ::xowiki::formfield {
       {points number,form_item_wrapper_CSSclass=form-inline,min=0.0,step=0.1,label=#xowf.Points#}
       $shuffleSpec
       $gradingSpec
+      {twocol boolean_checkbox,horizontal=true,label=#xowf.Twocol_layout#,default=f,form_item_wrapper_CSSclass=form-inline}
       $typeSpecificComponentSpec
       {interaction {$interaction_class,$options,feedback_level=${:feedback_level},auto_correct=${:auto_correct},label=}}
       [:feed_back_definition]
@@ -562,11 +569,12 @@ namespace eval ::xowiki::formfield {
       dict set fc_dict correct_when [:comp_correct_when_from_value [:get_named_sub_component_value correct_when]]
     }
 
+    set twocol [:twocol_layout]
     append form \
         "<form>\n" \
-        "<div class='text_interaction'>\n" \
-        "<div class='question_text'>$intro_text</div>\n" \
-        "@answer@\n" \
+        "<div class='text_interaction row'>\n" \
+        "<div class='question_text first-column $twocol'>$intro_text</div>\n" \
+        "<div class='second-column $twocol'>@answer@</div>\n" \
         "</div>\n" \
         "</form>\n"
     append fc \
@@ -624,11 +632,10 @@ namespace eval ::xowiki::formfield {
     append intro_text [:text_attachments]
     set answerFields  [:get_named_sub_component_value -from_repeat answer]
     if {[acs_user::site_wide_admin_p]} {
-      set substvalues   [:get_named_sub_component_value substvalues]
+      set substvalues [:get_named_sub_component_value substvalues]
     } else {
       set substvalues ""
     }
-
     set options {}
     set render_hints {}
     set answer {}
@@ -655,11 +662,12 @@ namespace eval ::xowiki::formfield {
     dict set fc_dict descriptions $solution
     dict set fc_dict render_hints $render_hints
 
+    set twocol [:twocol_layout]
     append form \
         "<form>\n" \
-        "<div class='short_text_interaction'>\n" \
-        "<div class='question_text'>$intro_text</div>\n" \
-        "@answer@" \n \
+        "<div class='short_text_interaction row'>\n" \
+        "<div class='question_text first-column $twocol'>$intro_text</div>\n" \
+        "<div class='second-column $twocol'>@answer@</div>\n" \
         "</div>\n" \
         "</form>\n"
 
@@ -782,11 +790,12 @@ namespace eval ::xowiki::formfield {
     dict set fc_dict answer $answer
     dict set fc_dict grading [${:parent_field} get_named_sub_component_value grading]
 
+    set twocol [:twocol_layout]
     append form \
         "<form>\n" \
-        "<div class='reorder_interaction'>\n" \
-        "<div class='question_text'>$intro_text</div>\n" \
-        "@answer@" \n \
+        "<div class='reorder_interaction row'>\n" \
+        "<div class='question_text first-column $twocol'>$intro_text</div>\n" \
+        "<div class='second-column $twocol'>@answer@</div>\n" \
         "</div>\n" \
         "</form>\n"
 
@@ -866,11 +875,12 @@ namespace eval ::xowiki::formfield {
     dict set fc_dict show_max [${:parent_field} get_named_sub_component_value show_max]
 
     set interaction_class [expr {${:multiple} ? "mc_interaction" : "sc_interaction"}]
+    set twocol [:twocol_layout]
     append form \
         "<form>\n" \
-        "<div class='$interaction_class'>\n" \
-        "<div class='question_text'>$intro_text</div>\n" \
-        "@answer@" \n \
+        "<div class='$interaction_class row'>\n" \
+        "<div class='question_text first-column $twocol'>$intro_text</div>\n" \
+        "<div class='second-column $twocol'>@answer@</div>\n" \
         "</div>" \n \
         "</form>\n"
 
@@ -954,11 +964,12 @@ namespace eval ::xowiki::formfield {
     }
 
     append intro_text [:text_attachments]
+    set twocol [:twocol_layout]
     append form \
         "<form>\n" \
-        "<div class='upload_interaction'>\n" \
-        "<div class='question_text'>$intro_text</div>\n" \
-        "@answer@" \
+        "<div class='upload_interaction row'>\n" \
+        "<div class='question_text first-column $twocol'>$intro_text</div>\n" \
+        "<div class='second-column $twocol'>@answer@</div>\n" \
         "</div>\n" \
         "</form>\n"
     append fc \

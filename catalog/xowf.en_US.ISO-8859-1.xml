@@ -239,4 +239,5 @@
   <msg key="out_of">of</msg>
   <msg key="question_structure">Structure</msg>
   <msg key="Download_file_submissions">Download all displayed file submissions</msg>
+  <msg key="Twocol_layout">2 columns</msg>
 </message_catalog>
