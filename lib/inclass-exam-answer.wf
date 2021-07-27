@@ -277,7 +277,12 @@ proc working_form_loader {ctx form_name} {
   #
   # Update the title of the page
   #
-  :set_title $obj -position $position -item_nr $item_nr -for_question -with_minutes
+  :set_title $obj \
+      -prevent_multiple_tabs [expr {[$obj property try_out_mode 0] == 0}] \
+      -position $position \
+      -item_nr $item_nr \
+      -for_question \
+      -with_minutes
 
   ns_log notice "============ working_form_loader: set title -position $position -item_nr $item_nr "
 
