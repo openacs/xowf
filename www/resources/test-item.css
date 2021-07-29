@@ -92,6 +92,8 @@ div.exam-preview div.question_text {
  */
 div.question_text {
     /*background-color: #fafafa;*/
+    overflow: auto;
+    max-height: 80vh;
 }
 
 /* keep display for div.upload_interaction div.form-label */
