@@ -274,7 +274,12 @@ namespace eval ::xowiki::formfield {
         set can_shuffle false
         set typeSpecificComponentSpec {{max_nr_submission_files {number,form_item_wrapper_CSSclass=form-inline,min=1,default=1,label=Maximale Anzahl von Abgaben}}}
       }
-
+      section {
+        set interaction_class test_section
+        set options ""
+        set auto_correct false
+        set can_shuffle false
+      }
       default {error "unknown question type: ${:question_type}"}
     }
     :log test_item-auto_correct=$auto_correct
@@ -314,9 +319,27 @@ namespace eval ::xowiki::formfield {
     } else {
       set shuffleSpec ""
     }
+
+    if {${:question_type} eq "section"} {
+      #
+      # Don't show "minutes" and "points" in the composite test item
+      # form but still define it, such we can compute and update it in
+      # convert_to_internal with little effort, since all "question"
+      # content is built based on included form fields.
+      #
+      set pointsSpec {
+        {minutes hidden}
+        {points hidden}
+      }
+    } else {
+      set pointsSpec {
+        {minutes number,form_item_wrapper_CSSclass=form-inline,min=1,default=2,label=#xowf.Minutes#}
+        {points number,form_item_wrapper_CSSclass=form-inline,min=0.0,step=0.1,label=#xowf.Points#}
+      }
+    }
+
     :create_components  [subst {
-      {minutes number,form_item_wrapper_CSSclass=form-inline,min=1,default=2,label=#xowf.Minutes#}
-      {points number,form_item_wrapper_CSSclass=form-inline,min=0.0,step=0.1,label=#xowf.Points#}
+      $pointsSpec
       $shuffleSpec
       $gradingSpec
       {twocol boolean_checkbox,horizontal=true,label=#xowf.Twocol_layout#,default=f,form_item_wrapper_CSSclass=form-inline}
@@ -572,14 +595,6 @@ namespace eval ::xowiki::formfield {
     set twocol [:twocol_layout]
     append form \
         "<form>\n" \
-        "<div class='text_interaction row'>\n" \
-        "<div class='question_text first-column $twocol'>$intro_text</div>\n" \
-        "<div class='second-column $twocol'>@answer@</div>\n" \
-        "</div>\n" \
-        "</form>\n"
-    append fc \
-        "@categories:off @cr_fields:hidden\n" \
-        "{answer:[:dict_to_fc -type textarea $fc_dict]}"
 
     #ns_log notice "text_interaction $form\n$fc"
     ${:object} set_property -new 1 form $form
@@ -661,6 +676,7 @@ namespace eval ::xowiki::formfield {
     dict set fc_dict answer $answer
     dict set fc_dict descriptions $solution
     dict set fc_dict render_hints $render_hints
+    dict set fc_dict substvalues $substvalues
 
     set twocol [:twocol_layout]
     append form \
@@ -994,8 +1010,24 @@ namespace eval ::xowiki::formfield {
   #
   ###########################################################
 
-  Class create test_section -superclass {form_page} -parameter {
+  Class create test_section -superclass {TestItemField} -parameter {
     {multiple true}
+    {form en:edit-interaction.wf}
+  }
+
+  test_section instproc initialize {} {
+
+    if {${:__state} ne "after_specs"} {
+      return
+    }
+    next
+    set widget [test_item set richtextWidget]
+    :create_components  [subst {
+      {text        {$widget,height=150px,label=#xowf.exercise-text#,plugins=OacsFs}}
+      {selection   {form_page,form=en:edit-interaction.wf,multiple=true}}
+    }]
+
+    set :__initialized 1
   }
 
   test_section instproc pretty_value {v} {
@@ -1007,86 +1039,92 @@ namespace eval ::xowiki::formfield {
     # Build a complex form composed of the specified form pages names
     # contained in the value of this field.  The form-fields have to
     # be renamed. This affects the input field names in the form and
-    # the form constraints. We use the item_id contained pages as the
-    # prefix for the form-fields. This method must be most likely
-    # extended for other question types.
+    # the form constraints.
     #
-    set form "<form>\n"
-    set fc "@categories:off @cr_fields:hidden\n"
-    set intro_text [${:object} property _text]
-    append form "$intro_text\n<ol>\n"
-    foreach v [:value] {
-      # TODO: the next two commands should not be necessary to lookup
-      # again, since the right values are already loaded into the
-      # options
-      set item_id [[${:object} package_id] lookup -name $v]
-      set page [::xo::db::CrClass get_instance_from_db -item_id $item_id]
-      append form "<li><h2>[::$item_id title]</h2>\n"
-      set prefix c$item_id
-      set __ia [$page set instance_attributes]
-      #
-      # If for some reason, we have not form entry, we ignore it.
-      # TODO: We should deal here with computed forms and with true
-      # ::xowiki::forms as well...
-      #
-      if {![dict exists $__ia form]} {
-        :msg "$v has no form included"
-        continue
-      }
-      #
-      # Replace the form-field names in the form
-      #
-      dom parse -simple -html [dict get $__ia form] doc
-      $doc documentElement root
-      set alt_inputs [list]
-      set alt_values [list]
-      foreach html_type {input textarea} {
-        foreach n [$root selectNodes "//$html_type\[@name != ''\]"] {
-          set alt_input [$n getAttribute name]
-          $n setAttribute name $prefix-$alt_input
-          if {$html_type eq "input"} {
-            set alt_value [$n getAttribute value]
-          } else {
-            set alt_value ""
-          }
-          lappend alt_inputs $alt_input
-          lappend alt_values $alt_value
-        }
-      }
-      # We have to drop the top-level <form> of the included form
-      foreach n [$root childNodes] {append form [$n asHTML]}
-      append form "</li>\n"
-      #
-      # Replace the formfield names in the form constraints
-      #
-      foreach f [dict get $__ia form_constraints] {
-        if {[regexp {^([^:]+):(.*)$} $f _ field_name definition]} {
-          if {[string match @* $field_name]} continue
-          # keep all form-constraints for which we have altered the name
-          #:msg "old fc=$f, [list lsearch -exact $alt_inputs $field_name] => [lsearch -exact $alt_inputs $field_name] $alt_values"
-          set ff [${:object} create_raw_form_field -name $field_name -spec $definition]
-          #:msg "ff answer => '[$ff answer]'"
-          if {$field_name in $alt_inputs} {
-            lappend fc $prefix-$f
-          } elseif {[$ff exists answer] && $field_name eq [$ff answer]} {
-            # this rule is for single choice
-            lappend fc $prefix-$f
-          }
-        }
-      }
+    set intro_text [:get_named_sub_component_value text]
+    set selection [:get_named_sub_component_value selection]
+    set twocol [:twocol_layout]
+
+    #
+    # Load the forms specified via "selection".
+    #
+    set package_id [${:object} package_id]
+    set formObjs [::$package_id instantiate_forms \
+                      -forms [join [split $selection \n] |] \
+                      -default_lang en]
+
+    # foreach formObj $formObjs {
+    #   set substvalues [$formObj property substvalues]
+    #   if {$substvalues ne ""} {
+    #     ns_log notice ".... [$formObj name] has substvalues $substvalues"
+    #     set d [::xowf::test_item::question_manager percent_substitute_in_form \
+    #                -obj ${:object} \
+    #                -form_obj $formObj \
+    #                -position $position \
+    #                $html]
+    #     $form_obj set_property form [dict get $d form]
+    #     $form_obj set_property form_constraints [dict get $d form_constraints]
+    #     $form_obj set_property disabled_form_constraints [dict get $d disabled_form_constraints]
+    #   }
+    # }
+
+    #
+    # Build a form with the usual numbering containing all the
+    # formObjs and remove all form tags.
+    #
+    set number 0
+    set numbers [lmap formObj $formObjs {incr number}]
+    set question_infos [::xowf::test_item::question_manager question_info \
+                            -with_minutes \
+                            -numbers $numbers \
+                            -no_position \
+                            -obj ${:object} $formObjs]
+    # ns_log notice "SELECTION question_info '$question_infos'"
+
+    #
+    # Build a single clean form based on the question infors,
+    # containing all selected items.
+    #
+    regsub -all {<[/]?form>} [dict get $question_infos form] "" aggregatedForm
+    set aggregatedFC [dict get $question_infos form_constraints]
+    #ns_log notice "SELECTION aggregatedFC\n$aggregatedFC"
+
+    #
+    # The following regexps are dangerous (esp. on form
+    # constraints). I think, we have already a better function for
+    # this.
+    #
+    set names [regexp -inline -all {@([^@]+_)@} [dict get $question_infos form]]
+    foreach {. name} $names {
+      regsub -all "@$name@" $aggregatedForm "@answer_$name@" aggregatedForm
+      regsub -all $name $aggregatedFC "answer_$name" aggregatedFC
     }
-    append form "</ol></form>\n"
+
+    ns_log notice "AGGREGATED FORM $aggregatedForm\nFC\n$aggregatedFC\n"
+
+    #
+    # Automatically compute the minutes and points of the composite
+    # field and update the form field.
+    #
+    set total_minutes [::xowf::test_item::question_manager total_minutes $question_infos]
+    set total_points  [::xowf::test_item::question_manager total_points $question_infos]
+
+    [${:parent_field} get_named_sub_component minutes] value $total_minutes
+    [${:parent_field} get_named_sub_component points] value $total_points
+
+    append form \
+        "<form class='row'>\n" \
+        "<div class='question_text first-column $twocol'>$intro_text</div>\n" \
+        "<div class='second-column $twocol'>$aggregatedForm</div>\n" \
+        "</form>\n"
+
     ${:object} set_property -new 1 form $form
-    ${:object} set_property -new 1 form_constraints $fc
+    ${:object} set_property -new 1 form_constraints $aggregatedFC
     set anon_instances true ;# TODO make me configurable
     ${:object} set_property -new 1 anon_instances $anon_instances
-    # for mixed test sections (e.g. text interaction and mc), we have
-    # to combine the values of the items
-    ${:object} set_property -new 1 auto_correct true ;# should be computed
-    ${:object} set_property -new 1 has_solution true ;# should be computed
-    #:msg "fc=$fc"
   }
 }
+
 ############################################################################
 # Generic Assement interface
 ############################################################################
@@ -1257,10 +1295,11 @@ namespace eval ::xowf::test_item {
       set fc   [$form_obj get_property -name form_constraints]
 
       #
-      # Map "answer" to a generic name in the form "@answer@" and in the
-      # form constraints.
+      # Map "answer" to a generic name "@answer@" in the form and in
+      # the form constraints.
       #
       set newName [:form_name_based_attribute_stem [$form_obj name]]
+      #ns_log notice "renaming form loader: MAP '[$form_obj name]' -> '$newName'"
 
       regsub -all -- {@answer} $form @$newName form
       set fc [:map_form_constraints $fc "answer" $newName]
@@ -3730,6 +3769,9 @@ namespace eval ::xowf::test_item {
     #   - exam_target_time
     #   - exam_base_time
     #
+    #   - percent_substitute_in_form
+    #   - item_substitute_markup
+    #
     #   - describe_form
     #   - exam_summary
     #   - question_info_block
@@ -3996,31 +4038,27 @@ namespace eval ::xowf::test_item {
       return $result
     }
 
-    :public method item_substitute_markup {
+    :public method percent_substitute_in_form {
       -obj:object
-      {-position:integer 0}
       -form_obj:object
-      {-do_substitutions:switch 1}
+      -position:integer
+      html
     } {
       #
-      # Substitute everything item-specific in the text, including
-      # markup (handling e.g. images resolving in the context of the
-      # original question) and also percent-substitutions
+      # Perform percent substitution in the provided HTML,
+      # form_constraints and disabled_form_constraints and return the
+      # result as a dict.
       #
-      :assert_answer_instance $obj
-      $obj do_substitutions $do_substitutions
-      set html [$obj substitute_markup \
-                    -context_obj $form_obj \
-                    [$form_obj property form]]
-      set fc [$form_obj property form_constraints]
-      set dfc [$form_obj property disabled_form_constraints]
       set form_name [$form_obj name]
       set seed [lindex [$obj property seeds] $position]
-
-      #ns_log notice "CHECK-AA $form_name seed <$seed> // seeds <[$obj property seeds]>"
       set substvalues [$form_obj property substvalues]
+      #ns_log notice "CHECK-AA $form_name seed <$seed> // seeds <[$obj property seeds]> // subs '$substvalues'"
+
+      set fc [$form_obj property form_constraints]
+      set dfc [$form_obj property disabled_form_constraints]
+
       if {$seed eq "" && $substvalues ne ""} {
-        ns_log warning "item_substitute_markup cannot substitute percent variables in $form_name"
+        ns_log warning "percent_substitute_in_form cannot substitute percent variables in $form_name"
       } else {
         if {$substvalues ne ""} {
           set html [:percent_substitute \
@@ -4038,6 +4076,38 @@ namespace eval ::xowf::test_item {
         }
       }
       return [list form $html form_constraints $fc disabled_form_constraints $dfc]
+    }
+
+    :public method item_substitute_markup {
+      -obj:object
+      -form_obj:object
+      {-position:integer}
+      {-do_substitutions:switch 1}
+    } {
+      #
+      # Substitute everything item-specific in the text, including
+      # markup (handling e.g. images resolving in the context of the
+      # original question) and also percent-substitutions (if
+      # desired).
+      #
+      ns_log notice "=== item_substitute_markup [$form_obj name] do percent subst [info exists position]"
+      :assert_answer_instance $obj
+      $obj do_substitutions $do_substitutions
+      set html [$obj substitute_markup \
+                    -context_obj $form_obj \
+                    [$form_obj property form]]
+
+      if {[info exists position]} {
+        return [:percent_substitute_in_form \
+                    -obj $obj \
+                    -form_obj $form_obj \
+                    -position $position \
+                    $html]
+      } else {
+        set fc [$form_obj property form_constraints]
+        set dfc [$form_obj property disabled_form_constraints]
+        return [list form $html form_constraints $fc disabled_form_constraints $dfc]
+      }
     }
 
     :public method disallow_paste {form_obj:object} {
@@ -4083,6 +4153,7 @@ namespace eval ::xowf::test_item {
       {-titleless_form:switch false}
       {-obj:object}
       {-user_answers:object,0..1 ""}
+      {-no_position:switch false}
       form_objs
     } {
       #
@@ -4099,6 +4170,9 @@ namespace eval ::xowf::test_item {
       set randomizationOk 1
       set autoGrade 1
       foreach form_obj $form_objs number $numbers {
+        #if {[info exists fixed_position]} {
+        #  set position $fixed_position
+        #}
         set form_obj [::xowf::test_item::renaming_form_loader rename_attributes $form_obj]
         set form_title [$form_obj title]
         set minutes [:question_property $form_obj minutes]
@@ -4137,27 +4211,33 @@ namespace eval ::xowf::test_item {
           append full_form \
               "<h4>$title</h4>\n"
         }
-        #
-        # Resolve links in the context of the resolve_object
-        #
 
+        #
+        # The flag "no_position" is just provided for the composite
+        # form, since we are called there at form generation time,
+        # where the position is different from the position in the
+        # questionnairee. When the position is fixed, we do not provide
+        # it as an argument. As a consequence, the percent
+        # substitution is not performed, since it would return always
+        # very similar values based on the fixed position.
+        #
+        if {$no_position} {
+          set positionArg {}
+        } else {
+          set positionArg [list -position $position]
+        }
         #ns_log notice "CHECK 0 user_answers <$user_answers> (obj is the inclass exam [$obj name])"
         if {$user_answers eq ""} {
           set user_answers $obj
         }
+        #
+        # Resolve links in the context of the resolve_object
+        #
         set d [:item_substitute_markup \
                    -obj $user_answers \
-                   -position $position \
+                   {*}$positionArg \
                    -form_obj $form_obj]
         append full_form [dict get $d form]
-
-        #ns_log notice "CHECK [$obj serialize]"
-        #ns_log notice "CHECK obj $obj form_obj $form_obj parent_obj [$obj parent_id]"
-
-        #append full_form \
-            #    [$form_obj substitute_markup -context_obj $form_obj [$form_obj property form]]
-
-        #ns_log notice "FORM=$full_form"
 
         lappend title_infos [list full_title $title \
                                  title $form_title \
@@ -4168,12 +4248,12 @@ namespace eval ::xowf::test_item {
                              -fc [dict get $d form_constraints] \
                              -minutes $minutes \
                              -points $points \
-                             -position $position]
+                             {*}$positionArg]
         lappend full_disabled_fc [:add_to_fc \
                                       -fc [dict get $d disabled_form_constraints] \
                                       -minutes $minutes \
                                       -points $points \
-                                      -position $position]
+                                      {*}$positionArg]
         incr position
 
         set formAttributes [$form_obj instance_attributes]

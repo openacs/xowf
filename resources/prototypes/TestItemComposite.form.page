@@ -1,7 +1,7 @@
 # -*- tcl-*-
 ::xowiki::Form new \
     -name en:TestItemComposite.form \
-    -title "ShortTextItem" \
+    -title "CompositeItem" \
     -anon_instances f \
     -text {} \
     -form {{<form>@question@ @_nls_language@</form>} text/html} \
