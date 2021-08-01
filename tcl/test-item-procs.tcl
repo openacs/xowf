@@ -3776,6 +3776,11 @@ namespace eval ::xowf::test_item {
     #   - exam_summary
     #   - question_info_block
     #
+
+    #----------------------------------------------------------------------
+    # Class:  Question_manager
+    # Method: goto_page
+    #----------------------------------------------------------------------
     :public method goto_page {obj:object position} {
       #ns_log notice "===== goto_page $position"
       #
@@ -3785,6 +3790,10 @@ namespace eval ::xowf::test_item {
       $obj set_property position $position
     }
 
+    #----------------------------------------------------------------------
+    # Class:  Question_manager
+    # Method: more_ahead
+    #----------------------------------------------------------------------
     :public method more_ahead {{-position ""} obj:object} {
       #
       # Return true, when this is for the current user not the last
@@ -3797,6 +3806,10 @@ namespace eval ::xowf::test_item {
       return [expr {$position + 1 < [:question_count $obj]}]
     }
 
+    #----------------------------------------------------------------------
+    # Class:  Question_manager
+    # Method: pagination_button_css
+    #----------------------------------------------------------------------
     :method pagination_button_css {
       {-CSSclass "btn-sm"}
       {-cond:boolean,required}
@@ -3808,6 +3821,10 @@ namespace eval ::xowf::test_item {
       return $CSSclass
     }
 
+    #----------------------------------------------------------------------
+    # Class:  Question_manager
+    # Method: pagination_actions
+    #----------------------------------------------------------------------
     :public method pagination_actions {
       -container:object
       -question_count:integer
@@ -3874,6 +3891,10 @@ namespace eval ::xowf::test_item {
       return $actions
     }
 
+    #----------------------------------------------------------------------
+    # Class:  Question_manager
+    # Method: load_question_objs
+    #----------------------------------------------------------------------
     :method load_question_objs {obj:object names} {
       #
       # Load the question objects for the provided question names and
@@ -3911,11 +3932,19 @@ namespace eval ::xowf::test_item {
       return $questionForms
     }
 
+    #----------------------------------------------------------------------
+    # Class:  Question_manager
+    # Method: current_question_name
+    #----------------------------------------------------------------------
     :method current_question_name {obj:object} {
       set questions [dict get [$obj instance_attributes] question]
       return [lindex [dict get [$obj instance_attributes] question] [$obj property position]]
     }
 
+    #----------------------------------------------------------------------
+    # Class:  Question_manager
+    # Method: current_question_obj
+    #----------------------------------------------------------------------
     :public method current_question_obj {obj:object} {
       #
       # Load the current question obj based on the current question
@@ -3924,6 +3953,10 @@ namespace eval ::xowf::test_item {
       return [:load_question_objs $obj [:current_question_name $obj]]
     }
 
+    #----------------------------------------------------------------------
+    # Class:  Question_manager
+    # Method: shuffled_index
+    #----------------------------------------------------------------------
     :public method shuffled_index {{-shuffle_id:integer -1} obj:object position} {
       #
       # Return the shuffled index position, in case shuffling is turned on.
@@ -3936,6 +3969,10 @@ namespace eval ::xowf::test_item {
       return $position
     }
 
+    #----------------------------------------------------------------------
+    # Class:  Question_manager
+    # Method: question_objs
+    #----------------------------------------------------------------------
     :public method question_objs {{-shuffle_id:integer -1} obj:object} {
       #
       # For the provided assessment object, return the question
@@ -3953,6 +3990,10 @@ namespace eval ::xowf::test_item {
       return $form_objs
     }
 
+    #----------------------------------------------------------------------
+    # Class:  Question_manager
+    # Method: question_names
+    #----------------------------------------------------------------------
     :public method question_names {obj:object} {
       #
       # Return the names of the questions of an assessment.
@@ -3960,11 +4001,15 @@ namespace eval ::xowf::test_item {
       return [$obj property question]
     }
 
+    #----------------------------------------------------------------------
+    # Class:  Question_manager
+    # Method: question_count
+    #----------------------------------------------------------------------
     :public method question_count {obj:object} {
       #
       # Return the number questions in an exam. It is either the
       # number of defined questions, or it might be restricted by the
-      # max_items (if specified).
+      # property max_items (if defined for "obj").
       #
       set nr_questions [llength [$obj property question]]
       set max_items [$obj property max_items ""]
@@ -3976,6 +4021,10 @@ namespace eval ::xowf::test_item {
       return $nr_questions
     }
 
+    #----------------------------------------------------------------------
+    # Class:  Question_manager
+    # Method: add_seeds
+    #----------------------------------------------------------------------
     :public method add_seeds {-obj:object -seed:integer -number:integer} {
       #
       # Add property "seed" to the provided object, consisting of a
@@ -3991,6 +4040,10 @@ namespace eval ::xowf::test_item {
       $obj set_property -new 1 seeds $seeds
     }
 
+    #----------------------------------------------------------------------
+    # Class:  Question_manager
+    # Method: nth_question_obj
+    #----------------------------------------------------------------------
     :public method nth_question_obj {obj:object position:integer} {
       #
       # Return the nth question object of an assessment (based on
@@ -4002,6 +4055,10 @@ namespace eval ::xowf::test_item {
       return $result
     }
 
+    #----------------------------------------------------------------------
+    # Class:  Question_manager
+    # Method: percent_substitute
+    #----------------------------------------------------------------------
     :method percent_substitute {-verbose:switch -substvalues -seed text} {
       set result ""
       set start 0
@@ -4038,6 +4095,10 @@ namespace eval ::xowf::test_item {
       return $result
     }
 
+    #----------------------------------------------------------------------
+    # Class:  Question_manager
+    # Method: percent_substitute_in_form
+    #----------------------------------------------------------------------
     :public method percent_substitute_in_form {
       -obj:object
       -form_obj:object
@@ -4078,6 +4139,10 @@ namespace eval ::xowf::test_item {
       return [list form $html form_constraints $fc disabled_form_constraints $dfc]
     }
 
+    #----------------------------------------------------------------------
+    # Class:  Question_manager
+    # Method: item_substitute_markup
+    #----------------------------------------------------------------------
     :public method item_substitute_markup {
       -obj:object
       -form_obj:object
@@ -4110,6 +4175,10 @@ namespace eval ::xowf::test_item {
       }
     }
 
+    #----------------------------------------------------------------------
+    # Class:  Question_manager
+    # Method: disallow_paste
+    #----------------------------------------------------------------------
     :public method disallow_paste {form_obj:object} {
       #
       # This function changes the form_constraints of the provided
@@ -4127,6 +4196,10 @@ namespace eval ::xowf::test_item {
       $form_obj set_property form_constraints $fc
     }
 
+    #----------------------------------------------------------------------
+    # Class:  Question_manager
+    # Method: add_to_fc
+    #----------------------------------------------------------------------
     :method add_to_fc {-fc:required -position -minutes -points} {
       return [lmap c $fc {
         if {[regexp {^[^:]+_:} $c]} {
@@ -4145,6 +4218,10 @@ namespace eval ::xowf::test_item {
       }]
     }
 
+    #----------------------------------------------------------------------
+    # Class:  Question_manager
+    # Method: question_info
+    #----------------------------------------------------------------------
     :public method question_info {
       {-numbers ""}
       {-with_title:switch false}
@@ -4335,6 +4412,10 @@ namespace eval ::xowf::test_item {
     }
 
 
+    #----------------------------------------------------------------------
+    # Class:  Question_manager
+    # Method: question_property
+    #----------------------------------------------------------------------
     :public method question_property {form_obj:object attribute {default ""}} {
       #
       # Get an attribute of the original question
@@ -4349,6 +4430,10 @@ namespace eval ::xowf::test_item {
       return $value
     }
 
+    #----------------------------------------------------------------------
+    # Class:  Question_manager
+    # Method: minutes_string
+    #----------------------------------------------------------------------
     :public method minutes_string {form_obj:object} {
       #
       # Get an attribute of the original question
@@ -4360,6 +4445,10 @@ namespace eval ::xowf::test_item {
       }
     }
 
+    #----------------------------------------------------------------------
+    # Class:  Question_manager
+    # Method: points_string
+    #----------------------------------------------------------------------
     :public method points_string {form_obj:object} {
       #
       # Get an attribute of the original question
@@ -4375,6 +4464,10 @@ namespace eval ::xowf::test_item {
       }
     }
 
+    #----------------------------------------------------------------------
+    # Class:  Question_manager
+    # Method: combined_question_form
+    #----------------------------------------------------------------------
     :public method combined_question_form {
       {-with_numbers:switch false}
       {-with_title:switch false}
@@ -4441,6 +4534,10 @@ namespace eval ::xowf::test_item {
                   $form_objs]
     }
 
+    #----------------------------------------------------------------------
+    # Class:  Question_manager
+    # Method: pretty_nr_alternatives
+    #----------------------------------------------------------------------
     :method pretty_nr_alternatives {question_infos} {
       set result {}
       foreach question_info $question_infos {
@@ -4467,14 +4564,26 @@ namespace eval ::xowf::test_item {
       return $result
     }
 
+    #----------------------------------------------------------------------
+    # Class:  Question_manager
+    # Method: pretty_ncorrect
+    #----------------------------------------------------------------------
     :method pretty_ncorrect {m} {
       return " (#xowf.Correct# $m) "
     }
+    #----------------------------------------------------------------------
+    # Class:  Question_manager
+    # Method: pretty_shuffle
+    #----------------------------------------------------------------------
     :method pretty_shuffle {m} {
       if {$m ne ""} {
         return #xowf.shuffle_$m#
       }
     }
+    #----------------------------------------------------------------------
+    # Class:  Question_manager
+    # Method: describe_form
+    #----------------------------------------------------------------------
     :public method describe_form {{-asHTML:switch} form_obj} {
       #
       # Call for every form field of the form_obj the "describe"
@@ -4525,6 +4634,10 @@ namespace eval ::xowf::test_item {
       return $msgList
     }
 
+    #----------------------------------------------------------------------
+    # Class:  Question_manager
+    # Method: exam_summary
+    #----------------------------------------------------------------------
     :public method exam_summary {obj} {
       #
       # Provide a summary of all questions of an exam.
@@ -4545,7 +4658,10 @@ namespace eval ::xowf::test_item {
       return $HTML
     }
 
-
+    #----------------------------------------------------------------------
+    # Class:  Question_manager
+    # Method: question_info_block
+    #----------------------------------------------------------------------
     :public method question_info_block {obj} {
       #
       # Provide question info block.
@@ -4596,6 +4712,10 @@ namespace eval ::xowf::test_item {
       return $HTML
     }
 
+    #----------------------------------------------------------------------
+    # Class:  Question_manager
+    # Method: exam_info_block
+    #----------------------------------------------------------------------
     :public method exam_info_block {-combined_form_info obj} {
       #
       # Provide a summarive overview of an exam.
@@ -4664,7 +4784,14 @@ namespace eval ::xowf::test_item {
       return $text
     }
 
+    #----------------------------------------------------------------------
+    # Class:  Question_manager
+    # Method: total
+    #----------------------------------------------------------------------
     :method total {-property:required title_infos} {
+      #
+      # Sum up the values of the provided property from title_infos
+      #
       set total 0
       foreach title_info $title_infos {
         if {[dict exists $title_info $property]} {
@@ -4679,6 +4806,10 @@ namespace eval ::xowf::test_item {
       return $total
     }
 
+    #----------------------------------------------------------------------
+    # Class:  Question_manager
+    # Method: title_infos
+    #----------------------------------------------------------------------
     :method title_infos {{-max_items:integer,0..1 ""} form_info} {
       #
       # When max_items is nonempty, return the title infos of all
@@ -4691,6 +4822,10 @@ namespace eval ::xowf::test_item {
       return $title_infos
     }
 
+    #----------------------------------------------------------------------
+    # Class:  Question_manager
+    # Method: total_minutes
+    #----------------------------------------------------------------------
     :public method total_minutes {{-max_items:integer,0..1 ""} form_info} {
       #
       # Compute the duration of an exam based on the form_info dict.
@@ -4698,6 +4833,10 @@ namespace eval ::xowf::test_item {
       return [:total -property minutes [:title_infos -max_items $max_items $form_info]]
     }
 
+    #----------------------------------------------------------------------
+    # Class:  Question_manager
+    # Method: total_points
+    #----------------------------------------------------------------------
     :public method total_points {{-max_items:integer,0..1 ""} form_info} {
       #
       # Compute the maximal achievable points of an exam based on the
@@ -4706,6 +4845,10 @@ namespace eval ::xowf::test_item {
       return [:total -property points [:title_infos -max_items $max_items $form_info]]
     }
 
+    #----------------------------------------------------------------------
+    # Class:  Question_manager
+    # Method: total_minutes_for_exam
+    #----------------------------------------------------------------------
     :public method total_minutes_for_exam {-manager:object} {
       #
       # Compute the total time of an exam, based on the minutes
@@ -4718,6 +4861,10 @@ namespace eval ::xowf::test_item {
                              $combined_form_info]
     }
 
+    #----------------------------------------------------------------------
+    # Class:  Question_manager
+    # Method: exam_target_time
+    #----------------------------------------------------------------------
     :public method exam_target_time {-manager:object -base_time} {
       #
       # Calculate the exam target time (finishing time) based on the
@@ -4746,6 +4893,10 @@ namespace eval ::xowf::test_item {
       return ${target_time}.$secfrac
     }
 
+    #----------------------------------------------------------------------
+    # Class:  Question_manager
+    # Method: exam_base_time
+    #----------------------------------------------------------------------
     :public method exam_base_time {-manager:object -answer_obj:object} {
       #
       # Calculate the exam base time for a student. This is the time
@@ -4764,6 +4915,10 @@ namespace eval ::xowf::test_item {
       return $base_time
     }
 
+    #----------------------------------------------------------------------
+    # Class:  Question_manager
+    # Method: current_question_form
+    #----------------------------------------------------------------------
     :public method current_question_form {
       {-with_numbers:switch false}
       {-with_title:switch false}
@@ -4775,6 +4930,10 @@ namespace eval ::xowf::test_item {
       return [:nth_question_form -with_numbers=$with_numbers -with_title=$with_title $obj]
     }
 
+    #----------------------------------------------------------------------
+    # Class:  Question_manager
+    # Method: nth_question_form
+    #----------------------------------------------------------------------
     :public method nth_question_form {
       {-position:integer}
       {-item_nr:integer}
@@ -4812,6 +4971,10 @@ namespace eval ::xowf::test_item {
                   $form_objs]
     }
 
+    #----------------------------------------------------------------------
+    # Class:  Question_manager
+    # Method: current_question_number
+    #----------------------------------------------------------------------
     :public method current_question_number {obj:object} {
       #
       # Translate the position of an object into its question number
@@ -4820,6 +4983,10 @@ namespace eval ::xowf::test_item {
       return [expr {[$obj property position] + 1}]
     }
 
+    #----------------------------------------------------------------------
+    # Class:  Question_manager
+    # Method: current_question_title
+    #----------------------------------------------------------------------
     :public method current_question_title {{-with_numbers:switch false} obj:object} {
       #
       # In case, with_numbers is provided, return a internationalized
