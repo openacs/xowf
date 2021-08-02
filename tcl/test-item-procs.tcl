@@ -595,9 +595,18 @@ namespace eval ::xowiki::formfield {
     set twocol [:twocol_layout]
     append form \
         "<form>\n" \
+        "<div class='text_interaction row'>\n" \
+        "<div class='question_text first-column $twocol'>$intro_text</div>\n" \
+        "<div class='second-column $twocol'>@answer@</div>\n" \
+        "</div>\n" \
+        "</form>\n"
+    append fc \
+        "@categories:off @cr_fields:hidden\n" \
+        "{answer:[:dict_to_fc -type textarea $fc_dict]}"        
 
     #ns_log notice "text_interaction $form\n$fc"
     ${:object} set_property -new 1 form $form
+
     ${:object} set_property -new 1 form_constraints $fc
     set anon_instances true ;# TODO make me configurable
     ${:object} set_property -new 1 anon_instances $anon_instances
