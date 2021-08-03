@@ -131,6 +131,7 @@
   <msg key="choice_options">Antwortmöglichkeiten</msg>  
   <msg key="show_max">Zeige maximal</msg>
 
+  <msg key="menu-New-Item-CompositeInteraction">Zusammengesetzte Frage</msg>
   <msg key="menu-New-Item-TextInteraction">Textfrage</msg>
   <msg key="menu-New-Item-ShortTextInteraction">Kurztextfrage</msg>
   <msg key="menu-New-Item-MCInteraction">MC-Frage</msg>

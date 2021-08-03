@@ -152,7 +152,7 @@
   <msg key="menu-New-Item-CodeInteraction">Code Interaction</msg>
   <msg key="menu-New-Item-UploadInteraction">Upload Interaction</msg>
   <msg key="menu-New-Item-ReorderInteraction">Ordering Interaction</msg>
-  <msg key="menu-New-Item-CompositeInteraction">Composite Interaction 2</msg>
+  <msg key="menu-New-Item-CompositeInteraction">Composite Interaction</msg>
 
   <msg key="menu-New-App-OnlineExam">Online Exam</msg>
   <msg key="menu-New-App-InclassQuiz">Inclass Quiz</msg>

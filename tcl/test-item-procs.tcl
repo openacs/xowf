@@ -166,7 +166,7 @@ namespace eval ::xowiki::formfield {
     {grading exact}
   } -ad_doc {
 
-    Wrapper for complex test items, containing specification for
+    Wrapper for composite test items, containing specification for
     minutes, grading scheme, feedback levels, handling different types
     of questions ("interactions" in the terminology of QTI). When such
     a question is saved, an HTML form is generated, which is used as a
@@ -5298,6 +5298,7 @@ namespace eval ::xowiki {
       {entry -name New.Item.MCInteraction -form en:edit-interaction.wf -query p.item_type=MC}
       {entry -name New.Item.ReorderInteraction -form en:edit-interaction.wf -query p.item_type=Reorder}
       {entry -name New.Item.UploadInteraction -form en:edit-interaction.wf -query p.item_type=Upload}
+      {entry -name New.Item.CompositeInteraction -form en:edit-interaction.wf -query p.item_type=Composite}
 
       {entry -name New.App.OnlineExam -form en:online-exam.wf -disabled true}
       {entry -name New.App.InclassQuiz -form en:inclass-quiz.wf -disabled true}

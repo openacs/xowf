@@ -56,6 +56,7 @@ namespace eval ::xowf {
     TestItemSC.form
     TestItemReorder.form
     TestItemUpload.form
+    TestItemComposite.form
 
     ExamFolder
 
