@@ -2906,6 +2906,7 @@ namespace eval ::xowf::test_item {
         # Check if we have found a file submission
         #
         if {!$file_submission_exists
+            && !$export
             && [llength [:get_non_empty_file_formfields -submission $submission]] > 0
           } {
           set file_submission_exists 1
