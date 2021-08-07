@@ -1970,7 +1970,7 @@ namespace eval ::xowf {
             return [$package returnredirect \
                         [export_vars -no_base_encode \
                              -base [$package pretty_link -parent_id $parent_id $lang:$stripped_name] \
-                             [list return_url template_file]]]
+                             {return_url template_file}]]
           } else {
             set item [::xo::db::CrClass get_instance_from_db -item_id $id]
             # missing: policy check.
