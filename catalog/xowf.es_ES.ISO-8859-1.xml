@@ -216,7 +216,8 @@
   <msg key="randomization_for_exam_ok">aleatorización para el examen correcta</msg>
   <msg key="randomization_for_exam_not_ok">aleatorización para el examen incorrecta ("siempre" no debería usarse)</msg>
 
-  <msg key="panel_achieved_points_wi1">%achievedPoints% (redondeado%rounded%) de %totalPoints% puntos posibles, %percentage%%, nota: %grade%</msg>
+  <msg key="panel_achieved_points_wi1">%achievedPoints% (redondeado%achievedPointsRounded%) de %totalPoints% puntos posibles, %percentage%%, nota: %grade%</msg>
+  <msg key="panel_achieved_points_wi1p">%achievedPoints% de %totalPoints% puntos posibles, %percentage%% (redondeado %percentageRounded%%), nota: %grade%</msg>
   <msg key="panel_achieved_points_wi1_noround">%achievedPoints% de %totalPoints% puntos posibles, %percentage%%, nota: %grade%</msg>
   <msg key="test_item_name-validate_name">Nombre contiene al menos un carácter inválido</msg>
 
@@ -230,4 +231,12 @@
 
   <msg key="flag_set">Marcar esta pregunta</msg>
   <msg key="flag_delete">Quitar marca</msg>
+
+  <msg key="exam_summary">Resumen</msg>
+  <msg key="question_summary">Preguntas</msg>
+  <msg key="detailed_summary">Resumen detallado</msg>
+  <msg key="out_of">de</msg>
+  <msg key="question_structure">Estructura</msg>
+  <msg key="Download_file_submissions">Descargar todas las entregas mostradas</msg>
+  <msg key="Twocol_layout">2 columnas</msg>
 </message_catalog>
