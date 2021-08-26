@@ -133,7 +133,7 @@ namespace eval ::xowiki::formfield {
 
   TestItemField instproc twocol_layout {} {
     return [expr {[${:parent_field} get_named_sub_component_value -default 0 twocol]
-                  ? "col-sm-6" : ""}]
+                  ? "col-sm-6" : "col-xs-12"}]
   }
 
 
@@ -602,7 +602,7 @@ namespace eval ::xowiki::formfield {
         "</form>\n"
     append fc \
         "@categories:off @cr_fields:hidden\n" \
-        "{answer:[:dict_to_fc -type textarea $fc_dict]}"        
+        "{answer:[:dict_to_fc -type textarea $fc_dict]}"
 
     #ns_log notice "text_interaction $form\n$fc"
     ${:object} set_property -new 1 form $form
@@ -1122,9 +1122,11 @@ namespace eval ::xowiki::formfield {
     [${:parent_field} get_named_sub_component points] value $total_points
 
     append form \
-        "<form class='row'>\n" \
+        "<form>\n" \
+        "<div class='composite_interaction row'>$intro_text</div>\n" \
         "<div class='question_text first-column $twocol'>$intro_text</div>\n" \
         "<div class='second-column $twocol'>$aggregatedForm</div>\n" \
+        "</div>" \
         "</form>\n"
 
     ${:object} set_property -new 1 form $form
@@ -2512,17 +2514,21 @@ namespace eval ::xowf::test_item {
     :method get_non_empty_file_formfields {
       {-submission:object}
     } {
-      set objs [lmap {name obj} [$submission set __form_fields] {set obj}]
+      if {[$submission exists __form_fields]} {
+        set objs [lmap {name obj} [$submission set __form_fields] {set obj}]
 
-      #
-      # Filter out the form-fields, which have a nonempty
-      # revision_id.
-      #
-      return [::xowiki::formfield::child_components \
-                  -filter {[$_ hasclass "::xowiki::formfield::file"]
-                    && [dict exists [$_ value] revision_id]
-                    && [dict get [$_ value] revision_id] ne ""} \
-                  $objs]
+        #
+        # Filter out the form-fields, which have a nonempty
+        # revision_id.
+        #
+        return [::xowiki::formfield::child_components \
+                    -filter {[$_ hasclass "::xowiki::formfield::file"]
+                      && [dict exists [$_ value] revision_id]
+                      && [dict get [$_ value] revision_id] ne ""} \
+                    $objs]
+      } else {
+        return ""
+      }
     }
 
     #----------------------------------------------------------------------
@@ -4791,7 +4797,7 @@ namespace eval ::xowf::test_item {
         [expr {[llength $review_periods] > 0 ? "#xowf.inclass-exam-review#: [join $review_periods {, }]<br>" : ""}]
         </p>
       }]
-      return $text
+      return "<div class='exam-info-block'>$text</div>"
     }
 
     #----------------------------------------------------------------------
