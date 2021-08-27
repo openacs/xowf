@@ -326,7 +326,7 @@ Action instproc unpublish_link {obj} {
       <div class='container-fluid'><div class='row'>
       <div class="col-sm-9">$answerStatus</div>
       <div class="col-sm-3">$qrCode</div>
-      <div class="col-sm-9 quiz-preview">$fullQuestionForm</div>
+      <div class="col-xs-12 quiz-preview">$fullQuestionForm</div>
       <div class="col-sm-6">$countdownHTML</div>
       </div></div>
     }]

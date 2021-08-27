@@ -111,6 +111,7 @@ div.text_interaction div.form-label
 div.mc_interaction,
 div.sc_interaction,
 div.short_text_interaction,
+div.composite_interaction,
 div.text_interaction,
 div.reorder_interaction {
     padding: 15px 0px 15px 0px;
