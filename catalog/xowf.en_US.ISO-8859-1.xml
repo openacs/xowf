@@ -42,10 +42,11 @@
   <msg key="online-exam-closed">Exam closed</msg>
   <msg key="answer">Answer</msg>
   <msg key="question">Question</msg>
-  <msg key="questions">Questions</msg>
+  <msg key="questions">Questions</msg>  
   <msg key="first_question">First Question</msg>
   <msg key="next_question">Next Question</msg>
   <msg key="previous_question">Previous Question</msg>
+  <msg key="subquestion">Subquestion</msg>  
   <msg key="restart">Restart</msg>
   <msg key="refresh">Refresh</msg>
   <msg key="print">Print</msg>

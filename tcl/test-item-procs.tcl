@@ -1084,6 +1084,7 @@ namespace eval ::xowiki::formfield {
     set number 0
     set numbers [lmap formObj $formObjs {incr number}]
     set question_infos [::xowf::test_item::question_manager question_info \
+                            -question_number_label "#xowf.subquestion#" \
                             -with_minutes \
                             -numbers $numbers \
                             -no_position \
@@ -1123,7 +1124,7 @@ namespace eval ::xowiki::formfield {
 
     append form \
         "<form>\n" \
-        "<div class='composite_interaction row'>$intro_text</div>\n" \
+        "<div class='composite_interaction row'>\n" \
         "<div class='question_text first-column $twocol'>$intro_text</div>\n" \
         "<div class='second-column $twocol'>$aggregatedForm</div>\n" \
         "</div>" \
@@ -4247,6 +4248,7 @@ namespace eval ::xowf::test_item {
       {-obj:object}
       {-user_answers:object,0..1 ""}
       {-no_position:switch false}
+      {-question_number_label #xowf.question#}
       form_objs
     } {
       #
@@ -4288,7 +4290,7 @@ namespace eval ::xowf::test_item {
         }
         set title ""
         if {$number ne ""} {
-          append title "#xowf.question# $number:"
+          append title "$question_number_label $number:"
         }
         if {$with_title} {
           append title " $form_title"

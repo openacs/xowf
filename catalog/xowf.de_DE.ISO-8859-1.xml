@@ -45,6 +45,7 @@
   <msg key="first_question">Erste Frage</msg>
   <msg key="next_question">Nächste Frage</msg>
   <msg key="previous_question">Vorherige Frage</msg>
+  <msg key="subquestion">Teilfrage</msg>
   <msg key="restart">Zurück zum Start</msg>
   <msg key="online-exam-submit">Finale Abgabe</msg>
   <msg key="online-exam-save">Antwort zwischenspeichern</msg>
