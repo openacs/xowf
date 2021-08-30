@@ -18,6 +18,7 @@
   <msg key="close_submission_review_title">Chiudi la correzione della consegna degli studenti</msg>
   <msg key="code_question">Domanda Codice</msg>
   <msg key="columns">Colonne</msg>
+  <msg key="composite_question">Domanda Composita</msg>
   <msg key="Correct">Corretto</msg>
   <msg key="correct">Corretto?</msg>
   <msg key="correct_when">Corretto Quando</msg>
@@ -28,12 +29,15 @@
   <msg key="Day">Giorno</msg>
   <msg key="Days">Giorni</msg>
   <msg key="Detail_configuration">Configurazione Dettagliata</msg>
+  <msg key="detailed_summary">Riepilogo dettagliato</msg>
   <msg key="Displayed_revision">Revisione visualizzata</msg>
+  <msg key="Download_file_submissions">Scarica tutte le consegne file visualizzate</msg>
   <msg key="Duration">Durata</msg>
   <msg key="Exam-review-not-open">La correzione non è aperta per questo esame</msg>
   <msg key="Exam_published">Esame Pubblicato</msg>
   <msg key="exam_review_not_possible">correzione automatica dell&#39;esame impossibile</msg>
   <msg key="exam_review_possible">correzione automatica dell&#39;esame possibile</msg>
+  <msg key="exam_summary">Riepilogo</msg>
   <msg key="Exam_time_window">Finestra Temporale D&#39;Esame</msg>
   <msg key="Exam_time_window_help_text">Finestra temporale opzionale per aprire/chiudere automaticamente l&#39;esame. Quando questi valori sono impostati, l&#39;apertura e la chiusura manuale dell&#39;esame è ancora possibile.</msg>
   <msg key="Exercise">Esercizio</msg>
@@ -45,6 +49,8 @@
   <msg key="feedback_correct">Feedback corretto</msg>
   <msg key="feedback_incorrect">Feedback scorretto</msg>
   <msg key="first_question">Prima domanda</msg>
+  <msg key="flag_delete">Rimuovi Contrassegno</msg>
+  <msg key="flag_set">Contrassegna questa Domanda</msg>
   <msg key="Goto_this_revision">Vai a questa revisione</msg>
   <msg key="Grade">Voto</msg>
   <msg key="Grading-Scheme">Criterio di valutazione</msg>
@@ -86,8 +92,10 @@
   <msg key="menu-New-App-InclassExam">Esame in classe</msg>
   <msg key="menu-New-App-InclassQuiz">Quiz in classe</msg>
   <msg key="menu-New-App-OnlineExam">Esame online</msg>
+  <msg key="menu-New-Assignment-TopicAssignment">Compito a Tema</msg>
   <msg key="menu-New-Extra-Workflow">Nuovo Workflow</msg>
   <msg key="menu-New-Item-CodeInteraction">Voto</msg>
+  <msg key="menu-New-Item-CompositeInteraction">Interazione Composita</msg>
   <msg key="menu-New-Item-ExamFolder">Esame in Classe chiuso (correzione aperta)</msg>
   <msg key="menu-New-Item-MCInteraction">Interazione a scelta multipla</msg>
   <msg key="menu-New-Item-ReorderInteraction">Quiz ...</msg>
@@ -134,8 +142,10 @@
   <msg key="online-exam-unpublish">Chiudi esame</msg>
   <msg key="open_submission_review">Apri correzione consegna studente</msg>
   <msg key="open_submission_review_title">Apri la correzione consegna degli studenti</msg>
-  <msg key="panel_achieved_points_wi1">%achievedPoints% (arrotondato %rounded%) di %totalPoints% punti totali, %percentage%%, voto: %grade%</msg>
+  <msg key="out_of">di</msg>
+  <msg key="panel_achieved_points_wi1">%achievedPoints% (arrotondato %achievedPointsRounded%) di %totalPoints% punti possibili, %percentage%%, voto: %grade%</msg>
   <msg key="panel_achieved_points_wi1_noround">%achievedPoints% di %totalPoints% punti totali, %percentage%%, voto: %grade%</msg>
+  <msg key="panel_achieved_points_wi1p">%achievedPoints% di %totalPoints% punti possibili, %percentage%% (arrotondato %percentageRounded%%), voto: %grade%</msg>
   <msg key="participant">Partecipante</msg>
   <msg key="Participants">Partecipanti</msg>
   <msg key="participants_answered_question">i partecipanti hanno risposto a questa domanda</msg>
@@ -151,6 +161,8 @@
   <msg key="Proctoring_options_help_text">Opzioni per configurare il comportamento della supervisione</msg>
   <msg key="question">Domanda</msg>
   <msg key="Question_management">Gestione Domanda</msg>
+  <msg key="question_structure">Struttura</msg>
+  <msg key="question_summary">Domande</msg>
   <msg key="questions">Domande</msg>
   <msg key="randomization_for_exam_not_ok">randomizzazione impossibile per l&#39;esame (&#34;sempre&#34; non dovrebbe essere usato)</msg>
   <msg key="randomization_for_exam_ok">randomizzazione possibile per l&#39;esame</msg>
@@ -169,6 +181,8 @@
   <msg key="Security">Sicurezza</msg>
   <msg key="select_question_help_text">Domanda Drag and Drop ...</msg>
   <msg key="short_text_question">Risposta breve</msg>
+  <msg key="Show_IP">Mostra indirizzo IP</msg>
+  <msg key="Show_IP_help_text">Mostra agli studenti il loro IP durante l&#39;esame</msg>
   <msg key="show_max">Mosta il massimo</msg>
   <msg key="Show_minutes">Mostra minuti</msg>
   <msg key="Show_minutes_help_text">Mostra i minuti agli studenti durante l&#39;esame</msg>
@@ -190,6 +204,7 @@
   <msg key="sub_questions">Sotto-Domande</msg>
   <msg key="submitted">consegnato</msg>
   <msg key="submitted_answers">Risposte consegnate</msg>
+  <msg key="subquestion">Sottodomanda</msg>
   <msg key="Synchronized">Esame Sincronizzato</msg>
   <msg key="Synchronized_help_text">La durata dell&#39;esame è strettamente controllata dal docente, o ogni studente riceve il suo tempo a disposizione, indipendentemente dal suo orario di inizio.</msg>
   <msg key="test_item_name-validate_name">Il nome contiene almeno un carattere non valido</msg>
@@ -199,5 +214,6 @@
   <msg key="Time_budget_help_text">Aumenta il tempo a disposizione per studenti con disabilità</msg>
   <msg key="Time_management">Gestione del Tempo</msg>
   <msg key="Total-Score">Punteggio Totale</msg>
+  <msg key="Twocol_layout">2 colonne</msg>
   <msg key="ul_question">Domanda caricamento file</msg>
 </message_catalog>
