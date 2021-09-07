@@ -136,6 +136,21 @@ namespace eval ::xowiki::formfield {
                   ? "col-sm-6" : "col-xs-12"}]
   }
 
+  TestItemField instproc form_markup {
+    -interaction
+    -intro_text
+    -body
+  } {
+    set twocol [:twocol_layout]
+    return [string cat \
+                "<form>\n" \
+                "<div class='${interaction}_interaction row row-$twocol'>\n" \
+                "<div class='question_text first-column $twocol'>$intro_text</div>\n" \
+                "<div class='second-column $twocol'>$body</div>\n" \
+                "</div>\n" \
+                "</form>\n"]    
+  }
+
 
   ###########################################################
   #
@@ -480,7 +495,7 @@ namespace eval ::xowiki::formfield {
         lappend if_fc "feedback_answer_incorrect=[::xowiki::formfield:::FormField fc_encode $value(feedback_incorrect)]"
       }
       if {[llength $if_fc] > 0} {
-        append fc [list $input_field_name:checkbox,[join $if_fc ,]] \n
+        lappend fc [list $input_field_name:checkbox,[join $if_fc ,]]
       }
       #:msg "$input_field_name .correct = $value(correct)"
     }
@@ -592,17 +607,10 @@ namespace eval ::xowiki::formfield {
       dict set fc_dict correct_when [:comp_correct_when_from_value [:get_named_sub_component_value correct_when]]
     }
 
-    set twocol [:twocol_layout]
-    append form \
-        "<form>\n" \
-        "<div class='text_interaction row'>\n" \
-        "<div class='question_text first-column $twocol'>$intro_text</div>\n" \
-        "<div class='second-column $twocol'>@answer@</div>\n" \
-        "</div>\n" \
-        "</form>\n"
-    append fc \
-        "@categories:off @cr_fields:hidden\n" \
-        "{answer:[:dict_to_fc -type textarea $fc_dict]}"
+    set form [:form_markup -interaction text -intro_text $intro_text -body @answer@]
+    lappend fc \
+        "@categories:off @cr_fields:hidden" \
+        "answer:[:dict_to_fc -type textarea $fc_dict]"
 
     #ns_log notice "text_interaction $form\n$fc"
     ${:object} set_property -new 1 form $form
@@ -687,15 +695,8 @@ namespace eval ::xowiki::formfield {
     dict set fc_dict render_hints $render_hints
     dict set fc_dict substvalues $substvalues
 
-    set twocol [:twocol_layout]
-    append form \
-        "<form>\n" \
-        "<div class='short_text_interaction row'>\n" \
-        "<div class='question_text first-column $twocol'>$intro_text</div>\n" \
-        "<div class='second-column $twocol'>@answer@</div>\n" \
-        "</div>\n" \
-        "</form>\n"
-
+    set form [:form_markup -interaction short_text -intro_text $intro_text -body @answer@]
+    
     set fc {}
     lappend fc \
         answer:[:dict_to_fc -type text_fields $fc_dict] \
@@ -815,15 +816,7 @@ namespace eval ::xowiki::formfield {
     dict set fc_dict answer $answer
     dict set fc_dict grading [${:parent_field} get_named_sub_component_value grading]
 
-    set twocol [:twocol_layout]
-    append form \
-        "<form>\n" \
-        "<div class='reorder_interaction row'>\n" \
-        "<div class='question_text first-column $twocol'>$intro_text</div>\n" \
-        "<div class='second-column $twocol'>@answer@</div>\n" \
-        "</div>\n" \
-        "</form>\n"
-
+    set form [:form_markup -interaction reorder -intro_text $intro_text -body @answer@]
     set fc {}
     lappend fc \
         answer:[:dict_to_fc -type reorder_box $fc_dict] \
@@ -899,17 +892,9 @@ namespace eval ::xowiki::formfield {
     dict set fc_dict grading [${:parent_field} get_named_sub_component_value grading]
     dict set fc_dict show_max [${:parent_field} get_named_sub_component_value show_max]
 
-    set interaction_class [expr {${:multiple} ? "mc_interaction" : "sc_interaction"}]
-    set twocol [:twocol_layout]
-    append form \
-        "<form>\n" \
-        "<div class='$interaction_class row'>\n" \
-        "<div class='question_text first-column $twocol'>$intro_text</div>\n" \
-        "<div class='second-column $twocol'>@answer@</div>\n" \
-        "</div>" \n \
-        "</form>\n"
-
+    set interaction [expr {${:multiple} ? "mc" : "sc"}]
     set widget [expr {${:multiple} ? "checkbox" : "radio"}]
+    set form [:form_markup -interaction $interaction -intro_text $intro_text -body @answer@]
     set fc {}
     lappend fc \
         answer:[:dict_to_fc -type $widget $fc_dict] \
@@ -989,17 +974,10 @@ namespace eval ::xowiki::formfield {
     }
 
     append intro_text [:text_attachments]
-    set twocol [:twocol_layout]
-    append form \
-        "<form>\n" \
-        "<div class='upload_interaction row'>\n" \
-        "<div class='question_text first-column $twocol'>$intro_text</div>\n" \
-        "<div class='second-column $twocol'>@answer@</div>\n" \
-        "</div>\n" \
-        "</form>\n"
-    append fc \
-        "@categories:off @cr_fields:hidden\n" \
-        "{answer:[:dict_to_fc -type file $file_dict]}"
+    set form [:form_markup -interaction upload -intro_text $intro_text -body @answer@]
+    lappend fc \
+        "@categories:off @cr_fields:hidden" \
+        "answer:[:dict_to_fc -type file $file_dict]"
 
     ${:object} set_property -new 1 form $form
     ${:object} set_property -new 1 form_constraints $fc
@@ -1052,7 +1030,6 @@ namespace eval ::xowiki::formfield {
     #
     set intro_text [:get_named_sub_component_value text]
     set selection [:get_named_sub_component_value selection]
-    set twocol [:twocol_layout]
 
     #
     # Load the forms specified via "selection".
@@ -1122,13 +1099,7 @@ namespace eval ::xowiki::formfield {
     [${:parent_field} get_named_sub_component minutes] value $total_minutes
     [${:parent_field} get_named_sub_component points] value $total_points
 
-    append form \
-        "<form>\n" \
-        "<div class='composite_interaction row'>\n" \
-        "<div class='question_text first-column $twocol'>$intro_text</div>\n" \
-        "<div class='second-column $twocol'>$aggregatedForm</div>\n" \
-        "</div>" \
-        "</form>\n"
+    set form [:form_markup -interaction composite -intro_text $intro_text -body $aggregatedForm]
 
     ${:object} set_property -new 1 form $form
     ${:object} set_property -new 1 form_constraints $aggregatedFC
@@ -1473,10 +1444,10 @@ namespace eval ::xowf::test_item {
                   -package_id   [$parentObj package_id] \
                   -default_lang [$parentObj lang] \
                   -forms        $master_workflow]
-      set fc ""
-      append fc \
-          "@table:_item_id,_state,$attributeNames,_last_modified " \
-          "@table_properties:view_field=_item_id " \
+      set fc {}
+      lappend fc \
+          "@table:_item_id,_state,$attributeNames,_last_modified" \
+          "@table_properties:view_field=_item_id" \
           @cr_fields:hidden
 
       set wf [$WF create_form_page_instance \
