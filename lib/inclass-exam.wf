@@ -160,7 +160,7 @@ open_submission_review proc activate {obj} {
 Action instproc publish_link {obj} {
   set aLink [$obj pretty_link -query m=answer]
   $obj util_user_message -html \
-      -message "[$obj name] is available as <a target='_blank' href='[ns_quotehtml $aLink]'>[ns_quotehtml $aLink]</a>"
+      -message "[ns_quotehtml [$obj name]] is available as <a target='_blank' href='[ns_quotehtml $aLink]'>[ns_quotehtml $aLink]</a>"
   # TODO: make it happen in the LMS
 }
 ########################################################################
@@ -187,7 +187,7 @@ Action instproc unpublish_link {obj} {
   set full_fc [dict get $combined_form_info disabled_form_constraints]
 
   #:log  fullQuestionForm=$fullQuestionForm
-  set text "<h3>$title</h3>"
+  set text "<h3>[ns_quotehtml $title]</h3>"
   set menu ""
 
   set text [::xowf::test_item::question_manager exam_info_block \
@@ -248,7 +248,7 @@ Action instproc unpublish_link {obj} {
     dict for {name d} $md {
       set href [[dict get $d obj] pretty_link -query m=[dict get $d m]]
       append menu "<a class='list-group-item $link_disabled' href='[ns_quotehtml $href]'>" \
-          "<span class='glyphicon glyphicon-[dict get $d glyph]'></span> [dict get $d label]</a>\n"
+          "<span class='glyphicon glyphicon-[dict get $d glyph]'></span> [ns_quotehtml [dict get $d label]]</a>\n"
     }
   }
 
@@ -281,7 +281,7 @@ Action instproc unpublish_link {obj} {
     "published" {
       append extraAction "<br>" \
           "#xowf.online-exam-can_answer# " \
-          "<a class='answer' href='$aLink'>$aLink</a>"
+          "<a class='answer' href='$aLink'>[ns_quotehtml $aLink]</a>"
     }
   }
 
@@ -333,8 +333,6 @@ Action instproc unpublish_link {obj} {
   }
 
   set footer " $extraAction"
-
-  #-form [subst {<form>$text<div class='exam-preview'>$fullQuestionForm</div>$report</form> text/html}]
   set f [::xowiki::Form new \
              -destroy_on_cleanup \
              -set name en:question \
