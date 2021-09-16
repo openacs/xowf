@@ -148,7 +148,7 @@ namespace eval ::xowiki::formfield {
                 "<div class='question_text first-column $twocol'>$intro_text</div>\n" \
                 "<div class='second-column $twocol'>$body</div>\n" \
                 "</div>\n" \
-                "</form>\n"]    
+                "</form>\n"]
   }
 
 
@@ -337,14 +337,17 @@ namespace eval ::xowiki::formfield {
 
     if {${:question_type} eq "section"} {
       #
-      # Don't show "minutes" and "points" in the composite test item
-      # form but still define it, such we can compute and update it in
-      # convert_to_internal with little effort, since all "question"
-      # content is built based on included form fields.
+      # Don't show "minutes" and "points" in the full composite test
+      # item form but still define it, such we can compute and update
+      # it in convert_to_internal with little effort, since all
+      # "question" content is built based on included form fields.
       #
       set pointsSpec {
         {minutes hidden}
         {points hidden}
+        {show_minutes boolean_checkbox,form_item_wrapper_CSSclass=form-inline,default=t,label=#xowf.Composite_Show_minutes#}
+        {show_points boolean_checkbox,form_item_wrapper_CSSclass=form-inline,default=f,label=#xowf.Composite_Show_points#}
+        {show_title boolean_checkbox,form_item_wrapper_CSSclass=form-inline,default=f,label=#xowf.Composite_Show_title#}
       }
     } else {
       set pointsSpec {
@@ -696,7 +699,7 @@ namespace eval ::xowiki::formfield {
     dict set fc_dict substvalues $substvalues
 
     set form [:form_markup -interaction short_text -intro_text $intro_text -body @answer@]
-    
+
     set fc {}
     lappend fc \
         answer:[:dict_to_fc -type text_fields $fc_dict] \
@@ -1060,9 +1063,23 @@ namespace eval ::xowiki::formfield {
     #
     set number 0
     set numbers [lmap formObj $formObjs {incr number}]
+
+    set option_dict {with_minutes t with_points f with_title f}
+    foreach field {show_minutes show_points show_title} {
+      set value [${:parent_field} get_named_sub_component_value -default "" $field]
+      if {$value ne ""} {
+        dict set option_dict $field $value
+      }
+    }
+    set title_options [lmap kind {minutes points title} {
+      if {![dict get $option_dict show_$kind]} {
+        continue
+      }
+      set result "-with_$kind"
+    }]
     set question_infos [::xowf::test_item::question_manager question_info \
                             -question_number_label "#xowf.subquestion#" \
-                            -with_minutes \
+                            {*}$title_options \
                             -numbers $numbers \
                             -no_position \
                             -obj ${:object} $formObjs]
