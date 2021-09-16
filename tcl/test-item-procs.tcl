@@ -4280,15 +4280,18 @@ namespace eval ::xowf::test_item {
         if {$number ne ""} {
           append title "$question_number_label $number:"
         }
+
+        set title_components {}
         if {$with_title} {
-          append title " $form_title"
+          lappend title_components [ns_quotehtml $form_title]
         }
         if {$with_minutes} {
-          append title " - [:minutes_string $form_obj]"
+          lappend title_components [:minutes_string $form_obj]
         }
         if {$with_points} {
-          append title " - [:points_string $form_obj]"
+          lappend title_components [:points_string $form_obj]
         }
+        append title " " [join $title_components " - "]
 
         if {!$titleless_form} {
           append full_form \
