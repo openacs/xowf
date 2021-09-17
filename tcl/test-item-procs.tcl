@@ -198,6 +198,10 @@ namespace eval ::xowiki::formfield {
   #
   test_item set richtextWidget {richtext,editor=ckeditor4,ck_package=basic,displayMode=inline,extraPlugins=}
 
+  test_item instproc makeSpec {-name:required dict} {
+    return [list [list $name [:dict_to_fc $dict]]]
+  }
+
   test_item instproc feed_back_definition {} {
     #
     # Return the definition of the feed_back widgets depending on the
@@ -289,7 +293,8 @@ namespace eval ::xowiki::formfield {
         set can_shuffle false
         set typeSpecificComponentSpec {{max_nr_submission_files {number,form_item_wrapper_CSSclass=form-inline,min=1,default=1,label=Maximale Anzahl von Abgaben}}}
       }
-      section {
+      section -
+      case {
         set interaction_class test_section
         set options ""
         set auto_correct false
@@ -335,7 +340,15 @@ namespace eval ::xowiki::formfield {
       set shuffleSpec ""
     }
 
-    if {${:question_type} eq "section"} {
+    #
+    # Default towcol spec
+    #
+    dict set twocolDict label #xowf.Twocol_layout#
+    dict set twocolDict default f
+    dict set twocolDict form_item_wrapper_CSSclass form-inline
+    dict set twocolDict _type boolean_checkbox
+
+    if {${:question_type} in {section case}} {
       #
       # Don't show "minutes" and "points" in the full composite test
       # item form but still define it, such we can compute and update
@@ -345,9 +358,21 @@ namespace eval ::xowiki::formfield {
       set pointsSpec {
         {minutes hidden}
         {points hidden}
+      }
+      set typeSpecificComponentSpec {
         {show_minutes boolean_checkbox,form_item_wrapper_CSSclass=form-inline,default=t,label=#xowf.Composite_Show_minutes#}
         {show_points boolean_checkbox,form_item_wrapper_CSSclass=form-inline,default=f,label=#xowf.Composite_Show_points#}
         {show_title boolean_checkbox,form_item_wrapper_CSSclass=form-inline,default=f,label=#xowf.Composite_Show_title#}
+      }
+      #
+      # Things different between "section" and "case".
+      #
+      switch ${:question_type} {
+        "section" {}
+        "case" {
+          dict set twocolDict default t
+        }
+        default {error "this can't happen"}
       }
     } else {
       set pointsSpec {
@@ -360,8 +385,8 @@ namespace eval ::xowiki::formfield {
       $pointsSpec
       $shuffleSpec
       $gradingSpec
-      {twocol boolean_checkbox,horizontal=true,label=#xowf.Twocol_layout#,default=f,form_item_wrapper_CSSclass=form-inline}
       $typeSpecificComponentSpec
+      [:makeSpec -name twocol $twocolDict]
       {interaction {$interaction_class,$options,feedback_level=${:feedback_level},auto_correct=${:auto_correct},label=}}
       [:feed_back_definition]
     }]
