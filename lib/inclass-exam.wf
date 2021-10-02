@@ -61,6 +61,8 @@ set :policy ::xowf::test_item::test-item-policy-publish
 set :debug 0
 set :live_updates 1
 
+Property realexam -default 1 -allow_query_parameter true
+
 Action select -next_state created -label #xowf.online-exam-select# \
     -title #xowf.online-exam-title-select#
 Action publish -next_state published -state_safe true -label #xowf.online-exam-publish# \
@@ -361,7 +363,7 @@ Action instproc unpublish_link {obj} {
 
   if {${:state} eq "done"} {
     set done_actions republish
-    set combined_form_info [::xowf::test_item::question_manager combined_question_form [self]]
+    set combined_form_info [::xowf::test_item::question_manager combined_question_form [self]]    
 
     #
     # We could allow open_submission_review only when autograde is
@@ -378,6 +380,15 @@ Action instproc unpublish_link {obj} {
     ${container}::done in_role swa [subst {
       -actions {$swa_done_actions}
     }]
+    
+  } elseif {${:state} eq "created" && [:property realexam]} {
+    #
+    # Check, if randomization is OK. If not, remove the "publish"
+    # button from the workflow.
+    #
+    set randomizationOk [dict get $combined_form_info randomization_for_exam]
+    ${container}::${:state} actions \
+        [expr {$randomizationOk ? {publish restart} : {restart}}]
   }
 
   #

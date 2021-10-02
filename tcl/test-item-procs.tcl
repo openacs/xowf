@@ -5327,7 +5327,7 @@ namespace eval ::xowiki {
 
       {entry -name New.App.OnlineExam -form en:online-exam.wf -disabled true}
       {entry -name New.App.InclassQuiz -form en:inclass-quiz.wf -disabled true}
-      {entry -name New.App.InclassExam -form en:inclass-exam.wf}
+      {entry -name New.App.InclassExam -form en:inclass-exam.wf -query p.realexam=1}
     }
   }
 
