@@ -385,6 +385,7 @@ Action instproc unpublish_link {obj} {
     # Check, if randomization is OK. If not, remove the "publish"
     # button from the workflow.
     #
+    set combined_form_info [::xowf::test_item::question_manager combined_question_form [self]]    
     set randomizationOk [dict get $combined_form_info randomization_for_exam]
     ${container}::${:state} actions \
         [expr {$randomizationOk ? {publish restart} : {restart}}]
