@@ -352,7 +352,6 @@ Action instproc unpublish_link {obj} {
 ########################################################################
 
 :object-specific {
-
   set ctx [:wf_context]
   set container [$ctx wf_container]
   if {$ctx ne $container} {
@@ -381,7 +380,7 @@ Action instproc unpublish_link {obj} {
       -actions {$swa_done_actions}
     }]
     
-  } elseif {${:state} eq "created" && [:property realexam]} {
+  } elseif {${:state} eq "created" && [:property realexam 0]} {
     #
     # Check, if randomization is OK. If not, remove the "publish"
     # button from the workflow.
