@@ -1037,9 +1037,17 @@ namespace eval ::xowiki::formfield {
     }
     next
     set widget [test_item set richtextWidget]
+
+    # We could exclude the "self" item (inclusion would lead to
+    # infinite loops), but that is as well excluded, when no Composite
+    # items are allowed.
+    #
+    #  set item_id [${:object} item_id]
+    #  {selection {form_page,form=en:edit-interaction.wf,unless=_item_id=$item_id,multiple=true}}
+
     :create_components  [subst {
       {text        {$widget,height=150px,label=#xowf.exercise-text#,plugins=OacsFs}}
-      {selection   {form_page,form=en:edit-interaction.wf,multiple=true}}
+      {selection   {form_page,form=en:edit-interaction.wf,unless=item_type=Composite,multiple=true}}
     }]
 
     set :__initialized 1
