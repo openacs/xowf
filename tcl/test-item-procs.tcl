@@ -1134,7 +1134,7 @@ namespace eval ::xowiki::formfield {
     set names [regexp -inline -all {@([^@]+_)@} [dict get $question_infos form]]
     foreach {. name} $names {
       regsub -all "@$name@" $aggregatedForm "@answer_$name@" aggregatedForm
-      regsub -all $name $aggregatedFC "answer_$name" aggregatedFC
+      regsub -all ${name}: $aggregatedFC "answer_${name}:" aggregatedFC
     }
 
     ns_log notice "AGGREGATED FORM $aggregatedForm\nFC\n$aggregatedFC\n"
