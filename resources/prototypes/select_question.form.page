@@ -30,7 +30,7 @@
         {show_minutes:boolean,horizontal=true,default=t,label=#xowf.Show_minutes#,help_text=#xowf.Show_minutes_help_text#}
         {show_points:boolean,horizontal=true,default=t,label=#xowf.Show_points#,help_text=#xowf.Show_points_help_text#}
         {show_ip:boolean,horizontal=true,default=t,label=#xowf.Show_IP#,help_text=#xowf.Show_IP_help_text#}
-        {time_budget:range,default=100,min=100,max=300,step=10,with_output=t,form_item_wrapper_CSSclass=form-inline,output_suffix=%,label=#xowf.Time_budget#,help_text=#xowf.Time_budget_help_text#}
+        {time_budget:range,default=100,min=100,max=300,step=5,with_output=t,form_item_wrapper_CSSclass=form-inline,output_suffix=%,label=#xowf.Time_budget#,help_text=#xowf.Time_budget_help_text#}
 	{synchronized:boolean,horizontal=true,default=f,label=#xowf.Synchronized#,help_text=#xowf.Synchronized_help_text#}
 	{time_window:time_span,label=#xowf.Exam_time_window#,help_text=#xowf.Exam_time_window_help_text#}
 	{signature:boolean,horizontal=true,default=f,label=#xowf.Signature#,help_text=#xowf.Signature_help_text#}
