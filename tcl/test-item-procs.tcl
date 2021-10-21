@@ -4215,6 +4215,27 @@ namespace eval ::xowf::test_item {
 
     #----------------------------------------------------------------------
     # Class:  Question_manager
+    # Method: disable_text_field_feature
+    #----------------------------------------------------------------------
+    :method disable_text_field_feature {form_obj:object feature} {
+      #
+      # This function changes the form_constraints of the provided
+      # form object by adding "$feature=false" properties to textarea or
+      # text_fields entries.
+      #
+      set fc {}
+      foreach e [$form_obj property form_constraints] {
+        if {[regexp {^[^:]+_:(textarea|text_fields)} $e]} {
+          #ns_log notice "======= turn $feature off"
+          append e , $feature=false
+        }
+        lappend fc $e
+      }
+      $form_obj set_property form_constraints $fc
+    }
+
+    #----------------------------------------------------------------------
+    # Class:  Question_manager
     # Method: disallow_paste
     #----------------------------------------------------------------------
     :public method disallow_paste {form_obj:object} {
@@ -4222,16 +4243,20 @@ namespace eval ::xowf::test_item {
       # This function changes the form_constraints of the provided
       # form object by adding "paste=false" properties to textarea or
       # text_fields entries.
+      :disable_text_field_feature $form_obj paste
+    }
+
+    #----------------------------------------------------------------------
+    # Class:  Question_manager
+    # Method: disallow_spellcheck
+    #----------------------------------------------------------------------
+    :public method disallow_spellcheck {form_obj:object} {
       #
-      set fc {}
-      foreach e [$form_obj property form_constraints] {
-        if {[regexp {^[^:]+_:(textarea|text_fields)} $e]} {
-          #ns_log notice "======= turn paste off"
-          append e , paste=false
-        }
-        lappend fc $e
-      }
-      $form_obj set_property form_constraints $fc
+      # This function changes the form_constraints of the provided
+      # form object by adding "spellcheck=false" properties to textarea or
+      # text_fields entries.
+      #
+      :disable_text_field_feature $form_obj spellcheck
     }
 
     #----------------------------------------------------------------------
@@ -4770,6 +4795,7 @@ namespace eval ::xowf::test_item {
       set allow_paste  [$obj property allow_paste 1]
       set max_items    [$obj property max_items ""]
       set time_window  [$obj property time_window ""]
+      set allow_spellcheck [$obj property allow_spellcheck true]
 
       append text [subst {<p>
         [expr {$synchronized ? "" : "Non-"}]Synchronized Exam
@@ -4818,6 +4844,7 @@ namespace eval ::xowf::test_item {
         [expr {$autograde ? "#xowf.exam_review_possible#" : "#xowf.exam_review_not_possible#"}]<br>
         [expr {$randomizationOk ? "#xowf.randomization_for_exam_ok#" : "#xowf.randomization_for_exam_not_ok#"}]<br>
         [expr {$allow_paste ? "#xowf.Cut_and_paste_allowed#" : "#xowf.Cut_and_paste_not_allowed#"}]<br>
+        [expr {$allow_spellcheck ? "#xowf.Spellcheck_allowed#" : "#xowf.Spellcheck_not_allowed#"}]<br>
         $time_window_msg
         [expr {[llength $published_periods] > 0 ? "<br>#xowf.inclass-exam-open#: [join $published_periods {, }]<br>" : ""}]
         [expr {[llength $review_periods] > 0 ? "#xowf.inclass-exam-review#: [join $review_periods {, }]<br>" : ""}]

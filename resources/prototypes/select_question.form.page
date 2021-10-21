@@ -8,7 +8,7 @@
         @question@
         <h4>#xowf.Detail_configuration#</h4>
         <p><button type="button" class="btn btn-small" data-toggle="collapse" data-target="#question_management"><span class="glyphicon glyphicon-chevron-down">&nbsp;</span>#xowf.Question_management#</button><div id="question_management" class="collapse">        
-        @shuffle_items@ @max_items@ @allow_paste@ @show_minutes@ @show_points@ @show_ip@ @time_budget@
+        @shuffle_items@ @max_items@ @allow_paste@ @allow_spellcheck@ @show_minutes@ @show_points@ @show_ip@ @time_budget@
         </div>
         <p><button type="button" class="btn btn-small" data-toggle="collapse" data-target="#time_management"><span class="glyphicon glyphicon-chevron-down">&nbsp;</span>#xowf.Time_management#</button><div id="time_management" class="collapse">
         @synchronized@ @time_window@
@@ -27,6 +27,7 @@
 	{shuffle_items:boolean,horizontal=true,label=#xowf.randomized_items#,help_text=#xowf.randomized_items_help_text#}
 	{max_items:number,min=1,label=#xowf.Max_items#,help_text=#xowf.Max_items_help_text#}
 	{allow_paste:boolean,horizontal=true,default=t,label=#xowf.Allow_paste#,help_text=#xowf.Allow_paste_help_text#}
+	{allow_spellcheck:boolean,horizontal=true,default=t,label=#xowf.Allow_spellcheck#,help_text=#xowf.Allow_spellcheck_help_text#}
         {show_minutes:boolean,horizontal=true,default=t,label=#xowf.Show_minutes#,help_text=#xowf.Show_minutes_help_text#}
         {show_points:boolean,horizontal=true,default=t,label=#xowf.Show_points#,help_text=#xowf.Show_points_help_text#}
         {show_ip:boolean,horizontal=true,default=t,label=#xowf.Show_IP#,help_text=#xowf.Show_IP_help_text#}

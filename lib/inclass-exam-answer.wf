@@ -287,12 +287,13 @@ proc working_form_loader {ctx form_name} {
   ns_log notice "============ working_form_loader: set title -position $position -item_nr $item_nr "
 
   #
-  # Disallow paste if required
+  # Disallow spellcheck/paste if required
   #
-  if {![$parent_obj property allow_paste true]} {
-    ${:QM} disallow_paste $form_obj
+  foreach p {paste spellcheck} {
+    if {![$parent_obj property allow_$p true]} {
+      ${:QM} disallow_$p $form_obj
+    }
   }
-
   #$form_obj lappend form_constraints {__item_nr:hidden}
 
   #ns_log notice "============ working_form_loader: [$form_obj serialize] "

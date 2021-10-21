@@ -187,6 +187,10 @@
   <msg key="Allow_paste_help_text">Is the student allowed to use cut and paste in multiline text fields?</msg>
   <msg key="Cut_and_paste_allowed">Cut and Paste is allowed in multi-line text fields</msg>
   <msg key="Cut_and_paste_not_allowed">Cut and Paste is not allowed in multi-line text fields</msg>
+  <msg key="Allow_spellcheck">Allow spellcheck</msg>
+  <msg key="Allow_spellcheck_help_text">Is the built-in spellcheck activated in multiline text fields?</msg>
+  <msg key="Spellcheck_allowed">Spellcheck is activated in multi-line text fields</msg>
+  <msg key="Spellcheck_not_allowed">Spellcheck is deactivated in multi-line text fields</msg>
   <msg key="Show_points">Show points</msg>
   <msg key="Show_points_help_text">Show student points during exam</msg>
   <msg key="Show_minutes">Show minutes</msg>
