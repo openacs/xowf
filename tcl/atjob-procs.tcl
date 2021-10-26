@@ -44,6 +44,20 @@ namespace eval ::xowf {
 
   atjob instproc persist {} {
     set class [self class]
+    #
+    # When "object" is specified, the atjob is automatically removed,
+    # when the "object" is deleted.
+    #
+    if {![info exists :object]} {
+      #
+      # When there is no :object, use the global en:atjob-form object
+      # as :object.
+      #
+      set info [xowf::Package require_site_wide_info]
+      set item_id [::xo::db::CrClass lookup -name en:atjob-form -parent_id [dict get $info folder_id]]
+      set :object [::xo::db::CrClass get_instance_from_db -item_id $item_id]
+      ::xo::Package require [dict get $info instance_id]
+    }
     set owner_id [${:object} item_id]
     set package_id [${:object} package_id]
     set ansi_time [$class ansi_time [clock scan ${:time}]]
