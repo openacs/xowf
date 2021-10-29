@@ -11,7 +11,7 @@
 # the question with a QR code. Teacher can see the incoming answers in
 # the report (without manual refresh when "live_updates" are
 # activated). After every question the teacher can toggle to a
-# "results" display showing the actial answer with statistics as
+# "results" display showing the actual answer with statistics as
 # provided by the participants. 
 #
 # An admin might with to add the following entries to the folder to
