@@ -1204,6 +1204,53 @@ namespace eval ::xowf::test_item {
     :method dict_value {dict key {default ""}} {
       expr {[dict exists $dict $key] ? [dict get $dict $key] : $default}
     }
+
+    #----------------------------------------------------------------------
+    # Class:  AssessmentInterface
+    # Method: add_to_fc
+    #----------------------------------------------------------------------
+    :method add_to_fc {-fc:required -position -minutes -points} {
+      return [lmap c $fc {
+        if {[regexp {^[^:]+_:} $c]} {
+          if {[info exists position]} {
+            append c ,test_item_in_position=$position
+          }
+          if {[info exists minutes]} {
+            append c ,test_item_minutes=$minutes
+          }
+          if {[info exists points]} {
+            append c ,test_item_points=$points
+          }
+          #ns_log notice "APPEND $c"
+        }
+        set c
+      }]
+    }
+
+    #----------------------------------------------------------------------
+    # Class:  AssessmentInterface
+    # Method: replace_in_fc
+    #----------------------------------------------------------------------
+    :method replace_in_fc {-fc:required property value} {
+      return [lmap c $fc {
+        if {[regexp {^[^:]+_:} $c]} {
+          set pairs {}
+          foreach pair [split $c ,] {
+            set p [string first = $pair]
+            set attribute [string range $pair 0 $p-1]
+            #set old_value [string range $pair $p+1 end]
+            if {$attribute eq $property} {
+              set pair $property=$value
+            }
+            lappend pairs $pair
+          }
+          set c [join $pairs ,]
+          #ns_log notice "APPEND $c"
+        }
+        set c
+      }]
+    }
+
   }
 }
 namespace eval ::xowf::test_item {
@@ -1373,10 +1420,32 @@ namespace eval ::xowf::test_item {
 
 namespace eval ::xowf::test_item {
 
+  ad_proc -private spec_to_dict {spec} {
+    #
+    # Convert a single spec to a Tcl dict.
+    #
+    set elements [split $spec ,]
+    dict set result type [lindex $elements 0]
+    foreach s [lrange $elements 1 end] {
+      switch -glob -- $s {
+        *=* {
+          set p [string first = $s]
+          set attribute [string range $s 0 $p-1]
+          set value [::xowiki::formfield::FormField fc_decode [string range $s $p+1 end]]
+          dict set result $attribute $value
+        }
+        default {
+          ns_log notice "... spec_to_dict ignores <$s>"
+        }
+      }
+    }
+    return $result
+  }
+
   ad_proc -private fc_to_dict {form_constraints} {
     #
     # Convert from form_constraint syntax to a dict. This is just a
-    # partial implementation, since form constraints are interprted
+    # partial implementation, since form constraints are interpreted
     # from left to right, changing types, etc., which is not
     # supported here.
     #
@@ -1384,27 +1453,27 @@ namespace eval ::xowf::test_item {
       #ns_log notice "... fc_to_dict works on <$fc>"
       if {[regexp {^([^:]+):(.*)$} $fc _ field_name definition]} {
         if {[string match @* $field_name]} continue
-        set elements [split $definition ,]
-        dict set result $field_name type [lindex $elements 0]
-        foreach s [lrange $elements 1 end] {
-          switch -glob -- $s {
-            *=* {
-              set p [string first = $s]
-              set attribute [string range $s 0 $p-1]
-              set value [::xowiki::formfield::FormField fc_decode [string range $s $p+1 end]]
-              dict set result $field_name $attribute $value
-            }
-            default {
-              ns_log notice "... fc_to_dict ignores <$s>"
-            }
-          }
-        }
+        dict set result $field_name [spec_to_dict $definition]
         dict set result $field_name definition $definition
       }
     }
     return $result
   }
 
+  ad_proc -private tdom_render {script} {
+    #
+    # Render a snippet of tdom-html commands (as e.g. form-fields) into
+    # HTML text.
+    #
+    dom createDocument html doc
+    set root [$doc documentElement]
+    $root appendFromScript {uplevel $script}
+    set n [$root childNode]
+    if {$n ne ""} {
+      return [$n asHTML]
+    }
+    ns_log notice "tdom_render $script returns empty"
+  }
 
   nx::Class create Answer_manager -superclass AssessmentInterface {
 
@@ -2982,6 +3051,27 @@ namespace eval ::xowf::test_item {
             "</span> #xowf.Download_file_submissions#</a>"
       }
 
+      #
+      # Store statistics only in autograding cases, and only, when it
+      # was a full evaluation of the exam. This has the advantage
+      # that we do no have to partially update the statistics. These
+      # are somewhat overly conservative assumptions for now, which
+      # might be partially relaxed in the future.
+      #
+      if {$with_grading_table && $autograde
+          && !$as_student && $filter_id eq "" && $creation_user eq "" && $revision_id eq ""
+        } {
+        set ia [$examWf instance_attributes]
+        foreach var {__stats_success __stats_count} key {success count} {
+          if {[$examWf exists $var]} {
+            dict set statistics $key [$examWf set $var]
+            $examWf unset $var
+          }
+        }
+        dict set ia __statistics $statistics
+        $examWf update_attribute_from_slot [$examWf find_slot instance_attributes] $ia
+      }
+
       return [list do_stream $do_stream HTML $HTML]
     }
 
@@ -3038,7 +3128,11 @@ namespace eval ::xowf::test_item {
     # Class:  Answer_manager
     # Method: answer_form_field_objs
     #----------------------------------------------------------------------
-    :method answer_form_field_objs {-clear:switch -wf:object form_info} {
+    :public method answer_form_field_objs {-clear:switch -wf:object -generic:switch form_info} {
+      #
+      # Instantiate the form_field objects of the provided form based on
+      # form_info.
+      #
       set key ::__test_item_answer_form_fields
       if {$clear} {
         #
@@ -3051,12 +3145,13 @@ namespace eval ::xowf::test_item {
         #ns_log notice "### key exists [info exists $key]"
         if {![info exists $key]} {
           #ns_log notice "form_info: $form_info"
-          set fc [dict get $form_info disabled_form_constraints]
+          set fc [lsort -unique [dict get $form_info disabled_form_constraints]]
           set pc_params [::xo::cc perconnection_parameter_get_all]
-          #ns_log notice "### create_form_fields_from_form_constraints <$fc>"
-          set $key [$wf create_form_fields_from_form_constraints \
-                        -lookup \
-                        [lsort -unique $fc]]
+          if {$generic} {
+            set fc [:replace_in_fc -fc $fc shuffle_kind none]
+            set fc [:replace_in_fc -fc $fc show_max ""]
+          }
+          set $key [$wf create_form_fields_from_form_constraints -lookup $fc]
           ::xo::cc perconnection_parameter_set_all $pc_params
           $wf form_field_index [set $key]
         }
@@ -4261,28 +4356,6 @@ namespace eval ::xowf::test_item {
 
     #----------------------------------------------------------------------
     # Class:  Question_manager
-    # Method: add_to_fc
-    #----------------------------------------------------------------------
-    :method add_to_fc {-fc:required -position -minutes -points} {
-      return [lmap c $fc {
-        if {[regexp {^[^:]+_:} $c]} {
-          if {[info exists position]} {
-            append c ,test_item_in_position=$position
-          }
-          if {[info exists minutes]} {
-            append c ,test_item_minutes=$minutes
-          }
-          if {[info exists points]} {
-            append c ,test_item_points=$points
-          }
-          #ns_log notice "APPEND $c"
-        }
-        set c
-      }]
-    }
-
-    #----------------------------------------------------------------------
-    # Class:  Question_manager
     # Method: question_info
     #----------------------------------------------------------------------
     :public method question_info {
@@ -4658,12 +4731,21 @@ namespace eval ::xowf::test_item {
       #
       # @result list of dicts describing the form fields.
       #
+
+      set fc [$form_obj property form_constraints]
+
+      #
+      # We might be willing in the future to get the full set of all
+      # options, i.e. remove "show_max" constraints etc.
+      #
+      #ns_log notice DESCRIBE-BEFORE--$fc
+      #set fc [:replace_in_fc -fc $fc shuffle_kind none]
+      #set fc [:replace_in_fc -fc $fc show_max ""]
+      #ns_log notice DESCRIBE-changed
+
       set form_fields [$form_obj create_form_fields_from_form_constraints \
-                           -lookup \
-                           [lsort -unique [$form_obj property form_constraints]]]
-      set question_infos [lmap form_field $form_fields {
-        $form_field describe
-      }]
+                           -lookup $fc]
+      set question_infos [lmap form_field $form_fields { $form_field describe }]
 
       #ns_log notice "describe_form [$form_obj name]: $question_infos"
       set question_infos [:pretty_nr_alternatives $question_infos]
@@ -4734,19 +4816,10 @@ namespace eval ::xowf::test_item {
       # Provide question info block.
       #
       set href [$obj pretty_link -query m=print-answers]
+
       set form_objs [:question_objs $obj]
-      append HTML [subst {
-        <div class="panel panel-default">
-        <div class="panel-heading">#xowf.question_summary#</div>
-        <div class="panel-body">
-        <div class='table-responsive'><table class='question_summary table table-condensed'>
-        <tr><th></th><th>#xowf.question_structure#</th>
-        <th style='text-align: center;'>#xowf.Minutes#</th>
-        <th style='text-align: center;'>#xowf.Points#</th>
-        <th style='text-align: center;'>#xowf.Shuffle#</th>
-        <th style='text-align: center;'></th>
-        </tr>
-      }]
+
+      set chunks {}
       foreach form_obj $form_objs {
         set chunk [lindex [:describe_form $form_obj] 0]
         set structure ""
@@ -4760,14 +4833,32 @@ namespace eval ::xowf::test_item {
           append structure " " [:pretty_ncorrect [dict get $chunk nrcorrect]]
         }
         if {[$obj state] in {done submission_review}} {
-          set title_value "<a href='$href&fos=[$form_obj item_id]'>[ns_quotehtml [$form_obj title]]</a>"
+          dict set chunk title_value "<a href='$href&fos=[$form_obj item_id]'>[ns_quotehtml [$form_obj title]]</a>"
         } else {
-          set title_value [ns_quotehtml [$form_obj title]]
+          dict set chunk title_value [ns_quotehtml [$form_obj title]]
         }
+        dict set chunk structure $structure
+        lappend chunks $chunk
+      }
+
+      append HTML [subst {
+        <div class="panel panel-default">
+        <div class="panel-heading">#xowf.question_summary#</div>
+        <div class="panel-body">
+        <div class='table-responsive'><table class='question_summary table table-condensed'>
+        <tr><th></th><th>#xowf.question_structure#</th>
+        <th style='text-align: center;'>#xowf.Minutes#</th>
+        <th style='text-align: center;'>#xowf.Points#</th>
+        <th style='text-align: center;'>#xowf.Shuffle#</th>
+        <th style='text-align: center;'></th>
+        </tr>
+      }]
+
+      foreach chunk $chunks {
         append HTML [subst {
           <tr>
-          <td>$title_value</a></td>
-          <td>[:dict_value $chunk type]: $structure</td>
+          <td>[:dict_value $chunk title_value]</a></td>
+          <td>[:dict_value $chunk type]: [:dict_value $chunk structure]</td>
           <td style='text-align: center;'>[:dict_value $chunk Minutes]</td>
           <td style='text-align: center;'>[:dict_value $chunk Points]</td>
           <td style='text-align: center;'>[:pretty_shuffle [:dict_value $chunk shuffle]]</td>
@@ -4776,6 +4867,70 @@ namespace eval ::xowf::test_item {
       }
       append HTML "</table></div></div></div>\n"
 
+      #
+      # When we have results, we can provide statistics
+      #
+      if {[$obj state] in {done submission_review}} {
+        
+        template::head::add_link -rel stylesheet -href /resources/xowf/test-item.css
+        set combined_form_info [:combined_question_form -with_numbers $obj]
+
+        #
+        # Get the form-field objects with all alternatives (use flag
+        # "-generic")
+        #
+        set form_field_objs [xowf::test_item::answer_manager answer_form_field_objs \
+                                 -generic \
+                                 -wf [xowf::test_item::answer_manager get_answer_wf $obj] \
+                                 $combined_form_info]
+        #
+        # Get the persisted statistics from the workflow
+        # instance. These statistics are computed when the exam
+        # protocol is rendered.
+        #
+        set statistics [$obj property  __statistics]
+        if {$statistics ne ""} {
+          foreach var {success_statistics count_statistics} key {success count} {
+            if {[dict exists $statistics $key]} {
+              set $var [dict get $statistics $key]
+            } else {
+              set $var ""
+            }
+          }
+          
+          #
+          # Merge the statistics into the generic form-fields such we
+          # can use the usual form-field based rendering.
+          #
+          foreach form_field_obj $form_field_objs {
+            #
+            # The linkage between the statistics and the form-fields
+            # is performed via the form-field names. Note that in
+            # cases, where multiple folders are used as a source, the
+            # names have to be disambiguated.
+            #
+            set name [$form_field_obj name]
+            set result_statistics ""
+            if {[dict exists $success_statistics $name]} {
+              set result_statistics [dict get $success_statistics $name]
+            }
+            if {[dict exists $count_statistics $name]} {
+              #ns_log notice "statistics question_info_block $name count '[dict get $count_statistics $name]'"
+              dict set result_statistics count [dict get $count_statistics $name]
+              $form_field_obj set result_statistics $result_statistics
+            }
+          }
+        }
+
+        #
+        # Substitute form-field place-holders ion the combined form.
+        #
+        set form [$obj regsub_eval  \
+                      [template::adp_variable_regexp] [dict get $combined_form_info form] \
+                      {$obj form_field_as_html -mode display "\\\1" "\2" $form_field_objs}]
+        
+        append HTML $form
+      }
       return $HTML
     }
 

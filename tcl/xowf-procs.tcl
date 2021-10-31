@@ -1819,6 +1819,32 @@ namespace eval ::xowf {
     }
     return $correct
   }
+
+  WorkflowPage ad_instproc stats_record_count {name} {
+
+    Record that the specified question was used.
+
+  } {
+    dict incr :__stats_count $name
+  }
+
+  WorkflowPage ad_instproc stats_record_detail {
+    -label
+    -value
+    -name
+    -correctly_answered:boolean
+  } {
+  } {
+    dict set :__stats_label $name label $value $label
+    if {[info exists :__stats_success] && [dict exists ${:__stats_success} $name $value]} {
+      set details [dict get ${:__stats_success} $name $value]
+    } else {
+      set details ""
+    }
+    dict incr details $correctly_answered
+    dict set :__stats_success $name $value $details
+  }
+
   WorkflowPage instproc unset_temporary_instance_variables {} {
     # never save/cache the following variables
     array unset :__wfi
