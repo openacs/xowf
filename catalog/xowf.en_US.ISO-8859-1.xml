@@ -199,7 +199,9 @@
   <msg key="Show_IP_help_text">Show student his own IP address during exam</msg>
   <msg key="Time_budget">Time budget</msg>
   <msg key="Time_budget_help_text">Increase time budget for handicapped students</msg>
-
+  <msg key="Countdown_audio_alarm">Countdown timer with audio alarm</msg>
+  <msg key="Countdown_audio_alarm_help_text">Include optional audio alarm control for countdown timer (maybe not wanted for class-room exams)</msg>
+  
   <msg key="Max_items">Restrict Items</msg>
   <msg key="Max_items_help_text">Restrict item selection to this number of items (requires same weight of every item)</msg>
   <msg key="Max_items_ok">Restriction to %n% items ok, %n% of </msg>

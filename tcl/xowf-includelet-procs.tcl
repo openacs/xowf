@@ -145,6 +145,7 @@ namespace eval ::xowiki::includelet {
         {__decoration plain}
         {parameter_declaration {
           {-target_time ""}
+          {-audio_alarm "true"}
         }}
       } -ad_doc {
         Countdown timer
@@ -155,7 +156,9 @@ namespace eval ::xowiki::includelet {
   countdown-timer instproc render {} {
     :get_parameters
     return [xowf::test_item::answer_manager countdown_timer \
-                -target_time $target_time -id [::xowiki::Includelet html_id [self]]]
+                -target_time $target_time \
+                -audio_alarm $audio_alarm \
+                -id [::xowiki::Includelet html_id [self]]]
   }
 }
 
@@ -167,6 +170,7 @@ namespace eval ::xowiki::includelet {
       -parameter {
         {__decoration plain}
         {parameter_declaration {
+          {-countdown_audio_alarm "true"}          
           {-target_time ""}
           {-url_poll ""}
           {-url_dismiss ""}
@@ -197,7 +201,8 @@ namespace eval ::xowiki::includelet {
       set pn ""
     }
     return [subst {
-      [${:__including_page} include [list countdown-timer -target_time $target_time]]
+      [${:__including_page} include \
+           [list countdown-timer -audio_alarm $countdown_audio_alarm -target_time $target_time]]
       $pn
     }]
   }

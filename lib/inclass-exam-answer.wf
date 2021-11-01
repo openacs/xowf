@@ -381,6 +381,7 @@ proc done_form_loader {ctx form_name} {
     set url_dismiss [$obj pretty_link -query m=message-dismiss]
     ::xo::cc set_parameter top_includelet \
         [list exam-top-includelet \
+             -countdown_audio_alarm [$parent_obj property countdown_audio_alarm t] \
              -target_time $target_time \
              -url_poll $url_poll \
              -url_dismiss $url_dismiss \
