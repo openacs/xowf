@@ -4580,7 +4580,7 @@ namespace eval ::xowf::test_item {
       #
       set minutes [:question_property $form_obj minutes]
       if {$minutes ne ""} {
-        set pretty_label [expr {$minutes eq "1" ? [_ xowiki.minute] : [_ xowiki.minutes]}]
+        set pretty_label [expr {$minutes eq "1" ? [_ xowf.Minute] : [_ xowf.Minutes]}]
         set minutes "($minutes $pretty_label)"
       }
     }
