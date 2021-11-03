@@ -1757,9 +1757,11 @@ namespace eval ::xowf::test_item {
 
         if {$dtend eq ""} {
           #
-          # No end given. set it to start + exam time + 5 minutes
-          #
-          set end_clock [expr {$start_clock + ($total_minutes + 5) * 60}]
+          # No end given. set it to start + exam time + 5 minutes.
+          # The value of "total_minutes" might contain fractions of a
+          # minute, so make sure that the end_clock is an integer as
+          # needed by "clock format",
+          set end_clock [expr {int($start_clock + ($total_minutes + 5) * 60)}]
           set new_dtend [clock format $end_clock -format %H:%M]
           ns_log notice "#### no dtend given. set it from $dtend to $new_dtend"
 
@@ -1769,9 +1771,9 @@ namespace eval ::xowf::test_item {
           if {($end_clock - $start_clock) < ($total_minutes * 60)} {
             #
             # The specified end time is too early. Set it to start +
-            # exam time + 5 minutes
+            # exam time + 5 minutes.
             #
-            set end_clock [expr {$start_clock + ($total_minutes + 5)*60}]
+            set end_clock [expr {int($start_clock + ($total_minutes + 5)*60)}]
             set new_dtend [clock format $end_clock -format %H:%M]
             ns_log notice "#### dtend is too early. Move it from $dtend to $new_dtend"
 
@@ -4871,7 +4873,7 @@ namespace eval ::xowf::test_item {
       # When we have results, we can provide statistics
       #
       if {[$obj state] in {done submission_review}} {
-        
+
         template::head::add_link -rel stylesheet -href /resources/xowf/test-item.css
         set combined_form_info [:combined_question_form -with_numbers $obj]
 
@@ -4897,7 +4899,7 @@ namespace eval ::xowf::test_item {
               set $var ""
             }
           }
-          
+
           #
           # Merge the statistics into the generic form-fields such we
           # can use the usual form-field based rendering.
@@ -4928,7 +4930,7 @@ namespace eval ::xowf::test_item {
         set form [$obj regsub_eval  \
                       [template::adp_variable_regexp] [dict get $combined_form_info form] \
                       {$obj form_field_as_html -mode display "\\\1" "\2" $form_field_objs}]
-        
+
         append HTML $form
       }
       return $HTML
