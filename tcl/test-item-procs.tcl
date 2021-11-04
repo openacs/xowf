@@ -4370,6 +4370,7 @@ namespace eval ::xowf::test_item {
       {-user_answers:object,0..1 ""}
       {-no_position:switch false}
       {-question_number_label #xowf.question#}
+      {-positions:int,0..n ""}
       form_objs
     } {
       #
@@ -4382,10 +4383,13 @@ namespace eval ::xowf::test_item {
       set full_fc {}
       set full_disabled_fc {}
       set title_infos {}
-      set position 0
+      if {[llength $positions] == 0} {
+        set position -1
+        set positions [lmap form_obj $form_objs {incr position}]
+      }
       set randomizationOk 1
       set autoGrade 1
-      foreach form_obj $form_objs number $numbers {
+      foreach form_obj $form_objs number $numbers position $positions {
         #if {[info exists fixed_position]} {
         #  set position $fixed_position
         #}
@@ -4473,7 +4477,6 @@ namespace eval ::xowf::test_item {
                                       -minutes $minutes \
                                       -points $points \
                                       {*}$positionArg]
-        incr position
 
         set formAttributes [$form_obj instance_attributes]
         if {[dict exists $formAttributes question]} {
@@ -4636,6 +4639,14 @@ namespace eval ::xowf::test_item {
       #if {$user_answers eq ""} {xo::show_stack}
       set all_form_objs [:question_objs -shuffle_id $shuffle_id $obj]
 
+      set positions {}
+      if {[llength $form_objs] > 0} {
+        foreach form_obj $form_objs {
+          lappend positions [lsearch $all_form_objs $form_obj]
+        }
+      }
+      #ns_log notice "XXX combined_question_form fos=$form_objs all_form_objs=$all_form_objs <$positions>"
+
       if {$user_specific} {
         set max_items [$obj property max_items ""]
         if {$max_items ne ""} {
@@ -4673,6 +4684,7 @@ namespace eval ::xowf::test_item {
                   {*}$extra_flags \
                   -obj $obj \
                   -user_answers $user_answers \
+                  -positions $positions \
                   $form_objs]
     }
 
