@@ -602,8 +602,9 @@ proc done_form_loader {ctx form_name} {
     if {$autosaveAllowed} {
       next
     } else {
-      ns_log notice "inclass-exam autosave rejected: $reason"
-      ns_return 200 text/plain "not ok"
+      set reply [subst {{"feedback": "[_ xowf.autosave_rejected_overdue]"}}]
+      ns_log notice "inclass-exam autosave rejected: $reason - $reply"
+      ns_return 200 application/json $reply
       ad_script_abort
     }
   }

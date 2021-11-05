@@ -251,4 +251,5 @@
   <msg key="Composite_Show_minutes">Subquestion with minutes</msg>
   <msg key="Composite_Show_points">Subquestion with points</msg>
   <msg key="Composite_Show_title">Subquestion with title</msg>
+  <msg key="autosave_rejected_overdue">Autosave operation rejected since submmission is overdue. Please save your answer and submit now.</msg> 
 </message_catalog>

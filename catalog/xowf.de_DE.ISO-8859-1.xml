@@ -222,4 +222,6 @@
   <msg key="out_of">aus</msg>
   <msg key="question_structure">Aufbau</msg>
   <msg key="Twocol_layout">2-Spaltig</msg>
+
+  <msg key="autosave_rejected_overdue">Automatische Speicherung nicht möglich, da die Bearbeitungszeit abgelaufen ist. Speichern Sie das Ergebnis und geben sie ab!</msg> 
 </message_catalog>
