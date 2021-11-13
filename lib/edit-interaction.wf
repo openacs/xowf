@@ -79,12 +79,15 @@ State created \
 :proc item_type {obj} {
     set item_type [$obj property item_type]
     if {$item_type eq ""} {
-        set item_type [ns_queryget p.item_type]
-        if {$item_type eq ""} {set item_type ShortText}
-        $obj set_property -new 1 item_type $item_type
+      set item_type [ns_queryget p.item_type]
+      if {$item_type eq ""} {
+        set item_type ShortText
+      }
+      $obj set_property -new 1 item_type $item_type
     }
     return $item_type
 }
+
 :proc form_name_from_item_type {obj} {
     return en:TestItem[:item_type $obj].form
 }
@@ -97,6 +100,11 @@ State created \
   ${container}::created form $form_name
   ${container}::created actions {save preview}
   #${container}::created in_role swa { -actions {save view preview} }
+
+  :proc render_icon {} {
+    return [subst {text "#xowf.menu-New-Item-[:property item_type]Interaction#" is_richtext false}]
+  }
+
 }
 
 #
