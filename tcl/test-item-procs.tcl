@@ -115,7 +115,6 @@ namespace eval ::xowiki::formfield {
   }
 
   TestItemField instproc correct_when_widget {{-nr 10}} {
-    set dict ""
     dict set dict repeat 1..10
     dict set dict repeat_add_label #xowiki.form-repeatable-add-condition#
     dict set dict help_text #xowiki.formfield-comp_correct_when-help_text#
@@ -300,9 +299,16 @@ namespace eval ::xowiki::formfield {
         set auto_correct false
         set can_shuffle false
       }
+      pool {
+        set interaction_class pool_question
+        set options ""
+        set auto_correct false
+        set can_shuffle false
+      }
       default {error "unknown question type: ${:question_type}"}
     }
-    :log test_item-auto_correct=$auto_correct
+    #:log test_item-auto_correct=$auto_correct
+
     #
     # Handle feedback_level.
     #
@@ -331,9 +337,14 @@ namespace eval ::xowiki::formfield {
     }
 
     if {$can_shuffle} {
-      set shuffle_options "{#xowf.shuffle_none# none} {#xowf.shuffle_peruser# peruser} {#xowf.shuffle_always# always}"
+      set shuffle_dict horizontal true
+      set shuffle_dict form_item_wrapper_CSSclass form-inline
+      set shuffle_dict default none
+      set shuffle_dict label #xowf.Shuffle#
+      set shuffle_dict options \
+          "{#xowf.shuffle_none# none} {#xowf.shuffle_peruser# peruser} {#xowf.shuffle_always# always}"
       set shuffleSpec [subst {
-        {shuffle {radio,horizontal=true,form_item_wrapper_CSSclass=form-inline,options=$shuffle_options,default=none,label=#xowf.Shuffle#}}
+        [list [list shuffle [:dict_to_fc -type radio $shuffle_dict]]]
         {show_max {number,form_item_wrapper_CSSclass=form-inline,min=1,label=#xowf.show_max#}}
       }]
     } else {
@@ -380,13 +391,15 @@ namespace eval ::xowiki::formfield {
         {points number,form_item_wrapper_CSSclass=form-inline,min=0.0,step=0.1,label=#xowf.Points#}
       }
     }
-
-    :create_components  [subst {
+    if {${:question_type} eq "pool"} {
+      set twocolDict ""
+    }
+    :create_components [subst {
       $pointsSpec
       $shuffleSpec
       $gradingSpec
       $typeSpecificComponentSpec
-      [:makeSpec -name twocol $twocolDict]
+      [expr {$twocolDict ne "" ? [:makeSpec -name twocol $twocolDict] : ""}]
       {interaction {$interaction_class,$options,feedback_level=${:feedback_level},auto_correct=${:auto_correct},label=}}
       [:feed_back_definition]
     }]
@@ -407,7 +420,9 @@ namespace eval ::xowiki::formfield {
     {nr_choices 5}
     {multiple true}
   }
-  mc_interaction set auto_correct true
+  mc_interaction set closed_question_type true
+  #mc_interaction set item_type MC  ;# just used for reverse lookup in pool questions,
+  #                                    where the old MC questions are not supported
 
   mc_interaction instproc set_compound_value {value} {
     set r [next]
@@ -442,7 +457,7 @@ namespace eval ::xowiki::formfield {
     # create component structure
     #
     set widget [test_item set richtextWidget]
-    :create_components  [subst {
+    :create_components [subst {
       {text  {$widget,required,height=150px,label=#xowf.exercise-text#}}
       {mc {mc_choice,feedback_level=${:feedback_level},label=#xowf.alternative#,multiple=${:multiple},repeat=1..${:nr_choices}}}
     }]
@@ -538,7 +553,7 @@ namespace eval ::xowiki::formfield {
     ${:object} set_property -new 1 form_constraints $fc
     set anon_instances true ;# TODO make me configurable
     ${:object} set_property -new 1 anon_instances $anon_instances
-    ${:object} set_property -new 1 auto_correct [[self class] set auto_correct]
+    ${:object} set_property -new 1 auto_correct [[self class] set closed_question_type]
     ${:object} set_property -new 1 has_solution true
   }
 
@@ -599,7 +614,8 @@ namespace eval ::xowiki::formfield {
 
   Class create text_interaction -superclass TestItemField -parameter {
   }
-  #text_interaction set auto_correct false
+  text_interaction set closed_question_type false
+  text_interaction set item_type Text
 
   text_interaction instproc initialize {} {
     if {${:__state} ne "after_specs"} return
@@ -661,6 +677,8 @@ namespace eval ::xowiki::formfield {
   Class create short_text_interaction -superclass TestItemField -parameter {
     {nr 15}
   }
+  short_text_interaction set item_type ShortText
+  short_text_interaction set closed_question_type false
 
   short_text_interaction instproc initialize {} {
     if {${:__state} ne "after_specs"} return
@@ -765,7 +783,7 @@ namespace eval ::xowiki::formfield {
         set p [$p info parent]
         continue
       }
-      set :auto_correct [$p set auto_correct]
+      set :auto_correct [$p set closed_question_type]
       break
     }
 
@@ -804,6 +822,8 @@ namespace eval ::xowiki::formfield {
   Class create reorder_interaction -superclass TestItemField -parameter {
     {nr 15}
   }
+  reorder_interaction set item_type {Reorder}
+  reorder_interaction set closed_question_type true
 
   reorder_interaction instproc initialize {} {
     if {${:__state} ne "after_specs"} return
@@ -811,7 +831,6 @@ namespace eval ::xowiki::formfield {
     # Create component structure.
     #
     set widget [test_item set richtextWidget]
-    ns_log notice "[self] [:info class] auto_correct=${:auto_correct}"
 
     :create_components [subst {
       {text  {$widget,height=100px,label=#xowf.exercise-text#,plugins=OacsFs}}
@@ -874,6 +893,8 @@ namespace eval ::xowiki::formfield {
     {nr 15}
     {multiple true}
   }
+  mc_interaction2 set item_type {SC MC}
+  mc_interaction2 set closed_question_type true
 
   mc_interaction2 instproc initialize {} {
 
@@ -952,8 +973,8 @@ namespace eval ::xowiki::formfield {
     set widget [test_item set richtextWidget]
 
     # {correct {boolean_checkbox,horizontal=true,label=#xowf.Correct#,form_item_wrapper_CSSclass=form-inline}}
-    :create_components  [subst {
-      {text  {$widget,height=50px,label=#xowf.choice_option#,plugins=OacsFs}}
+    :create_components [subst {
+      {text    {$widget,height=50px,label=#xowf.choice_option#,plugins=OacsFs}}
       {correct {boolean_checkbox,horizontal=true,default=f,label=#xowf.Correct#,form_item_wrapper_CSSclass=form-inline}}
       {solution {textarea,rows=2,label=#xowf.Solution#,form_item_wrapper_CSSclass=form-inline}}
     }]
@@ -972,14 +993,15 @@ namespace eval ::xowiki::formfield {
 
   Class create upload_interaction -superclass TestItemField -parameter {
   }
-  upload_interaction set auto_correct false
+  upload_interaction set closed_question_type false
+  upload_interaction set item_type Upload
 
   upload_interaction instproc initialize {} {
     if {${:__state} ne "after_specs"} {
       return
     }
     set widget [test_item set richtextWidget]
-    :create_components  [subst {
+    :create_components [subst {
       {text        {$widget,height=150px,label=#xowf.exercise-text#,plugins=OacsFs}}
       {attachments {[:attachments_widget ${:nr_attachments}]}}
     }]
@@ -1011,7 +1033,7 @@ namespace eval ::xowiki::formfield {
     ${:object} set_property -new 1 form_constraints $fc
     set anon_instances true ;# TODO make me configurable
     ${:object} set_property -new 1 anon_instances $anon_instances
-    ${:object} set_property -new 1 auto_correct [[self class] set auto_correct]
+    ${:object} set_property -new 1 auto_correct [[self class] set closed_question_type]
     ${:object} set_property -new 1 has_solution false
   }
 }
@@ -1029,6 +1051,8 @@ namespace eval ::xowiki::formfield {
     {multiple true}
     {form en:edit-interaction.wf}
   }
+  test_section set item_type Composite
+  test_section set closed_question_type false
 
   test_section instproc initialize {} {
 
@@ -1045,7 +1069,7 @@ namespace eval ::xowiki::formfield {
     #  set item_id [${:object} item_id]
     #  {selection {form_page,form=en:edit-interaction.wf,unless=_item_id=$item_id,multiple=true}}
 
-    :create_components  [subst {
+    :create_components [subst {
       {text        {$widget,height=150px,label=#xowf.exercise-text#,plugins=OacsFs}}
       {selection   {form_page,form=en:edit-interaction.wf,unless=item_type=Composite,multiple=true}}
     }]
@@ -1157,6 +1181,127 @@ namespace eval ::xowiki::formfield {
     ${:object} set_property -new 1 anon_instances $anon_instances
   }
 }
+
+namespace eval ::xowiki::formfield {
+  ###########################################################
+  #
+  # ::xowiki::formfield::pool_question
+  #
+  ###########################################################
+
+  Class create pool_question -superclass TestItemField -parameter {
+  }
+  pool_question set closed_question_type false ; # the replacement query might be or not autocorrection capabable
+  pool_question set item_type PoolQuestion
+
+  pool_question set item_types {
+      Composite
+      MC
+      Reorder
+      SC
+      ShortText
+      Text
+      Upload
+  }
+  pool_question proc all_item_types_selected {item_types} {
+    #
+    # Check, if all item types were selected
+    #
+    foreach item_type [pool_question set item_types] {
+      if {$item_type ni $item_types} {
+        return 0
+      }
+    }
+    return 1
+  }
+  pool_question instproc initialize {} {
+    if {${:__state} ne "after_specs"} {
+      return
+    }
+    set item_types [pool_question set item_types]
+    set item_type_options [lmap item_type $item_types {
+      list #xowf.menu-New-Item-${item_type}Interaction# $item_type
+    }]
+
+    set current_folder_id [[${:object} parent_id] item_id]
+    set parent_folder_id [::$current_folder_id parent_id]
+    set fi [::xowiki::includelet::folders new -destroy_on_cleanup]
+    set folder_objs [$fi collect_folders \
+                         -package_id [${:object} package_id] \
+                         -parent_id $parent_folder_id]
+    set folder_options [list]
+    lappend folder_options {*}[lmap folder_obj $folder_objs {
+      if {[$folder_obj parent_id] ne $parent_folder_id} {
+        continue
+      }
+      list [$folder_obj title] ../[$folder_obj name]
+    }]
+
+    dict set pool_dict required true
+    dict set pool_dict options $folder_options
+    dict set pool_dict default ../[::$current_folder_id name]
+    dict set pool_dict label #xowf.pool_question_folder#
+
+    dict set item_dict options $item_type_options
+    dict set item_dict default $item_types
+    dict set item_dict label #xowf.pool_question_item_types#
+
+    :create_components [subst {
+      {folder      {[:dict_to_fc -type select $pool_dict]}}
+      {item_types  {[:dict_to_fc -type checkbox $item_dict]}}
+      {pattern     {text,default=*,label=#xowf.pool_question_pattern#}}
+    }]
+
+    set :__initialized 1
+  }
+
+  pool_question instproc convert_to_internal {} {
+    next
+    set allowed_item_types [:get_named_sub_component_value item_types]
+    dict set fc_dict folder [:get_named_sub_component_value folder]
+    dict set fc_dict pattern [:get_named_sub_component_value pattern]
+    dict set fc_dict item_types $allowed_item_types
+
+    set form "<form>@answer@</form>"
+    lappend fc \
+        "@categories:off @cr_fields:hidden" \
+        "answer:[:dict_to_fc -type pool_question_placeholder $fc_dict]"
+
+    ${:object} set_property -new 1 form $form
+    ${:object} set_property -new 1 form_constraints $fc
+
+    #
+    # Turn on "auto_correct" when for every selected item_type, *all*
+    # items are fully closed and therefore suited for
+    # auto_correction. For example, for composite questions, this might
+    # or might not be true (to handle this more aggressively, we would
+    # have to iterate over all exercises of this question types and
+    # check their detailed subcomponents).
+    #
+    set auto_correct 1
+    foreach class [::xowiki::formfield::TestItemField info subclass -closure] {
+      if {[$class exists item_type]} {
+        foreach item_type [$class set item_type] {
+          if {$item_type in $allowed_item_types && ![$class set closed_question_type]} {
+            set auto_correct 0
+            break
+          }
+        }
+      }
+    }
+    #ns_log notice "... FINAL auto_correct $auto_correct (allowed $allowed_item_types)"
+    ${:object} set_property -new 1 auto_correct $auto_correct
+  }
+
+  Class create pool_question_placeholder -superclass {TestItemField} -parameter {
+    folder
+    pattern
+    item_types
+  }
+
+}
+
+
 
 ############################################################################
 # Generic Assement interface
@@ -1449,6 +1594,7 @@ namespace eval ::xowf::test_item {
     # from left to right, changing types, etc., which is not
     # supported here.
     #
+    set result ""
     foreach fc $form_constraints {
       #ns_log notice "... fc_to_dict works on <$fc>"
       if {[regexp {^([^:]+):(.*)$} $fc _ field_name definition]} {
@@ -3914,6 +4060,377 @@ namespace eval ::xowf::test_item {
 
     #----------------------------------------------------------------------
     # Class:  Question_manager
+    # Method: initialize
+    #----------------------------------------------------------------------
+    :public method initialize {-wfi:object} {
+      #
+      # Initialize the question manager for a certain workflow
+      # instance. This is needed for per-answer-workflow questions (as
+      # for pool questions, where different questions are taken for
+      # different users).
+      #
+
+      #ns_log notice "QM initialize wfi $wfi"
+      set isAnswerInstance [expr {[$wfi is_wf_instance] == 1 && [$wfi is_wf] == 0}]
+      if {$isAnswerInstance} {
+        #ns_log notice "QM initialize answer instance [$wfi name] // [$wfi instance_attributes]"
+        set :wfi $wfi
+      } else {
+        ns_log warning "initializing question manager for not an answer instance [$wfi name]" \
+            "// [$wfi instance_attributes]"
+      }
+    }
+
+
+    #----------------------------------------------------------------------
+    # Class:  Question_manager
+    # Method: get_pool_replacement_candidates
+    #----------------------------------------------------------------------
+    :method get_pool_replacement_candidates {
+      {-allowed_forms en:edit-interaction.wf}
+      {-minutes}
+      {-points}
+      {-fc_dict}
+      {-lang ""}
+      pool_question_obj
+    } {
+      #
+      # Obtain for the specs in the pool_question_obj potential
+      # replacement items.
+      #
+      set parent_id [$pool_question_obj parent_id]
+      set package_id [$pool_question_obj package_id]
+
+      #
+      # We want to select only instances of these edit workflows
+      # specified in allowed_forms.
+      #
+      set form_objs [::$package_id instantiate_forms \
+                         -parent_id $parent_id \
+                         -forms $allowed_forms]
+      set form_object_item_ids [lmap f $form_objs {$f item_id}]
+
+      set pattern [dict get $fc_dict pattern]
+      set item_types [dict get $fc_dict item_types]
+      set folder [dict get $fc_dict folder]
+
+      set item_ref_info [::$package_id item_ref \
+                             -use_package_path 0 \
+                             -default_lang en \
+                             -parent_id $parent_id \
+                            $folder]
+      set folder_id [:dict_value $item_ref_info item_id]
+
+      #
+      # In case, all item types are selected, no additional clauses
+      # are needed.
+      #
+      if {[::xowiki::formfield::pool_question all_item_types_selected $item_types]} {
+        set w_clauses ""
+      } else {
+        set w_clauses [list "item_type = [join $item_types |]"]
+      }
+
+      #
+      # Never include PoolQuestions as a replacement for a pool
+      # question.
+      #
+      set u_clauses [list "item_type = PoolQuestion"]
+
+      #
+      # Perform language selection based on the name and combine this
+      # with the provided pattern.
+      #
+      if {$pattern eq ""} {
+        set pattern *
+      }
+      if {$lang ne ""} {
+        lappend w_clauses "_name matches ${lang}:$pattern"
+      } elseif {$pattern ne "*"} {
+        lappend w_clauses "_name matches $pattern"
+      } else {
+        #
+        # In case thjere is no pattern and no lang provided, there is
+        # no filter necessary.
+        #
+      }
+
+      # The matching of minutes and points are more complex due to
+      # mutual completion (see below).
+      #
+      #if {$minutes ne ""} {
+      #  lappend w_clauses "question matches *question.minutes $minutes*"
+      #}
+
+      set filters [::xowiki::FormPage compute_filter_clauses \
+                       {*}[expr {[llength $u_clauses] > 0 ? [list -unless [join $u_clauses &&]] : ""}] \
+                       {*}[expr {[llength $w_clauses] ? [list -where [join $w_clauses &&]] : ""}] \
+                      ]
+
+      #ns_log notice "get_pool_replacement_candidates filters $filters"
+      #ns_log notice "get_pool_replacement_candidates filters WC $w_clauses -->\n[dict get $filters wc]"
+      #ns_log notice "get_pool_replacement_candidates filters UC $u_clauses -->\n[dict get $filters uc]"
+
+      #
+      # In case the folder_id is a symbolic link to a different
+      # folder, resolve the link and reset the folder_id to the
+      # item_id of the link target.
+      #
+      # In case we have links to different packages, some more work
+      # might be required (e.g. instantiate the other package, etc.).
+      #
+      if {![nsf::is object ::$folder_id]} {
+        ::xo::db::CrClass get_instance_from_db -item_id $folder_id
+      }
+      if {[::$folder_id is_link_page]} {
+        set targetObj [::$folder_id get_target_from_link_page]
+        set folder_id [$targetObj item_id]
+      }
+
+      #
+      # TODO: one has to check the performance of the generic
+      # get_form_entries on learn with larger question pools. It would
+      # be possible to provide a quicker query based on the
+      # xowiki*item_index joined with acs-objects instead of the
+      # generic view used in get_form_entries. ... but maybe the
+      # current approach with caching is already quick enough.
+      #
+      set items [::xowiki::FormPage get_form_entries \
+                     -base_item_ids ${form_object_item_ids} \
+                     -form_fields {} \
+                     -publish_status ready \
+                     -parent_id $folder_id \
+                     -package_id ${package_id} \
+                     -h_where [dict get $filters wc] \
+                     -h_unless [dict get $filters uc] \
+                     -initialize false \
+                     -from_package_ids ""]
+
+      ns_log notice "get_pool_replacement_candidates parent_id $folder_id -> [llength [$items children]]"
+
+      #
+      # Since we allow the user to specify either minutes or points,
+      # and use the specified values as defaults for the others, we
+      # have to replace the empty values with the defaults (mutual
+      # completion).
+      #
+      if {$minutes eq "" && $points ne ""} {
+        set minutes $points
+      } elseif {$minutes ne "" && $points eq ""} {
+        set points $minutes
+      }
+
+      set result ""
+      foreach item [$items children] {
+        set qn [:qualified_question_names $item]
+        set ia [$item set instance_attributes]
+        set qa [dict get $ia question]
+
+        #
+        # Replace empty values for "minutes" and "points" with the
+        # defaults before comparing.
+        #
+        set item_minutes [dict get $qa question.minutes]
+        set item_points [dict get $qa question.points]
+        if {$item_minutes eq "" && $item_points ne ""} {
+          set item_minutes $item_points
+        } elseif {$item_minutes ne "" && $item_points eq ""} {
+          set item_points $item_minutes
+        }
+        if {$minutes ne "" && $item_minutes ne $minutes} {
+          continue
+        } elseif {$points ne "" && $item_points ne $points} {
+          continue
+        }
+
+        dict set result $qn item_id [$item item_id]
+        dict set result $qn item_type [dict get $ia item_type]
+        #dict set result $qn question_dict $qa
+      }
+
+      #ns_log notice "=============== get_pool_replacement_candidates returns $result"
+      return $result
+    }
+
+    #----------------------------------------------------------------------
+    # Class:  Question_manager
+    # Method: get_pool_questions
+    #----------------------------------------------------------------------
+    :public method get_pool_questions {
+      {-allowed_forms en:edit-interaction.wf}
+      {-field_name ""}
+      pool_question_obj
+      exam_question_names
+    } {
+      #
+      # Obtain for the specs in the pool_question_obj potential
+      # replacement items in form of a replacement dict. For raw forms
+      # (i.e., not obtained via the renaming form-loader), we have just
+      # the plain "answer", which can be provided via the "field_name"
+      # attribute.
+      #
+      set query_dict [fc_to_dict [$pool_question_obj property form_constraints]]
+      if {$field_name eq ""} {
+        #
+        # No field name was provided, so get the field name from the
+        # question obj.
+        #
+        set field_name [::xowf::test_item::renaming_form_loader \
+                            form_name_based_attribute_stem [$pool_question_obj name]]
+        if {![dict exists $query_dict $field_name]} {
+          #
+          # Fall back to field_name "answer". This will be necessary,
+          # when called with question_objs not adapted by the renaming
+          # form-loader.
+          #
+          if {[dict exists $query_dict answer]} {
+            ns_log notice "get_pool_questions: fallback from field_name '$field_name' to 'answer'"
+            set field_name answer
+          }
+        }
+      }
+      set question_attributes [dict get [$pool_question_obj instance_attributes] question]
+      set minutes [dict get $question_attributes question.minutes]
+      set points [dict get $question_attributes question.points]
+
+      set fc_dict [dict get $query_dict $field_name]
+      set lang [string range [$pool_question_obj nls_language] 0 1]
+
+      append key test-item-replacement-cands \
+          - $minutes - $points - $lang - $fc_dict - [$pool_question_obj revision_id]
+      ns_log notice "get_pool_questions fetch via key: '$key'"
+
+      #return [:get_pool_replacement_candidates \
+                  -minutes $minutes \
+                  -points $points \
+                  -fc_dict $fc_dict \
+                  -lang $lang \
+                  $pool_question_obj]
+      return [ns_cache_eval -expires 1m -- ns:memoize $key {
+        :get_pool_replacement_candidates \
+            -minutes $minutes \
+            -points $points \
+            -fc_dict $fc_dict \
+            -lang $lang \
+            $pool_question_obj
+      }]
+    }
+
+    #----------------------------------------------------------------------
+    # Class:  Question_manager
+    # Method: replace_pool_question
+    #----------------------------------------------------------------------
+    :public method replace_pool_question {
+      -position
+      -seed
+      {-allowed_forms en:edit-interaction.wf}
+      {-field_name ""}
+      -pool_question_obj
+      -exam_question_names
+    } {
+      #
+      #
+      # @return an initialized replacement form obj if this is possible
+      #
+      set field_name ""; ## rely on fallback
+      set candidate_dict [:get_pool_questions  \
+                              -allowed_forms $allowed_forms \
+                              -field_name $field_name \
+                              $pool_question_obj \
+                              $exam_question_names]
+
+      set candidate_names [dict keys $candidate_dict]
+      set nrCandidates [llength $candidate_names]
+      if {$nrCandidates == 0} {
+        set h [ns_set iget [ns_conn headers] referrer]
+        set url [join [lrange [split [xo::cc url] /] 0 end-1] /]?m=edit
+        util_user_message -message "could not find a replacement item for pool question: no matching item found"
+        ad_returnredirect $url
+        ad_script_abort
+      }
+
+      #
+      # It might be the case that we select the same item for an exam
+      # twice. Therefore, we have to iterate, until we find different
+      # items.
+      #
+      expr {srand($seed)}
+      set maxiter 100
+      while {1} {
+        set i [expr {int(($nrCandidates) * rand())}]
+        set new_name [lindex $candidate_names $i]
+        #ns_log notice "replace_pool_question position $position seed $seed random_index $i"
+
+        set contained [expr {$new_name in $exam_question_names}]
+        #ns_log notice "replace_pool_question replace [$pool_question_obj name] by $new_name contained in" \
+        #    "[lsort $exam_question_names] contained $contained"
+        if {!$contained || [incr maxiter -1] < 0} {
+          break
+        }
+      }
+      if {$contained} {
+        error "could not find a replacement item for [$pool_question_obj name]: only duplicate items found"
+
+      }
+      set form_obj [::xo::db::CrClass get_instance_from_db \
+                        -item_id [dict get $candidate_dict $new_name item_id]]
+
+      #$form_obj initialize
+
+      # ns_log notice [$form_obj serialize]
+      return $form_obj
+    }
+
+    #----------------------------------------------------------------------
+    # Class:  Question_manager
+    # Method: replace_pool_questions
+    #----------------------------------------------------------------------
+    :public method replace_pool_questions {
+      -answer_obj:object
+      -exam_obj:object
+    } {
+      if {[$answer_obj property question] ne ""} {
+        ns_log notice "answer_obj $answer_obj has already a 'question' property" \
+            [lsort [dict keys [$answer_obj instance_attributes]]]
+        return
+      }
+      set exam_question_names [$exam_obj property question]
+      set form_objs [:load_question_objs $exam_obj $exam_question_names]
+
+      #
+      # Make sure to normalize all names to ease comparison
+      #
+      set original_question_names [:qualified_question_names $form_objs]
+
+      set replaced_form_objs {}
+      set position 0
+      set seeds [$answer_obj property seeds]
+      foreach form_obj $form_objs {
+        #ns_log notice "YYY check item_type '[$form_obj property item_type]' // [$form_obj instance_attributes]"
+        if {[$form_obj property item_type] eq "PoolQuestion"} {
+          set replaced_form_obj [:replace_pool_question \
+                                     -position $position \
+                                     -seed [lindex $seeds $position] \
+                                     -pool_question_obj $form_obj \
+                                     -exam_question_names $exam_question_names]
+          set exam_question_names [lreplace $exam_question_names $position $position \
+                                       [:qualified_question_names $replaced_form_obj]]
+          lappend replaced_form_objs $replaced_form_obj
+        } else {
+          lappend replaced_form_objs $form_obj
+        }
+        incr position
+      }
+      #ns_log notice "YYYY OLD NAMES [join $original_question_names { }]"
+      #ns_log notice "YYYY UPD NAMES [join $exam_question_names { }]"
+      if {$original_question_names ne $exam_question_names} {
+        ns_log notice "YYYY store question names in user's answer workflow"
+        $answer_obj set_property -new 1 question $exam_question_names
+      }
+    }
+
+    #----------------------------------------------------------------------
+    # Class:  Question_manager
     # Method: goto_page
     #----------------------------------------------------------------------
     :public method goto_page {obj:object position} {
@@ -4028,6 +4545,26 @@ namespace eval ::xowf::test_item {
 
     #----------------------------------------------------------------------
     # Class:  Question_manager
+    # Method: qualified_question_names
+    #----------------------------------------------------------------------
+    :method qualified_question_names {question_objs} {
+      #
+      # Return the question names with parent folder in form of an
+      # item-ref. We assume here, all question_objs are from the same
+      # xowf instance. We will need item-refs pointing to other
+      # instances in the future.
+      #
+      lmap question_obj $question_objs {
+        set parent_id [$question_obj parent_id]
+        if {![nsf::is object ::$parent_id]} {
+          ::xo::db::CrClass get_instance_from_db -item_id $parent_id
+        }
+        set ref [::$parent_id name]/[$question_obj name]
+      }
+    }
+
+    #----------------------------------------------------------------------
+    # Class:  Question_manager
     # Method: load_question_objs
     #----------------------------------------------------------------------
     :method load_question_objs {obj:object names} {
@@ -4035,35 +4572,40 @@ namespace eval ::xowf::test_item {
       # Load the question objects for the provided question names and
       # return the question objs.
       #
-      set questions [lmap ref $names {
-        if {![string match "*/*" $ref]} {
-          #
-          # In case, '$ref' refers to a site-wide page, a prefix with
-          # the parent name would not help. In these cases, we expect
-          # to have the parent obj not instantiated.
-          #
-          set parent_id [$obj parent_id]
-          if {[nsf::is object ::$parent_id]} {
+
+      set parent_id [$obj parent_id]
+      #
+      # Make sure to have names pointing to a folder.
+      # In case, '$ref' refers to a site-wide page, a prefix with
+      # the parent name would not help. In these cases, we expect
+      # to have the parent obj not instantiated.
+      #
+      if {[nsf::is object ::$parent_id]} {
+        set names [lmap ref $names {
+          if {![string match "*/*" $ref]} {
             set ref [::$parent_id name]/$ref
           }
-        }
-        set ref
-      }]
-      set questionNames [join $questions |]
+          set ref
+        }]
+      }
+      #ns_log notice "XXX [$obj name] load_question_objs names = <$names>"
+      #xo::show_stack
+      set questionNames [join $names |]
       set questionForms [::[$obj package_id] instantiate_forms \
                              -default_lang [$obj lang] \
                              -forms $questionNames]
 
       #ns_log notice "load_question_objs called with $obj $names -> $questionForms"
-      if {[llength $questionForms] < [llength $questions]} {
-        if {[llength $questions] == 1} {
-          ns_log warning "load_question_objs: question '$questions' could not be loaded"
+      if {[llength $questionForms] < [llength $names]} {
+        if {[llength $names] == 1} {
+          ns_log warning "load_question_objs: question '$names' could not be loaded"
         } else {
           set loaded [llength $questionForms]
-          set out_of [llength $questions]
-          ns_log warning "load_question_objs: only $loaded out of $out_of from '$questions' could be loaded"
+          set out_of [llength $names]
+          ns_log warning "load_question_objs: only $loaded out of $out_of from '$names' could be loaded"
         }
       }
+      #ns_log notice "XXX [$obj name] load_question_objs questionNames = <$names>"
       return $questionForms
     }
 
@@ -4072,8 +4614,8 @@ namespace eval ::xowf::test_item {
     # Method: current_question_name
     #----------------------------------------------------------------------
     :method current_question_name {obj:object} {
-      set questions [dict get [$obj instance_attributes] question]
-      return [lindex [dict get [$obj instance_attributes] question] [$obj property position]]
+      set questions [:question_names $obj]
+      return [lindex $questions [$obj property position]]
     }
 
     #----------------------------------------------------------------------
@@ -4114,7 +4656,9 @@ namespace eval ::xowf::test_item {
       # objects in the right order, depending on the shuffle_id.
       #
       :assert_assessment $obj
-      set form_objs [:load_question_objs $obj [$obj property question]]
+      set form_objs [:load_question_objs $obj [:question_names $obj]]
+      #ns_log notice "question_objs from $obj => $form_objs shuffle_id $shuffle_id"
+
       if {$shuffle_id > -1} {
         set result {}
         foreach i [::xowiki::randomized_indices -seed $shuffle_id [llength $form_objs]] {
@@ -4133,7 +4677,20 @@ namespace eval ::xowf::test_item {
       #
       # Return the names of the questions of an assessment.
       #
-      return [$obj property question]
+      if {[info exists :wfi]} {
+        if {![nsf::is object ${:wfi}]} {
+          ns_log notice "we cannot trust :wfi '${:wfi}', probably a leftover"
+          unset :wfi
+        }
+      }
+      if {[info exists :wfi] && [${:wfi} property question] ne ""} {
+        set names [${:wfi} property question]
+        #ns_log notice "question_names returns obj-specific $names"
+      } else {
+        set names [$obj property question]
+        #ns_log notice "question_names returns wf-names ($obj property)"
+      }
+      return $names
     }
 
     #----------------------------------------------------------------------
@@ -4146,7 +4703,7 @@ namespace eval ::xowf::test_item {
       # number of defined questions, or it might be restricted by the
       # property max_items (if defined for "obj").
       #
-      set nr_questions [llength [$obj property question]]
+      set nr_questions [llength [:question_names $obj]]
       set max_items [$obj property max_items ""]
       if {$max_items ne ""} {
         if {$max_items < $nr_questions} {
@@ -4185,7 +4742,8 @@ namespace eval ::xowf::test_item {
       # position).
       #
       :assert_assessment $obj
-      set questions [dict get [$obj instance_attributes] question]
+      #set questions [dict get [$obj instance_attributes] question]
+      set questions [:question_names $obj]
       set result [:load_question_objs $obj [lindex $questions $position]]
       return $result
     }
@@ -4487,8 +5045,7 @@ namespace eval ::xowf::test_item {
           #
           # No question should have shuffle "always".
           #
-          if {[dict exists $qd question.shuffle]
-              && [dict get $qd question.shuffle] eq "always"} {
+          if {[:dict_value $qd question.shuffle] eq "always"} {
             #ns_log notice "FOUND shuffle $qd"
             set randomizationOk 0
           }
@@ -4498,18 +5055,20 @@ namespace eval ::xowf::test_item {
           #
           if {[dict exists $qd question.grading]} {
             #
-            # autograde ok on the question level
+            # autograde ok on the item type level
             #
           } elseif {[:dict_value $formAttributes auto_correct 0]} {
             #
-            # autograde ok on the form level
+            # auto_correct is in principle enabled, check details on
+            # the concrete question item.
             #
-            # Check, if the correct_when specification of a short text
-            # question is suited for autocorrection. On the longer
-            # range, this function should be moved to a different
-            # place.
-            #
-            if {[dict exists $formAttributes item_type] && [dict get $formAttributes item_type] eq "ShortText"} {
+            if {[:dict_value $formAttributes item_type] eq "ShortText"} {
+              #
+              # Check, if the correct_when specification of a short text
+              # question is suited for autocorrection. On the longer
+              # range, this function should be moved to a different
+              # place.
+              #
               set dict [lindex [fc_to_dict [dict get $formAttributes form_constraints]] 1]
               foreach a [dict get $dict answer] {
                 set op ""
@@ -4542,7 +5101,7 @@ namespace eval ::xowf::test_item {
           } else {
             set autoGrade 0
           }
-          ns_log notice "question_info [$form_obj name] [$form_obj title] autoGrade $autoGrade"
+          #ns_log notice "question_info [$form_obj name] [$form_obj title] autoGrade $autoGrade"
         }
       }
 
@@ -4635,10 +5194,10 @@ namespace eval ::xowf::test_item {
       # @param user_answers instance of the answer-wf.
       #        Needed for user-specific percent substitutions.
 
-      #ns_log notice "combined_question_form called with user_answers <$user_answers>"
+      #ns_log notice "combined_question_form called with user_answers <$user_answers> for $obj [$obj name]"
       #if {$user_answers eq ""} {xo::show_stack}
-      set all_form_objs [:question_objs -shuffle_id $shuffle_id $obj]
 
+      set all_form_objs [:question_objs -shuffle_id $shuffle_id $obj]
       set positions {}
       if {[llength $form_objs] > 0} {
         foreach form_obj $form_objs {
@@ -4734,11 +5293,51 @@ namespace eval ::xowf::test_item {
         return #xowf.shuffle_$m#
       }
     }
+
+    #----------------------------------------------------------------------
+    # Class:  Question_manager
+    # Method: render_describe_infos
+    #----------------------------------------------------------------------
+    :method render_describe_infos {describe_infos} {
+      set msgList {}
+      foreach describe_info $describe_infos {
+        if {$describe_info ne ""} {
+          #
+          # The handled metrics are currently hardcoded here. So, we can
+          # rely on having the returned value in the message keys. The
+          # list order is important, since it determines also the ordering
+          # in the message.
+          #
+          set msg ""
+          set hasStructure [dict exists $describe_info question_structure]
+          set metrics [expr {$hasStructure ? "question_structure" : [list choice_options sub_questions]}]
+          lappend metrics nrcorrect Minutes Points shuffle available_pool_items available_pool_item_stats
+          foreach metric $metrics {
+            if {[:dict_value $describe_info $metric] ne ""} {
+              set m [dict get $describe_info $metric]
+              switch $metric {
+                nrcorrect { append msg [:pretty_ncorrect $m] }
+                shuffle   { append msg "<strong>#xowf.Shuffle#:</strong> [:pretty_shuffle $m]" }
+                default   { append msg "<strong>#xowf.$metric#:</strong> $m "}
+              }
+            }
+          }
+          #append  msg " <pre>$describe_info</pre> "
+          lappend msgList "$msg\n"
+        }
+      }
+      return $msgList
+    }
+
     #----------------------------------------------------------------------
     # Class:  Question_manager
     # Method: describe_form
     #----------------------------------------------------------------------
-    :public method describe_form {{-asHTML:switch} form_obj} {
+    :public method describe_form {
+      {-asHTML:switch}
+      {-field_name ""}
+      form_obj
+    } {
       #
       # Call for every form field of the form_obj the "describe"
       # method and return these infos in a form of a list.
@@ -4759,42 +5358,19 @@ namespace eval ::xowf::test_item {
 
       set form_fields [$form_obj create_form_fields_from_form_constraints \
                            -lookup $fc]
-      set question_infos [lmap form_field $form_fields { $form_field describe }]
+      set describe_infos [lmap form_field $form_fields {
+        $form_field describe -field_name $field_name
+      }]
 
       #ns_log notice "describe_form [$form_obj name]: $question_infos"
-      set question_infos [:pretty_nr_alternatives $question_infos]
+      set describe_infos [:pretty_nr_alternatives $describe_infos]
       if {!$asHTML} {
-        return $question_infos
+        #ns_log notice "OOO [$form_obj name] early exit $describe_infos"
+        return $describe_infos
+      } else {
+        set HTML [:render_describe_infos $describe_infos]
+        return $HTML
       }
-
-      set msgList {}
-      foreach question_info $question_infos {
-        if {$question_info ne ""} {
-          #
-          # The handled metrics are currently hardcoded here. So, we can
-          # rely on having the returned value in the message keys. The
-          # list order is important, since it determines also the ordering
-          # in the message.
-          #
-          set msg ""
-          set hasStructure [dict exists $question_info question_structure]
-          set metrics [expr {$hasStructure ? "question_structure" : [list choice_options sub_questions]}]
-          lappend metrics nrcorrect Minutes Points shuffle
-          foreach metric $metrics {
-            if {[dict exists $question_info $metric]} {
-              set m [dict get $question_info $metric]
-              switch $metric {
-                nrcorrect { append msg [:pretty_ncorrect $m] }
-                shuffle   { append msg "<strong>#xowf.Shuffle#:</strong> [:pretty_shuffle $m]" }
-                default   { append msg "<strong>#xowf.$metric#:</strong> $m "}
-              }
-            }
-          }
-          #append  msg " <pre>$question_info</pre> "
-          lappend msgList "$msg\n"
-        }
-      }
-      return $msgList
     }
 
     #----------------------------------------------------------------------
@@ -4837,17 +5413,28 @@ namespace eval ::xowf::test_item {
       foreach form_obj $form_objs {
         set chunk [lindex [:describe_form $form_obj] 0]
         set structure ""
-        foreach att {question_structure choice_options sub_questions} {
+        foreach att {
+          question_structure choice_options sub_questions
+        } {
           if {[dict exists $chunk $att]} {
             append structure [dict get $chunk $att]
             break
           }
         }
+        if {[dict exists $chunk available_pool_items]} {
+          append structure \
+              " " [dict get $chunk available_pool_items] " " #xowf.questions# \
+              " " ([dict get $chunk available_pool_item_stats])
+        }
         if {[dict exists $chunk nrcorrect]} {
           append structure " " [:pretty_ncorrect [dict get $chunk nrcorrect]]
         }
-        if {[$obj state] in {done submission_review}} {
-          dict set chunk title_value "<a href='$href&fos=[$form_obj item_id]'>[ns_quotehtml [$form_obj title]]</a>"
+        if {[$obj state] in {done submission_review}
+            && ![dict exists $chunk available_pool_items]
+          } {
+          dict set chunk title_value [subst {
+            <a href='$href&fos=[$form_obj item_id]'>[ns_quotehtml [$form_obj title]]</a>
+          }]
         } else {
           dict set chunk title_value [ns_quotehtml [$form_obj title]]
         }
@@ -4974,6 +5561,7 @@ namespace eval ::xowf::test_item {
       set nrQuestions       [llength $question_objs]
       set randomizationOk   [dict get $combined_form_info randomization_for_exam]
       set autograde         [dict get $combined_form_info autograde]
+
       set revision_sets     [$obj get_revision_sets]
       set published_periods [xowf::test_item::answer_manager state_periods $revision_sets -state published]
       set review_periods    [xowf::test_item::answer_manager state_periods $revision_sets -state submission_review]
@@ -5248,13 +5836,14 @@ namespace eval ::xowiki::formfield {
   # being, until we have a better understanding what's needed in
   # detail.
   #
-  ::xowiki::formfield::FormField instproc describe {} {
+  ::xowiki::formfield::FormField instproc describe {{-field_name ""}} {
     set d ""
     #
     # The dict keys of the result should correspond as far as possible
     # to message keys to ease multi-language communication.
     #
     set qa [${:object} property question]
+    #ns_log notice "FormField describe gets <$qa> from ${:object}"
 
     foreach {key name} {
       question.minutes Minutes
@@ -5285,7 +5874,6 @@ namespace eval ::xowiki::formfield {
         dict set d nrcorrect [llength [lsearch -exact -all ${answer} t]]
         dict set d shuffle ${:shuffle_kind}
         #dict set d all [:serialize]
-        #ns_log warning "describe: $d"
       }
       ::xowiki::formfield::text_fields {
         set type ShortText
@@ -5304,10 +5892,22 @@ namespace eval ::xowiki::formfield {
         dict set d all ${:spec}
         dict set d sub_questions [llength ${options}]
         dict set d shuffle ${:shuffle_kind}
-        #ns_log warning "describe: $d"
       }
       ::xowiki::formfield::textarea {
         set type Text
+      }
+      ::xowiki::formfield::pool_question_placeholder {
+        set type PoolQuestion
+        set item_dict [::xowf::test_item::question_manager get_pool_questions \
+                           -field_name $field_name ${:object} ""]
+
+        set counts ""
+        foreach {key value} $item_dict {
+          dict incr counts [dict get $item_dict $key item_type]
+        }
+
+        dict set d available_pool_items [dict size $item_dict]
+        dict set d available_pool_item_stats $counts
       }
 
       default {
@@ -5316,6 +5916,8 @@ namespace eval ::xowiki::formfield {
       }
     }
     dict set d type $type
+    #ns_log notice "describe [:info class] [${:object} name] -> $d"
+
     return $d
   }
 }
@@ -5528,6 +6130,7 @@ namespace eval ::xowiki {
       {entry -name New.Item.ReorderInteraction -form en:edit-interaction.wf -query p.item_type=Reorder}
       {entry -name New.Item.UploadInteraction -form en:edit-interaction.wf -query p.item_type=Upload}
       {entry -name New.Item.CompositeInteraction -form en:edit-interaction.wf -query p.item_type=Composite}
+      {entry -name New.Item.PoolQuestionInteraction -form en:edit-interaction.wf -query p.item_type=PoolQuestion}
 
       {entry -name New.App.OnlineExam -form en:online-exam.wf -disabled true}
       {entry -name New.App.InclassQuiz -form en:inclass-quiz.wf -disabled true}

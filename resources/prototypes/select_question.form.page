@@ -23,7 +23,7 @@
     -form_constraints {
 	@cr_fields:hidden
 	{_title:text,label=#xowf.online-exam-name#,default=#xowf.online-exam-default_name#}
-	{question:form_page,multiple=true,keep_order=true,form=en:edit-interaction.wf|en:TestItemText.form|en:TestItemShortText.form|en:TestItemMC.form|en:TestItemSC.form|en:TestItemUpload.form|en:TestItemReorder.form,required,help_text=#xowf.select_question_help_text#,label=#xowiki.questions#}
+	{question:form_page,multiple=true,keep_order=true,parent_id=.,form=en:edit-interaction.wf|en:TestItemText.form|en:TestItemShortText.form|en:TestItemMC.form|en:TestItemSC.form|en:TestItemUpload.form|en:TestItemReorder.form,required,help_text=#xowf.select_question_help_text#,label=#xowiki.questions#}
         {countdown_audio_alarm:boolean,horizontal=true,default=t,label=#xowf.Countdown_audio_alarm#,help_text=#xowf.Countdown_audio_alarm_help_text#}
 	{shuffle_items:boolean,horizontal=true,label=#xowf.randomized_items#,help_text=#xowf.randomized_items_help_text#}
 	{max_items:number,min=1,label=#xowf.Max_items#,help_text=#xowf.Max_items_help_text#}

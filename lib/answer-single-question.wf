@@ -85,17 +85,25 @@ proc basic_form_loader {ctx form_name} {
   set parent_obj [::xo::db::CrClass get_instance_from_db -item_id $parent_id]
 
   #
-  # In case shuffling is required, fetch via the shuffled position.
-  #
-  set shuffle_id [expr {[$parent_obj property shuffle_items 0] ? [$obj creation_user] : -1}]
-
-  #
   # Load the form. This is here simply the parent object
   #
-  set form_obj ::[$obj parent_id]
+  set form_obj $parent_obj
 
-  foreach chunk [::xowf::test_item::question_manager describe_form -asHTML $form_obj] {
+  foreach chunk [::xowf::test_item::question_manager describe_form \
+                     -field_name answer -asHTML $form_obj] {
     util_user_message -html -message $chunk
+  }
+
+  if {[$form_obj property item_type] eq "PoolQuestion"} {
+    #
+    # In the case of a PoolQuestion, we have to replace the question.
+    #    
+    set form_obj [::xowf::test_item::question_manager replace_pool_question \
+                      -position 1 \
+                      -seed [clock seconds] \
+                      -field_name answer \
+                      -pool_question_obj $form_obj \
+                      -exam_question_names ""]
   }
   return $form_obj
 }

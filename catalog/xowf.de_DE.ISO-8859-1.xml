@@ -224,4 +224,13 @@
   <msg key="Twocol_layout">2-Spaltig</msg>
 
   <msg key="autosave_rejected_overdue">Automatische Speicherung nicht möglich, da die Bearbeitungszeit abgelaufen ist. Speichern Sie das Ergebnis und geben sie ab!</msg> 
+
+  <msg key="menu-New-Item-PoolQuestionInteraction">Pool-Frage</msg>
+  <msg key="pool_question">Pool-Frage</msg>
+  <msg key="pool_question_folder">Fragenpool</msg>
+  <msg key="pool_question_pattern">Namesmuster für Pool-Fragen</msg>  
+  <msg key="pool_question_item_types">Fragentypen</msg>
+  <msg key="available_pool_items">Verfügbare Pool-Fragen</msg>
+  <msg key="available_pool_item_stats">Pool-Fragen nach Typ</msg>
+
 </message_catalog>

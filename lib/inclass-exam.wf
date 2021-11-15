@@ -359,7 +359,8 @@ Action instproc unpublish_link {obj} {
   }
 
   ${container}::Property return_url -default "" -allow_query_parameter true
-
+  #ns_log notice "==== object-specific inclass-exam [self] state ${:state}"
+  
   if {${:state} eq "done"} {
     set done_actions republish
     set combined_form_info [::xowf::test_item::question_manager combined_question_form [self]]    
@@ -385,8 +386,15 @@ Action instproc unpublish_link {obj} {
     # Check, if randomization is OK. If not, remove the "publish"
     # button from the workflow.
     #
+    # Note: this initialization code is always called when the
+    # workflow is initialized, which might not be wanted, when this
+    # happen during e.g. a test-run of an instance. so, maybe put this
+    # to some "render" method?
+    #
+    #ns_log notice "==== check for randomization"
     set combined_form_info [::xowf::test_item::question_manager combined_question_form [self]]    
     set randomizationOk [dict get $combined_form_info randomization_for_exam]
+    #ns_log notice "==== check for randomization DONE"    
     ${container}::${:state} actions \
         [expr {$randomizationOk ? {publish restart} : {restart}}]
   }
@@ -756,6 +764,8 @@ Action instproc unpublish_link {obj} {
     ns_return 200 text/plain ok
     ad_script_abort
   }
+  
+  #ns_log notice "==== object-specific inclass-exam [self] state ${:state} DONE"
 }
 
 #

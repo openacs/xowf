@@ -57,6 +57,7 @@ namespace eval ::xowf {
     TestItemReorder.form
     TestItemUpload.form
     TestItemComposite.form
+    TestItemPoolQuestion.form
 
     ExamFolder
 
@@ -655,6 +656,7 @@ namespace eval ::xowf {
       } else {
         set source_obj [${:object} page_template]
       }
+
       set revision_id [$source_obj revision_id]
       if {$revision_id == 0} {
         set revision_id [::xo::db::sql::content_item get_live_revision \
@@ -1378,7 +1380,14 @@ namespace eval ::xowf {
   WorkflowPage ad_instproc render_icon {} {
     Provide an icon or text for describing the kind of application.
   } {
-    if {[:is_wf_instance]} {
+    if {[:info procs render_icon] ne ""} {
+      #
+      # In case, we have a per-object method (i.e., defined via the
+      # workflow), use this with highest precedence.
+      #
+      next
+
+    } elseif {[:is_wf_instance]} {
       set page_template ${:page_template}
       set title [::$page_template title]
       regsub {[.]wf$} $title "" title

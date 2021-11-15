@@ -252,4 +252,12 @@
   <msg key="Composite_Show_points">Subquestion with points</msg>
   <msg key="Composite_Show_title">Subquestion with title</msg>
   <msg key="autosave_rejected_overdue">Autosave operation rejected since submmission is overdue. Please save your answer and submit now.</msg> 
+
+  <msg key="menu-New-Item-PoolQuestionInteraction">Pool Question</msg>
+  <msg key="pool_question">Pool Question</msg>
+  <msg key="pool_question_folder">Pool Folder</msg>
+  <msg key="pool_question_pattern">Name Pattern</msg>  
+  <msg key="pool_question_item_types">Item Types</msg>
+  <msg key="available_pool_items">Available Pool Items</msg>
+  <msg key="available_pool_item_stats">Pool Item Statistics</msg>
 </message_catalog>

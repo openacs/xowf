@@ -73,7 +73,7 @@ Action initialize -proc activate {obj} {
 }
 
 Action instproc activate {obj} {
-  ns_log notice "... activate [self] $obj"
+  #ns_log notice "... activate [self] $obj"
 
   set ctx [:wf_context]
   set exam_info [[$ctx wf_container] exam_info $obj]
@@ -228,7 +228,7 @@ proc working_form_loader {ctx form_name} {
   }
 
   set item_nr [:current_position $obj]
-  #:msg "working_form_loader item_nr $item_nr [$obj instance_attributes]"
+  #ns_log notice "[self] current position => $item_nr"
 
   set parent_id [$obj parent_id]
   set parent_obj [::xo::db::CrClass get_instance_from_db -item_id $parent_id]
@@ -236,17 +236,13 @@ proc working_form_loader {ctx form_name} {
   #
   # In case shuffling is required, fetch via the shuffled position.
   #
-  #:msg "============ working_form_loader load form on pos $position"
-
   set shuffle_id [expr {[$parent_obj property shuffle_items 0] ? [$obj creation_user] : -1}]
   set position [${:QM} shuffled_index -shuffle_id $shuffle_id $parent_obj $item_nr]
-  #ns_log notice "============ working_form_loader: position based on item_nr $item_nr and shuffle $shuffle_id -> $position"
 
   #
   # Load the form.
   #
   set form_obj [${:QM} nth_question_obj $parent_obj $position]
-  #ns_log notice "load form => $form_obj (position $position [$form_obj name])"
 
   #
   # Substitute markup in the constant part of the form in the context
@@ -284,7 +280,7 @@ proc working_form_loader {ctx form_name} {
       -for_question \
       -with_minutes
 
-  ns_log notice "============ working_form_loader: set title -position $position -item_nr $item_nr "
+  #ns_log notice "============ working_form_loader: set title -position $position -item_nr $item_nr "
 
   #
   # Disallow spellcheck/paste if required
@@ -507,15 +503,31 @@ proc done_form_loader {ctx form_name} {
 ########################################################################
 
 :object-specific {
+  set isAnswerInstance [expr {[:is_wf_instance] == 1 && [:is_wf] == 0}]
+  #ns_log notice "==== object-specific inclass-exam-answer [self] isAnswerInstance $isAnswerInstance"
+
+  if {!$isAnswerInstance} {
+    #
+    # This happens during create-new.
+    #
+    #ns_log notice "==== object-specific inclass-exam-answer [self] not called on answerInstance"
+    return
+  }
+
   #
   # Ensure default value is updated for each instance individually.
   #
   set ctx [:wf_context]
   set container [$ctx wf_container]
   ${container}::Property ip -default [expr {[ns_conn isconnected] ? [ad_conn peeraddr] : "nowhere"}]
-  set :QM [$container set QM]
 
-  #:log "inclass-exam-answer state ${:state}"
+  set :QM [$container set QM]
+  ${:QM} initialize -wfi [self]
+  #ns_log notice "==== object-specific inclass-exam-answer [self] QM initialized with [self]"
+
+  set parent_obj [::xo::db::CrClass get_instance_from_db -item_id ${:parent_id}]
+
+  :log "inclass-exam-answer state ${:state}"
   set ctx [:wf_context]
   set container [$ctx wf_container]
   if {$ctx ne $container} {
@@ -533,7 +545,20 @@ proc done_form_loader {ctx form_name} {
           -obj [self] \
           -seed ${:creation_user} \
           -number $question_count
+      #
+      # After creating the seeds, replace pool questions in case these
+      # are contained. The list of pool questions will be kept per
+      # fill-out instance.
+      #
+
+      #ns_log notice "==== object-specific inclass-exam-answer [self] replace_pool_questions"
+      ${:QM} replace_pool_questions \
+          -answer_obj [self] \
+          -exam_obj $parent_obj
+      #ns_log notice "==== object-specific inclass-exam-answer [self] replace_pool_questions DONE"
+
     }
+
     #
     # Use the current_position in the sense of the nth question of the
     # user, which is not necessarily the nth question in the list of
@@ -575,29 +600,41 @@ proc done_form_loader {ctx form_name} {
 
   :proc www-autosave-attribute {} {
     #
-    # Reject autosave in case the exam was closed already.
+    # In try-out-mode (testrun), autosave is always allowed.
     #
-    set exam_info [[[:wf_context] wf_container] exam_info [self]]
-    set autosaveAllowed [dict get $exam_info open]
-    if {$autosaveAllowed} {
-      set parent_obj [::xo::db::CrClass get_instance_from_db -item_id ${:parent_id}]
-      set base_time [${:QM} exam_base_time -manager $parent_obj -answer_obj [self]]
-      set base_clock [clock scan [::xo::db::tcl_date $base_time tz secfrac]]
-
-      set seconds_working [expr {[clock seconds] - $base_clock}]
-      set total_minutes [${:QM} total_minutes_for_exam -manager $parent_obj]
-      set timeLeft [expr {$total_minutes*60 - $seconds_working}]
-      #
-      # The autosave operation has a 10 secs delay. To allow save operations
-      # up to the last second, we accept an 10
-      # secs overdue on autosave.
-      #
-      if {$timeLeft < -10} {
-        set autosaveAllowed 0
-        set reason "time used up (time left $timeLeft seconds)"
-      }
+    if {[:property try_out_mode 0]} {
+      set autosaveAllowed 1
     } else {
-      set reason "exam closed"
+      #
+      # Reject autosave in case the exam was closed already.
+      #
+      set exam_info [[[:wf_context] wf_container] exam_info [self]]
+      set autosaveAllowed [dict get $exam_info open]
+      if {$autosaveAllowed} {
+        #
+        # Don't allow the autosave opertions, when
+        # submission is overdue.
+        #
+        set parent_obj [::xo::db::CrClass get_instance_from_db -item_id ${:parent_id}]
+        set base_time [${:QM} exam_base_time -manager $parent_obj -answer_obj [self]]
+        set base_clock [clock scan [::xo::db::tcl_date $base_time tz secfrac]]
+
+        set seconds_working [expr {[clock seconds] - $base_clock}]
+        set total_minutes [${:QM} total_minutes_for_exam -manager $parent_obj]
+        set timeLeft [expr {$total_minutes*60 - $seconds_working}]
+
+        #
+        # The autosave operation has a 10 secs delay. To allow save operations
+        # up to the last second, we accept an 10
+        # secs overdue on autosave.
+        #
+        if {$timeLeft < -10} {
+          set autosaveAllowed 0
+          set reason "time used up (time left $timeLeft seconds)"
+        }
+      } else {
+        set reason "exam closed"
+      }
     }
     if {$autosaveAllowed} {
       next
