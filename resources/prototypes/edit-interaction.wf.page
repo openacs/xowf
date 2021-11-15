@@ -4,7 +4,7 @@ xowf::Package create_new_workflow_page \
     -package_id $package_id \
     -parent_id $parent_id \
     -name en:online-exam.wf \
-    -title "Online Exam Workflow" \
+    -title "Test Item" \
     -instance_attributes {
         workflow_definition {::xowf::include /packages/xowf/lib/edit-interaction.wf}
         form_constraints {}
