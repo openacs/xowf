@@ -6193,6 +6193,7 @@ namespace eval ::xowf::test_item {
       view-my-exam   {{item_id read}}
       proctor-answer {{item_id read}}
       proctor        {{item_id read}}
+      view           admin
       poll           admin
       send-participant-message admin
       edit           admin
