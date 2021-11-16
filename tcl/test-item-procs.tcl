@@ -337,11 +337,11 @@ namespace eval ::xowiki::formfield {
     }
 
     if {$can_shuffle} {
-      set shuffle_dict horizontal true
-      set shuffle_dict form_item_wrapper_CSSclass form-inline
-      set shuffle_dict default none
-      set shuffle_dict label #xowf.Shuffle#
-      set shuffle_dict options \
+      dict set shuffle_dict horizontal true
+      dict set shuffle_dict form_item_wrapper_CSSclass form-inline
+      dict set shuffle_dict default none
+      dict set shuffle_dict label #xowf.Shuffle#
+      dict set shuffle_dict options \
           "{#xowf.shuffle_none# none} {#xowf.shuffle_peruser# peruser} {#xowf.shuffle_always# always}"
       set shuffleSpec [subst {
         [list [list shuffle [:dict_to_fc -type radio $shuffle_dict]]]
@@ -782,8 +782,8 @@ namespace eval ::xowiki::formfield {
       if {![$p istype ::xowiki::formfield::short_text_interaction]} {
         set p [$p info parent]
         continue
-      }
-      set :auto_correct [$p set closed_question_type]
+      }    
+      set :auto_correct [$p set auto_correct]
       break
     }
 
