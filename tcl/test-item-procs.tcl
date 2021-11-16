@@ -6209,7 +6209,7 @@ namespace eval ::xowf::test_item {
   test-item-policy-answer contains {
     Class create FormPage -array set require_permission {
       poll            {{item_id read}}
-      edit            {{item_id read}}
+      edit            creator
       message-poll    {{item_id read}}
       message-dismiss {{item_id read}}
     }
