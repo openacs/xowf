@@ -2018,13 +2018,14 @@ namespace eval ::xowf::test_item {
       {-orderby ""}
       -creation_user:integer
       -item_id:integer
+      -state
       wf:object
     } {
       # get_wf_instances: return the workflow instances
 
       :assert_assessment_container $wf
       set extra_where_clause ""
-      foreach var {creation_user item_id} {
+      foreach var {creation_user item_id state} {
         if {[info exists $var]} {
           append extra_where_clause "AND $var = [ns_dbquotevalue [set $var]] "
         }
