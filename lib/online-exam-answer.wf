@@ -92,11 +92,13 @@ Action instproc set_page {obj increment} {
 Action prevQuestion \
     -next_state working \
     -label #xowf.previous_question# \
+    -title #xowf.previous_question_title# \
     -proc activate {obj} {:set_page $obj -1}
 
 Action nextQuestion \
     -next_state working \
     -label #xowf.next_question# \
+    -title #xowf.next_question_title# \
     -proc activate {obj} {:set_page $obj 1}
 
 Action review \
@@ -133,6 +135,7 @@ Action start \
 
 Action start_again \
     -label #xowf.first_question# \
+    -title #xowf.first_question_title# \
     -next_state working -proc activate {obj} {
       $obj set_property position 0
     }

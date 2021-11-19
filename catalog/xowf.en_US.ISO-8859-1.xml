@@ -44,8 +44,11 @@
   <msg key="question">Question</msg>
   <msg key="questions">Questions</msg>  
   <msg key="first_question">First Question</msg>
+  <msg key="first_question_title">Save and go to first question</msg>
   <msg key="next_question">Next Question</msg>
+  <msg key="next_question_title">Save and go to next question</msg>
   <msg key="previous_question">Previous Question</msg>
+  <msg key="previous_question_title">Save and go to previous question</msg>
   <msg key="subquestion">Subquestion</msg>  
   <msg key="restart">Restart</msg>
   <msg key="refresh">Refresh</msg>

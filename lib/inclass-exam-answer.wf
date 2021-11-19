@@ -113,12 +113,14 @@ Action create previousQuestion \
     -state_safe true \
     -next_state working \
     -label #xowf.previous_question# \
+    -title #xowf.previous_question_title# \
     -proc activate {obj} {if {[next]} {:set_page $obj -1}}
 
 Action create nextQuestion \
     -state_safe true \
     -next_state working \
     -label #xowf.next_question# \
+    -title #xowf.next_question_title# \
     -proc activate {obj} {if {[next]} {:set_page $obj 1}}
 
 Action create review \
@@ -172,6 +174,7 @@ Action create logout \
 
 # Action start_again \
 #     -label #xowf.first_question# \
+#     -title #xowf.first_question_title# \
 #     -next_state working -proc activate {obj} {
 #       $obj set_property position 0
 #     }
