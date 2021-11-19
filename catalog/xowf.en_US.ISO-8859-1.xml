@@ -127,6 +127,7 @@
   <msg key="randomized_items_help_text">Present question of exam to every student in different order</msg>
 
   <msg key="inclass-exam-submit">Submit and Finish Exam</msg>
+  <msg key="inclass-exam-submit_title">Submit exam. Exam cannot be modified afterwards.</msg>
   <msg key="inclass-exam-already_answered">You have finished this exam.</msg>
 
   <msg key="composite_question">Composite Question</msg>

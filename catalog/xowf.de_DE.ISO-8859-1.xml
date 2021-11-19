@@ -109,6 +109,7 @@
   <msg key="inclass-quiz-default_name">Quiz ...</msg>
 
   <msg key="inclass-exam-submit">Abgabe der Prüfung</msg>
+  <msg key="inclass-exam-submit_title">Submit exam. Exam cannot be modified afterwards.</msg>
   <msg key="inclass-exam-already_answered">Ihre Prüfung ist abgegeben und gespeichert.</msg>
 
   <msg key="select_question_help_text">Wählen Sie Fragen mittels Drag &amp; Drop aus</msg>

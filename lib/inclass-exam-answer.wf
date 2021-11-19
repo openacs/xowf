@@ -156,6 +156,7 @@ Action create logout \
     -state_safe true \
     -next_state done \
     -label #xowf.inclass-exam-submit# \
+    -title #xowf.inclass-exam-submit_title# \
     -extra_css_class "logout" \
     -proc activate {obj} {
       [[$obj wf_context ] wf_container] addSignature $obj
