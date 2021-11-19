@@ -50,7 +50,7 @@
   <msg key="restart">Restart</msg>
   <msg key="refresh">Refresh</msg>
   <msg key="print">Print</msg>
-  <msg key="testrun">Testrun</msg>
+  <msg key="testrun">Test run</msg>
   <msg key="please_answer">Please answer</msg>
   <msg key="participant">Participant</msg>
   <msg key="Participants">Participants</msg>
@@ -77,8 +77,8 @@
   <msg key="online-exam-unpublish">Close Exam</msg>
   <msg key="online-exam-republish">Open Exam again</msg>
   <msg key="online-exam-title-republish">Publish exam again, existing answers are NOT deleted.</msg>
-  <msg key="online-exam-title-publish">Publish exam (clean testrun data on first publish operation)</msg>
-  <msg key="online-exam-title-restart">Go back to start where questions can be selected (existing anwers will be deleted).</msg>
+  <msg key="online-exam-title-publish">Publish exam (clean test run data on first publish operation)</msg>
+  <msg key="online-exam-title-restart">Go back to start where questions can be selected (existing answers will be deleted).</msg>
   <msg key="online-exam-title-select">Create a fresh Exam (will delete all answers to this exam)</msg>
 
   <msg key="online-exam-exam_instances">Listing of Filled-out Exams</msg>
@@ -253,7 +253,7 @@
   <msg key="Composite_Show_minutes">Subquestion with minutes</msg>
   <msg key="Composite_Show_points">Subquestion with points</msg>
   <msg key="Composite_Show_title">Subquestion with title</msg>
-  <msg key="autosave_rejected_overdue">Autosave operation rejected since submmission is overdue. Please save your answer and submit now.</msg> 
+  <msg key="autosave_rejected_overdue">Autosave operation rejected since submission is overdue. Please save your answer and submit now.</msg> 
 
   <msg key="menu-New-Item-PoolQuestionInteraction">Pool Question</msg>
   <msg key="pool_question">Pool Question</msg>
