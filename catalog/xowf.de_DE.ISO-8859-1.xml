@@ -36,7 +36,7 @@
   <msg key="submitted_answers">Abgegebene Antworten</msg>
   <msg key="answer_lines">Antwortzeilen</msg>
   <msg key="answer_columns">Antwortspalten</msg>
-  <msg key="correct_when">Richig wenn...</msg>
+  <msg key="correct_when">Richtig wenn...</msg>
   <msg key="online-exam-draft_exam">Prüfungsentwurf (Prüfung nicht freigeschaltet)</msg>
   <msg key="online-exam-open">Prüfung ist freigeschaltet</msg>
   <msg key="online-exam-closed">Prüfung ist geschlossen</msg>
@@ -78,7 +78,7 @@
   <msg key="online-exam-results-table">Ergebnisse</msg>
   <msg key="online-exam-submitted_exams_heading">Abgegebene Prüfungen</msg>
   <msg key="online-exam-submitted_exams_msg">Studierende haben eine Prüfung abgegeben</msg>
-  <msg key="online-exam-name">Bezeichung der Prüfung</msg>
+  <msg key="online-exam-name">Bezeichnung der Prüfung</msg>
   <msg key="online-exam-default_name">Prüfung aus ...</msg>
 
   <msg key="open_submission_review">Einsicht öffnen</msg>
@@ -91,7 +91,7 @@
   <msg key="participants_answered_question">Teilnehmer haben diese Frage beantwortet</msg>
   <msg key="please_answer">Bitte beantworten Sie</msg>
   <msg key="results">Ergebnisse</msg>
-  <msg key="show_results">Zeige Antwortstatisktik</msg>
+  <msg key="show_results">Zeige Antwortstatistik</msg>
   <msg key="results_of">Ergebnisse von</msg>
   <msg key="inclass-quiz-unpublish">Quiz beenden</msg>
   <msg key="inclass-quiz-save">Antwort speichern</msg>
@@ -102,7 +102,7 @@
   <msg key="inclass-quiz-waiting_for_next">Warte auf nächste Frage ...</msg>
   <msg key="inclass-quiz-not_available">Der Quiz kann derzeit nicht beantwortet werden</msg>
   <msg key="inclass-quiz-already_answered">Sie haben Frage %number% beantwortet</msg>
-  <msg key="inclass-quiz-name">Bezeichung des Quiz</msg>
+  <msg key="inclass-quiz-name">Bezeichnung des Quiz</msg>
   <msg key="inclass-quiz-default_name">Quiz ...</msg>
 
   <msg key="inclass-exam-submit">Abgabe der Prüfung</msg>
@@ -161,7 +161,7 @@
   <msg key="Proctoring">Online-Beaufsichtigung</msg>
   <msg key="Proctoring_help_text">Verwende für diese Prüfung eine Online-Beaufsichtigung</msg>
   <msg key="Synchronized">Synchronisierte Abwicklung</msg>
-  <msg key="Synchronized_help_text">Wird die angezeigte Bearbeitungszeit strikt vom Lehrenden vorgegeben, oder hat jeder Student die Anzeige seiner aktuellen Bearbeitsdauer, auch wenn er etwas später beginnt</msg>
+  <msg key="Synchronized_help_text">Wird die angezeigte Bearbeitungszeit strikt vom Lehrenden vorgegeben, oder hat jeder Student die Anzeige seiner aktuellen Bearbeitungsdauer, auch wenn er etwas später beginnt</msg>
   <msg key="Allow_paste">Ausschneiden und Einfügen erlaubt</msg>
   <msg key="Allow_paste_help_text">Darf der Studierende in mehrzeiligen Textfeldern Ausschneiden und Einfügen verwenden?</msg>
   <msg key="Cut_and_paste_allowed">Ausschneiden und Einfügen in mehrzeiligen Textfeldern ist erlaubt</msg>
@@ -169,11 +169,11 @@
   <msg key="Show_points">Punkteanzeige</msg>
   <msg key="Show_points_help_text">Zeige Studierenden während der Prüfung die erreichbaren Punkte pro Beispiel</msg>
   <msg key="Show_minutes">Minutenanzeige</msg>
-  <msg key="Show_minutes_help_text">Zeige Studierenden während der Prüfung die vorgesehen Bearbeitsdauer pro Beispiel</msg>
+  <msg key="Show_minutes_help_text">Zeige Studierenden während der Prüfung die vorgesehen Bearbeitungsdauer pro Beispiel</msg>
   <msg key="Show_IP">Anzeige der IP-Adresse</msg>
   <msg key="Show_IP_help_text">Zeige Studierenden während der Prüfung eigene IP-Adresse</msg>
   <msg key="Time_budget">Zeitbudget</msg>
-  <msg key="Time_budget_help_text">Erhöhe die Bearbeitungsdauer auf den angeführen relativen Wert</msg>
+  <msg key="Time_budget_help_text">Erhöhe die Bearbeitungsdauer auf den angeführten relativen Wert</msg>
 
   <msg key="Max_items">Beschränkte Fragenzahl</msg>
   <msg key="Max_items_help_text">Beschränke die Zahl der Fragen auf
@@ -214,7 +214,7 @@
   <msg key="Preview">Vorschau</msg>
 
   <msg key="flag_set">Frage markieren</msg>
-  <msg key="flag_delete">Makierung löschen</msg>    
+  <msg key="flag_delete">Markierung löschen</msg>    
 
   <msg key="exam_summary">Zusammenfassung</msg>    
   <msg key="question_summary">Fragenübersicht</msg>    
@@ -233,4 +233,5 @@
   <msg key="available_pool_items">Verfügbare Pool-Fragen</msg>
   <msg key="available_pool_item_stats">Pool-Fragen nach Typ</msg>
 
+  <msg key="submit_confirmation">Sind Sie sicher, dass Sie abgeben wollen? Dieser Schritt kann nicht rückgängig gemacht werden.</msg>
 </message_catalog>

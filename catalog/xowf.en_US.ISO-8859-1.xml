@@ -260,4 +260,6 @@
   <msg key="pool_question_item_types">Item Types</msg>
   <msg key="available_pool_items">Available Pool Items</msg>
   <msg key="available_pool_item_stats">Pool Item Statistics</msg>
+
+  <msg key="submit_confirmation">Are you sure you want to submit? This step cannot be undone.</msg>
 </message_catalog>

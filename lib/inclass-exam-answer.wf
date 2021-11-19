@@ -596,7 +596,9 @@ proc done_form_loader {ctx form_name} {
 
     ${container}::${:state} actions $actions
   }
-  template::add_confirm_handler -CSSclass logout
+  template::add_confirm_handler \
+      -CSSclass logout \
+      -message #xowf.submit_confirmation#
 
   :proc www-autosave-attribute {} {
     #
