@@ -214,7 +214,9 @@
   <msg key="Preview">Vorschau</msg>
 
   <msg key="flag_set">Frage markieren</msg>
+  <msg key="flag_set_title">Frage für eine spätere Bearbeitung markieren</msg>
   <msg key="flag_delete">Markierung löschen</msg>    
+  <msg key="flag_delete_title">Markierung dieser Frage löschen</msg>
 
   <msg key="exam_summary">Zusammenfassung</msg>    
   <msg key="question_summary">Fragenübersicht</msg>    
@@ -234,4 +236,5 @@
   <msg key="available_pool_item_stats">Pool-Fragen nach Typ</msg>
 
   <msg key="submit_confirmation">Sind Sie sicher, dass Sie abgeben wollen? Dieser Schritt kann nicht rückgängig gemacht werden.</msg>
+
 </message_catalog>

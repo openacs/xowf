@@ -4537,7 +4537,9 @@ namespace eval ::xowf::test_item {
             -wrapper_CSSclass "pagination"
 
         set flag_state [expr {$current_position in $flagged ? "delete" : "set"}]
-        ${container}::flag label "#xowf.flag_$flag_state#"
+        ${container}::flag configure \
+            -label "#xowf.flag_${flag_state}#" \
+            -title "#xowf.flag_${flag_state}_title#"
 
         lappend actions nextQuestion
       }

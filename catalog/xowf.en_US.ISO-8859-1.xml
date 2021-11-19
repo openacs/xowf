@@ -238,7 +238,9 @@
   <msg key="Preview">Preview</msg>
 
   <msg key="flag_set">Flag this Question</msg>
+  <msg key="flag_set_title">Flag this question for later</msg>
   <msg key="flag_delete">Remove Flag</msg>
+  <msg key="flag_delete_title">Remove flag for this question</msg>
 
   <msg key="exam_summary">Summary</msg>    
   <msg key="question_summary">Questions</msg>    
