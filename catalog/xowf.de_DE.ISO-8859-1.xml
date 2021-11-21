@@ -109,7 +109,7 @@
   <msg key="inclass-quiz-default_name">Quiz ...</msg>
 
   <msg key="inclass-exam-submit">Abgabe der Prüfung</msg>
-  <msg key="inclass-exam-submit_title">Submit exam. Exam cannot be modified afterwards.</msg>
+  <msg key="inclass-exam-submit_title">Prüfung abgeben. Diese kann danach nicht mehr bearbeitet werden.</msg>
   <msg key="inclass-exam-already_answered">Ihre Prüfung ist abgegeben und gespeichert.</msg>
 
   <msg key="select_question_help_text">Wählen Sie Fragen mittels Drag &amp; Drop aus</msg>
@@ -215,6 +215,8 @@
   <msg key="Security">Sicherheit</msg>
   <msg key="Proctoring_options">Optionen für Online-Beaufsichtigung</msg>
   <msg key="Proctoring_options_help_text">Detailangaben, welche Funktionen der Online-Beaufsichtigung genutzt werden sollen</msg>
+  <msg key="Proctoring_record">Aufnahmen speichern</msg>
+  <msg key="Proctoring_record_help_text">Speichere die Aufnahmen der Teilnehmer</msg>
   <msg key="Preview">Vorschau</msg>
 
   <msg key="flag_set">Frage markieren</msg>

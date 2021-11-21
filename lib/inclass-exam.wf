@@ -296,7 +296,6 @@ Action instproc unpublish_link {obj} {
 
     if {$state in {published done submission_review} || [llength $answers] > 0 } {
       if {$state eq "done"} {
-        [$ctx object] setCSSDefaults
         set marked [xowf::test_item::answer_manager marked_results -obj $obj -wf $wf $combined_form_info]
         set marked ""  ;# not needed right now
       }
@@ -577,8 +576,10 @@ Action instproc unpublish_link {obj} {
       set proctoring [:property proctoring]
       if {$proctoring ne "" && $proctoring} {
         set po [:property proctoring_options]
+        set record_p [:property proctoring_record true]
         set cLink [export_vars -base [:pretty_link] {
-          {m proctor} {link "[:pretty_link -query m=proctor-answer&proctoring_options=$po]"}
+          {m proctor}
+          {link "[:pretty_link -query m=proctor-answer&proctoring_options=$po&record_p=$record_p]"}
         }]
         ::${:package_id} returnredirect $cLink
       } else {
@@ -655,6 +656,7 @@ Action instproc unpublish_link {obj} {
       set object_id ${:item_id}
       set object_url $link
       set examination_statement_p [expr {![string match *p.try_out_mode=1* $link]}]
+      set record_p [:property proctoring_record true]
       set proctoring_options [:property proctoring_options "d c a s"]
       foreach \
           proctoring_parm {d c a s} \
@@ -675,6 +677,7 @@ Action instproc unpublish_link {obj} {
         desktop_p
         camera_p
         audio_p
+        record_p
         max_ms_interval
         examination_statement_p
         {check_active_p false}
@@ -764,7 +767,7 @@ Action instproc unpublish_link {obj} {
     ns_return 200 text/plain ok
     ad_script_abort
   }
-  
+
   #ns_log notice "==== object-specific inclass-exam [self] state ${:state} DONE"
 }
 

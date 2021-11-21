@@ -239,6 +239,8 @@
   <msg key="Security">Security</msg>
   <msg key="Proctoring_options">Proctoring Options</msg>
   <msg key="Proctoring_options_help_text">Options to tailor proctoring behavior</msg>
+  <msg key="Proctoring_record">Record proctoring</msg>
+  <msg key="Proctoring_record_help_text">Record proctoring (images and audio files of participants)</msg>
   <msg key="Preview">Preview</msg>
 
   <msg key="flag_set">Flag this Question</msg>

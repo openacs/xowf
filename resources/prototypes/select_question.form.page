@@ -16,6 +16,7 @@
         <p><button type="button" class="btn btn-small" data-toggle="collapse" data-target="#proctoring"><span class="glyphicon glyphicon-chevron-down">&nbsp;</span>#xowf.Security#</button><div id="proctoring" class="collapse">
         @proctoring@
         @proctoring_options@
+        @proctoring_record@
         @signature@
         </div>
         </form>
@@ -38,6 +39,7 @@
 	{signature:boolean,horizontal=true,default=f,label=#xowf.Signature#,help_text=#xowf.Signature_help_text#}
 	{proctoring:boolean,horizontal=true,default=f,label=#xowf.Proctoring#,help_text=#xowf.Proctoring_help_text#}
         {proctoring_options:checkbox,horizontal=true,options={Desktop d} {Camera c} {Audio a} {Statement s},default=d c a s,label=#xowf.Proctoring_options#,help_text=#xowf.Proctoring_options_help_text#,swa?:disabled=1}
+	{proctoring_record:boolean,horizontal=true,default=t,label=#xowf.Proctoring_record#,help_text=#xowf.Proctoring_record_help_text#}
 	_description:omit _page_order:omit
     }
 
