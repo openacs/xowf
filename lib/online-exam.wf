@@ -194,7 +194,6 @@ Action instproc unpublish_link {obj} {
 
   if {$state in {published done}} {
     if {$state eq "done"} {
-      [$ctx object] setCSSDefaults
       set marked [xowf::test_item::answer_manager marked_results -obj $obj -wf $wf $combined_form_info]
     }
     set answerStats [xowf::test_item::answer_manager answers_panel \
