@@ -782,7 +782,7 @@ namespace eval ::xowiki::formfield {
       if {![$p istype ::xowiki::formfield::short_text_interaction]} {
         set p [$p info parent]
         continue
-      }    
+      }
       set :auto_correct [$p set auto_correct]
       break
     }
@@ -798,12 +798,12 @@ namespace eval ::xowiki::formfield {
     # The options field is made "required" to avoid deselecting.
     #
     set textEntryConfigSpec [subst {
-      {options {radio,horizontal=true,form_item_wrapper_CSSclass=form-inline,options=$render_hints,default=single_word,required,label=#xowf.answer#}}
-      {lines {number,form_item_wrapper_CSSclass=form-inline,default=1,min=1,label=#xowf.lines#}}
+      {options {radio,horizontal=true,form_item_wrapper_CSSclass=form-inline,options=$render_hints,value=multiple_words,required,label=#xowf.answer#}}
+      {lines {number,form_item_wrapper_CSSclass=form-inline,value=1,min=1,label=#xowf.lines#}}
     }]
 
-    :create_components  [subst {
-      {text  {$widget,height=100px,label=#xowf.sub_question#,plugins=OacsFs}}
+    :create_components [subst {
+      {text {$widget,height=100px,label=#xowf.sub_question#,plugins=OacsFs}}
       $textEntryConfigSpec [:correct_when_spec]
       {solution {textarea,rows=2,label=#xowf.Solution#}}
     }]
