@@ -4963,7 +4963,7 @@ namespace eval ::xowf::test_item {
           set points $minutes
         }
         set time_budget [$obj property time_budget]
-        if {$time_budget ni {"" 100}} {
+        if {$time_budget ni {"" 100} && $minutes ne ""} {
           set minutes [expr {$time_budget*$minutes/100.0}]
           ns_log notice "[$form_obj name]: TIME BUDGET '$time_budget' -> minutes set to $minutes"
         }
