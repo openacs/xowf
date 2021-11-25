@@ -4330,7 +4330,6 @@ namespace eval ::xowf::test_item {
       -exam_question_names
     } {
       #
-      #
       # @return an initialized replacement form obj if this is possible
       #
       set field_name ""; ## rely on fallback
@@ -4390,6 +4389,9 @@ namespace eval ::xowf::test_item {
       -answer_obj:object
       -exam_obj:object
     } {
+      #
+      # Applies replace_pool_question to all the relevant form objects
+      #
       if {[$answer_obj property question] ne ""} {
         ns_log notice "answer_obj $answer_obj has already a 'question' property" \
             [lsort [dict keys [$answer_obj instance_attributes]]]
