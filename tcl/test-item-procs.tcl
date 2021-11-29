@@ -653,7 +653,7 @@ namespace eval ::xowiki::formfield {
 
     set form [:form_markup -interaction text -intro_text $intro_text -body @answer@]
     lappend fc \
-        "@categories:off @cr_fields:hidden" \
+        @categories:off @cr_fields:hidden \
         "answer:[:dict_to_fc -type textarea $fc_dict]"
 
     #ns_log notice "text_interaction $form\n$fc"
@@ -1026,7 +1026,7 @@ namespace eval ::xowiki::formfield {
     append intro_text [:text_attachments]
     set form [:form_markup -interaction upload -intro_text $intro_text -body @answer@]
     lappend fc \
-        "@categories:off @cr_fields:hidden" \
+        @categories:off @cr_fields:hidden \
         "answer:[:dict_to_fc -type file $file_dict]"
 
     ${:object} set_property -new 1 form $form
@@ -1264,7 +1264,7 @@ namespace eval ::xowiki::formfield {
 
     set form "<form>@answer@</form>"
     lappend fc \
-        "@categories:off @cr_fields:hidden" \
+        @categories:off @cr_fields:hidden \
         "answer:[:dict_to_fc -type pool_question_placeholder $fc_dict]"
 
     ${:object} set_property -new 1 form $form
