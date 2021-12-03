@@ -50,7 +50,7 @@
   <msg key="previous_question">Previous Question</msg>
   <msg key="previous_question_title">Save and go to previous question</msg>
   <msg key="subquestion">Subquestion</msg>  
-  <msg key="restart">Restart</msg>
+  <msg key="restart">Edit Exam Configuration</msg>
   <msg key="refresh">Refresh</msg>
   <msg key="print">Print</msg>
   <msg key="testrun">Test run</msg>
@@ -268,6 +268,8 @@
   <msg key="pool_question_item_types">Item Types</msg>
   <msg key="available_pool_items">Available Pool Items</msg>
   <msg key="available_pool_item_stats">Pool Item Statistics</msg>
+
+  <msg key="Grading">Grading</msg>
 
   <msg key="submit_confirmation">Are you sure you want to submit? This step cannot be undone.</msg>
 </message_catalog>

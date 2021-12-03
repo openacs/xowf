@@ -1050,6 +1050,7 @@ namespace eval ::xowiki::formfield {
   Class create test_section -superclass {TestItemField} -parameter {
     {multiple true}
     {form en:edit-interaction.wf}
+    {QM ::xowf::test_item::question_manager}
   }
   test_section set item_type Composite
   test_section set closed_question_type false
@@ -1103,7 +1104,7 @@ namespace eval ::xowiki::formfield {
     #   set substvalues [$formObj property substvalues]
     #   if {$substvalues ne ""} {
     #     ns_log notice ".... [$formObj name] has substvalues $substvalues"
-    #     set d [::xowf::test_item::question_manager percent_substitute_in_form \
+    #     set d [${:QM} percent_substitute_in_form \
     #                -obj ${:object} \
     #                -form_obj $formObj \
     #                -position $position \
@@ -1134,19 +1135,22 @@ namespace eval ::xowiki::formfield {
       }
       set result "-with_$kind"
     }]
-    set question_infos [::xowf::test_item::question_manager question_info \
+    set question_infos [${:QM} question_info \
                             -question_number_label "#xowf.subquestion#" \
                             {*}$title_options \
                             -numbers $numbers \
                             -no_position \
-                            -obj ${:object} $formObjs]
+                            -obj ${:object} \
+                            $formObjs]
     # ns_log notice "SELECTION question_info '$question_infos'"
 
     #
     # Build a single clean form based on the question infors,
     # containing all selected items.
     #
-    regsub -all {<[/]?form>} [dict get $question_infos form] "" aggregatedForm
+    set aggregatedForm [${:QM} aggregated_form \
+                            -with_grading_box hidden \
+                            $question_infos]
     set aggregatedFC [dict get $question_infos form_constraints]
     #ns_log notice "SELECTION aggregatedFC\n$aggregatedFC"
 
@@ -1155,7 +1159,7 @@ namespace eval ::xowiki::formfield {
     # constraints). I think, we have already a better function for
     # this.
     #
-    set names [regexp -inline -all {@([^@]+_)@} [dict get $question_infos form]]
+    set names [regexp -inline -all {@([^@]+_)@} $aggregatedForm]
     foreach {. name} $names {
       regsub -all "@$name@" $aggregatedForm "@answer_$name@" aggregatedForm
       regsub -all ${name}: $aggregatedFC "answer_${name}:" aggregatedFC
@@ -1167,8 +1171,8 @@ namespace eval ::xowiki::formfield {
     # Automatically compute the minutes and points of the composite
     # field and update the form field.
     #
-    set total_minutes [::xowf::test_item::question_manager total_minutes $question_infos]
-    set total_points  [::xowf::test_item::question_manager total_points $question_infos]
+    set total_minutes [${:QM} total_minutes $question_infos]
+    set total_points  [${:QM} total_points $question_infos]
 
     [${:parent_field} get_named_sub_component minutes] value $total_minutes
     [${:parent_field} get_named_sub_component points] value $total_points
@@ -1191,7 +1195,7 @@ namespace eval ::xowiki::formfield {
 
   Class create pool_question -superclass TestItemField -parameter {
   }
-  pool_question set closed_question_type false ; # the replacement query might be or not autocorrection capabable
+  pool_question set closed_question_type false ; # the replacement query might be or not autocorrection capable
   pool_question set item_type PoolQuestion
 
   pool_question set item_types {
@@ -1357,13 +1361,13 @@ namespace eval ::xowf::test_item {
     :method add_to_fc {-fc:required -position -minutes -points} {
       return [lmap c $fc {
         if {[regexp {^[^:]+_:} $c]} {
-          if {[info exists position]} {
+          if {[info exists position] && ![string match *,position=* $c]} {
             append c ,test_item_in_position=$position
           }
-          if {[info exists minutes]} {
+          if {[info exists minutes] && ![string match *,minutes=* $c]} {
             append c ,test_item_minutes=$minutes
           }
-          if {[info exists points]} {
+          if {[info exists points] && ![string match *,test_item_points=* $c]} {
             append c ,test_item_points=$points
           }
           #ns_log notice "APPEND $c"
@@ -1618,8 +1622,11 @@ namespace eval ::xowf::test_item {
     if {$n ne ""} {
       return [$n asHTML]
     }
-    ns_log notice "tdom_render $script returns empty"
+    ns_log warning "tdom_render: $script returns empty"
   }
+}
+
+namespace eval ::xowf::test_item {
 
   nx::Class create Answer_manager -superclass AssessmentInterface {
 
@@ -1965,8 +1972,15 @@ namespace eval ::xowf::test_item {
       set wf [:get_answer_wf $obj]
       if {$wf ne ""} {
         set items [:get_wf_instances -initialize false $wf]
-        foreach i [$items children] { $i delete }
+        foreach i [$items children] {
+          $i www-delete
+        }
       }
+      #
+      # Delete as well the manual gradings for this exam.
+      #
+      $obj set_property -new 1 manual_gradings {}
+
       return $wf
     }
 
@@ -1978,7 +1992,7 @@ namespace eval ::xowf::test_item {
       #
       # Delete previously scheduled atjobs
       #
-      ns_log notice "#### delete_scheduled_atjobs"
+      #ns_log notice "#### delete_scheduled_atjobs"
 
       set item_id [$obj item_id]
       set atjob_form_id [::xowf::atjob form_id -parent_id $item_id -package_id [ad_conn package_id]]
@@ -2232,10 +2246,16 @@ namespace eval ::xowf::test_item {
     # Class:  Answer_manager
     # Method: achieved_points
     #----------------------------------------------------------------------
-    :public method achieved_points {-submission:object -answer_attributes:required } {
+    :public method achieved_points {
+      {-manual_grading ""}
+      -submission:object
+      -answer_attributes:required
+    } {
       #
       # This method has to be called after the instance was rendered,
       # since it uses the produced form_fields.
+      #
+      # @return dict containing "achievedPoints", "details" and "achievablePoints"
       #
       set all_form_fields [::xowiki::formfield::FormField info instances -closure]
       set totalPoints 0
@@ -2250,24 +2270,174 @@ namespace eval ::xowf::test_item {
         }
         set achievablePoints [$f set test_item_points]
         set achievableTotalPoints [expr {$achievableTotalPoints + $achievablePoints}]
+
         if {[$f exists correction_data]} {
-          set cd [$f set correction_data]
-          #ns_log notice "FOO: $a <$f> $cd"
-          if {[dict exists $cd points]} {
-            set points [dict get $cd points]
-            set totalPoints [expr {$totalPoints + $points}]
-          } else {
-            ns_log warning "$a: no points in correction_data, ignoring in points calculation"
-          }
+          set auto_correct_achieved [:dict_value [$f set correction_data] points]
+        } else {
+          set auto_correct_achieved ""
+        }
+
+        #
+        # Manual grading has higher priority than autograding.
+        #
+        set achieved [:dict_value [:dict_value $manual_grading $a] achieved]
+        if {$achieved eq ""} {
+          set achieved $auto_correct_achieved
+        }
+
+        if {$achieved ne ""} {
+          set totalPoints [expr {$totalPoints + $achieved}]
+        } else {
+          ns_log warning "$a: no points in correction_data, ignoring in points calculation"
         }
         lappend details [dict create \
                              attributeName $a \
-                             achieved $points \
+                             achieved $achieved \
+                             auto_correct_achieved $auto_correct_achieved \
                              achievable $achievablePoints]
       }
       return [list achievedPoints $totalPoints \
                   details $details \
                   achievablePoints $achievableTotalPoints]
+    }
+
+    #----------------------------------------------------------------------
+    # Class:  Answer_manager
+    # Method: grading_dialog_setup
+    #----------------------------------------------------------------------
+    :public method grading_dialog_setup {examWf} {
+      #
+      # Define the modal dialog and everything necessary for reusing
+      # this dialog for multiple occasions. This method registers the
+      # pop-up and dismiss handlers for JavaScript and returns the
+      # HTML markup of the modal dialog.
+      #
+      # @return HTML block for the modal dialog
+      #
+      set url [$examWf pretty_link -query m=grade-single-item]
+
+      ::template::add_body_script -script [subst -novariables {
+        $(document).ready(function(){
+          $('.modal .confirm').on('click', function(ev) {
+            //
+            // Submit button of grading dialog was pressed.
+            //
+            var id = ev.currentTarget.dataset.id;
+            var gradingBox = document.getElementById(id);
+            var points     = document.querySelector('#grading-points').value;
+            var comment    = document.querySelector('#grading-comment').value;
+
+            document.querySelector('#' + id + ' .points').textContent = points;
+            document.querySelector('#' + id + ' .comment').textContent = comment;
+            gradingBox.dataset.achieved = points;
+            gradingBox.dataset.comment = comment;
+            if (comment == "") {
+              document.querySelector('#' + id + ' .feedback-label').classList.add('hidden');
+            } else {
+              document.querySelector('#' + id + ' .feedback-label').classList.remove('hidden');
+            }
+
+            var user_id = gradingBox.dataset.user_id;
+            var examGradingBox = document.getElementById('runtime-panel-' + user_id);
+
+            var data = new FormData();
+            data.append('question_name', gradingBox.dataset.question_name);
+            data.append('user_id', user_id);
+            data.append('achieved', points);
+            data.append('comment', comment);
+            data.append('grading_scheme', examGradingBox.dataset.grading_scheme);
+            data.append('achieved_points', examGradingBox.dataset.achieved_points);
+
+            var xhttp = new XMLHttpRequest();
+            xhttp.open('POST', '[set url]', true);
+            xhttp.onload = function () {
+              if (this.readyState == 4) {
+                if (this.status == 200) {
+                  var text = this.responseText;
+                  var span = document.querySelector('#runtime-panel-' + user_id + ' .achieved-points');
+                  span.textContent = text;
+                } else {
+                  console.log('sent NOT ok');
+                }
+              }
+            };
+            xhttp.send(data);
+
+            return true;
+          });
+
+          $('.modal-dialog form').keypress(function(e){
+            if(e.keyCode == 13) {
+              e.preventDefault();
+              return false;
+            }
+          });
+
+          $('#grading-modal').on('shown.bs.modal', function (ev) {
+            //
+            // Pop-up of grading dialog.
+            // Copy values from data attributes to input fields.
+            //
+            var gradingBox = ev.relatedTarget.parentElement;
+            document.getElementById('grading-question-title').textContent = gradingBox.dataset.title;
+            document.getElementById('grading-participant').textContent = gradingBox.dataset.full_name;
+
+            var pointsInput = document.getElementById('grading-points');
+            pointsInput.value = gradingBox.dataset.achieved;
+            pointsInput.max = gradingBox.dataset.achievable;
+            document.getElementById('grading-comment').value = gradingBox.dataset.comment;
+
+            // Tell confirm button to which grading box it belongs
+            var confirmButton = document.querySelector('#grading-modal-confirm');
+            confirmButton.dataset.id = gradingBox.id;
+          });
+        });
+      }]
+
+      return [ns_trim -delimiter | {
+        |<div class="modal fade" id="grading-modal" tabindex="-1" role="dialog"
+        |     aria-labelledby="grading-modal-label" aria-hidden="true">
+        |  <div class="modal-dialog" role="document">
+        |    <div class="modal-content">
+        |      <div class="modal-header">
+        |        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+        |          <span aria-hidden="true">&#215;</span>
+        |        </button>
+        |        <h4 class="modal-title" id="gradingModalTitle">#xowf.Grading#:
+        |            <span id='grading-participant'></span></h4>
+        |         <p class="modal-subtitle">#xowf.question#: <span id='grading-question-title'></span></p>
+        |      </div>
+        |      <div class="modal-body">
+        |        <form class="form-horizontal" role="form" action='#' method="post">
+        |          <div class="form-group">
+        |             <label for="grading-points" class="control-label col-sm-2">#xowf.Points#:</label>
+        |             <div class="col-sm-9">
+        |                <input class="form-control" id="grading-points" placeholder="#xowf.Points#"
+        |                       type="number" step="0.1">
+        |             </div>
+        |          </div>
+        |          <div class="form-group">
+        |             <label for="grading-comment" class="control-label col-sm-2">#xowf.feedback#:</label>
+        |             <div class="col-sm-9">
+        |                <textarea lines="2" class="form-control" id="grading-comment"
+        |                 placeholder="..."></textarea>
+        |             </div>
+        |          </div>
+        |        </form>
+        |      </div>
+        |      <div class="modal-footer">
+        |        <button type="button" class="btn btn-secondary"
+        |                data-dismiss="modal">#acs-kernel.common_Cancel#
+        |        </button>
+        |        <button id="grading-modal-confirm" type="button" class="btn btn-primary confirm"
+        |                data-dismiss="modal">#acs-subsite.Confirm#
+        |        </button>
+        |      </div>
+        |    </div>
+        |  </div>
+        |</div>
+      }]
+
     }
 
     #----------------------------------------------------------------------
@@ -2281,10 +2451,12 @@ namespace eval ::xowf::test_item {
       answerObj:object
     } {
       #
-      # Return statistics for the provided object:
+      # Return statistics for the provided object in the form of HTML:
       # - minimal statistics: when view default
       # - statistics with clickable revisions: when view = revision_overview
       # - per-revision statistics: when view = revision_overview and revision_id is provided
+      #
+      # @return HTML block
       #
       set revision_sets [$answerObj get_revision_sets]
       set parent_revsion_sets [[$answerObj parent_id] get_revision_sets]
@@ -2381,7 +2553,7 @@ namespace eval ::xowf::test_item {
 
       if {$grading_info ne ""} {
         set achievedPointsInfo [subst {
-          #xowf.Achieved_points#: <span class='data'>$grading_info</span><br>
+          #xowf.Achieved_points#: <span class='data achieved-points'>$grading_info</span><br>
         }]
       } else {
         set achievedPointsInfo ""
@@ -2552,6 +2724,8 @@ namespace eval ::xowf::test_item {
       # general, this could be as well made available per question or
       # per-student.
       #
+      # @return HTML
+      #
       set wf [:get_answer_wf $examWf]
       if {$wf eq ""} {
         return ""
@@ -2571,9 +2745,10 @@ namespace eval ::xowf::test_item {
       {-revision_id}
     } {
       #
-      # Render for the submission i the proctor images.
+      # Render proctor images the provided submission.
       #
-
+      # @return HTML
+      #
       set user_id [$submission creation_user]
       set img_url [$examWf pretty_link -query m=proctor-image&user_id=$user_id]
 
@@ -2744,6 +2919,7 @@ namespace eval ::xowf::test_item {
         $submission set __form_objs $form_objs
         set question_form [$submission render_content]
       }
+
       return $question_form
     }
 
@@ -2813,6 +2989,181 @@ namespace eval ::xowf::test_item {
 
     #----------------------------------------------------------------------
     # Class:  Answer_manager
+    # Method: dom ensemble for tdom manipluations
+    #----------------------------------------------------------------------
+    :method "dom node replace" {domNode xquery script} {
+      set node [$domNode selectNodes $xquery]
+      if {$node ne ""} {
+        foreach child [$node childNodes] {
+          $child delete
+        }
+        :uplevel [list $node appendFromScript $script]
+      }
+    }
+    :method "dom node delete" {domNode xquery} {
+      set nodes [$domNode selectNodes $xquery]
+      foreach node $nodes {
+        $node delete
+      }
+    }
+    :method "dom class add" {domNode xquery class} {
+      set nodes [$domNode selectNodes $xquery]
+      foreach node $nodes {
+        set oldClass [$node getAttribute class]
+        if {$class ni $oldClass} {
+          $node setAttribute class "$oldClass $class"
+        }
+      }
+    }
+    :method "dom class remove" {domNode xquery class} {
+      set nodes [$domNode selectNodes $xquery]
+      foreach node $nodes {
+        set oldClass [$node getAttribute class]
+        set pos [lsearch $oldClass $class]
+        if {$pos != -1} {
+          $node setAttribute class [lreplace $oldClass $pos $pos]
+        }
+      }
+    }
+
+    #----------------------------------------------------------------------
+    # Class:  Answer_manager
+    # Method: postprocess_question_html
+    #----------------------------------------------------------------------
+    :method postprocess_question_html {
+      {-question_form:required}
+      {-achieved_points:required}
+      {-manual_grading:required}
+      {-submission:object,required}
+      {-runtime_panel_view:required}
+      {-exam_state:required}
+    } {
+      #
+      # Post-process the HTML of a question by adding information of
+      # the student as data attributes, such as achieved and
+      # achievable points, setting CSS classes, mangling names of
+      # composite questions to match with the data in achieved_points,
+      #
+      # @return HTML block
+
+      #ns_log notice "QF=$question_form"
+      dom parse -simple -html $question_form doc
+      $doc documentElement root
+      if {$root eq ""} {
+        error "form '$form' is not valid"
+      }
+
+      set per_question_points ""
+      foreach pd [:dict_value $achieved_points details] {
+        set qn [dict get $pd attributeName]
+        dict set per_question_points $qn achieved [dict get $pd achieved]
+        dict set per_question_points $qn achievable [dict get $pd achievable]
+      }
+
+      #
+      # For every composite question:
+      #
+      # - update the question_name of the subquestion by prefixing it
+      #   with the name of the composite, since this is what we have
+      #   in the details of achieved_points.
+      # - hide the grading box of the composite
+      # - unhide the grading box of the composite children
+      #
+      set composite_grading_boxes \
+          [$root selectNodes \
+               {//div[@data-item_type='Composite']/div[contains(@class,'grading-box')]}]
+      foreach composite_grading_box $composite_grading_boxes {
+        set composite_qn [$composite_grading_box getAttribute "data-question_name"]
+        set parentNode [$composite_grading_box parentNode]
+        :dom class add $composite_grading_box {.} hidden
+        foreach grading_box [$parentNode selectNodes {div//div[contains(@class,'grading-box')]}] {
+          set qn [$grading_box getAttribute data-question_name]
+          regsub {^answer_} $qn ${composite_qn}_ new_qn
+          #ns_log notice "CHILD of Composite: rename QN from $qn to $new_qn"
+          $grading_box setAttribute data-question_name $new_qn
+          $grading_box setAttribute id ${composite_qn}_[$grading_box getAttribute id]
+          :dom class remove $grading_box {.} hidden
+        }
+      }
+
+      set submission_state [$submission state]
+      set noManualGrading [expr {$submission_state ne "done" || $exam_state eq "published"}]
+
+      set grading_boxes [${root} selectNodes {//div[contains(@class,'grading-box')]}]
+      foreach grading_box $grading_boxes {
+        set qn [$grading_box getAttribute "data-question_name"]
+        set item_node [$grading_box parentNode]
+        set item_type [expr {[$item_node hasAttribute "data-item_type"]
+                             ? [$item_node getAttribute "data-item_type"]
+                             : ""}]
+        ns_log notice "... QN '$qn' item_type '$item_type'" \
+            "submission state $submission_state" \
+            "exam state $exam_state"
+        if {$noManualGrading} {
+          :dom class add $grading_box {a[contains(@class,'manual-grade')]} hidden
+        }
+
+        #
+        # Get manual gradings, if these were already provided.
+        #
+        if {[dict exists $manual_grading $qn]} {
+          set achieved [dict get $manual_grading $qn achieved]
+          set comment [dict get $manual_grading $qn comment]
+        } else {
+          set achieved ""
+          set comment ""
+        }
+
+        if {[dict exists $per_question_points $qn achieved]} {
+          #
+          # Manual grading has higher priority than automated grading.
+          #
+          if {$achieved eq ""} {
+            set achieved [dict get $per_question_points $qn achieved]
+          }
+          set achievable [dict get $per_question_points $qn achievable]
+          $grading_box setAttribute data-autograde 1
+        } else {
+          set achievable ""
+        }
+        #ns_log notice "... QN '$qn' item_type $item_type achieved '$achieved' achievable '$achievable'"
+
+        if {$achieved eq ""} {
+          :dom node replace $grading_box {span[@class='points']} {
+            ::html::span -class "glyphicon glyphicon-alert text-warn" -aria-hidden "true" {}
+          }
+        } else {
+          :dom node replace $grading_box {span[@class='points']} {::html::t $achieved}
+        }
+        #
+        # When "comment" is empty, do not show the label.
+        #
+        :dom node replace $grading_box {span[@class='comment']} {::html::t $comment}
+        if {$comment eq ""} {
+          :dom class add $grading_box {span[@class='feedback-label']} hidden
+        } else {
+          :dom class remove $grading_box {span[@class='feedback-label']} hidden
+        }
+
+        $grading_box setAttribute data-user_id [$submission creation_user]
+        $grading_box setAttribute data-user_name [$submission set online-exam-userName]
+        $grading_box setAttribute data-full_name [$submission set online-exam-fullName]
+        $grading_box setAttribute data-achieved $achieved
+        $grading_box setAttribute data-achievable $achievable
+        $grading_box setAttribute data-comment $comment
+
+        #
+        # In student review mode ('Einsicht'), remove edit controls.
+        #
+        if {$runtime_panel_view eq "student"} {
+          :dom node delete $grading_box {a}
+        }
+      }
+      return [$root asHTML]
+    }
+
+    #----------------------------------------------------------------------
+    # Class:  Answer_manager
     # Method: render_submission=exam_protocol
     #----------------------------------------------------------------------
     :method render_submission=exam_protocol {
@@ -2832,9 +3183,10 @@ namespace eval ::xowf::test_item {
       {-with_signature:boolean false}
       {-with_exam_heading:boolean true}
     } {
-
       set userName [$submission set online-exam-userName]
       set fullName [$submission set online-exam-fullName]
+      set user_id  [$submission set creation_user]
+      set manual_gradings [$examWf property manual_gradings]
 
       #if {[$submission state] ne "done"} {
       #  ns_log notice "online-exam: submission of $userName is not finished (state [$submission state])"
@@ -2856,14 +3208,17 @@ namespace eval ::xowf::test_item {
         }
       }
 
+      set answerAttributes [xowf::test_item::renaming_form_loader \
+                                answer_attributes [$submission instance_attributes]]
+
+      #
+      # "render_full_submission_form" calls "summary_form" to obtain the
+      # user's answers to all questions.
+      #
       set question_form [:render_full_submission_form \
                              -wf $wf \
                              -submission $submission \
                              -form_objs $form_objs]
-      #
-      # Now, the question_form contains the rendered answer of the
-      # student.
-      #
 
       if {$recutil ne ""} {
         :export_answer \
@@ -2877,17 +3232,23 @@ namespace eval ::xowf::test_item {
         :export_file_submission -submission $submission -zipFile $zipFile
       }
 
-      set achieved_points {}
-      if {$with_signature || $autograde} {
-        set answerAttributes [xowf::test_item::renaming_form_loader \
-                                  answer_attributes [$submission instance_attributes]]
-        if {$autograde} {
-          set achieved_points [:achieved_points \
-                                   -submission $submission \
-                                   -answer_attributes $answerAttributes]
-          dict set achieved_points totalPoints $totalPoints
-        }
-      }
+      #
+      # Achieved_points are computed for autograded and manually
+      # graded exams.
+      #
+      set achieved_points [:achieved_points \
+                               -manual_grading [:dict_value $manual_gradings $user_id] \
+                               -submission $submission \
+                               -answer_attributes $answerAttributes]
+      dict set achieved_points totalPoints $totalPoints
+
+      set question_form [:postprocess_question_html \
+                             -question_form $question_form \
+                             -achieved_points $achieved_points \
+                             -manual_grading [:dict_value $manual_gradings $user_id] \
+                             -submission $submission \
+                             -exam_state [$examWf state] \
+                             -runtime_panel_view $runtime_panel_view]
 
       if {$with_signature} {
         set sha256 [ns_md string -digest sha256 $answerAttributes]
@@ -2941,19 +3302,59 @@ namespace eval ::xowf::test_item {
         set runtime_panel ""
       }
 
+      #
+      # Don't add details to exam-review for student.
+      #
+      if {$runtime_panel_view eq "student"} {
+        set grading_scheme ""
+        set achieved_points ""
+      }
       set heading "$userName · $fullName · $pretty_date"
-      append HTML [subst {
+      append HTML [subst [ns_trim {
         <div class='single_exam'>
-        <div class='runtime-data'>
+        <div class='runtime-panel' id='runtime-panel-$user_id'
+             data-grading_scheme='[namespace tail $grading_scheme]'
+             data-achieved_points='$achieved_points'>
         [expr {$with_exam_heading ? "<h2>$heading</h2>" : ""}]
         $runtime_panel
         </div>
         $signatureString
         $question_form
         </div>
-      }]
+      }]]
 
       return $HTML
+    }
+
+    #----------------------------------------------------------------------
+    # Class:  Answer_manager
+    # Method: grading_scheme
+    #----------------------------------------------------------------------
+    :method grading_scheme {
+      {-grading:alnum,0..n ""}
+      {-total_points}
+    } {
+      #
+      # The management of the grading scheme has to be extended. For the
+      # time being, we have a single grading scheme with the option to
+      # round to full points or not. When an exam has less than 40
+      # points, we do not round per default, since this rounding could
+      # provide more than 1 percent of the result. This should be made
+      # configurable (also in www-print-answer-table, which is not used
+      # right now).
+      #
+      # @return fully qualified grading scheme object
+      #
+      if {$grading eq ""} {
+        set grading [expr {$total_points < 40 ? "wi1_noround" : "wi1p"}]
+      }
+
+      set grading_scheme ::xowf::test_item::grading::$grading
+      if {[info commands $grading_scheme] eq ""} {
+        set grading_scheme ::xowf::test_item::grading::wi1
+      }
+      #ns_log notice "USE grading_scheme $grading_scheme"
+      return $grading_scheme
     }
 
     #----------------------------------------------------------------------
@@ -2976,6 +3377,8 @@ namespace eval ::xowf::test_item {
       # Return the answers in HTML format in a somewhat printer
       # friendly way, e.g. as the exam protocol.
       #
+      # @return dict containing "do_stream" and "HTML"
+      #
       set combined_form_info [::xowf::test_item::question_manager combined_question_form $examWf]
       set autograde   [dict get $combined_form_info autograde]
       set totalPoints [::xowf::test_item::question_manager total_points \
@@ -2996,24 +3399,8 @@ namespace eval ::xowf::test_item {
             "valid [dict get $combined_form_info question_objs]"
         set form_objs ""
       }
-      #
-      # The management of the grading scheme has to be extended. For the
-      # time being, we have a single grading scheme with the option to
-      # round to full points or not. When an exam has less than 40
-      # points, we do not round per default, since this rounding could
-      # provide more than 1 percent of the result. This should be made
-      # configurable (also in www-print-answer-table, which is not used
-      # right now).
-      #
-      if {$grading eq ""} {
-        set grading [expr {$totalPoints < 40 ? "wi1_noround" : "wi1p"}]
-      }
 
-      set grading_scheme ::xowf::test_item::grading::$grading
-      if {[info commands $grading_scheme] eq ""} {
-        set grading_scheme ::xowf::test_item::grading::wi1
-      }
-      #ns_log notice "USE grading_scheme $grading_scheme"
+      set grading_scheme [:grading_scheme -grading $grading -total_points $totalPoints]
 
       set :grade_dict {}
       set :grade_csv ""
@@ -3062,6 +3449,7 @@ namespace eval ::xowf::test_item {
           set runtime_panel_view "default"
         }
       }
+      append HTML [:grading_dialog_setup $examWf]
 
       if {$do_stream} {
         # ns_log notice STREAM-[info level]-$::template::parse_level
@@ -3210,6 +3598,7 @@ namespace eval ::xowf::test_item {
       if {$with_grading_table && $autograde
           && !$as_student && $filter_id eq "" && $creation_user eq "" && $revision_id eq ""
         } {
+        set statistics {}
         set ia [$examWf instance_attributes]
         foreach var {__stats_success __stats_count} key {success count} {
           if {[$examWf exists $var]} {
@@ -3249,7 +3638,16 @@ namespace eval ::xowf::test_item {
           #ns_log notice "### '$att' value '$value'"
           $answerObj combine_data_and_form_field_default 1 $f $value
           $f set_feedback 1
-          $f add_statistics -options {word_statistics word_cloud}
+
+          #
+          # TODO: world-cloud statistics make mostly sense for the
+          # inclass quizzes, but there these require still an
+          # interface via "reporting_obj" instead of "add_statistics"
+          # (although, for the purposes of the inclass-quiz,
+          # randomization is not an issue.
+          #
+          #$f add_statistics -options {word_statistics word_cloud}
+
           #
           # Leave the form-field in statistics mode in a state with
           # correct anwers.
@@ -4301,12 +4699,6 @@ namespace eval ::xowf::test_item {
           - $minutes - $points - $lang - $fc_dict - [$pool_question_obj revision_id]
       ns_log notice "get_pool_questions fetch via key: '$key'"
 
-      #return [:get_pool_replacement_candidates \
-                  -minutes $minutes \
-                  -points $points \
-                  -fc_dict $fc_dict \
-                  -lang $lang \
-                  $pool_question_obj]
       return [ns_cache_eval -expires 1m -- ns:memoize $key {
         :get_pool_replacement_candidates \
             -minutes $minutes \
@@ -4390,7 +4782,12 @@ namespace eval ::xowf::test_item {
       -exam_obj:object
     } {
       #
-      # Applies replace_pool_question to all the relevant form objects
+      # Replaces all pool questions for the exam by random items.  In
+      # case there were replacement items, set/update the property
+      # "question" for the individual answer_obj.
+      #
+      # @param answer_obj the workflow instance of the answer workflow
+      # @param exam_obj the exam objject to which the answer_object belongs to
       #
       if {[$answer_obj property question] ne ""} {
         ns_log notice "answer_obj $answer_obj has already a 'question' property" \
@@ -4610,7 +5007,6 @@ namespace eval ::xowf::test_item {
           ns_log warning "load_question_objs: only $loaded out of $out_of from '$names' could be loaded"
         }
       }
-      #ns_log notice "XXX [$obj name] load_question_objs questionNames = <$names>"
       return $questionForms
     }
 
@@ -4921,6 +5317,161 @@ namespace eval ::xowf::test_item {
 
     #----------------------------------------------------------------------
     # Class:  Question_manager
+    # Method: question_randomization_ok
+    #----------------------------------------------------------------------
+    :method question_randomization_ok {form_obj} {
+      set randomizationOk 1
+      set qd [:dict_value [$form_obj instance_attributes] question]
+      if {$qd ne ""} {
+        #
+        # No question should have shuffle "always".
+        #
+        if {[:dict_value $qd question.shuffle] eq "always"} {
+          #ns_log notice "FOUND shuffle $qd"
+          set randomizationOk 0
+        }
+      }
+      return $randomizationOk
+    }
+
+    #----------------------------------------------------------------------
+    # Class:  Question_manager
+    # Method: question_is_autograded
+    #----------------------------------------------------------------------
+    :method question_is_autograded {form_obj} {
+      #
+      # Return boolean information whether this question is autograded.
+      #
+
+      set formAttributes [$form_obj instance_attributes]
+      if {[dict exists $formAttributes question]} {
+        #
+        # Check autograding and randomization for exam.
+        #
+        set qd [dict get [$form_obj instance_attributes] question]
+
+        #
+        # For autoGrade, we assume currently to have either a grading,
+        # or a question, where every alternative is exactly provided.
+        #
+        if {[dict exists $qd question.grading]} {
+          #
+          # autograde ok on the item type level
+          #
+          set autoGrade 1
+
+        } elseif {[:dict_value $formAttributes auto_correct 0]} {
+          #
+          # auto_correct is in principle enabled, check details on
+          # the concrete question item.
+          #
+          set autoGrade 1
+
+          if {[:dict_value $formAttributes item_type] eq "ShortText"} {
+            #
+            # Check, if the correct_when specification of a short text
+            # question is suited for autocorrection. On the longer
+            # range, this function should be moved to a different
+            # place.
+            #
+
+            set dict [lindex [fc_to_dict [dict get $formAttributes form_constraints]] 1]
+            foreach a [dict get $dict answer] {
+              set op ""
+              regexp {^(\S+)\s} $a . op
+              if {$op ni {eq lt le gt ge btwn AND}} {
+                ns_log notice "question_info [$form_obj name]: not suited for autoGrade: '$a'"
+                set autoGrade 0
+                break
+              }
+              if {$op eq "AND"} {
+                foreach c [lrange $a 1 end] {
+                  set op ""
+                  regexp {^(\S+)\s} $c . op
+                  if {$op ni {eq lt le gt ge btwn}} {
+                    ns_log notice "question_info [$form_obj name]: not suited for autoGrade: AND clause '$c'"
+                    set autoGrade 0
+                    break
+                  }
+                }
+              }
+            }
+          }
+        } elseif [dict exists $qd question.interaction question.interaction.answer] {
+          set autoGrade 1
+
+          set answer [dict get $qd question.interaction question.interaction.answer]
+          foreach k [dict keys $answer] {
+            if {![dict exists $answer $k $k.correct]} {
+              set autoGrade 0
+            }
+          }
+        } else {
+          set autoGrade 0
+        }
+        #ns_log notice "question_info [$form_obj name] [$form_obj title] autoGrade $autoGrade"
+      }
+      return $autoGrade
+    }
+
+    #----------------------------------------------------------------------
+    # Class:  Question_manager
+    # Method: exam_form
+    #----------------------------------------------------------------------
+    :public method aggregated_form {
+      {-titleless_form:switch false}
+      {-with_grading_box ""}
+      question_infos
+    } {
+      #
+      # Compute an aggregated form based on the chunks available in
+      # question_infos.
+      #
+      # @return HTML form content
+      #
+      set full_form ""
+      set count 0
+      foreach \
+          question_form [dict get $question_infos question_forms] \
+          title_info [dict get $question_infos title_infos] \
+          question_obj [dict get $question_infos question_objs] {
+            set item_type [$question_obj property item_type]
+            append full_form \
+                "<div class='test-item' data-item_type='$item_type'>"
+
+            if {!$titleless_form} {
+              append full_form \
+                  "<h4>[dict get $title_info full_title]</h4>\n"
+            }
+            if {$with_grading_box ne ""} {
+              set question_name [xowf::test_item::renaming_form_loader \
+                                     form_name_based_attribute_stem \
+                                     [$question_obj name]]
+              set visible [expr {$with_grading_box eq "hidden" ? "hidden" : ""}]
+              if {$with_grading_box eq "hidden"} {
+                set question_name answer_$question_name
+              }
+              append full_form [subst [ns_trim -delimiter | {
+                |<div id='grading-box-[incr count]' class='grading-box $visible'
+                |     data-question_name='$question_name' data-title='[$question_obj title]'
+                |     data-question_id='[$question_obj item_id]'>
+                |  #xowf.Points#: <span class='points'></span>
+                |  <span class='feedback-label'>#xowf.feedback#: </span><span class='comment'></span>
+                |  <a class='manual-grade' href='#' data-toggle='modal' data-target='#grading-modal'>
+                |    <span class='glyphicon glyphicon-pencil' aria-hidden='true'></span>
+                |  </a>
+                |</div>
+              }]]
+            }
+            append full_form $question_form \n</div>
+          }
+
+      regsub -all {<[/]?form>} $full_form "" full_form
+      return $full_form
+    }
+
+    #----------------------------------------------------------------------
+    # Class:  Question_manager
     # Method: question_info
     #----------------------------------------------------------------------
     :public method question_info {
@@ -4942,10 +5493,13 @@ namespace eval ::xowf::test_item {
       # "randomization_for_exam" "autograde" and "question_objs". This
       # information is obtained from the provided "form_objs".
       #
-      set full_form {}
-      set full_fc {}
+      # @return dict containing "title_infos", "form_constraints",
+      #    "disabled_form_constraints", "randomization_for_exam",
+      #     "autograde", "question_forms", "question_objs"
       set full_disabled_fc {}
       set title_infos {}
+      set question_forms {}
+
       if {[llength $positions] == 0} {
         set position -1
         set positions [lmap form_obj $form_objs {incr position}]
@@ -4953,9 +5507,6 @@ namespace eval ::xowf::test_item {
       set randomizationOk 1
       set autoGrade 1
       foreach form_obj $form_objs number $numbers position $positions {
-        #if {[info exists fixed_position]} {
-        #  set position $fixed_position
-        #}
         set form_obj [::xowf::test_item::renaming_form_loader rename_attributes $form_obj]
         set form_title [$form_obj title]
         set minutes [:question_property $form_obj minutes]
@@ -4993,19 +5544,14 @@ namespace eval ::xowf::test_item {
         }
         append title " " [join $title_components " - "]
 
-        if {!$titleless_form} {
-          append full_form \
-              "<h4>$title</h4>\n"
-        }
-
         #
         # The flag "no_position" is just provided for the composite
-        # form, since we are called there at form generation time,
+        # form, in cases where we are called at form generation time,
         # where the position is different from the position in the
-        # questionnairee. When the position is fixed, we do not provide
-        # it as an argument. As a consequence, the percent
-        # substitution is not performed, since it would return always
-        # very similar values based on the fixed position.
+        # exam. When the position is fixed, we do not provide it as an
+        # argument. As a consequence, the percent substitution is not
+        # performed, since it would return always very similar values
+        # based on a fixed position.
         #
         if {$no_position} {
           set positionArg {}
@@ -5023,8 +5569,8 @@ namespace eval ::xowf::test_item {
                    -obj $user_answers \
                    {*}$positionArg \
                    -form_obj $form_obj]
-        append full_form [dict get $d form]
 
+        lappend question_forms [dict get $d form]
         lappend title_infos [list full_title $title \
                                  title $form_title \
                                  minutes $minutes \
@@ -5035,88 +5581,28 @@ namespace eval ::xowf::test_item {
                              -minutes $minutes \
                              -points $points \
                              {*}$positionArg]
+
         lappend full_disabled_fc [:add_to_fc \
                                       -fc [dict get $d disabled_form_constraints] \
                                       -minutes $minutes \
                                       -points $points \
                                       {*}$positionArg]
 
-        set formAttributes [$form_obj instance_attributes]
-        if {[dict exists $formAttributes question]} {
-          #
-          # Check autograding and randomization for exam.
-          #
-          set qd [dict get [$form_obj instance_attributes] question]
-          #
-          # No question should have shuffle "always".
-          #
-          if {[:dict_value $qd question.shuffle] eq "always"} {
-            #ns_log notice "FOUND shuffle $qd"
-            set randomizationOk 0
-          }
-          #
-          # For autoGrade, we assume currently to have either a grading,
-          # or a question, where every alternative is exactly provided.
-          #
-          if {[dict exists $qd question.grading]} {
-            #
-            # autograde ok on the item type level
-            #
-          } elseif {[:dict_value $formAttributes auto_correct 0]} {
-            #
-            # auto_correct is in principle enabled, check details on
-            # the concrete question item.
-            #
-            if {[:dict_value $formAttributes item_type] eq "ShortText"} {
-              #
-              # Check, if the correct_when specification of a short text
-              # question is suited for autocorrection. On the longer
-              # range, this function should be moved to a different
-              # place.
-              #
-              set dict [lindex [fc_to_dict [dict get $formAttributes form_constraints]] 1]
-              foreach a [dict get $dict answer] {
-                set op ""
-                regexp {^(\S+)\s} $a . op
-                if {$op ni {eq lt le gt ge btwn AND}} {
-                  ns_log notice "question_info: not suited for autoGrade: '$a'"
-                  set autoGrade 0
-                  break
-                }
-                if {$op eq "AND"} {
-                  foreach c [lrange $a 1 end] {
-                    set op ""
-                    regexp {^(\S+)\s} $c . op
-                    if {$op ni {eq lt le gt ge btwn}} {
-                      ns_log notice "question_info: not suited for autoGrade: AND clause '$c'"
-                      set autoGrade 0
-                      break
-                    }
-                  }
-                }
-              }
-            }
-          } elseif [dict exists $qd question.interaction question.interaction.answer] {
-            set answer [dict get $qd question.interaction question.interaction.answer]
-            foreach k [dict keys $answer] {
-              if {![dict exists $answer $k $k.correct]} {
-                set autoGrade 0
-              }
-            }
-          } else {
-            set autoGrade 0
-          }
-          #ns_log notice "question_info [$form_obj name] [$form_obj title] autoGrade $autoGrade"
+        if {![:question_is_autograded $form_obj]} {
+          set autoGrade 0
+        }
+        if {![:question_randomization_ok $form_obj]} {
+          set randomizationOk 0
         }
       }
 
       return [list \
-                  form $full_form \
                   title_infos $title_infos \
                   form_constraints [join [lsort -unique $full_fc] \n] \
                   disabled_form_constraints [join [lsort -unique $full_disabled_fc] \n] \
                   randomization_for_exam $randomizationOk \
                   autograde $autoGrade \
+                  question_forms $question_forms \
                   question_objs $form_objs]
     }
 
@@ -5531,8 +6017,9 @@ namespace eval ::xowf::test_item {
         #
         # Substitute form-field place-holders ion the combined form.
         #
+        set combined_form [:aggregated_form $combined_form_info]
         set form [$obj regsub_eval  \
-                      [template::adp_variable_regexp] [dict get $combined_form_info form] \
+                      [template::adp_variable_regexp] $combined_form \
                       {$obj form_field_as_html -mode display "\\\1" "\2" $form_field_objs}]
 
         append HTML $form
@@ -5957,7 +6444,7 @@ namespace eval ::xowf::test_item::grading {
   nx::Class create Grading {
     :property {percentage_boundaries {50.0 60.0 70.0 80.0}}
 
-    :method calc_grade {-percentage -points -achieved_points} {
+    :method calc_grade {-percentage -points:required -achieved_points:required} {
       #
       # Return a numeric grade based on achieved_points dict and
       # percentage_mapping. On invalid data, return 0.
@@ -5974,7 +6461,10 @@ namespace eval ::xowf::test_item::grading {
       #  ns_log warning "test_item::grading legacy call, use 'achievablePoints' instead of 'totalPoints'"
       #  dict set achieved_points achievablePoints [dict get $achieved_points totalPoints]
       #}
+
       if {![info exists percentage]} {
+        #ns_log notice "=== calc_grade compute percentage from totalPoints"
+
         if {[dict exists $achieved_points totalPoints] && [dict get $achieved_points totalPoints] > 0} {
           set percentage \
               [format %.2f [expr {
@@ -6013,13 +6503,32 @@ namespace eval ::xowf::test_item::grading {
     :method complete_dict {achieved_points} {
       #
       # This is a transitional method, just for defensive programming
-      # to make sure, nobody elese uses the legacy field... should
+      # to make sure, nobody else uses the legacy field... should
       # disappear soon.
       #
       if {![dict exists $achieved_points achievablePoints] && [dict exists $achieved_points totalPoints]} {
         ns_log warning "test_item::grading legacy call, use 'achievablePoints' instead of 'totalPoints'"
         dict set achieved_points achievablePoints [dict get $achieved_points totalPoints]
       }
+      #
+      # When "achievedPoints" is set to empty, and "details" are
+      # provided, we perform a new calculation based on "details".
+      #
+      if {[dict get $achieved_points achievedPoints] eq ""
+          && [dict exists $achieved_points details]
+        } {
+        set achievablePoints 0
+        set achievedPoints 0
+        #ns_log notice "RECALC in complete_dict "
+        foreach detail [dict get $achieved_points details] {
+          #ns_log notice "RECALC in complete_dict '$detail'"
+          set achievedPoints   [expr {$achievedPoints   + [dict get $detail achieved]}]
+          set achievablePoints [expr {$achievablePoints + [dict get $detail achievable]}]
+        }
+        dict set achieved_points achievedPoints $achievedPoints
+        dict set achieved_points achievablePoints $achievablePoints
+      }
+
       foreach key {
         achievedPoints
         achievablePoints
@@ -6201,6 +6710,7 @@ namespace eval ::xowf::test_item {
       view           admin
       poll           admin
       send-participant-message admin
+      grade-single-item admin
       edit           admin
       print-answers  admin
       proctoring-display admin

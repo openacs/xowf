@@ -36,7 +36,7 @@
   <msg key="submitted_answers">Abgegebene Antworten</msg>
   <msg key="answer_lines">Antwortzeilen</msg>
   <msg key="answer_columns">Antwortspalten</msg>
-  <msg key="correct_when">Richtig wenn...</msg>
+  <msg key="correct_when">Richtig, wenn...</msg>
   <msg key="online-exam-draft_exam">Prüfungsentwurf (Prüfung nicht freigeschaltet)</msg>
   <msg key="online-exam-open">Prüfung ist freigeschaltet</msg>
   <msg key="online-exam-closed">Prüfung ist geschlossen</msg>
@@ -49,7 +49,7 @@
   <msg key="previous_question">Vorherige Frage</msg>
   <msg key="previous_question_title">Speichern und zur vorherigen Frage gehen</msg>
   <msg key="subquestion">Teilfrage</msg>
-  <msg key="restart">Zurück zum Start</msg>
+  <msg key="restart">Prüfungseinstellungen bearbeiten</msg>
   <msg key="online-exam-submit">Finale Abgabe</msg>
   <msg key="online-exam-save">Antwort zwischenspeichern</msg>
   <msg key="online-exam-start">Prüfung beginnen</msg>
@@ -240,6 +240,8 @@
   <msg key="pool_question_item_types">Fragentypen</msg>
   <msg key="available_pool_items">Verfügbare Pool-Fragen</msg>
   <msg key="available_pool_item_stats">Pool-Fragen nach Typ</msg>
+
+  <msg key="grading">Beurteilung</msg>
 
   <msg key="submit_confirmation">Sind Sie sicher, dass Sie abgeben wollen? Dieser Schritt kann nicht rückgängig gemacht werden.</msg>
 

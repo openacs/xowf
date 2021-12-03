@@ -15,22 +15,22 @@ div.single_exam div.incorrect input\[type="text"\]:disabled {
     background: #FFdddd;
     color: black;
 }
-div.single_exam div.runtime-data {
+div.single_exam div.runtime-panel {
     background: #efefef;
     color: black;
     padding: 2px 10px 4px 10px;
 }
-div.single_exam div.runtime-data .data {
+div.single_exam div.runtime-panel .data {
     color: #888;
 }
-div.single_exam div.runtime-data a.other,
-div.single_exam div.runtime-data a.live {
+div.single_exam div.runtime-panel a.other,
+div.single_exam div.runtime-panel a.live {
     color: #66f;
 }
-div.single_exam div.runtime-data .right {
+div.single_exam div.runtime-panel .right {
     float: right;
 }
-div.single_exam div.runtime-data .revision-details {
+div.single_exam div.runtime-panel .revision-details {
     text-align: right;
 }
 div.single_exam > form {
@@ -335,4 +335,26 @@ form.Form-inclass-exam div.collapse {
 
 div.xowiki-content .download-submissions {
     margin-top: 2em;
+}
+
+/*
+ * Grading box and grading modal dialog
+ */
+div.grading-box span.comment,
+div.grading-box span.points {
+    padding-right: .5ex;
+}
+div.grading-box a.manual-grade {
+    color: #dd1e1e;
+}
+div.grading-box span.comment, 
+div.grading-box span.points {
+    color: #888888;
+}
+div.xowiki-content div.modal-dialog h5,
+div.xowiki-content div.modal-dialog h4 {
+    clear: inherit;
+}
+div.grading-box span.text-warn {
+    color: #ed920ac9;
 }

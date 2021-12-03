@@ -60,6 +60,7 @@ set :autoname 1   ;# to avoid editable name field
 set :policy ::xowf::test_item::test-item-policy-publish
 set :debug 0
 set :live_updates 1
+set :QM ::xowf::test_item::question_manager
 
 Property realexam -default 1 -allow_query_parameter true
 
@@ -184,15 +185,15 @@ Action instproc unpublish_link {obj} {
   set state [$obj property _state]
   set proctoring [$obj property proctoring 0]
 
-  set combined_form_info [::xowf::test_item::question_manager combined_question_form -with_numbers $obj]
-  set fullQuestionForm [dict get $combined_form_info form]
+  set combined_form_info [${:QM} combined_question_form -with_numbers $obj]
+  set fullQuestionForm [${:QM} aggregated_form $combined_form_info]
   set full_fc [dict get $combined_form_info disabled_form_constraints]
 
   #:log  fullQuestionForm=$fullQuestionForm
   set text "<h3>[ns_quotehtml $title]</h3>"
   set menu ""
 
-  set text [::xowf::test_item::question_manager exam_info_block \
+  set text [${:QM} exam_info_block \
                 -combined_form_info $combined_form_info \
                 $obj]
   set detail_link [$obj pretty_link -query m=exam-summary]
@@ -314,7 +315,7 @@ Action instproc unpublish_link {obj} {
     if {$state eq "published"} {
       set src [$obj pretty_link -query m=qrcode]
       set qrCode [subst {<div><img class="img-thumbnail qrcode" src="[ns_quotehtml $src]" ></div>}]
-      set target_time [xowf::test_item::question_manager exam_target_time \
+      set target_time [${:QM} exam_target_time \
                            -manager $obj -base_time [$obj last_modified]]
       set countdownHTML [xowf::test_item::answer_manager countdown_timer \
                              -target_time $target_time -id "countdown"]
@@ -356,13 +357,14 @@ Action instproc unpublish_link {obj} {
   if {$ctx ne $container} {
     $ctx forward load_form $container %proc $ctx
   }
+  set :QM [$container set QM]
 
   ${container}::Property return_url -default "" -allow_query_parameter true
   #ns_log notice "==== object-specific inclass-exam [self] state ${:state}"
-  
+
   if {${:state} eq "done"} {
     set done_actions republish
-    set combined_form_info [::xowf::test_item::question_manager combined_question_form [self]]    
+    set combined_form_info [${:QM} combined_question_form [self]]
 
     #
     # We could allow open_submission_review only when autograde is
@@ -379,7 +381,7 @@ Action instproc unpublish_link {obj} {
     ${container}::done in_role swa [subst {
       -actions {$swa_done_actions}
     }]
-    
+
   } elseif {${:state} eq "created" && [:property realexam 0]} {
     #
     # Check, if randomization is OK. If not, remove the "publish"
@@ -391,9 +393,9 @@ Action instproc unpublish_link {obj} {
     # to some "render" method?
     #
     #ns_log notice "==== check for randomization"
-    set combined_form_info [::xowf::test_item::question_manager combined_question_form [self]]    
+    set combined_form_info [${:QM} combined_question_form [self]]
     set randomizationOk [dict get $combined_form_info randomization_for_exam]
-    #ns_log notice "==== check for randomization DONE"    
+    #ns_log notice "==== check for randomization DONE"
     ${container}::${:state} actions \
         [expr {$randomizationOk ? {publish restart} : {restart}}]
   }
@@ -427,7 +429,7 @@ Action instproc unpublish_link {obj} {
 
     set wf [xowf::test_item::answer_manager get_answer_wf [self]]
     if {$wf ne ""} {
-      #set form_info [::xowf::test_item::question_manager combined_question_form -with_numbers [self]]
+      #set form_info [${:QM} combined_question_form -with_numbers [self]]
 
       set items [xowf::test_item::answer_manager get_wf_instances $wf]
       set items2 [$items deep_copy]
@@ -510,7 +512,7 @@ Action instproc unpublish_link {obj} {
   # Print a summary of the exam-questions.
   #
   :proc www-exam-summary {} {
-    :www-view [::xowf::test_item::question_manager exam_summary [self]]
+    :www-view [${:QM} exam_summary [self]]
   }
 
   ########################################################################
@@ -765,6 +767,49 @@ Action instproc unpublish_link {obj} {
                       urgency [${:package_id} form_parameter urgency]]
 
     ns_return 200 text/plain ok
+    ad_script_abort
+  }
+
+  ########################################################################
+  # AJAX call "grade-single-item", acts as responder
+  #
+  :proc www-grade-single-item {} {
+    set formDict [ns_set array [ns_getform]]
+
+    #
+    # Update property "manual_gradings" of the exam
+    #
+    set manual_gradings [:property manual_gradings]
+    set user_id [dict get $formDict user_id]
+    set qn [dict get $formDict question_name]
+    dict set manual_gradings $user_id $qn achieved [dict get $formDict achieved]
+    dict set manual_gradings $user_id $qn comment [dict get $formDict comment]
+    dict set :instance_attributes manual_gradings $manual_gradings
+    :update_attribute_from_slot [:find_slot instance_attributes] ${:instance_attributes}
+
+    #
+    # Recompute the achieved points percentage for the full exam
+    # submission of the student... based on the grading scheme and
+    # manual grading info.
+    #
+    set grading_scheme [dict get $formDict grading_scheme]
+    set achieved_points [dict get $formDict achieved_points]
+    set details [dict get $achieved_points details]
+    set newDetails {}
+    foreach detail $details {
+      if {[dict get $detail attributeName] eq $qn} {
+        dict set detail achieved [dict get $formDict achieved]
+      }
+      lappend newDetails $detail
+    }
+    dict set achieved_points details $newDetails
+    dict set achieved_points achievedPoints ""
+    set gradingInfo [::xowf::test_item::grading::$grading_scheme print -achieved_points $achieved_points]
+
+    #
+    # Return the line for the panel as result of the AJAX call
+    #
+    ns_return 200 text/plain [dict get $gradingInfo panel]
     ad_script_abort
   }
 

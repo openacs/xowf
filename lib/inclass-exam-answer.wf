@@ -421,7 +421,7 @@ proc done_form_loader {ctx form_name} {
 #
 :proc summary_form {ctx form_title {form_objs ""}} {
   set obj [$ctx object]
-  set parent_obj [::xo::db::CrClass  get_instance_from_db -item_id [$obj parent_id]]
+  set parent_obj [::xo::db::CrClass get_instance_from_db -item_id [$obj parent_id]]
   #:msg "summary_form_loader $form_title /$form_objs/ [$obj instance_attributes]"
 
   set shuffle_id [expr {[$parent_obj property shuffle_items 0] ? [$obj creation_user] : -1}]
@@ -436,9 +436,8 @@ proc done_form_loader {ctx form_name} {
                      $parent_obj]
   #ns_log notice "SUMMARY FORM shuffle_id $shuffle_id $form_info"
 
-  set summary_form [dict get $form_info form]
+  set summary_form [${:QM} aggregated_form -with_grading_box true $form_info]
   set summary_fc [dict get $form_info disabled_form_constraints]
-  regsub -all {</?form[^>]*>} $summary_form {} summary_form
 
   #
   # For the exam-protocol, we never want prevent_multiple_tabs to be
@@ -618,7 +617,7 @@ proc done_form_loader {ctx form_name} {
       set autosaveAllowed [dict get $exam_info open]
       if {$autosaveAllowed} {
         #
-        # Don't allow the autosave opertions, when
+        # Don't allow the autosave operations, when
         # submission is overdue.
         #
         set parent_obj [::xo::db::CrClass get_instance_from_db -item_id ${:parent_id}]
@@ -663,7 +662,7 @@ proc done_form_loader {ctx form_name} {
                       -notification_id ${:parent_id} \
                       -user_id [xo::cc user_id]]
     ns_return 200 text/json $response
-    ns_log notice "AJAX-message-poll -> $response"
+    #ns_log notice "AJAX-message-poll -> $response"
     ad_script_abort
   }
 
@@ -674,7 +673,7 @@ proc done_form_loader {ctx form_name} {
     #
     # Handle message dismiss
     #
-    ns_log notice "AJAX-message-dismiss (${:parent_id} [xo::cc user_id] [ns_queryget ts])"
+    #ns_log notice "AJAX-message-dismiss (${:parent_id} [xo::cc user_id] [ns_queryget ts])"
     ::xowiki::includelet::personal-notification-messages message_dismiss \
         -notification_id ${:parent_id} \
         -user_id [xo::cc user_id] \
