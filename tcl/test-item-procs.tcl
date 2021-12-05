@@ -5496,16 +5496,18 @@ namespace eval ::xowf::test_item {
       # @return dict containing "title_infos", "form_constraints",
       #    "disabled_form_constraints", "randomization_for_exam",
       #     "autograde", "question_forms", "question_objs"
+      set full_fc {}
       set full_disabled_fc {}
       set title_infos {}
       set question_forms {}
 
+      set randomizationOk 1
+      set autoGrade 1
+      
       if {[llength $positions] == 0} {
         set position -1
         set positions [lmap form_obj $form_objs {incr position}]
       }
-      set randomizationOk 1
-      set autoGrade 1
       foreach form_obj $form_objs number $numbers position $positions {
         set form_obj [::xowf::test_item::renaming_form_loader rename_attributes $form_obj]
         set form_title [$form_obj title]
