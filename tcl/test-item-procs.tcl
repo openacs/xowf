@@ -6590,7 +6590,7 @@ namespace eval ::xowf::test_item::grading {
       set achieved_points [:complete_dict $achieved_points]
       if {[dict exists $achieved_points achievedPoints]} {
         dict with achieved_points {
-          return [:calc_grade -percentage $percentageRounded -achieved_points $achieved_points]
+          return [:calc_grade -points $achievedPoints -percentage $percentageRounded -achieved_points $achieved_points]
         }
       }
     }
