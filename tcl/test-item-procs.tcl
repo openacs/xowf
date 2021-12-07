@@ -2991,8 +2991,8 @@ namespace eval ::xowf::test_item {
     # Class:  Answer_manager
     # Method: dom ensemble for tdom manipluations
     #----------------------------------------------------------------------
-    :method "dom node replace" {dom_node xquery script} {
-      set node [$dom_node selectNodes $xquery]
+    :method "dom node replace" {domNode xquery script} {
+      set node [$domNode selectNodes $xquery]
       if {$node ne ""} {
         foreach child [$node childNodes] {
           $child delete
@@ -3000,14 +3000,14 @@ namespace eval ::xowf::test_item {
         :uplevel [list $node appendFromScript $script]
       }
     }
-    :method "dom node delete" {dom_node xquery} {
-      set nodes [$dom_node selectNodes $xquery]
+    :method "dom node delete" {domNode xquery} {
+      set nodes [$domNode selectNodes $xquery]
       foreach node $nodes {
         $node delete
       }
     }
-    :method "dom class add" {dom_node xquery class} {
-      set nodes [$dom_node selectNodes $xquery]
+    :method "dom class add" {domNode xquery class} {
+      set nodes [$domNode selectNodes $xquery]
       foreach node $nodes {
         set oldClass [$node getAttribute class]
         if {$class ni $oldClass} {
@@ -3015,8 +3015,8 @@ namespace eval ::xowf::test_item {
         }
       }
     }
-    :method "dom class remove" {dom_node xquery class} {
-      set nodes [$dom_node selectNodes $xquery]
+    :method "dom class remove" {domNode xquery class} {
+      set nodes [$domNode selectNodes $xquery]
       foreach node $nodes {
         set oldClass [$node getAttribute class]
         set pos [lsearch $oldClass $class]
