@@ -5067,6 +5067,15 @@ namespace eval ::xowf::test_item {
         }
         set form_objs $result
       }
+
+      #
+      # Make sure, we return just up to max_items form_objs.
+      #
+      set max_items [$obj property max_items ""]
+      if {$max_items ne ""} {
+        set form_objs [lrange $form_objs 0 $max_items-1]
+      }
+
       return $form_objs
     }
 
@@ -5503,7 +5512,7 @@ namespace eval ::xowf::test_item {
 
       set randomizationOk 1
       set autoGrade 1
-      
+
       if {[llength $positions] == 0} {
         set position -1
         set positions [lmap form_obj $form_objs {incr position}]
@@ -6035,7 +6044,7 @@ namespace eval ::xowf::test_item {
     #----------------------------------------------------------------------
     :public method exam_info_block {-combined_form_info obj} {
       #
-      # Provide a summarive overview of an exam.
+      # Provide a summative overview of an exam.
       #
       if {![info exists combined_form_info]} {
         set combined_form_info [:combined_question_form -with_numbers $obj]
@@ -6052,7 +6061,7 @@ namespace eval ::xowf::test_item {
         [expr {$proctoring ? " with Proctoring" : ""}]
         </p>}]
       set question_objs     [dict get $combined_form_info question_objs]
-      set nrQuestions       [llength $question_objs]
+      set nrQuestions       [llength [:question_names $obj]]
       set randomizationOk   [dict get $combined_form_info randomization_for_exam]
       set autograde         [dict get $combined_form_info autograde]
 
