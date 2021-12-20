@@ -271,5 +271,8 @@
 
   <msg key="Grading">Grading</msg>
 
+  <msg key="export_results">Export Results</msg>
+  <msg key="export_results_title">Export results and comments per question</msg>
+
   <msg key="submit_confirmation">Are you sure you want to submit? This step cannot be undone.</msg>
 </message_catalog>

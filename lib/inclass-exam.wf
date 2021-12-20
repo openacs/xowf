@@ -516,6 +516,19 @@ Action instproc unpublish_link {obj} {
   }
 
   ########################################################################
+  # web-callable method "exam-results"
+  #
+  # export results as CSV table
+  #
+  :proc www-exam-results {} {
+    set manual_gradings [:property manual_gradings]
+    set results [:property __results]
+    xowf::test_item::answer_manager results_export -reply -manual_gradings $manual_gradings $results
+    ad_script_abort
+  }
+
+
+  ########################################################################
   # web-callable method "print-answers"
   #
   # Print the answers in a somewhat printer friendly way.

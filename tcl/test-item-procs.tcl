@@ -3187,6 +3187,7 @@ namespace eval ::xowf::test_item {
       set fullName [$submission set online-exam-fullName]
       set user_id  [$submission set creation_user]
       set manual_gradings [$examWf property manual_gradings]
+      set results ""
 
       #if {[$submission state] ne "done"} {
       #  ns_log notice "online-exam: submission of $userName is not finished (state [$submission state])"
@@ -3241,6 +3242,15 @@ namespace eval ::xowf::test_item {
                                -submission $submission \
                                -answer_attributes $answerAttributes]
       dict set achieved_points totalPoints $totalPoints
+
+      #ns_log notice "achieved_points [dict get $achieved_points details]"
+      #ns_log notice "manual_gradings [:dict_value $manual_gradings $user_id]"
+
+      foreach pd [:dict_value $achieved_points details] {
+        set qn [dict get $pd attributeName]
+        dict set results $qn achieved [dict get $pd achieved]
+        dict set results $qn achievable [dict get $pd achievable]
+      }
 
       set question_form [:postprocess_question_html \
                              -question_form $question_form \
@@ -3323,7 +3333,7 @@ namespace eval ::xowf::test_item {
         </div>
       }]]
 
-      return $HTML
+      return [list HTML $HTML results $results]
     }
 
     #----------------------------------------------------------------------
@@ -3513,22 +3523,25 @@ namespace eval ::xowf::test_item {
       $items orderby $orderby
       foreach submission [$items children] {
 
-        set html [:render_submission=exam_protocol \
-                      -submission $submission \
-                      -wf $wf \
-                      -examWf $examWf \
-                      -autograde $autograde \
-                      -combined_form_info $combined_form_info \
-                      -filter_id $filter_id \
-                      -form_objs $form_objs \
-                      -grading_scheme $grading_scheme \
-                      -recutil $recutil \
-                      -zipFile $zipFile \
-                      -revision_id $revision_id \
-                      -totalPoints $totalPoints \
-                      -runtime_panel_view $runtime_panel_view \
-                      -with_exam_heading [expr {!$as_student}] \
-                      -with_signature $withSignature]
+        set d [:render_submission=exam_protocol \
+                   -submission $submission \
+                   -wf $wf \
+                   -examWf $examWf \
+                   -autograde $autograde \
+                   -combined_form_info $combined_form_info \
+                   -filter_id $filter_id \
+                   -form_objs $form_objs \
+                   -grading_scheme $grading_scheme \
+                   -recutil $recutil \
+                   -zipFile $zipFile \
+                   -revision_id $revision_id \
+                   -totalPoints $totalPoints \
+                   -runtime_panel_view $runtime_panel_view \
+                   -with_exam_heading [expr {!$as_student}] \
+                   -with_signature $withSignature]
+
+        set html [dict get $d HTML]
+        dict set results [$submission set creation_user] [dict get $d results]
 
         if {$do_stream && $html ne ""} {
           ns_write [lang::util::localize $html]
@@ -3554,6 +3567,12 @@ namespace eval ::xowf::test_item {
 
       if {$with_grading_table && $autograde} {
         append HTML <p>[:grading_table -csv ${:grade_csv} ${:grade_dict}]</p>
+        #
+        # The following lines are conveniant for debugging
+        #
+        #set manual_gradings [$examWf property manual_gradings]
+        #append HTML <pre>$manual_gradings</pre>
+        #append HTML <pre>[:results_export -manual_gradings $manual_gradings $results]</pre>
       }
 
       if {$create_zip_file} {
@@ -3595,18 +3614,21 @@ namespace eval ::xowf::test_item {
       # are somewhat overly conservative assumptions for now, which
       # might be partially relaxed in the future.
       #
-      if {$with_grading_table && $autograde
+      if {$with_grading_table
           && !$as_student && $filter_id eq "" && $creation_user eq "" && $revision_id eq ""
         } {
         set statistics {}
         set ia [$examWf instance_attributes]
-        foreach var {__stats_success __stats_count} key {success count} {
-          if {[$examWf exists $var]} {
-            dict set statistics $key [$examWf set $var]
-            $examWf unset $var
+        if {$autograde} {
+          foreach var {__stats_success __stats_count} key {success count} {
+            if {[$examWf exists $var]} {
+              dict set statistics $key [$examWf set $var]
+              $examWf unset $var
+            }
           }
+          dict set ia __statistics $statistics
         }
-        dict set ia __statistics $statistics
+        dict set ia __results $results
         $examWf update_attribute_from_slot [$examWf find_slot instance_attributes] $ia
       }
 
@@ -3708,6 +3730,45 @@ namespace eval ::xowf::test_item {
 
     #----------------------------------------------------------------------
     # Class:  Answer_manager
+    # Method: results_export
+    #----------------------------------------------------------------------
+    :public method results_export {
+      {-manual_gradings "" }
+      {-reply:switch false}
+      results_dict
+    } {
+      set t [::xo::Table new -volatile \
+                 -name results \
+                 -columns {
+                   Field create participant -label participant
+                   Field create query_name -label query_name
+                   Field create achieved -label achieved
+                   Field create achievable -label achievable
+                   Field create comment -label comment
+                 }]
+      foreach user_id [dict keys $results_dict] {
+        set manual_grading [:dict_value $manual_gradings $user_id]
+        foreach qn [dict keys [dict get $results_dict $user_id]] {
+          set l [::xo::Table::Line new]
+          $t add \
+              -participant [acs_user::get_element \
+                            -user_id $user_id \
+                            -element username] \
+              -query_name [string trimright $qn _] \
+              -achievable [dict get $results_dict $user_id $qn achievable] \
+              -achieved [dict get $results_dict $user_id $qn achieved] \
+              -comment [:dict_value [:dict_value $manual_grading $qn] comment]
+        }
+      }
+      if {$reply} {
+        $t write_csv
+      } else {
+        $t format_csv
+      }
+    }
+
+    #----------------------------------------------------------------------
+    # Class:  Answer_manager
     # Method: grading_table
     #----------------------------------------------------------------------
     :public method grading_table {{-csv ""} grade_dict} {
@@ -3749,7 +3810,7 @@ namespace eval ::xowf::test_item {
       wf:object
     } {
       #
-      # Render the results in forma of a table and return HTML.
+      # Render the results in format of a table and return HTML.
       # Currently deactivated.
       #
 
@@ -5893,6 +5954,16 @@ namespace eval ::xowf::test_item {
       }]
 
       append HTML [:question_info_block $obj]
+
+      set results [$obj property __results]
+      if {$results ne ""} {
+        set href [$obj pretty_link -query m=exam-results]
+        append HTML [subst {
+          <p>#xowf.export_results#: <a title="#xowf.export_results_title#" href="$href">
+          CSV <span class="glyphicon glyphicon-download" aria-hidden="true"></span></a>
+        }]
+      }
+
       set return_url [::xo::cc query_parameter local_return_url:localurl [$obj pretty_link]]
       append HTML "<hr><p><a class='btn btn-default' href='$return_url'>#xowiki.back#</a></p>\n"
 
@@ -6723,6 +6794,7 @@ namespace eval ::xowf::test_item {
       send-participant-message admin
       grade-single-item admin
       edit           admin
+      exam-results   admin
       print-answers  admin
       proctoring-display admin
       print-answer-table admin

@@ -243,6 +243,9 @@
 
   <msg key="grading">Beurteilung</msg>
 
+  <msg key="export_results">Exportiere Ergebnisse</msg>
+  <msg key="export_results_title">Exportiere Ergebnisse und Kommentare pro Frage</msg>
+
   <msg key="submit_confirmation">Sind Sie sicher, dass Sie abgeben wollen? Dieser Schritt kann nicht rückgängig gemacht werden.</msg>
 
 </message_catalog>
