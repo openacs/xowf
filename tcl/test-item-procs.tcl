@@ -535,7 +535,7 @@ namespace eval ::xowiki::formfield {
         lappend if_fc "feedback_answer_correct=[::xowiki::formfield::FormField fc_encode $value(feedback_correct)]"
       }
       if {$value(feedback_incorrect) ne ""} {
-        lappend if_fc "feedback_answer_incorrect=[::xowiki::formfield:::FormField fc_encode $value(feedback_incorrect)]"
+        lappend if_fc "feedback_answer_incorrect=[::xowiki::formfield::FormField fc_encode $value(feedback_incorrect)]"
       }
       if {[llength $if_fc] > 0} {
         lappend fc [list $input_field_name:checkbox,[join $if_fc ,]]
