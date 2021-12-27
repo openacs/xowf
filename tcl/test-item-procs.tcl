@@ -2324,8 +2324,31 @@ namespace eval ::xowf::test_item {
             //
             var id = ev.currentTarget.dataset.id;
             var gradingBox = document.getElementById(id);
-            var points     = document.querySelector('#grading-points').value;
+            var pointsInput = document.querySelector('#grading-points');
+            var helpBlock   = document.querySelector('#grading-points-help-block');
             var comment    = document.querySelector('#grading-comment').value;
+            var points      = pointsInput.value;
+            var pointsFormGroup = pointsInput.parentElement.parentElement;
+
+            if (points != "") {
+              if(parseFloat(points) > parseFloat(pointsInput.max) || parseFloat(points) < parseFloat(pointsInput.min)){
+                if (parseFloat(points) > parseFloat(pointsInput.max)) {
+                  helpBlock.textContent = '[_ xowf.Value_max] ' + pointsInput.max;
+                } else {
+                  helpBlock.textContent = '[_ xowf.Value_min] ' + pointsInput.min;
+                }
+                pointsFormGroup.classList.add('has-error');
+                helpBlock.classList.remove('hidden');
+                ev.preventDefault();
+                return false;
+              } else {
+                pointsFormGroup.classList.remove('has-error');
+                helpBlock.classList.add('hidden');
+              }
+            } else {
+              pointsFormGroup.removeClass('has-error');
+              helpBlock.classList.add('hidden');
+            }
 
             document.querySelector('#' + id + ' .points').textContent = points;
             document.querySelector('#' + id + ' .comment').textContent = comment;
@@ -2413,7 +2436,8 @@ namespace eval ::xowf::test_item {
         |             <label for="grading-points" class="control-label col-sm-2">#xowf.Points#:</label>
         |             <div class="col-sm-9">
         |                <input class="form-control" id="grading-points" placeholder="#xowf.Points#"
-        |                       type="number" step="0.1">
+        |                       type="number" step="0.1" min="0">
+        |                <span id="grading-points-help-block" class="help-block hidden"></span>
         |             </div>
         |          </div>
         |          <div class="form-group">
@@ -5480,6 +5504,8 @@ namespace eval ::xowf::test_item {
           set autoGrade 0
         }
         #ns_log notice "question_info [$form_obj name] [$form_obj title] autoGrade $autoGrade"
+      } else {
+        set autoGrade 0
       }
       return $autoGrade
     }

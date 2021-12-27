@@ -246,6 +246,10 @@
   <msg key="export_results">Exportiere Ergebnisse</msg>
   <msg key="export_results_title">Exportiere Ergebnisse und Kommentare pro Frage</msg>
 
-  <msg key="submit_confirmation">Sind Sie sicher, dass Sie abgeben wollen? Dieser Schritt kann nicht rückgängig gemacht werden.</msg>
+  <msg key="submit_confirmation">Sind Sie sicher, dass Sie abgeben
+  wollen? Dieser Schritt kann nicht rückgängig gemacht werden.</msg>
+  
+  <msg key="Value_max">Wert muss kleiner oder gleich sein als</msg>
+  <msg key="Value_min">Wert muss größer oder gleich sein als</msg>
 
 </message_catalog>

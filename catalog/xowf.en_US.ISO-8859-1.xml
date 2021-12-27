@@ -275,4 +275,8 @@
   <msg key="export_results_title">Export results and comments per question</msg>
 
   <msg key="submit_confirmation">Are you sure you want to submit? This step cannot be undone.</msg>
+
+  <msg key="Value_max">Value must smaller or equal</msg>
+  <msg key="Value_min">Value must larger or equal</msg>
+  
 </message_catalog>
