@@ -3761,6 +3761,17 @@ namespace eval ::xowf::test_item {
       {-reply:switch false}
       results_dict
     } {
+      #
+      # Exports results as csv
+      #
+      # @param reply when false, csv will be returned as text, when
+      #              true, it will be returned as response to the
+      #              browser.
+      # @param results_dict the results to format as csv, every key in
+      #                     the dict represents a user_id.
+      #
+      # @return csv as value or as response to the client
+      #
       set t [::xo::Table new -volatile \
                  -name results \
                  -columns {
