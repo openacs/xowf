@@ -65,6 +65,7 @@ namespace eval ::xowf {
     inclass-quiz.wf
     inclass-exam.wf
     edit-interaction.wf
+    edit-grading-scheme.wf
     answer-single-question.wf
     topic-assignment.wf
 
@@ -2531,7 +2532,7 @@ namespace eval ::xowf {
 
   ad_proc -private include_get {{-level 1} wfName {vars ""}} {
 
-    Implement inclusion of worflow definitions.
+    Implement inclusion of workflow definitions.
 
   } {
     if {![string match "/packages/*/lib/*" $wfName]} {

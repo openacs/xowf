@@ -19,7 +19,7 @@ namespace eval ::xowiki::includelet {
 
   #
   # Create an includelet called wf-todo, which lists the todo items
-  # for a user_id from a single or multiple worflows)
+  # for a user_id from a single or multiple workflows)
   #
   ::xowiki::IncludeletClass create wf-todo \
       -superclass ::xowiki::Includelet \
