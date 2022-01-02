@@ -352,6 +352,7 @@ Action instproc unpublish_link {obj} {
 ########################################################################
 
 :object-specific {
+  set t0 [clock clicks -milliseconds]
   set ctx [:wf_context]
   set container [$ctx wf_container]
   if {$ctx ne $container} {
@@ -545,7 +546,7 @@ Action instproc unpublish_link {obj} {
                -form_objs     [:query_parameter fos:int32 ""] \
                -export        [:query_parameter export:boolean 0] \
                -orderby       [:query_parameter orderby:token "online-exam-userName"] \
-               -grading       [:query_parameter grading:alnum ""] \
+               -grading       [:query_parameter grading:alnum [:property grading]] \
                -with_grading_table [expr {!$as_student}] \
                [self]]
 
@@ -826,7 +827,7 @@ Action instproc unpublish_link {obj} {
     ad_script_abort
   }
 
-  #ns_log notice "==== object-specific inclass-exam [self] state ${:state} DONE"
+  #ns_log notice "==== object-specific inclass-exam [self] state ${:state} DONE (took [expr {[clock clicks -milliseconds]-$t0}]ms)"
 }
 
 #
