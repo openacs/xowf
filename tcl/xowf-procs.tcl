@@ -1743,7 +1743,7 @@ namespace eval ::xowf {
       # "get_next_state" by the activated method.
       #
       set next_state [$actionObj get_next_state]
-      :log "ACTIVATE ${:name} no error next-state <$next_state>"
+      #:log "ACTIVATE ${:name} no error next-state <$next_state>"
     }
     return $next_state
   }
