@@ -143,9 +143,9 @@
   <msg key="open_submission_review">Apri correzione consegna studente</msg>
   <msg key="open_submission_review_title">Apri la correzione consegna degli studenti</msg>
   <msg key="out_of">di</msg>
-  <msg key="panel_achieved_points_wi1">%achievedPoints% (arrotondato %achievedPointsRounded%) di %totalPoints% punti possibili, %percentage%%, voto: %grade%</msg>
-  <msg key="panel_achieved_points_wi1_noround">%achievedPoints% di %totalPoints% punti totali, %percentage%%, voto: %grade%</msg>
-  <msg key="panel_achieved_points_wi1p">%achievedPoints% di %totalPoints% punti possibili, %percentage%% (arrotondato %percentageRounded%%), voto: %grade%</msg>
+  <msg key="panel_GradingRoundPoints">%achievedPoints% (arrotondato %achievedPointsRounded%) di %totalPoints% punti possibili, %percentage%%, voto: %grade%</msg>
+  <msg key="panel_GradingRoundNone">%achievedPoints% di %totalPoints% punti totali, %percentage%%, voto: %grade%</msg>
+  <msg key="panel_GradingRoundPercentage">%achievedPoints% di %totalPoints% punti possibili, %percentage%% (arrotondato %percentageRounded%%), voto: %grade%</msg>
   <msg key="participant">Partecipante</msg>
   <msg key="Participants">Partecipanti</msg>
   <msg key="participants_answered_question">i partecipanti hanno risposto a questa domanda</msg>

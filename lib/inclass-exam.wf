@@ -353,6 +353,7 @@ Action instproc unpublish_link {obj} {
 
 :object-specific {
   set t0 [clock clicks -milliseconds]
+  #ns_log notice "==== object-specific inclass-exam [self] state ${:state}"
   set ctx [:wf_context]
   set container [$ctx wf_container]
   if {$ctx ne $container} {
@@ -361,7 +362,6 @@ Action instproc unpublish_link {obj} {
   set :QM [$container set QM]
 
   ${container}::Property return_url -default "" -allow_query_parameter true
-  #ns_log notice "==== object-specific inclass-exam [self] state ${:state}"
 
   if {${:state} eq "done"} {
     set done_actions republish

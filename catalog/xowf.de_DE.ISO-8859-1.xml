@@ -144,6 +144,8 @@
   <msg key="menu-New-Item-UploadInteraction">Dateiabgabefrage</msg>
   <msg key="menu-New-Item-ReorderInteraction">Anordnungsfrage</msg>
 
+  <msg key="menu-New-Grading-Scheme">Benotungsschema</msg>
+
   <msg key="inclass-exam-draft_exam">Entwurf des Inclass-Exams (nicht freigegeben)</msg>
   <msg key="inclass-exam-open">Inclass-Exam freigeschaltet</msg>
   <msg key="inclass-exam-closed">Inclass-Exam geschlossen</msg>
@@ -203,10 +205,10 @@
   <msg key="exam_review_not_possible">automatische Einsicht nicht möglich</msg>
   <msg key="randomization_for_exam_ok">Randomisierung für Prüfung geeignet</msg>
   <msg key="randomization_for_exam_not_ok">Randomisierung für Prüfung nicht geeignet (keine Zufallsauswahl "immer" verwenden)</msg>
-  <msg key="panel_achieved_points_wi1">%achievedPoints% (gerundet %achievedPointsRounded%) von möglichen %totalPoints% Punkten, %percentage%%, Note: %grade%</msg>
-  <msg key="panel_achieved_points_wi1p">%achievedPoints% von möglichen %totalPoints% Punkten, %percentage%% (gerundet %percentageRounded%%), Note: %grade%</msg>
-  <msg key="panel_achieved_points_wi1_noround">%achievedPoints% von möglichen %totalPoints% Punkten, %percentage%%, Note: %grade%</msg>
-
+  <msg key="panel_GradingRoundPoints">%achievedPoints% (gerundet %achievedPointsRounded%) von möglichen %totalPoints% Punkten, %percentage%%, Note: %grade%</msg>
+  <msg key="panel_GradingRoundPercentage">%achievedPoints% von möglichen %totalPoints% Punkten, %percentage%% (gerundet %percentageRounded%%), Note: %grade%</msg>
+  <msg key="panel_GradingRoundNone">%achievedPoints% von möglichen %totalPoints% Punkten, %percentage%%, Note: %grade%</msg>
+  <msg key="panel_GradingNone">%achievedPoints% von möglichen %totalPoints% Punkten, %percentage%%</msg>
   <msg key="test_item_name-validate_name">Name enthält zumindest ein ungültiges Zeichen</msg>
 
   <msg key="Detail_configuration">Detaileinstellungen</msg>
@@ -251,5 +253,16 @@
   
   <msg key="Value_max">Wert muss kleiner oder gleich sein als</msg>
   <msg key="Value_min">Wert muss größer oder gleich sein als</msg>
-
+  
+  <msg key="Rounding_scheme">Rundungsschema</msg>
+  <msg key="Rounding_scheme-GradingRoundNone">genau</msg>
+  <msg key="Rounding_scheme-GradingRoundPoints">nach Punkten</msg>
+  <msg key="Rounding_scheme-GradingRoundPercentage">nach Prozenten</msg>
+  <msg key="Rounding_precision">Rundungsgenauigkeit</msg>
+  <msg key="Grade_boundaries">Notengrenzen</msg>
+  <msg key="Grade">Note</msg>
+  <msg key="Grading_scheme">Benotungsschema</msg>
+  <msg key="Grading_scheme_help_text">Das Benotungsschema definiertdie Notengrenzen und die Rundungsregeln, um von dem erreichten Ergebnis (in Prozenten) eine Note abzuleiten</msg>
+  <msg key="Grading_scheme-None">Keine Notenvergabe</msg>
+  
 </message_catalog>

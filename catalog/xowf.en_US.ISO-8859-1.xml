@@ -159,6 +159,8 @@
   <msg key="menu-New-Item-ReorderInteraction">Ordering Interaction</msg>
   <msg key="menu-New-Item-CompositeInteraction">Composite Interaction</msg>
 
+  <msg key="menu-New-Grading-Scheme">Grading Scheme</msg>
+  
   <msg key="menu-New-App-OnlineExam">Online Exam</msg>
   <msg key="menu-New-App-InclassQuiz">Inclass Quiz</msg>
   <msg key="menu-New-App-InclassExam">Inclass Exam</msg>
@@ -228,9 +230,10 @@
   <msg key="randomization_for_exam_ok">randomization for exam ok</msg>
   <msg key="randomization_for_exam_not_ok">randomization for exam NOT ok ("always" should not be used)</msg>
 
-  <msg key="panel_achieved_points_wi1">%achievedPoints% (rounded %achievedPointsRounded%) of possible %totalPoints% points, %percentage%%, grade: %grade%</msg>
-  <msg key="panel_achieved_points_wi1p">%achievedPoints% of possible %totalPoints% points, %percentage%% (rounded %percentageRounded%%), grade: %grade%</msg>
-  <msg key="panel_achieved_points_wi1_noround">%achievedPoints% of possible %totalPoints% points, %percentage%%, grade: %grade%</msg>
+  <msg key="panel_GradingRoundPoints">%achievedPoints% (rounded %achievedPointsRounded%) of possible %totalPoints% points, %percentage%%, grade: %grade%</msg>
+  <msg key="panel_GradingRoundPercentage">%achievedPoints% of possible %totalPoints% points, %percentage%% (rounded %percentageRounded%%), grade: %grade%</msg>
+  <msg key="panel_GradingRoundNone">%achievedPoints% of possible %totalPoints% points, %percentage%%, grade: %grade%</msg>
+  <msg key="panel_GradingNone">%achievedPoints% of possible %totalPoints% points, %percentage%%</msg>
   <msg key="test_item_name-validate_name">Name contains at least one invalid character</msg>
 
   <msg key="Detail_configuration">Detailed Configuration</msg>
@@ -279,4 +282,15 @@
   <msg key="Value_max">Value must smaller or equal</msg>
   <msg key="Value_min">Value must larger or equal</msg>
   
+  <msg key="Rounding_scheme">Rounding Scheme</msg>
+  <msg key="Rounding_scheme-GradingRoundNone">precise</msg>
+  <msg key="Rounding_scheme-GradingRoundPoints">by points</msg>
+  <msg key="Rounding_scheme-GradingRoundPercentage">by percentage</msg>
+  <msg key="Rounding_precision">Rounding Precision</msg>
+  <msg key="Grade_boundaries">Grade Boundaries</msg>
+  <msg key="Grade">Grade</msg>
+  <msg key="Grading_scheme">Grading Scheme</msg>
+  <msg key="Grading_scheme_help_text">The grading scheme defines grade boundaries and rounding rules for determining grades from achieved percentages</msg>
+  <msg key="Grading_scheme-None">No grading</msg>
+
 </message_catalog>

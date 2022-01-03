@@ -8,7 +8,7 @@
         @question@
         <h4>#xowf.Detail_configuration#</h4>
         <p><button type="button" class="btn btn-small" data-toggle="collapse" data-target="#question_management"><span class="glyphicon glyphicon-chevron-down">&nbsp;</span>#xowf.Question_management#</button><div id="question_management" class="collapse">        
-        @shuffle_items@ @max_items@ @allow_paste@ @allow_spellcheck@ @show_minutes@ @show_points@ @show_ip@ @countdown_audio_alarm@
+        @shuffle_items@ @max_items@ @allow_paste@ @allow_spellcheck@ @show_minutes@ @show_points@ @show_ip@ @countdown_audio_alarm@ 
         </div>
         <p><button type="button" class="btn btn-small" data-toggle="collapse" data-target="#time_management"><span class="glyphicon glyphicon-chevron-down">&nbsp;</span>#xowf.Time_management#</button><div id="time_management" class="collapse">
         @synchronized@ @time_window@ @time_budget@
@@ -19,12 +19,13 @@
         @proctoring_record@
         @signature@
         </div>
+        @grading@
         </form>
     } text/html} \
     -form_constraints {
 	@cr_fields:hidden
 	{_title:text,label=#xowf.online-exam-name#,default=#xowf.online-exam-default_name#}
-	{question:form_page,multiple=true,keep_order=true,parent_id=.,form=en:edit-interaction.wf|en:TestItemText.form|en:TestItemShortText.form|en:TestItemMC.form|en:TestItemSC.form|en:TestItemUpload.form|en:TestItemReorder.form,required,help_text=#xowf.select_question_help_text#,label=#xowiki.questions#}
+	{question:form_page,multiple=true,keep_order=true,parent_id=.,form=en:edit-interaction.wf,required,help_text=#xowf.select_question_help_text#,label=#xowiki.questions#}
         {countdown_audio_alarm:boolean,horizontal=true,default=t,label=#xowf.Countdown_audio_alarm#,help_text=#xowf.Countdown_audio_alarm_help_text#}
 	{shuffle_items:boolean,horizontal=true,label=#xowf.randomized_items#,help_text=#xowf.randomized_items_help_text#}
 	{max_items:number,min=1,label=#xowf.Max_items#,help_text=#xowf.Max_items_help_text#}
@@ -40,6 +41,7 @@
 	{proctoring:boolean,horizontal=true,default=f,label=#xowf.Proctoring#,help_text=#xowf.Proctoring_help_text#}
         {proctoring_options:checkbox,horizontal=true,options={Desktop d} {Camera c} {Audio a} {Statement s},default=d c a s,label=#xowf.Proctoring_options#,help_text=#xowf.Proctoring_options_help_text#,swa?:disabled=1}
 	{proctoring_record:boolean,horizontal=true,default=t,label=#xowf.Proctoring_record#,help_text=#xowf.Proctoring_record_help_text#}
+	{grading:grading_scheme,required,default=none,label=#xowf.Grading_scheme#,help_text=#xowf.Grading_scheme_help_text#}
 	_description:omit _page_order:omit
     }
 

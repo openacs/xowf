@@ -428,6 +428,75 @@ namespace eval ::xowiki::formfield {
     set :__initialized 1
   }
 
+  ###########################################################
+  #
+  # ::xowiki::formfield::grading_scheme
+  #
+  ###########################################################
+
+  Class create grading_scheme -superclass select -parameter {
+  }
+
+  grading_scheme instproc initialize {} {
+    if {${:__state} ne "after_specs"} return
+
+    set t1 [clock clicks -milliseconds]
+    ::xowf::test_item::grading::load_grading_schemes \
+        -package_id [${:object} package_id] \
+        -parent_id [${:object} parent_id]
+
+    set :options [lsort [lmap gso [::xowf::test_item::grading::Grading info instances -closure] {
+      set grading [namespace tail $gso]
+      list [$gso cget -title] $grading
+    }]]
+    ns_log notice "#### available grading_scheme_objs (took [expr {[clock clicks -milliseconds]-$t1}]ms)\n[join [lsort ${:options}] \n]"
+    next
+    
+    set :__initialized 1
+  }
+  
+  ###########################################################
+  #
+  # ::xowiki::formfield::grade_boundary
+  #
+  ###########################################################
+  Class create grade_boundary -superclass number -parameter {
+  }
+  grade_boundary instproc render_input {} {
+    #
+    # The definition of this validator assumes 4 grade boundaries with
+    # exactly these naming conventions. The corresponding form is
+    # defined in edit-grading-scheme.wf.
+    #
+    next
+    template::add_event_listener -event input -id ${:id} -script {
+      const inputField = event.target;
+      const form = inputField.parentNode.parentNode;
+      //console.log('check descending values');
+      const grade1 = form.elements["grade1"];
+      const grade2 = form.elements["grade2"];
+      const grade3 = form.elements["grade3"];
+      const grade4 = form.elements["grade4"];
+      if (grade1.value < grade2.value) {
+        console.log('error grade 1');        
+        grade2.setCustomValidity('percentage for grade 1 must by larger than grade 2');
+      } else {
+        grade2.setCustomValidity('');
+      }
+      if (grade2.value < grade3.value) {
+        console.log('error grade 2');        
+        grade3.setCustomValidity('percentage for grade 2 must by larger than grade 3');
+      } else {
+        grade3.setCustomValidity('');
+      }
+      if (grade3.value < grade4.value) {
+        console.log('error grade 3');        
+        grade4.setCustomValidity('percentage for grade 3 must by larger than grade 4');
+      } else {
+        grade4.setCustomValidity('');
+      }
+    }
+  }  
 }
 
 ::xo::library source_dependent

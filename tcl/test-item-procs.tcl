@@ -197,10 +197,6 @@ namespace eval ::xowiki::formfield {
   #
   test_item set richtextWidget {richtext,editor=ckeditor4,ck_package=basic,displayMode=inline,extraPlugins=}
 
-  test_item instproc makeSpec {-name:required dict} {
-    return [list [list $name [:dict_to_fc $dict]]]
-  }
-
   test_item instproc feed_back_definition {} {
     #
     # Return the definition of the feed_back widgets depending on the
@@ -323,6 +319,7 @@ namespace eval ::xowiki::formfield {
     }
 
     if {${:grading} ne "none" && [llength ${:grading}] >1} {
+      set grading_dict {_name grading _type select}
       dict set grading_dict default [lindex ${:grading} 0]
       dict set grading_dict options {}
       foreach o ${:grading} {
@@ -331,12 +328,13 @@ namespace eval ::xowiki::formfield {
       dict set grading_dict form_item_wrapper_CSSclass form-inline
       dict set grading_dict label #xowf.Grading-Scheme#
       dict set grading_dict required true
-      set gradingSpec [list [list grading [:dict_to_fc -type select $grading_dict]]]
+      set gradingSpec [list [:dict_to_spec -aspair $grading_dict]]
     } else {
       set gradingSpec ""
     }
 
     if {$can_shuffle} {
+      set shuffle_dict {_name shuffle _type radio}
       dict set shuffle_dict horizontal true
       dict set shuffle_dict form_item_wrapper_CSSclass form-inline
       dict set shuffle_dict default none
@@ -344,7 +342,7 @@ namespace eval ::xowiki::formfield {
       dict set shuffle_dict options \
           "{#xowf.shuffle_none# none} {#xowf.shuffle_peruser# peruser} {#xowf.shuffle_always# always}"
       set shuffleSpec [subst {
-        [list [list shuffle [:dict_to_fc -type radio $shuffle_dict]]]
+        [list [:dict_to_spec -aspair $shuffle_dict]]
         {show_max {number,form_item_wrapper_CSSclass=form-inline,min=1,label=#xowf.show_max#}}
       }]
     } else {
@@ -352,12 +350,15 @@ namespace eval ::xowiki::formfield {
     }
 
     #
-    # Default towcol spec
+    # Default twocol spec
     #
-    dict set twocolDict label #xowf.Twocol_layout#
-    dict set twocolDict default f
-    dict set twocolDict form_item_wrapper_CSSclass form-inline
-    dict set twocolDict _type boolean_checkbox
+    set twocolDict {
+      _name twocol
+      _type boolean_checkbox
+      label #xowf.Twocol_layout#
+      default f
+      form_item_wrapper_CSSclass form-inline
+    }
 
     if {${:question_type} in {section case}} {
       #
@@ -399,7 +400,7 @@ namespace eval ::xowiki::formfield {
       $shuffleSpec
       $gradingSpec
       $typeSpecificComponentSpec
-      [expr {$twocolDict ne "" ? [:makeSpec -name twocol $twocolDict] : ""}]
+      [list [:dict_to_spec -aspair $twocolDict]]
       {interaction {$interaction_class,$options,feedback_level=${:feedback_level},auto_correct=${:auto_correct},label=}}
       [:feed_back_definition]
     }]
@@ -641,11 +642,15 @@ namespace eval ::xowiki::formfield {
     set intro_text [:get_named_sub_component_value text]
     append intro_text [:text_attachments]
 
+    set fc_dict {
+      _name answer
+      _type textarea
+      disabled_as_div 1
+      label #xowf.answer#
+      autosave true
+    }
     dict set fc_dict rows [:get_named_sub_component_value lines]
     dict set fc_dict cols [:get_named_sub_component_value columns]
-    dict set fc_dict disabled_as_div 1
-    dict set fc_dict label #xowf.answer#
-    dict set fc_dict autosave true
 
     if {${:auto_correct}} {
       dict set fc_dict correct_when [:comp_correct_when_from_value [:get_named_sub_component_value correct_when]]
@@ -654,7 +659,7 @@ namespace eval ::xowiki::formfield {
     set form [:form_markup -interaction text -intro_text $intro_text -body @answer@]
     lappend fc \
         @categories:off @cr_fields:hidden \
-        "answer:[:dict_to_fc -type textarea $fc_dict]"
+        [:dict_to_spec $fc_dict]
 
     #ns_log notice "text_interaction $form\n$fc"
     ${:object} set_property -new 1 form $form
@@ -731,10 +736,9 @@ namespace eval ::xowiki::formfield {
                                 lines [dict get $value $fieldName.lines]]
     }
 
+    set fc_dict { _name answer _type text_fields disabled_as_div 1 label ""}
     dict set fc_dict shuffle_kind [${:parent_field} get_named_sub_component_value shuffle]
     dict set fc_dict show_max [${:parent_field} get_named_sub_component_value show_max]
-    dict set fc_dict disabled_as_div 1
-    dict set fc_dict label ""
     dict set fc_dict options $options
     dict set fc_dict answer $answer
     dict set fc_dict descriptions $solution
@@ -745,10 +749,10 @@ namespace eval ::xowiki::formfield {
 
     set fc {}
     lappend fc \
-        answer:[:dict_to_fc -type text_fields $fc_dict] \
+        [:dict_to_spec $fc_dict] \
         @categories:off @cr_fields:hidden
 
-    ns_log notice "short_text_interaction $form\n$fc"
+    #ns_log notice "short_text_interaction $form\n$fc"
     ${:object} set_property -new 1 form $form
     ${:object} set_property -new 1 form_constraints $fc
     set anon_instances true ;# TODO make me configurable
@@ -855,8 +859,7 @@ namespace eval ::xowiki::formfield {
       incr count
     }
 
-    #dict set fc_dict shuffle_kind [${:parent_field} get_named_sub_component_value shuffle]
-    #dict set fc_dict show_max [${:parent_field} get_named_sub_component_value show_max]
+    set fc_dict {_name answer _type reorder_box}
     dict set fc_dict disabled_as_div 1
     dict set fc_dict label ""
     dict set fc_dict options $options
@@ -866,7 +869,7 @@ namespace eval ::xowiki::formfield {
     set form [:form_markup -interaction reorder -intro_text $intro_text -body @answer@]
     set fc {}
     lappend fc \
-        answer:[:dict_to_fc -type reorder_box $fc_dict] \
+        [:dict_to_spec $fc_dict] \
         @categories:off @cr_fields:hidden
 
     #ns_log notice "reorder_interaction $form\n$fc"
@@ -933,6 +936,8 @@ namespace eval ::xowiki::formfield {
       lappend solution [dict get $value $fieldName.solution]
     }
 
+    dict set fc_dict _name answer
+    dict set fc_dict _type [expr {${:multiple} ? "checkbox" : "radio"}]
     dict set fc_dict richtext 1
     dict set fc_dict answer $correct
     dict set fc_dict options $options
@@ -942,11 +947,10 @@ namespace eval ::xowiki::formfield {
     dict set fc_dict show_max [${:parent_field} get_named_sub_component_value show_max]
 
     set interaction [expr {${:multiple} ? "mc" : "sc"}]
-    set widget [expr {${:multiple} ? "checkbox" : "radio"}]
     set form [:form_markup -interaction $interaction -intro_text $intro_text -body @answer@]
     set fc {}
     lappend fc \
-        answer:[:dict_to_fc -type $widget $fc_dict] \
+        [:dict_to_spec $fc_dict] \
         @categories:off @cr_fields:hidden
 
     #ns_log notice "mc_interaction2 $form\n$fc"
@@ -1015,6 +1019,7 @@ namespace eval ::xowiki::formfield {
     set max_nr_submission_files [${:parent_field} get_named_sub_component_value max_nr_submission_files]
     #dict set file_dict choose_file_label "Datei hochladen"
 
+    set file_dict {_name answer _type file}
     if {$max_nr_submission_files > 1} {
       dict set file_dict repeat 1..$max_nr_submission_files
       dict set file_dict repeat_add_label #xowiki.form-repeatable-add-another-file#
@@ -1027,7 +1032,7 @@ namespace eval ::xowiki::formfield {
     set form [:form_markup -interaction upload -intro_text $intro_text -body @answer@]
     lappend fc \
         @categories:off @cr_fields:hidden \
-        "answer:[:dict_to_fc -type file $file_dict]"
+        [:dict_to_spec $file_dict]
 
     ${:object} set_property -new 1 form $form
     ${:object} set_property -new 1 form_constraints $fc
@@ -1050,7 +1055,6 @@ namespace eval ::xowiki::formfield {
   Class create test_section -superclass {TestItemField} -parameter {
     {multiple true}
     {form en:edit-interaction.wf}
-    {QM ::xowf::test_item::question_manager}
   }
   test_section set item_type Composite
   test_section set closed_question_type false
@@ -1104,7 +1108,7 @@ namespace eval ::xowiki::formfield {
     #   set substvalues [$formObj property substvalues]
     #   if {$substvalues ne ""} {
     #     ns_log notice ".... [$formObj name] has substvalues $substvalues"
-    #     set d [${:QM} percent_substitute_in_form \
+    #     set d [:QM percent_substitute_in_form \
     #                -obj ${:object} \
     #                -form_obj $formObj \
     #                -position $position \
@@ -1135,7 +1139,7 @@ namespace eval ::xowiki::formfield {
       }
       set result "-with_$kind"
     }]
-    set question_infos [${:QM} question_info \
+    set question_infos [:QM question_info \
                             -question_number_label "#xowf.subquestion#" \
                             {*}$title_options \
                             -numbers $numbers \
@@ -1148,7 +1152,7 @@ namespace eval ::xowiki::formfield {
     # Build a single clean form based on the question infors,
     # containing all selected items.
     #
-    set aggregatedForm [${:QM} aggregated_form \
+    set aggregatedForm [:QM aggregated_form \
                             -with_grading_box hidden \
                             $question_infos]
     set aggregatedFC [dict get $question_infos form_constraints]
@@ -1171,8 +1175,8 @@ namespace eval ::xowiki::formfield {
     # Automatically compute the minutes and points of the composite
     # field and update the form field.
     #
-    set total_minutes [${:QM} total_minutes $question_infos]
-    set total_points  [${:QM} total_points $question_infos]
+    set total_minutes [:QM total_minutes $question_infos]
+    set total_points  [:QM total_points $question_infos]
 
     [${:parent_field} get_named_sub_component minutes] value $total_minutes
     [${:parent_field} get_named_sub_component points] value $total_points
@@ -1241,19 +1245,21 @@ namespace eval ::xowiki::formfield {
       list [$folder_obj title] ../[$folder_obj name]
     }]
 
+    set pool_dict {_name folder _type select}
     dict set pool_dict required true
     dict set pool_dict options $folder_options
     dict set pool_dict default ../[::$current_folder_id name]
     dict set pool_dict label #xowf.pool_question_folder#
 
+    set item_dict {_name item_types _type checkbox}
     dict set item_dict options $item_type_options
     dict set item_dict default $item_types
     dict set item_dict label #xowf.pool_question_item_types#
 
     :create_components [subst {
-      {folder      {[:dict_to_fc -type select $pool_dict]}}
-      {item_types  {[:dict_to_fc -type checkbox $item_dict]}}
-      {pattern     {text,default=*,label=#xowf.pool_question_pattern#}}
+      [list [:dict_to_spec -aspair $pool_dict]]
+      [list [:dict_to_spec -aspair $item_dict]]
+      {pattern {text,default=*,label=#xowf.pool_question_pattern#}}
     }]
 
     set :__initialized 1
@@ -1262,6 +1268,8 @@ namespace eval ::xowiki::formfield {
   pool_question instproc convert_to_internal {} {
     next
     set allowed_item_types [:get_named_sub_component_value item_types]
+
+    set fc_dict {_name answer _type pool_question_placeholder}
     dict set fc_dict folder [:get_named_sub_component_value folder]
     dict set fc_dict pattern [:get_named_sub_component_value pattern]
     dict set fc_dict item_types $allowed_item_types
@@ -1269,7 +1277,7 @@ namespace eval ::xowiki::formfield {
     set form "<form>@answer@</form>"
     lappend fc \
         @categories:off @cr_fields:hidden \
-        "answer:[:dict_to_fc -type pool_question_placeholder $fc_dict]"
+        [:dict_to_spec $fc_dict]
 
     ${:object} set_property -new 1 form $form
     ${:object} set_property -new 1 form_constraints $fc
@@ -1317,6 +1325,10 @@ namespace eval ::xowf::test_item {
     #
     # Abstract class for common functionality
     #
+
+    :public alias dict_value ::xowiki::formfield::dict_value
+    :alias fc_to_dict ::xowiki::formfield::fc_to_dict
+
     :method assert_assessment_container {o:object} {
       set ok [expr {[$o is_wf_instance] == 0 && [$o is_wf] == 1}]
       if {!$ok} {
@@ -1350,9 +1362,6 @@ namespace eval ::xowf::test_item {
       }
     }
 
-    :method dict_value {dict key {default ""}} {
-      expr {[dict exists $dict $key] ? [dict get $dict $key] : $default}
-    }
 
     #----------------------------------------------------------------------
     # Class:  AssessmentInterface
@@ -1400,8 +1409,30 @@ namespace eval ::xowf::test_item {
       }]
     }
 
+    #----------------------------------------------------------------------
+    # Class:  AssessmentInterface
+    # Method: list_equal
+    #----------------------------------------------------------------------
+    :method list_equal { l1 l2 } {
+      #
+      # Compare two lists for equality. This function has to be used,
+      # when lists contain the same elements in the same order, but
+      # these are not literally equal due to, e.g., line breaks
+      # between list elements, etc.
+      #
+      if {[llength $l1] != [llength $l2]} {
+        return 0
+      }
+      foreach e1 $l1 e2 $l2 {
+        if {$e1 ne $e2} {
+          return 0
+        }
+      }
+      return 1
+    }
   }
 }
+
 namespace eval ::xowf::test_item {
 
   nx::Class create Renaming_form_loader -superclass AssessmentInterface {
@@ -1557,58 +1588,17 @@ namespace eval ::xowf::test_item {
       #
       set form_id [$ctx default_load_form_id $form_name]
       set obj [$ctx object]
-      set form_obj [::xo::db::CrClass get_instance_from_db -item_id $form_id]
+      set form_obj [::xowiki::FormPage get_instance_from_db -item_id $form_id]
       return [:rename_attributes $form_obj]
     }
-
   }
 
-  Renaming_form_loader create renaming_form_loader
+  AssessmentInterface forward FL \
+      [Renaming_form_loader create renaming_form_loader]
 }
 
 
 namespace eval ::xowf::test_item {
-
-  ad_proc -private spec_to_dict {spec} {
-    #
-    # Convert a single spec to a Tcl dict.
-    #
-    set elements [split $spec ,]
-    dict set result type [lindex $elements 0]
-    foreach s [lrange $elements 1 end] {
-      switch -glob -- $s {
-        *=* {
-          set p [string first = $s]
-          set attribute [string range $s 0 $p-1]
-          set value [::xowiki::formfield::FormField fc_decode [string range $s $p+1 end]]
-          dict set result $attribute $value
-        }
-        default {
-          ns_log notice "... spec_to_dict ignores <$s>"
-        }
-      }
-    }
-    return $result
-  }
-
-  ad_proc -private fc_to_dict {form_constraints} {
-    #
-    # Convert from form_constraint syntax to a dict. This is just a
-    # partial implementation, since form constraints are interpreted
-    # from left to right, changing types, etc., which is not
-    # supported here.
-    #
-    set result ""
-    foreach fc $form_constraints {
-      #ns_log notice "... fc_to_dict works on <$fc>"
-      if {[regexp {^([^:]+):(.*)$} $fc _ field_name definition]} {
-        if {[string match @* $field_name]} continue
-        dict set result $field_name [spec_to_dict $definition]
-        dict set result $field_name definition $definition
-      }
-    }
-    return $result
-  }
 
   ad_proc -private tdom_render {script} {
     #
@@ -1624,9 +1614,6 @@ namespace eval ::xowf::test_item {
     }
     ns_log warning "tdom_render: $script returns empty"
   }
-}
-
-namespace eval ::xowf::test_item {
 
   nx::Class create Answer_manager -superclass AssessmentInterface {
 
@@ -1654,6 +1641,7 @@ namespace eval ::xowf::test_item {
     #  - get_IPs
     #  - revisions_up_to
     #  - last_time_in_state
+    #  - last_time_switched_to_state
     #  - state_periods
     #
 
@@ -1688,15 +1676,14 @@ namespace eval ::xowf::test_item {
       $parentObj set_property -new 1 wfName $wfName
 
       set wfTitle [$parentObj property _title]
-      set questionObjs [::xowf::test_item::question_manager question_objs $parentObj]
+      set questionObjs [:QM question_objs $parentObj]
 
       set wfQuestionNames {}
       set wfQuestionTitles {}
       set attributeNames {}
       foreach form_obj $questionObjs {
-
-        lappend attributeNames [xowf::test_item::renaming_form_loader \
-                                    form_name_based_attribute_stem [$form_obj name]]
+        lappend attributeNames \
+            [:FL form_name_based_attribute_stem [$form_obj name]]
 
         lappend wfQuestionNames ../[$form_obj name]
         lappend wfQuestionTitles [$form_obj title]
@@ -1841,12 +1828,12 @@ namespace eval ::xowf::test_item {
       # Get the question dict, which is a mapping between question
       # names and form_obj_ids.
       #
-      set question_dict [renaming_form_loader name_to_question_obj_dict \
+      set question_dict [:FL name_to_question_obj_dict \
                              [dict get $combined_form_info question_objs]]
       # ns_log notice "export_answers: question_dict: $question_dict"
 
       set form_constraints [lsort -unique [dict get $combined_form_info form_constraints]]
-      set fc_dict [fc_to_dict $form_constraints]
+      set fc_dict [:fc_to_dict $form_constraints]
       #ns_log notice "... form_constraints ([llength $form_constraints]) $form_constraints"
       #ns_log notice ".... dict $fc_dict"
       #
@@ -1963,7 +1950,7 @@ namespace eval ::xowf::test_item {
 
     #----------------------------------------------------------------------
     # Class:  Answer_manager
-    # Method: last_time_in_state
+    # Method: delete_all_answer_data
     #----------------------------------------------------------------------
     :public method delete_all_answer_data {obj:object} {
       #
@@ -1986,7 +1973,7 @@ namespace eval ::xowf::test_item {
 
     #----------------------------------------------------------------------
     # Class:  Answer_manager
-    # Method: last_time_in_state
+    # Method: delete_scheduled_atjobs
     #----------------------------------------------------------------------
     :public method delete_scheduled_atjobs {obj:object} {
       #
@@ -2011,7 +1998,7 @@ namespace eval ::xowf::test_item {
 
     #----------------------------------------------------------------------
     # Class:  Answer_manager
-    # Method: last_time_in_state
+    # Method: get_answer_wf
     #----------------------------------------------------------------------
     :public method get_answer_wf {obj:object} {
       #
@@ -2025,7 +2012,7 @@ namespace eval ::xowf::test_item {
 
     #----------------------------------------------------------------------
     # Class:  Answer_manager
-    # Method: last_time_in_state
+    # Method: get_wf_instances
     #----------------------------------------------------------------------
     :public method get_wf_instances {
       {-initialize false}
@@ -2058,7 +2045,7 @@ namespace eval ::xowf::test_item {
 
     #----------------------------------------------------------------------
     # Class:  Answer_manager
-    # Method: last_time_in_state
+    # Method: get_answers
     #----------------------------------------------------------------------
     :public method get_answers {{-state ""} {-extra_attributes {}} wf:object} {
       #
@@ -2077,8 +2064,9 @@ namespace eval ::xowf::test_item {
         if {$state ne "" && [$i state] ne $state} {
           continue
         }
-        set answerAttributes [xowf::test_item::renaming_form_loader answer_attributes \
-                                  [$i instance_attributes]]
+
+        set answerAttributes \
+            [:FL answer_attributes [$i instance_attributes]]
         foreach extra $extra_attributes {
           lappend answerAttributes $extra [$i property $extra]
         }
@@ -2090,7 +2078,7 @@ namespace eval ::xowf::test_item {
 
     #----------------------------------------------------------------------
     # Class:  Answer_manager
-    # Method: last_time_in_state
+    # Method: get_duration
     #----------------------------------------------------------------------
     :public method get_duration {{-exam_published_time ""} revision_sets} {
       #
@@ -2115,6 +2103,7 @@ namespace eval ::xowf::test_item {
         dict set r examPublished [clock format $examPublishedClock -format "%H:%M:%S"]
         set epTimeDiff [expr {$toClock - $examPublishedClock}]
         dict set r examPublishedDuration "[expr {$epTimeDiff/60}]m [expr {$epTimeDiff%60}]s"
+        ns_log notice "EP examPublishedDuration [dict get $r examPublishedDuration] EP [dict get $r examPublished] $exam_published_time"
         dict set r examPublishedSeconds $epTimeDiff
       }
       return $r
@@ -2122,7 +2111,7 @@ namespace eval ::xowf::test_item {
 
     #----------------------------------------------------------------------
     # Class:  Answer_manager
-    # Method: last_time_in_state
+    # Method: get_IPs
     #----------------------------------------------------------------------
     :public method get_IPs {revision_sets} {
       #
@@ -2141,7 +2130,7 @@ namespace eval ::xowf::test_item {
 
     #----------------------------------------------------------------------
     # Class:  Answer_manager
-    # Method: last_time_in_state
+    # Method: revisions_up_to
     #----------------------------------------------------------------------
     :public method revisions_up_to {revision_sets revision_id} {
       #
@@ -2162,7 +2151,7 @@ namespace eval ::xowf::test_item {
     # Class:  Answer_manager
     # Method: last_time_in_state
     #----------------------------------------------------------------------
-    :public method last_time_in_state {revision_sets -state:required -with_until:switch } {
+    :public method last_time_in_state {revision_sets -state:required} {
       #
       # Loops through revision sets and retrieves the latest date
       # where state is equal the specified value.
@@ -2178,6 +2167,38 @@ namespace eval ::xowf::test_item {
         if {$state eq [ns_set get $ps state]} {
           set result [ns_set get $ps last_modified]
         }
+      }
+      return $result
+    }
+
+    #----------------------------------------------------------------------
+    # Class:  Answer_manager
+    # Method: last_time_switched_to_state
+    #----------------------------------------------------------------------
+    :public method last_time_switched_to_state {revision_sets -state:required {-before ""}} {
+      #
+      # Loops through revision sets and retrieves the latest date
+      # where state is equal the specified value.
+      #
+      # @param revision_sets a list of ns_sets containing revision
+      #        data. List is assumed to be sorted in descending
+      #        creation_date order (as retrieved by get_revision_sets)
+      #
+      # @return a date
+      #
+      set result ""
+      set last_state ""
+      foreach ps $revision_sets {
+        if {$before ne ""} {
+          set currentClock [clock scan [::xo::db::tcl_date [ns_set get $ps last_modified] tz]]
+          if {$currentClock > $before} {
+            break
+          }
+        }
+        if {$last_state ne $state && $state eq [ns_set get $ps state]} {
+          set result [ns_set get $ps last_modified]
+        }
+        set last_state [ns_set get $ps state]
       }
       return $result
     }
@@ -2252,10 +2273,15 @@ namespace eval ::xowf::test_item {
       -answer_attributes:required
     } {
       #
+      # Calculate the achieved_points dict for an exam submission. This
+      # function iterates of every question and sums up the achievable
+      # and achieved points of the questions. The per-question results
+      # are placed in the dict entry "details".
+      #
       # This method has to be called after the instance was rendered,
       # since it uses the produced form_fields.
       #
-      # @return dict containing "achievedPoints", "details" and "achievablePoints"
+      # @return dict containing "achievedPoints", "achievablePoints" and "details"
       #
       set all_form_fields [::xowiki::formfield::FormField info instances -closure]
       set totalPoints 0
@@ -2323,15 +2349,19 @@ namespace eval ::xowf::test_item {
             // Submit button of grading dialog was pressed.
             //
             var id = ev.currentTarget.dataset.id;
-            var gradingBox = document.getElementById(id);
+            var gradingBox  = document.getElementById(id);
             var pointsInput = document.querySelector('#grading-points');
             var helpBlock   = document.querySelector('#grading-points-help-block');
-            var comment    = document.querySelector('#grading-comment').value;
+            var comment     = document.querySelector('#grading-comment').value;
             var points      = pointsInput.value;
             var pointsFormGroup = pointsInput.parentElement.parentElement;
+            var percentage  = "";
 
             if (points != "") {
-              if(parseFloat(points) > parseFloat(pointsInput.max) || parseFloat(points) < parseFloat(pointsInput.min)){
+              //
+              // Number valdation
+              //
+              if (parseFloat(points) > parseFloat(pointsInput.max) || parseFloat(points) < parseFloat(pointsInput.min)){
                 if (parseFloat(points) > parseFloat(pointsInput.max)) {
                   helpBlock.textContent = '[_ xowf.Value_max] ' + pointsInput.max;
                 } else {
@@ -2345,12 +2375,18 @@ namespace eval ::xowf::test_item {
                 pointsFormGroup.classList.remove('has-error');
                 helpBlock.classList.add('hidden');
               }
+              var achievable = gradingBox.dataset.achievable;
+              if (achievable != "") {
+                percentage = "(" + (points*100.0/achievable).toFixed(2) + "%)";
+              }
+
             } else {
               pointsFormGroup.removeClass('has-error');
               helpBlock.classList.add('hidden');
             }
 
             document.querySelector('#' + id + ' .points').textContent = points;
+            document.querySelector('#' + id + ' .percentage').textContent = percentage;
             document.querySelector('#' + id + ' .comment').textContent = comment;
             gradingBox.dataset.achieved = points;
             gradingBox.dataset.comment = comment;
@@ -2548,7 +2584,9 @@ namespace eval ::xowf::test_item {
       if {$revision_id eq ""} {
         set revision_sets [:revisions_up_to $revision_sets $live_revision_id]
       }
-      set last_published [:last_time_in_state $parent_revsion_sets -state published]
+      set toClock [clock scan [::xo::db::tcl_date [ns_set get [lindex $revision_sets end] last_modified] tz]]
+      set last_published [:last_time_switched_to_state $parent_revsion_sets -state published -before $toClock]
+      ns_log notice "LAST PUBL $last_published"
       set duration [:get_duration -exam_published_time $last_published $revision_sets]
 
       set state [$answerObj state]
@@ -2709,9 +2747,8 @@ namespace eval ::xowf::test_item {
       {-examWf:object}
       {-submissions:object}
     } {
-      set combined_form_info [::xowf::test_item::question_manager combined_question_form $examWf]
-      set nameToQuestionObj [xowf::test_item::renaming_form_loader \
-                                 name_to_question_obj_dict \
+      set combined_form_info [:QM combined_question_form $examWf]
+      set nameToQuestionObj [:FL name_to_question_obj_dict \
                                  [dict get $combined_form_info question_objs]]
       #
       # Sort items by username
@@ -3111,7 +3148,8 @@ namespace eval ::xowf::test_item {
       }
 
       set submission_state [$submission state]
-      set noManualGrading [expr {$submission_state ne "done" || $exam_state eq "published"}]
+      #set noManualGrading [expr {$submission_state ne "done" || $exam_state eq "published"}]
+      set noManualGrading [expr {$exam_state eq "published"}]
 
       set grading_boxes [${root} selectNodes {//div[contains(@class,'grading-box')]}]
       foreach grading_box $grading_boxes {
@@ -3122,7 +3160,7 @@ namespace eval ::xowf::test_item {
                              : ""}]
         ns_log notice "... QN '$qn' item_type '$item_type'" \
             "submission state $submission_state" \
-            "exam state $exam_state"
+            "exam state $exam_state noManualGrading $noManualGrading"
         if {$noManualGrading} {
           :dom class add $grading_box {a[contains(@class,'manual-grade')]} hidden
         }
@@ -3158,6 +3196,10 @@ namespace eval ::xowf::test_item {
           }
         } else {
           :dom node replace $grading_box {span[@class='points']} {::html::t $achieved}
+          if {$achievable ne ""} {
+            set percentage [format %.2f [expr {$achieved*100.0/$achievable}]]
+            :dom node replace $grading_box {span[@class='percentage']} {::html::t ($percentage%)}
+          }
         }
         #
         # When "comment" is empty, do not show the label.
@@ -3232,9 +3274,8 @@ namespace eval ::xowf::test_item {
           return ""
         }
       }
-
-      set answerAttributes [xowf::test_item::renaming_form_loader \
-                                answer_attributes [$submission instance_attributes]]
+      set answerAttributes \
+          [:FL answer_attributes [$submission instance_attributes]]
 
       #
       # "render_full_submission_form" calls "summary_form" to obtain the
@@ -3365,27 +3406,44 @@ namespace eval ::xowf::test_item {
     # Method: grading_scheme
     #----------------------------------------------------------------------
     :method grading_scheme {
+      {-examWf:object,required}
       {-grading:alnum,0..n ""}
       {-total_points}
     } {
       #
-      # The management of the grading scheme has to be extended. For the
-      # time being, we have a single grading scheme with the option to
-      # round to full points or not. When an exam has less than 40
-      # points, we do not round per default, since this rounding could
-      # provide more than 1 percent of the result. This should be made
-      # configurable (also in www-print-answer-table, which is not used
-      # right now).
+      # Return the grading scheme object based on the provided short
+      # name.  In case the grading scheme belongs to the predefined
+      # grading schemes, the object can be directly loaded. When the
+      # name refers to a user-defined grading object, this might have
+      # to be loaded.
+      #
+      # We could consider some hints about the usefulness of the
+      # chosen grading scheme, E.g., when an exam has 40 points or
+      # less, rounding has the potential effect that a high percentage
+      # of the grade is just due to rounding. So, in such cases a
+      # non-rounding scheme should be preferred.
       #
       # @return fully qualified grading scheme object
       #
       if {$grading eq ""} {
-        set grading [expr {$total_points < 40 ? "wi1_noround" : "wi1p"}]
+        #set grading [expr {$total_points < 40 ? "round-none" : "round-points"}]
+        set grading "none"
+        ns_log notice "--- legacy grading scheme -> none"
       }
 
       set grading_scheme ::xowf::test_item::grading::$grading
-      if {[info commands $grading_scheme] eq ""} {
-        set grading_scheme ::xowf::test_item::grading::wi1
+      if {![nsf::is object $grading_scheme]} {
+        #
+        # Maybe we have to load this grading scheme...
+        #
+        ::xowf::test_item::grading::load_grading_schemes \
+            -package_id [$examWf package_id] \
+            -parent_id [$examWf parent_id]
+        ns_log notice "--- grading schemes loaded"
+      }
+      if {![nsf::is object $grading_scheme]} {
+        set grading_scheme ::xowf::test_item::grading::round-points
+        ns_log notice "--- fallback to default grading scheme object"
       }
       #ns_log notice "USE grading_scheme $grading_scheme"
       return $grading_scheme
@@ -3413,9 +3471,9 @@ namespace eval ::xowf::test_item {
       #
       # @return dict containing "do_stream" and "HTML"
       #
-      set combined_form_info [::xowf::test_item::question_manager combined_question_form $examWf]
+      set combined_form_info [:QM combined_question_form $examWf]
       set autograde   [dict get $combined_form_info autograde]
-      set totalPoints [::xowf::test_item::question_manager total_points \
+      set totalPoints [:QM total_points \
                            -max_items [$examWf property max_items ""] \
                            $combined_form_info]
 
@@ -3433,8 +3491,9 @@ namespace eval ::xowf::test_item {
             "valid [dict get $combined_form_info question_objs]"
         set form_objs ""
       }
-
-      set grading_scheme [:grading_scheme -grading $grading -total_points $totalPoints]
+      ns_log notice "--- grading '$grading'"
+      set grading_scheme [:grading_scheme -examWf $examWf -grading $grading -total_points $totalPoints]
+      #ns_log notice "--- grading_scheme $grading_scheme from grading '$grading'"
 
       set :grade_dict {}
       set :grade_csv ""
@@ -3506,7 +3565,7 @@ namespace eval ::xowf::test_item {
       }
 
       if {$export} {
-        set recutil [xowf::test_item::answer_manager recutil_create \
+        set recutil [:AM recutil_create \
                          -clear \
                          -exam_id [$wf parent_id] \
                          -fn [expr {$filter_id eq "" ? "all.rec" : "$filter_id.rec"}]
@@ -3564,8 +3623,8 @@ namespace eval ::xowf::test_item {
                    -with_exam_heading [expr {!$as_student}] \
                    -with_signature $withSignature]
 
-        set html [dict get $d HTML]
-        dict set results [$submission set creation_user] [dict get $d results]
+        set html [:dict_value $d HTML]
+        dict set results [$submission set creation_user] [:dict_value $d results]
 
         if {$do_stream && $html ne ""} {
           ns_write [lang::util::localize $html]
@@ -3735,10 +3794,11 @@ namespace eval ::xowf::test_item {
         #
         unset -nocomplain $key
       } else {
-        #ns_log notice "### key exists [info exists $key]"
+        #ns_log notice "### answer_form_field_objs key exists [info exists $key]"
         if {![info exists $key]} {
           #ns_log notice "form_info: $form_info"
           set fc [lsort -unique [dict get $form_info disabled_form_constraints]]
+          #ns_log notice "### FC $fc"
           set pc_params [::xo::cc perconnection_parameter_get_all]
           if {$generic} {
             set fc [:replace_in_fc -fc $fc shuffle_kind none]
@@ -3841,7 +3901,7 @@ namespace eval ::xowf::test_item {
       {-view_all_method print-answers}
       {-with_answers:boolean true}
       {-state done}
-      {-grading_scheme ::xowf::test_item::grading::wi1}
+      {-grading_scheme ::xowf::test_item::grading::none}
       wf:object
     } {
       #
@@ -3850,7 +3910,7 @@ namespace eval ::xowf::test_item {
       #
 
       #set form_info [:combined_question_form -with_numbers $wf]
-      set form_info [::xowf::test_item::question_manager combined_question_form $wf]
+      set form_info [:QM combined_question_form $wf]
       set answer_form_field_objs [:answer_form_field_objs -wf $wf $form_info]
       set autograde [dict get $form_info autograde]
 
@@ -4223,15 +4283,14 @@ namespace eval ::xowf::test_item {
       #        has to be provided with valid HTML markup.
       #
 
-      set answers [xowf::test_item::answer_manager get_answers $wf]
+      set answers [:AM get_answers $wf]
       set nrParticipants [llength $answers]
       if {$current_question ne ""} {
-        set answered [xowf::test_item::renaming_form_loader answers_for_form \
+        set answered [:FL answers_for_form \
                           [$current_question name] \
                           $answers]
       } else {
-        set answered [xowf::test_item::answer_manager get_answers \
-                          -state $target_state $wf]
+        set answered [:AM get_answers -state $target_state $wf]
       }
       set nrAnswered [llength $answered]
 
@@ -4510,7 +4569,8 @@ namespace eval ::xowf::test_item {
     }
   }
 
-  Answer_manager create answer_manager
+  AssessmentInterface forward AM \
+      [Answer_manager create answer_manager]
 }
 
 
@@ -4675,7 +4735,7 @@ namespace eval ::xowf::test_item {
       # might be required (e.g. instantiate the other package, etc.).
       #
       if {![nsf::is object ::$folder_id]} {
-        ::xo::db::CrClass get_instance_from_db -item_id $folder_id
+        ::xowiki::FormPage get_instance_from_db -item_id $folder_id
       }
       if {[::$folder_id is_link_page]} {
         set targetObj [::$folder_id get_target_from_link_page]
@@ -4764,14 +4824,13 @@ namespace eval ::xowf::test_item {
       # the plain "answer", which can be provided via the "field_name"
       # attribute.
       #
-      set query_dict [fc_to_dict [$pool_question_obj property form_constraints]]
+      set query_dict [:fc_to_dict [$pool_question_obj property form_constraints]]
       if {$field_name eq ""} {
         #
         # No field name was provided, so get the field name from the
         # question obj.
         #
-        set field_name [::xowf::test_item::renaming_form_loader \
-                            form_name_based_attribute_stem [$pool_question_obj name]]
+        set field_name [:FL form_name_based_attribute_stem [$pool_question_obj name]]
         if {![dict exists $query_dict $field_name]} {
           #
           # Fall back to field_name "answer". This will be necessary,
@@ -4860,7 +4919,7 @@ namespace eval ::xowf::test_item {
         error "could not find a replacement item for [$pool_question_obj name]: only duplicate items found"
 
       }
-      set form_obj [::xo::db::CrClass get_instance_from_db \
+      set form_obj [::xowiki::FormPage get_instance_from_db \
                         -item_id [dict get $candidate_dict $new_name item_id]]
 
       #$form_obj initialize
@@ -4919,7 +4978,7 @@ namespace eval ::xowf::test_item {
       }
       #ns_log notice "YYYY OLD NAMES [join $original_question_names { }]"
       #ns_log notice "YYYY UPD NAMES [join $exam_question_names { }]"
-      if {$original_question_names ne $exam_question_names} {
+      if {![:list_equal $original_question_names $exam_question_names]} {
         ns_log notice "YYYY store question names in user's answer workflow"
         $answer_obj set_property -new 1 question $exam_question_names
       }
@@ -5045,6 +5104,17 @@ namespace eval ::xowf::test_item {
     # Class:  Question_manager
     # Method: qualified_question_names
     #----------------------------------------------------------------------
+    :method max_items {max:integer,0..1 list} {
+      if {$max ne "" && $max < [llength $list]} {
+        return [lrange $list 0 $max-1]
+      }
+      return $list
+    }
+
+    #----------------------------------------------------------------------
+    # Class:  Question_manager
+    # Method: qualified_question_names
+    #----------------------------------------------------------------------
     :method qualified_question_names {question_objs} {
       #
       # Return the question names with parent folder in form of an
@@ -5055,7 +5125,7 @@ namespace eval ::xowf::test_item {
       lmap question_obj $question_objs {
         set parent_id [$question_obj parent_id]
         if {![nsf::is object ::$parent_id]} {
-          ::xo::db::CrClass get_instance_from_db -item_id $parent_id
+          ::xowiki::FormPage get_instance_from_db -item_id $parent_id
         }
         set ref [::$parent_id name]/[$question_obj name]
       }
@@ -5093,7 +5163,6 @@ namespace eval ::xowf::test_item {
                              -default_lang [$obj lang] \
                              -forms $questionNames]
 
-      #ns_log notice "load_question_objs called with $obj $names -> $questionForms"
       if {[llength $questionForms] < [llength $names]} {
         if {[llength $names] == 1} {
           ns_log warning "load_question_objs: question '$names' could not be loaded"
@@ -5136,9 +5205,15 @@ namespace eval ::xowf::test_item {
       # Return the shuffled index position, in case shuffling is turned on.
       #
       if {$shuffle_id > -1} {
-        set form_objs [:question_objs $obj]
-        set shuffled [::xowiki::randomized_indices -seed $shuffle_id [llength $form_objs]]
+        #
+        # Take always all questions as the basis for randomization,
+        # also when "max_items" is set.
+        #
+        set shuffled [::xowiki::randomized_indices \
+                          -seed $shuffle_id \
+                          [:question_count -all $obj]]
         set position [lindex $shuffled $position]
+        #ns_log notice "shuffled_index question_count [:question_count $obj] -> <$shuffled> -> position $position"
       }
       return $position
     }
@@ -5165,14 +5240,9 @@ namespace eval ::xowf::test_item {
       }
 
       #
-      # Make sure, we return just up to max_items form_objs.
+      # Return at most max items, when specified.
       #
-      set max_items [$obj property max_items ""]
-      if {$max_items ne ""} {
-        set form_objs [lrange $form_objs 0 $max_items-1]
-      }
-
-      return $form_objs
+      return [:max_items [$obj property max_items ""] $form_objs]
     }
 
     #----------------------------------------------------------------------
@@ -5191,10 +5261,10 @@ namespace eval ::xowf::test_item {
       }
       if {[info exists :wfi] && [${:wfi} property question] ne ""} {
         set names [${:wfi} property question]
-        #ns_log notice "question_names returns obj-specific $names"
+        #ns_log notice "question_names returns obj-specific [join $names]"
       } else {
         set names [$obj property question]
-        #ns_log notice "question_names returns wf-names ($obj property)"
+        #ns_log notice "question_names returns wf-names ($obj property): [join $names]"
       }
       return $names
     }
@@ -5203,17 +5273,19 @@ namespace eval ::xowf::test_item {
     # Class:  Question_manager
     # Method: question_count
     #----------------------------------------------------------------------
-    :public method question_count {obj:object} {
+    :public method question_count {{-all:switch false} obj:object} {
       #
       # Return the number questions in an exam. It is either the
       # number of defined questions, or it might be restricted by the
       # property max_items (if defined for "obj").
       #
       set nr_questions [llength [:question_names $obj]]
-      set max_items [$obj property max_items ""]
-      if {$max_items ne ""} {
-        if {$max_items < $nr_questions} {
-          set nr_questions $max_items
+      if {!$all} {
+        set max_items [$obj property max_items ""]
+        if {$max_items ne ""} {
+          if {$max_items < $nr_questions} {
+            set nr_questions $max_items
+          }
         }
       }
       return $nr_questions
@@ -5248,7 +5320,6 @@ namespace eval ::xowf::test_item {
       # position).
       #
       :assert_assessment $obj
-      #set questions [dict get [$obj instance_attributes] question]
       set questions [:question_names $obj]
       set result [:load_question_objs $obj [lindex $questions $position]]
       return $result
@@ -5480,7 +5551,7 @@ namespace eval ::xowf::test_item {
             # place.
             #
 
-            set dict [lindex [fc_to_dict [dict get $formAttributes form_constraints]] 1]
+            set dict [lindex [:fc_to_dict [dict get $formAttributes form_constraints]] 1]
             foreach a [dict get $dict answer] {
               set op ""
               regexp {^(\S+)\s} $a . op
@@ -5551,9 +5622,7 @@ namespace eval ::xowf::test_item {
                   "<h4>[dict get $title_info full_title]</h4>\n"
             }
             if {$with_grading_box ne ""} {
-              set question_name [xowf::test_item::renaming_form_loader \
-                                     form_name_based_attribute_stem \
-                                     [$question_obj name]]
+              set question_name [:FL form_name_based_attribute_stem [$question_obj name]]
               set visible [expr {$with_grading_box eq "hidden" ? "hidden" : ""}]
               if {$with_grading_box eq "hidden"} {
                 set question_name answer_$question_name
@@ -5563,6 +5632,7 @@ namespace eval ::xowf::test_item {
                 |     data-question_name='$question_name' data-title='[$question_obj title]'
                 |     data-question_id='[$question_obj item_id]'>
                 |  #xowf.Points#: <span class='points'></span>
+                |  <span class='percentage'></span>
                 |  <span class='feedback-label'>#xowf.feedback#: </span><span class='comment'></span>
                 |  <a class='manual-grade' href='#' data-toggle='modal' data-target='#grading-modal'>
                 |    <span class='glyphicon glyphicon-pencil' aria-hidden='true'></span>
@@ -5615,8 +5685,9 @@ namespace eval ::xowf::test_item {
         set position -1
         set positions [lmap form_obj $form_objs {incr position}]
       }
+
       foreach form_obj $form_objs number $numbers position $positions {
-        set form_obj [::xowf::test_item::renaming_form_loader rename_attributes $form_obj]
+        set form_obj [:FL rename_attributes $form_obj]
         set form_title [$form_obj title]
         set minutes [:question_property $form_obj minutes]
         set points [:question_property $form_obj points]
@@ -5807,10 +5878,7 @@ namespace eval ::xowf::test_item {
       #ns_log notice "XXX combined_question_form fos=$form_objs all_form_objs=$all_form_objs <$positions>"
 
       if {$user_specific} {
-        set max_items [$obj property max_items ""]
-        if {$max_items ne ""} {
-          set form_objs [lrange $form_objs 0 $max_items-1]
-        }
+        set form_objs [:max_items [$obj property max_items ""] $form_objs]
       }
       if {$with_numbers} {
         set numbers ""
@@ -6090,9 +6158,9 @@ namespace eval ::xowf::test_item {
         # Get the form-field objects with all alternatives (use flag
         # "-generic")
         #
-        set form_field_objs [xowf::test_item::answer_manager answer_form_field_objs \
+        set form_field_objs [:AM answer_form_field_objs \
                                  -generic \
-                                 -wf [xowf::test_item::answer_manager get_answer_wf $obj] \
+                                 -wf [:AM get_answer_wf $obj] \
                                  $combined_form_info]
         #
         # Get the persisted statistics from the workflow
@@ -6174,8 +6242,8 @@ namespace eval ::xowf::test_item {
       set autograde         [dict get $combined_form_info autograde]
 
       set revision_sets     [$obj get_revision_sets]
-      set published_periods [xowf::test_item::answer_manager state_periods $revision_sets -state published]
-      set review_periods    [xowf::test_item::answer_manager state_periods $revision_sets -state submission_review]
+      set published_periods [:AM state_periods $revision_sets -state published]
+      set review_periods    [:AM state_periods $revision_sets -state submission_review]
       set total_minutes     [:total_minutes -max_items $max_items $combined_form_info]
       set total_points      [:total_points -max_items $max_items $combined_form_info]
       set max_items_msg     ""
@@ -6234,7 +6302,7 @@ namespace eval ::xowf::test_item {
         if {[dict exists $title_info $property]} {
           set value [dict get $title_info  $property]
           if {$value eq ""} {
-            ns_log notice "missing $property in '$title_info'"
+            ns_log notice "missing property '$property' in '$title_info'"
             set value 0
           }
           set total [expr {$total + $value}]
@@ -6252,11 +6320,7 @@ namespace eval ::xowf::test_item {
       # When max_items is nonempty, return the title infos of all
       # items. Otherwise, just the specified number of items.
       #
-      set title_infos [dict get $form_info title_infos]
-      if {$max_items ne ""} {
-        set title_infos [lrange $title_infos 0 $max_items-1]
-      }
-      return $title_infos
+      return [:max_items $max_items [dict get $form_info title_infos]]
     }
 
     #----------------------------------------------------------------------
@@ -6276,7 +6340,7 @@ namespace eval ::xowf::test_item {
     #----------------------------------------------------------------------
     :public method total_points {{-max_items:integer,0..1 ""} form_info} {
       #
-      # Compute the maximal achievable points of an exam based on the
+      # Compute the maximum achievable points of an exam based on the
       # form_info dict.
       #
       return [:total -property points [:title_infos -max_items $max_items $form_info]]
@@ -6344,7 +6408,7 @@ namespace eval ::xowf::test_item {
       # @return time string as returned from the database
       #
       if {[$manager property synchronized 0]} {
-        set parent_obj [::xo::db::CrClass get_instance_from_db -item_id [$answer_obj parent_id]]
+        set parent_obj [::xowiki::FormPage get_instance_from_db -item_id [$answer_obj parent_id]]
         set base_time [$parent_obj last_modified]
       } else {
         set base_time [$answer_obj creation_date]
@@ -6434,9 +6498,9 @@ namespace eval ::xowf::test_item {
       }
     }
   }
-
-  Question_manager create question_manager
-
+  set qm [Question_manager create question_manager]
+  AssessmentInterface forward QM $qm
+  ::xowiki::formfield::TestItemField instforward QM  $qm
 }
 
 namespace eval ::xowiki::formfield {
@@ -6509,7 +6573,7 @@ namespace eval ::xowiki::formfield {
       }
       ::xowiki::formfield::pool_question_placeholder {
         set type PoolQuestion
-        set item_dict [::xowf::test_item::question_manager get_pool_questions \
+        set item_dict [:QM get_pool_questions \
                            -field_name $field_name ${:object} ""]
 
         set counts ""
@@ -6559,185 +6623,6 @@ namespace eval ::xowf::test_item {
   }
 }
 
-namespace eval ::xowf::test_item::grading {
-  nx::Class create Grading {
-    :property {percentage_boundaries {50.0 60.0 70.0 80.0}}
-
-    :method calc_grade {-percentage -points:required -achieved_points:required} {
-      #
-      # Return a numeric grade based on achieved_points dict and
-      # percentage_mapping. On invalid data, return 0.
-      #
-      # Important dict members of "achieved_points":
-      #  - achievedPoints: points that the student has achieved in her exam
-      #  - achievablePoints: points that the student could have achieved so far
-      #  - totalPoints: points that the student can achieve when finishing the exam
-      #
-      #     achieved_points:    {achievedPoints 4.0 achievablePoints 4 totalPoints 4}
-      #     percentage_mapping: {50.0 60.0 70.0 80.0}
-      #
-      #if {![dict exists $achieved_points achievablePoints] && [dict exists $achieved_points totalPoints]} {
-      #  ns_log warning "test_item::grading legacy call, use 'achievablePoints' instead of 'totalPoints'"
-      #  dict set achieved_points achievablePoints [dict get $achieved_points totalPoints]
-      #}
-
-      if {![info exists percentage]} {
-        #ns_log notice "=== calc_grade compute percentage from totalPoints"
-
-        if {[dict exists $achieved_points totalPoints] && [dict get $achieved_points totalPoints] > 0} {
-          set percentage \
-              [format %.2f [expr {
-                                  ($points*100/
-                                   [dict get $achieved_points totalPoints]) + 0.00001
-                                }]]
-        }
-      } else {
-        ns_log notice "USE PROVIDED percentage '$percentage'"
-      }
-      if {[info exists percentage]} {
-        set grade 1
-        set gradePos 0
-        foreach boundary ${:percentage_boundaries} {
-          if {$percentage < $boundary} {
-            set grade [expr {5-$gradePos}]
-            break
-          }
-          incr gradePos
-        }
-      } else {
-        set grade 0
-      }
-      return $grade
-    }
-
-    :public method print {-achieved_points:required} {
-      #
-      # Return the achievedPoints when available (or empty).
-      #
-      if {[dict exists $achieved_points achievedPoints]} {
-        return [dict get $achieved_points achievedPoints]
-      }
-    }
-
-    :method complete_dict {achieved_points} {
-      #
-      # This is a transitional method, just for defensive programming
-      # to make sure, nobody else uses the legacy field... should
-      # disappear soon.
-      #
-      if {![dict exists $achieved_points achievablePoints] && [dict exists $achieved_points totalPoints]} {
-        ns_log warning "test_item::grading legacy call, use 'achievablePoints' instead of 'totalPoints'"
-        dict set achieved_points achievablePoints [dict get $achieved_points totalPoints]
-      }
-      #
-      # When "achievedPoints" is set to empty, and "details" are
-      # provided, we perform a new calculation based on "details".
-      #
-      if {[dict get $achieved_points achievedPoints] eq ""
-          && [dict exists $achieved_points details]
-        } {
-        set achievablePoints 0
-        set achievedPoints 0
-        #ns_log notice "RECALC in complete_dict "
-        foreach detail [dict get $achieved_points details] {
-          #ns_log notice "RECALC in complete_dict '$detail'"
-          set achievedPoints   [expr {$achievedPoints   + [dict get $detail achieved]}]
-          set achievablePoints [expr {$achievablePoints + [dict get $detail achievable]}]
-        }
-        dict set achieved_points achievedPoints $achievedPoints
-        dict set achieved_points achievablePoints $achievablePoints
-      }
-
-      foreach key {
-        achievedPoints
-        achievablePoints
-        totalPoints
-      } {
-        if {![dict exists $achieved_points $key]} {
-          ns_log warning "test_item::grading dict without $key: $achieved_points"
-          ::xo::show_stack
-          dict set achieved_points $key 0
-        }
-      }
-      dict with achieved_points {
-        dict set achieved_points achievedPointsRounded [format %.0f $achievedPoints]
-        set achievablePoints [format %.2f $achievablePoints]
-        set achievedPoints   [format %.2f $achievedPoints]
-        set percentage  [format %.2f [expr {$totalPoints > 0 ? ($achievedPoints*100.0/$totalPoints) : 0}]]
-        dict set achieved_points percentage $percentage
-        dict set achieved_points percentageRounded [format %.0f $percentage]
-      }
-      #ns_log notice "R=$achieved_points"
-      return $achieved_points
-    }
-
-  }
-
-  Grading create ::xowf::test_item::grading::wi1 -percentage_boundaries {50.0 60.0 70.0 80.0} {
-
-    :public object method print {-achieved_points:required} {
-      set achieved_points  [:complete_dict $achieved_points]
-      set grade            [:grade -achieved_points $achieved_points]
-      dict with achieved_points {
-        set panelHTML [_ xowf.panel_achieved_points_wi1]
-        return [list panel $panelHTML csv [subst {$achievedPoints\t$achievedPointsRounded\t$percentage%\t$grade}]]
-      }
-    }
-    :public object method grade {-achieved_points:required} {
-      set achieved_points [:complete_dict $achieved_points]
-      if {[dict exists $achieved_points achievedPoints]} {
-        dict with achieved_points {
-          return [:calc_grade -points $achievedPointsRounded -achieved_points $achieved_points]
-        }
-      }
-    }
-  }
-
-  Grading create ::xowf::test_item::grading::wi1p -percentage_boundaries {50.0 60.0 70.0 80.0} {
-
-    :public object method print {-achieved_points:required} {
-      set achieved_points  [:complete_dict $achieved_points]
-      set grade            [:grade -achieved_points $achieved_points]
-      dict with achieved_points {
-        set panelHTML [_ xowf.panel_achieved_points_wi1p]
-        return [list panel $panelHTML csv [subst {$achievedPoints\t$percentage%\t$percentageRounded%\t$grade}]]
-      }
-    }
-    :public object method grade {-achieved_points:required} {
-      set achieved_points [:complete_dict $achieved_points]
-      if {[dict exists $achieved_points achievedPoints]} {
-        dict with achieved_points {
-          return [:calc_grade -points $achievedPoints -percentage $percentageRounded -achieved_points $achieved_points]
-        }
-      }
-    }
-  }
-
-
-  Grading create ::xowf::test_item::grading::wi1_noround -percentage_boundaries {50.0 60.0 70.0 80.0} {
-
-    :public object method print {-achieved_points:required} {
-      if {[dict exists $achieved_points achievedPoints]} {
-        set achieved_points  [:complete_dict $achieved_points]
-        set grade            [:grade -achieved_points $achieved_points]
-        dict with achieved_points {
-          set panelHTML [_ xowf.panel_achieved_points_wi1_noround]
-          return [list panel $panelHTML csv [subst {$achievedPoints\t$percentage%\t$grade}]]
-        }
-      }
-    }
-    :public object method grade {-achieved_points:required} {
-      if {[dict exists $achieved_points achievedPoints]} {
-        set achieved_points [:complete_dict $achieved_points]
-        dict with achieved_points {
-          return [:calc_grade -points $achievedPoints -achieved_points $achieved_points]
-        }
-      }
-    }
-  }
-
-}
-
 namespace eval ::xowiki {
   ::xowiki::MenuBar instproc config=test-items {
     {-bind_vars {}}
@@ -6765,9 +6650,12 @@ namespace eval ::xowiki {
       {entry -name New.Item.CompositeInteraction -form en:edit-interaction.wf -query p.item_type=Composite}
       {entry -name New.Item.PoolQuestionInteraction -form en:edit-interaction.wf -query p.item_type=PoolQuestion}
 
+      {entry -name New.Grading.Scheme -form en:edit-grading-scheme.wf}
+
       {entry -name New.App.OnlineExam -form en:online-exam.wf -disabled true}
       {entry -name New.App.InclassQuiz -form en:inclass-quiz.wf -disabled true}
       {entry -name New.App.InclassExam -form en:inclass-exam.wf -query p.realexam=1}
+
     }
   }
 

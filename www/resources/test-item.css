@@ -347,7 +347,8 @@ div.grading-box span.points {
 div.grading-box a.manual-grade {
     color: #dd1e1e;
 }
-div.grading-box span.comment, 
+div.grading-box span.comment,
+div.grading-box span.percentage,
 div.grading-box span.points {
     color: #888888;
 }
@@ -358,3 +359,26 @@ div.xowiki-content div.modal-dialog h4 {
 div.grading-box span.text-warn {
     color: #ed920ac9;
 }
+
+/*
+ * Editing grading schemes
+ */
+form.Form-edit-grading-scheme input.form-control.inline {
+    display: inline;
+    width: inherit;
+}
+form.Form-edit-grading-scheme div.form-group div input[type="number"].form-control {
+    text-align: right;
+    width: 5em;
+    direction: rtl;
+}
+form.Form-edit-grading-scheme div input[type="number"].form-control.inline {
+    text-align: right;
+    width: 6em;
+    direction: rtl;
+}
+
+/*
+form.Form-edit-grading-scheme input::-webkit-outer-spin-button,
+form.Form-edit-grading-scheme input::-webkit-inner-spin-button { margin-left: 2px; }
+*/

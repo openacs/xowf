@@ -307,6 +307,8 @@ proc working_form_loader {ctx form_name} {
 #
 proc done_form_loader {ctx form_name} {
   set obj [$ctx object]
+  #ns_log notice "==================================== done_form_loader called"
+
   #
   #
   #
@@ -328,6 +330,7 @@ proc done_form_loader {ctx form_name} {
                     -anon_instances t \
                    ]
   }
+  #ns_log notice "==================================== done_form_loader DONE"  
   return $result
 }
 
@@ -348,13 +351,13 @@ proc done_form_loader {ctx form_name} {
   set parent_obj [::xo::db::CrClass get_instance_from_db -item_id [$obj parent_id]]
   if {$for_question && [$obj state] in {initial working}} {
     if {$form_info eq ""} {
-    set form_info [${:QM} nth_question_form \
-                       -with_numbers \
-                       -with_title=false \
-                       -with_minutes=$with_minutes \
-                       -position $position \
-                       -item_nr $item_nr \
-                       $parent_obj]
+      set form_info [${:QM} nth_question_form \
+                         -with_numbers \
+                         -with_title=false \
+                         -with_minutes=$with_minutes \
+                         -position $position \
+                         -item_nr $item_nr \
+                         $parent_obj]
     }
     set title_info [lindex [dict get $form_info title_infos] 0]
     set titleString [dict get $title_info full_title]
@@ -693,6 +696,7 @@ proc done_form_loader {ctx form_name} {
       window.open("about:blank", "_self").close();
     }]
   }
+  #ns_log notice "==== object-specific inclass-exam-answer [self] isAnswerInstance $isAnswerInstance DONE"
 
 }
 
