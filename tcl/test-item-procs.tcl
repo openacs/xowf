@@ -1698,11 +1698,11 @@ namespace eval ::xowf::test_item {
       set attributeNames [join $attributeNames ,]
 
       #:log "create workflow by filling out form '$master_workflow'"
-      set WF [::xowiki::Weblog instantiate_forms \
+      set WF [::[$parentObj package_id] instantiate_forms \
                   -parent_id    [$parentObj parent_id] \
-                  -package_id   [$parentObj package_id] \
-                  -default_lang [$parentObj lang] \
-                  -forms        $master_workflow]
+                  -forms $master_workflow \
+                  -default_lang [$parentObj lang]]
+
       set fc {}
       lappend fc \
           "@table:_item_id,_state,$attributeNames,_last_modified" \
