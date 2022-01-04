@@ -352,6 +352,10 @@ div.grading-box span.percentage,
 div.grading-box span.points {
     color: #888888;
 }
+div.grading-box span.feedback-label {
+    padding-left: 4px;
+}
+
 div.xowiki-content div.modal-dialog h5,
 div.xowiki-content div.modal-dialog h4 {
     clear: inherit;
