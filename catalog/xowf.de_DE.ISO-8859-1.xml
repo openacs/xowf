@@ -180,6 +180,8 @@
   <msg key="Show_IP_help_text">Zeige Studierenden während der Prüfung eigene IP-Adresse</msg>
   <msg key="Time_budget">Zeitbudget</msg>
   <msg key="Time_budget_help_text">Erhöhe die Bearbeitungsdauer auf den angeführten relativen Wert</msg>
+  <msg key="Countdown_audio_alarm">Countdown Zeitmesser mit akkustischem Signal</msg>
+  <msg key="Countdown_audio_alarm_help_text">Inkludiere optionales Audiosignal für den Zeitmesser (ungeeigenet für Prüfungen in Schulungsräumen)</msg>
 
   <msg key="Max_items">Beschränkte Fragenzahl</msg>
   <msg key="Max_items_help_text">Beschränke die Zahl der Fragen auf
@@ -213,8 +215,8 @@
 
   <msg key="Detail_configuration">Detaileinstellungen</msg>
   <msg key="Time_management">Zeitablauf</msg>
-  <msg key="Question_management">Fragen</msg>
-  <msg key="Security">Sicherheit</msg>
+  <msg key="Question_management">Fragenenstellungen</msg>
+  <msg key="Security">Sicherheitseinstellungen</msg>
   <msg key="Proctoring_options">Optionen für Online-Beaufsichtigung</msg>
   <msg key="Proctoring_options_help_text">Detailangaben, welche Funktionen der Online-Beaufsichtigung genutzt werden sollen</msg>
   <msg key="Proctoring_record">Aufnahmen speichern</msg>
@@ -264,5 +266,6 @@
   <msg key="Grading_scheme">Benotungsschema</msg>
   <msg key="Grading_scheme_help_text">Das Benotungsschema definiertdie Notengrenzen und die Rundungsregeln, um von dem erreichten Ergebnis (in Prozenten) eine Note abzuleiten</msg>
   <msg key="Grading_scheme-None">Keine Notenvergabe</msg>
+  <msg key="Configuration">Einstellungen</msg>
   
 </message_catalog>

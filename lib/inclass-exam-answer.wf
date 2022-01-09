@@ -19,7 +19,7 @@ set :prevent_multiple_tabs 1
 # question manager. Use a different delegation instance in case of
 # strong customization.
 #
-set :QM ::xowf::test_item::question_manager
+:forward QM ::xowf::test_item::question_manager
 
 
 ########################################################################
@@ -241,12 +241,12 @@ proc working_form_loader {ctx form_name} {
   # In case shuffling is required, fetch via the shuffled position.
   #
   set shuffle_id [expr {[$parent_obj property shuffle_items 0] ? [$obj creation_user] : -1}]
-  set position [${:QM} shuffled_index -shuffle_id $shuffle_id $parent_obj $item_nr]
+  set position [:QM shuffled_index -shuffle_id $shuffle_id $parent_obj $item_nr]
 
   #
   # Load the form.
   #
-  set form_obj [${:QM} nth_question_obj $parent_obj $position]
+  set form_obj [:QM nth_question_obj $parent_obj $position]
 
   #
   # Substitute markup in the constant part of the form in the context
@@ -254,7 +254,7 @@ proc working_form_loader {ctx form_name} {
   # background to be able to refer to links relative to the from, when
   # it was created.
   #
-  set d [${:QM} item_substitute_markup \
+  set d [:QM item_substitute_markup \
              -obj $obj \
              -position $item_nr \
              -form_obj $form_obj]
@@ -291,7 +291,7 @@ proc working_form_loader {ctx form_name} {
   #
   foreach p {paste spellcheck} {
     if {![$parent_obj property allow_$p true]} {
-      ${:QM} disallow_$p $form_obj
+      :QM disallow_$p $form_obj
     }
   }
   #$form_obj lappend form_constraints {__item_nr:hidden}
@@ -330,7 +330,7 @@ proc done_form_loader {ctx form_name} {
                     -anon_instances t \
                    ]
   }
-  #ns_log notice "==================================== done_form_loader DONE"  
+  #ns_log notice "==================================== done_form_loader DONE"
   return $result
 }
 
@@ -351,7 +351,7 @@ proc done_form_loader {ctx form_name} {
   set parent_obj [::xo::db::CrClass get_instance_from_db -item_id [$obj parent_id]]
   if {$for_question && [$obj state] in {initial working}} {
     if {$form_info eq ""} {
-      set form_info [${:QM} nth_question_form \
+      set form_info [:QM nth_question_form \
                          -with_numbers \
                          -with_title=false \
                          -with_minutes=$with_minutes \
@@ -375,8 +375,8 @@ proc done_form_loader {ctx form_name} {
   :plain_template -prevent_multiple_tabs $prevent_multiple_tabs $obj
 
   if {[$parent_obj state] eq "published" && [$obj state] ne "done"} {
-    set base_time [${:QM} exam_base_time -manager $parent_obj -answer_obj $obj]
-    set target_time [${:QM} exam_target_time \
+    set base_time [:QM exam_base_time -manager $parent_obj -answer_obj $obj]
+    set target_time [:QM exam_target_time \
                          -manager $parent_obj \
                          -base_time $base_time \
                         ]
@@ -428,7 +428,7 @@ proc done_form_loader {ctx form_name} {
   #:msg "summary_form_loader $form_title /$form_objs/ [$obj instance_attributes]"
 
   set shuffle_id [expr {[$parent_obj property shuffle_items 0] ? [$obj creation_user] : -1}]
-  set form_info [${:QM} combined_question_form \
+  set form_info [:QM combined_question_form \
                      -with_numbers \
                      -with_title \
                      -with_points \
@@ -439,7 +439,7 @@ proc done_form_loader {ctx form_name} {
                      $parent_obj]
   #ns_log notice "SUMMARY FORM shuffle_id $shuffle_id $form_info"
 
-  set summary_form [${:QM} aggregated_form -with_grading_box true $form_info]
+  set summary_form [:QM aggregated_form -with_grading_box true $form_info]
   set summary_fc [dict get $form_info disabled_form_constraints]
 
   #
@@ -527,13 +527,13 @@ proc done_form_loader {ctx form_name} {
   set container [$ctx wf_container]
   ${container}::Property ip -default [expr {[ns_conn isconnected] ? [ad_conn peeraddr] : "nowhere"}]
 
-  set :QM [$container set QM]
-  ${:QM} initialize -wfi [self]
+  :forward QM ::xowf::test_item::question_manager
+  :QM initialize -wfi [self]
   #ns_log notice "==== object-specific inclass-exam-answer [self] QM initialized with [self]"
 
   set parent_obj [::xo::db::CrClass get_instance_from_db -item_id ${:parent_id}]
 
-  :log "inclass-exam-answer state ${:state}"
+  #:log "inclass-exam-answer state ${:state}"
   set ctx [:wf_context]
   set container [$ctx wf_container]
   if {$ctx ne $container} {
@@ -545,9 +545,9 @@ proc done_form_loader {ctx form_name} {
 
   if {${:state} in {initial working done}} {
     set parent_obj [::xo::db::CrClass  get_instance_from_db -item_id [:parent_id]]
-    set question_count [${:QM} question_count $parent_obj]
+    set question_count [:QM question_count $parent_obj]
     if {${:state} eq "initial" && [:property seeds] eq ""} {
-      ${:QM} add_seeds \
+      :QM add_seeds \
           -obj [self] \
           -seed ${:creation_user} \
           -number $question_count
@@ -558,7 +558,7 @@ proc done_form_loader {ctx form_name} {
       #
 
       #ns_log notice "==== object-specific inclass-exam-answer [self] replace_pool_questions"
-      ${:QM} replace_pool_questions \
+      :QM replace_pool_questions \
           -answer_obj [self] \
           -exam_obj $parent_obj
       #ns_log notice "==== object-specific inclass-exam-answer [self] replace_pool_questions DONE"
@@ -582,7 +582,7 @@ proc done_form_loader {ctx form_name} {
       foreach revision_set $revision_sets {
         dict set positions [dict get [ns_set get $revision_set instance_attributes] position] 1
       }
-      set pagination [${:QM} pagination_actions \
+      set pagination [:QM pagination_actions \
                           -container $container \
                           -visited [dict keys $positions] \
                           -flagged [:property flagged {}] \
@@ -624,11 +624,11 @@ proc done_form_loader {ctx form_name} {
         # submission is overdue.
         #
         set parent_obj [::xo::db::CrClass get_instance_from_db -item_id ${:parent_id}]
-        set base_time [${:QM} exam_base_time -manager $parent_obj -answer_obj [self]]
+        set base_time [:QM exam_base_time -manager $parent_obj -answer_obj [self]]
         set base_clock [clock scan [::xo::db::tcl_date $base_time tz secfrac]]
 
         set seconds_working [expr {[clock seconds] - $base_clock}]
-        set total_minutes [${:QM} total_minutes_for_exam -manager $parent_obj]
+        set total_minutes [:QM total_minutes_for_exam -manager $parent_obj]
         set timeLeft [expr {$total_minutes*60 - $seconds_working}]
 
         #

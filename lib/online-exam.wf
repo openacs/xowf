@@ -50,6 +50,26 @@ set :policy ::xowf::test_item::test-item-policy-publish
 set :debug 0
 set :live_updates 1
 
+set :fc_repository {
+  {countdown_audio_alarm:boolean,horizontal=true,default=t,label=#xowf.Countdown_audio_alarm#,help_text=#xowf.Countdown_audio_alarm_help_text#}
+  {shuffle_items:boolean,horizontal=true,label=#xowf.randomized_items#,help_text=#xowf.randomized_items_help_text#}
+  {max_items:number,min=1,label=#xowf.Max_items#,help_text=#xowf.Max_items_help_text#}
+  {allow_paste:boolean,horizontal=true,default=t,label=#xowf.Allow_paste#,help_text=#xowf.Allow_paste_help_text#}
+  {allow_spellcheck:boolean,horizontal=true,default=t,label=#xowf.Allow_spellcheck#,help_text=#xowf.Allow_spellcheck_help_text#}
+  {show_minutes:boolean,horizontal=true,default=t,label=#xowf.Show_minutes#,help_text=#xowf.Show_minutes_help_text#}
+  {show_points:boolean,horizontal=true,default=t,label=#xowf.Show_points#,help_text=#xowf.Show_points_help_text#}
+  {show_ip:boolean,horizontal=true,default=t,label=#xowf.Show_IP#,help_text=#xowf.Show_IP_help_text#}
+  {time_budget:range,default=100,min=100,max=300,step=5,with_output=t,form_item_wrapper_CSSclass=form-inline,output_suffix=%,label=#xowf.Time_budget#,help_text=#xowf.Time_budget_help_text#}
+  {synchronized:boolean,horizontal=true,default=f,label=#xowf.Synchronized#,help_text=#xowf.Synchronized_help_text#}
+  {time_window:time_span,label=#xowf.Exam_time_window#,help_text=#xowf.Exam_time_window_help_text#}
+  {proctoring:boolean,horizontal=true,default=f,label=#xowf.Proctoring#,help_text=#xowf.Proctoring_help_text#}
+  {proctoring_options:checkbox,horizontal=true,options={Desktop d} {Camera c} {Audio a} {Statement s},default=d c a s,label=#xowf.Proctoring_options#,help_text=#xowf.Proctoring_options_help_text#,swa?:disabled=1}
+  {proctoring_record:boolean,horizontal=true,default=t,label=#xowf.Proctoring_record#,help_text=#xowf.Proctoring_record_help_text#}
+  {signature:boolean,horizontal=true,default=f,label=#xowf.Signature#,help_text=#xowf.Signature_help_text#}
+  {grading:grading_scheme,required,default=none,label=#xowf.Grading_scheme#,help_text=#xowf.Grading_scheme_help_text#}
+}
+
+
 Action select -next_state created -label #xowf.online-exam-select# \
     -title #xowf.online-exam-title-select#
 Action publish -next_state published -label #xowf.online-exam-publish# \
@@ -161,7 +181,7 @@ Action instproc unpublish_link {obj} {
     #
     # If there are answers, include the full menu.
     #
-    set answers [xowf::test_item::answer_manager get_answers $wf]
+    set answers [xowf::test_item::answer_manager get_answer_attributes $wf]
     if {[llength $answers] > 0} {
 
       set lLink "$wf_pretty_link?m=list"
@@ -396,8 +416,8 @@ Action instproc unpublish_link {obj} {
   #
   :proc www-poll {} {
     set wf [xowf::test_item::answer_manager get_answer_wf [self]]
-    set answers [xowf::test_item::answer_manager get_answers $wf]
-    set answered [xowf::test_item::answer_manager get_answers -state done $wf]
+    set answers [xowf::test_item::answer_manager get_answer_attributes $wf]
+    set answered [xowf::test_item::answer_manager get_answer_attributes -state done $wf]
     ns_return 200 text/plain [llength $answered]/[llength $answers]
     #ns_log notice "MASTER POLL [self] ${:name}, returned [llength $answered]/[llength $answers]"
     ad_script_abort

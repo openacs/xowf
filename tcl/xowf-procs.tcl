@@ -1358,7 +1358,10 @@ namespace eval ::xowf {
       return 0
     }
     if {$role eq "creator"} {
-      # hmm, requires additional attribute
+      #
+      # Meaning: "creator of the object", requires the object as
+      # additional attribute.
+      #
       return [::xo::cc role=$role \
                   -object [self] \
                   -user_id [::xo::cc user_id] \
@@ -1625,6 +1628,15 @@ namespace eval ::xowf {
 
   WorkflowPage instproc get_assignee {assigned_to} {
     return [:assignee]
+  }
+
+  WorkflowPage instproc get_fc_repository {} {
+    set container [[:wf_context] wf_container]
+    if {[$container exists fc_repository]} {
+      return [$container set fc_repository]
+    }
+    ns_log warning "get_fc_repository returns empty"
+    return ""
   }
 
   WorkflowPage instproc send_to_assignee {
@@ -2107,27 +2119,39 @@ namespace eval ::xowf {
       next
     }
   }
-  WorkflowPage instproc constraints_as_array {c} {
-    array set __c ""
+  WorkflowPage instproc constraints_as_dict {{-fc_repository ""} c} {
+    set result ""
     foreach name_and_spec $c {
-      regexp {^([^:]+):(.*)$} $name_and_spec _ spec_name short_spec
-      set __c($spec_name) $short_spec
+      set p [string first : $name_and_spec]
+      if {$p > -1} {
+        set spec_name [string range $name_and_spec 0 $p-1]
+        set short_spec [string range $name_and_spec $p+1 end]
+        if {$short_spec eq "" && [dict exists $fc_repository $spec_name]} {
+          set short_spec [dict get $fc_repository $spec_name]
+          #:log "======= use fc_repository for <$spec_name> <$short_spec>"
+        }
+        dict set result $spec_name $short_spec
+      } else {
+        ns_log warning "ignore invalid fc: <$name_and_spec>"
+      }
     }
-    return [array get __c]
+    return $result
   }
   WorkflowPage instproc merge_constraints {c1 args} {
     # Load into the base_constraints c1 the constraints from the argument list.
     # The first constraints have the lowest priority
-    array set __c1 [:constraints_as_array $c1]
+    set fcrepo [:constraints_as_dict [:get_fc_repository]]
+    set merged [:constraints_as_dict -fc_repository $fcrepo $c1]
     foreach c2 $args {
-      foreach {att value} [:constraints_as_array $c2] {
-        set key __c1($att)
-        if {[info exists $key]} {append $key ",$value"} else {set $key $value}
+      foreach {att value} [:constraints_as_dict -fc_repository $fcrepo $c2] {
+        if {[dict exists $merged $att]} {
+          dict append merged $att ",$value"
+        } else {
+          dict set merged $att "$value"
+        }
       }
     }
-    set result [list]
-    foreach {att value} [array get __c1] {lappend result $att:$value}
-    return $result
+    return [lmap {att value} $merged {string cat $att:$value}]
   }
   WorkflowPage instproc wfi_merged_form_constraints {constraints_from_form} {
     set ctx [::xowf::Context require [self]]
@@ -2157,6 +2181,7 @@ namespace eval ::xowf {
   }
 
   WorkflowPage instproc get_form_constraints {{-trylocal false}} {
+    #:log ""
     if {[:istype ::xowiki::FormPage] && [:is_wf]} {
       #:msg "get_form_constraints is_wf"
       return [::xo::cc cache [list [self] wf_merged_form_constraints [next]]]

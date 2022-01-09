@@ -239,7 +239,7 @@
   <msg key="Detail_configuration">Detailed Configuration</msg>
   <msg key="Time_management">Time Management</msg>
   <msg key="Question_management">Question Management</msg>
-  <msg key="Security">Security</msg>
+  <msg key="Security">Security Configuration</msg>
   <msg key="Proctoring_options">Proctoring Options</msg>
   <msg key="Proctoring_options_help_text">Options to tailor proctoring behavior</msg>
   <msg key="Proctoring_record">Record proctoring</msg>
@@ -292,5 +292,6 @@
   <msg key="Grading_scheme">Grading Scheme</msg>
   <msg key="Grading_scheme_help_text">The grading scheme defines grade boundaries and rounding rules for determining grades from achieved percentages</msg>
   <msg key="Grading_scheme-None">No grading</msg>
-
+  <msg key="Configuration">Configuration</msg>
+  
 </message_catalog>

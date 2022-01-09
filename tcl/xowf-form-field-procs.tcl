@@ -192,11 +192,11 @@ namespace eval ::xo::role {
   # RelTypeRole (role definitions based on rel types)
   #
   Class create RelTypeRole -superclass Role -parameter {{rel_type ""}}
-  RelTypeRole instproc rel_type_clause {} {  
+  RelTypeRole instproc rel_type_clause {} {
     if {${:rel_type} ne ""} {
       return {r.rel_type = :rel_type}
     } else {
-      return {r.rel_type <> 'composition_rel'}      
+      return {r.rel_type <> 'composition_rel'}
     }
   }
   RelTypeRole instproc filtered_member_list {-group_id:required {-except ""}} {
@@ -221,7 +221,7 @@ namespace eval ::xo::role {
       and   r.object_id_two = :user_id
       and   [:rel_type_clause]
       and   r.rel_id = mr.rel_id
-      and   mr.member_state = 'approved'        
+      and   mr.member_state = 'approved'
     }]
     return [xo::dc 0or1row check_membership $query]
   }
@@ -256,7 +256,7 @@ namespace eval ::xo::role {
     #ns_log notice "IS MEMBER user_id $user_id -package_id $package_id group_id $group_id"
     return [:filtered_member_p -group_id $object_id -user_id $user_id]
   }
- 
+
   RelTypeRole create member
   RelTypeRole create student -rel_type dotlrn_student_rel
   RelTypeRole create instructor -rel_type dotlrn_instructor_rel
@@ -449,12 +449,12 @@ namespace eval ::xowiki::formfield {
       set grading [namespace tail $gso]
       list [$gso cget -title] $grading
     }]]
-    ns_log notice "#### available grading_scheme_objs (took [expr {[clock clicks -milliseconds]-$t1}]ms)\n[join [lsort ${:options}] \n]"
+    #ns_log notice "#### available grading_scheme_objs (took [expr {[clock clicks -milliseconds]-$t1}]ms)\n[join [lsort ${:options}] \n]"
     next
-    
+
     set :__initialized 1
   }
-  
+
   ###########################################################
   #
   # ::xowiki::formfield::grade_boundary
@@ -478,25 +478,25 @@ namespace eval ::xowiki::formfield {
       const grade3 = form.elements["grade3"];
       const grade4 = form.elements["grade4"];
       if (grade1.value < grade2.value) {
-        console.log('error grade 1');        
+        console.log('error grade 1');
         grade2.setCustomValidity('percentage for grade 1 must by larger than grade 2');
       } else {
         grade2.setCustomValidity('');
       }
       if (grade2.value < grade3.value) {
-        console.log('error grade 2');        
+        console.log('error grade 2');
         grade3.setCustomValidity('percentage for grade 2 must by larger than grade 3');
       } else {
         grade3.setCustomValidity('');
       }
       if (grade3.value < grade4.value) {
-        console.log('error grade 3');        
+        console.log('error grade 3');
         grade4.setCustomValidity('percentage for grade 3 must by larger than grade 4');
       } else {
         grade4.setCustomValidity('');
       }
     }
-  }  
+  }
 }
 
 ::xo::library source_dependent

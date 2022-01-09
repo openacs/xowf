@@ -365,6 +365,12 @@ div.grading-box span.text-warn {
 }
 
 /*
+ * Configuration modal dialog
+ */
+#configuration-modal {
+    font-size: smaller;
+}
+/*
  * Editing grading schemes
  */
 form.Form-edit-grading-scheme input.form-control.inline {

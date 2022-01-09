@@ -5,14 +5,14 @@
 #
 # This teacher paced inclass quiz workflow lets a teacher choose from
 # a predefined set of quiz questions.  The teacher selects one or
-# several quiz question via drag and drop. 
+# several quiz question via drag and drop.
 #
 # When the quiz is published, the students can be offered a display of
 # the question with a QR code. Teacher can see the incoming answers in
 # the report (without manual refresh when "live_updates" are
 # activated). After every question the teacher can toggle to a
 # "results" display showing the actual answer with statistics as
-# provided by the participants. 
+# provided by the participants.
 #
 # An admin might with to add the following entries to the folder to
 # ease creation of exercises and exams
@@ -193,7 +193,7 @@ Action instproc unpublish_link {obj} {
                             -wf $wf \
                             -current_question $current_question]
     }
-    
+
     default {
       :msg "not handled: state=$state"
     }
@@ -414,7 +414,7 @@ Action instproc unpublish_link {obj} {
   :proc www-poll {} {
     set wf [xowf::test_item::answer_manager get_answer_wf [self]]
     set current_question [xowf::test_item::question_manager current_question_obj [self]]
-    set answers [xowf::test_item::answer_manager get_answers $wf]
+    set answers [xowf::test_item::answer_manager get_answer_attributes $wf]
     set answered [xowf::test_item::renaming_form_loader answers_for_form [$current_question name] $answers]
     ns_return 200 text/plain [llength $answered]/[llength $answers]
     #ns_log notice "MASTER POLL [self] ${:name}, returned [llength $answered]/[llength $answers]"

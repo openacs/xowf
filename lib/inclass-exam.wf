@@ -50,7 +50,7 @@
 #  - "print-answers" (for lecturers),
 #  - "print-answer-table" (for lecturers),
 #  - "print-participants" (for lecturers),
-#  - "exam-summary" (for lecturers),
+#  - "question-summary" (for lecturers),
 #  - "delete" (for lecturers),
 #  - "qrcode" (for lecturers)
 #
@@ -61,9 +61,32 @@ set :policy ::xowf::test_item::test-item-policy-publish
 set :debug 0
 set :live_updates 1
 set :QM ::xowf::test_item::question_manager
+:forward QM ::xowf::test_item::question_manager
+
+set :fc_repository {
+  {countdown_audio_alarm:boolean,horizontal=true,default=t,label=#xowf.Countdown_audio_alarm#,help_text=#xowf.Countdown_audio_alarm_help_text#}
+  {shuffle_items:boolean,horizontal=true,label=#xowf.randomized_items#,help_text=#xowf.randomized_items_help_text#}
+  {max_items:number,min=1,label=#xowf.Max_items#,help_text=#xowf.Max_items_help_text#}
+  {allow_paste:boolean,horizontal=true,default=t,label=#xowf.Allow_paste#,help_text=#xowf.Allow_paste_help_text#}
+  {allow_spellcheck:boolean,horizontal=true,default=t,label=#xowf.Allow_spellcheck#,help_text=#xowf.Allow_spellcheck_help_text#}
+  {show_minutes:boolean,horizontal=true,default=t,label=#xowf.Show_minutes#,help_text=#xowf.Show_minutes_help_text#}
+  {show_points:boolean,horizontal=true,default=t,label=#xowf.Show_points#,help_text=#xowf.Show_points_help_text#}
+  {show_ip:boolean,horizontal=true,default=t,label=#xowf.Show_IP#,help_text=#xowf.Show_IP_help_text#}
+  {time_budget:range,default=100,min=100,max=300,step=5,with_output=t,form_item_wrapper_CSSclass=form-inline,output_suffix=%,label=#xowf.Time_budget#,help_text=#xowf.Time_budget_help_text#}
+  {synchronized:boolean,horizontal=true,default=f,label=#xowf.Synchronized#,help_text=#xowf.Synchronized_help_text#}
+  {time_window:time_span,label=#xowf.Exam_time_window#,help_text=#xowf.Exam_time_window_help_text#}
+  {proctoring:boolean,horizontal=true,default=f,label=#xowf.Proctoring#,help_text=#xowf.Proctoring_help_text#}
+  {proctoring_options:checkbox,horizontal=true,options={Desktop d} {Camera c} {Audio a} {Statement s},default=d c a s,label=#xowf.Proctoring_options#,help_text=#xowf.Proctoring_options_help_text#,swa?:disabled=1}
+  {proctoring_record:boolean,horizontal=true,default=t,label=#xowf.Proctoring_record#,help_text=#xowf.Proctoring_record_help_text#}
+  {signature:boolean,horizontal=true,default=f,label=#xowf.Signature#,help_text=#xowf.Signature_help_text#}
+  {grading:grading_scheme,required,default=none,label=#xowf.Grading_scheme#,help_text=#xowf.Grading_scheme_help_text#}
+}
 
 Property realexam -default 1 -allow_query_parameter true
 
+########################################################################
+# Define actions:
+#
 Action select -next_state created -label #xowf.online-exam-select# \
     -title #xowf.online-exam-title-select#
 Action publish -next_state published -state_safe true -label #xowf.online-exam-publish# \
@@ -78,9 +101,13 @@ Action open_submission_review -next_state submission_review -label #xowf.open_su
 Action close_submission_review -next_state done -label #xowf.close_submission_review# \
     -title #xowf.close_submission_review_title#
 
+########################################################################
+# Define states:
+#
 State parameter {
   {extra_css {/resources/xowf/test-item.css}}
 }
+
 State initial -actions {select} -form en:select_question.form -view_method edit
 State created -actions {publish restart} -form_loader load_form -view_method edit \
     -form "#xowf.inclass-exam-draft_exam#"
@@ -176,28 +203,41 @@ Action instproc unpublish_link {obj} {
 }
 
 ########################################################################
-# form loader: create dynamically a form containing the disabled
-# questions as a preview and the survey results (the results can be
-# refreshed).
+# form loader: create dynamically a form containing the overview exam
+# page, containing the state of the exam and information about
+# students in submission or working state.
 #
 :proc load_form {ctx title} {
   set obj [$ctx object]
   set state [$obj property _state]
   set proctoring [$obj property proctoring 0]
 
-  set combined_form_info [${:QM} combined_question_form -with_numbers $obj]
-  set fullQuestionForm [${:QM} aggregated_form $combined_form_info]
-  set full_fc [dict get $combined_form_info disabled_form_constraints]
+  set combined_form_info [:QM combined_question_form -with_numbers $obj]
 
-  #:log  fullQuestionForm=$fullQuestionForm
   set text "<h3>[ns_quotehtml $title]</h3>"
   set menu ""
 
-  set text [${:QM} exam_info_block \
-                -combined_form_info $combined_form_info \
-                $obj]
-  set detail_link [$obj pretty_link -query m=exam-summary]
-  append text "<p><a class='btn btn-default' href='$detail_link'>#xowf.detailed_summary#</a></p>"
+  #<a href=''><span class='glyphicon glyphicon-cog' style="float: right"></span></a>
+
+  append text [subst {<p>
+    <div class="col-sm-9">
+    <div class="panel panel-default">
+    <div class="panel-heading">
+    #xowf.exam_summary#
+    [:QM exam_configuration_popup $obj]
+    </div>
+    <div class="panel-body">
+    [:QM exam_info_block -combined_form_info $combined_form_info $obj]
+    </div>
+    </div>
+    </div>
+  }]
+
+  set detail_link [$obj pretty_link -query m=question-summary]
+  append text [subst {<div class="col-sm-12">
+    <p><a class='btn btn-default' href='$detail_link'>#xowf.question_summary#</a>
+    </div>
+  }]
 
   set wf [xowf::test_item::answer_manager get_answer_wf $obj]
   if {$wf eq ""} {
@@ -228,7 +268,7 @@ Action instproc unpublish_link {obj} {
       #
     }
 
-    set answers [xowf::test_item::answer_manager get_answers $wf]
+    set answers [xowf::test_item::answer_manager get_answer_attributes $wf]
 
     #
     # Per default, the entries are disabled. When there are answers,
@@ -246,31 +286,13 @@ Action instproc unpublish_link {obj} {
       dict unset md listing
     }
     dict unset md results
+    #ns_log notice ALL=$text
 
     set menu ""
     dict for {name d} $md {
       set href [[dict get $d obj] pretty_link -query m=[dict get $d m]]
       append menu "<a class='list-group-item $link_disabled' href='[ns_quotehtml $href]'>" \
           "<span class='glyphicon glyphicon-[dict get $d glyph]'></span> [ns_quotehtml [dict get $d label]]</a>\n"
-    }
-  }
-
-  switch $state {
-    "created" -
-    "done" -
-    "submission_review" -
-    "published" {
-      #
-      # In inclass cases, never show all questions on screen, since
-      # the lecturer might have the screen on the projector.
-      #
-      template::add_script -src urn:ad:js:bootstrap3
-      set fullQuestionForm [subst {
-        <button type="button" class="btn btn-default btn-sm dropdown-toggle" data-toggle="collapse" data-target="#questions">#xowf.questions# <span class="caret"></span></button>
-        <div id="questions" class="collapse">
-        $fullQuestionForm
-        </div>
-      }]
     }
   }
 
@@ -315,33 +337,29 @@ Action instproc unpublish_link {obj} {
     if {$state eq "published"} {
       set src [$obj pretty_link -query m=qrcode]
       set qrCode [subst {<div><img class="img-thumbnail qrcode" src="[ns_quotehtml $src]" ></div>}]
-      set target_time [${:QM} exam_target_time \
+      set target_time [:QM exam_target_time \
                            -manager $obj -base_time [$obj last_modified]]
       set countdownHTML [xowf::test_item::answer_manager countdown_timer \
                              -target_time $target_time -id "countdown"]
     }
-
-    # Remove wrapping forms
-    regsub -all {</?form[^>]*>} $fullQuestionForm {} fullQuestionForm
+    #ns_log notice ALL=$text
 
     append text [subst {
       <div class='container-fluid'><div class='row'>
       <div class="col-sm-9">$answerStatus</div>
       <div class="col-sm-3">$qrCode</div>
-      <div class="col-xs-12 quiz-preview">$fullQuestionForm</div>
       <div class="col-sm-6">$countdownHTML</div>
       </div></div>
     }]
   }
 
-  set footer " $extraAction"
   set f [::xowiki::Form new \
              -destroy_on_cleanup \
              -set name en:question \
-             -form [subst {<form>$text$marked$footer</form> text/html}] \
+             -form [subst {<form>$text$marked $extraAction</form> text/html}] \
              -text {} \
              -anon_instances t \
-             -form_constraints $full_fc \
+             -form_constraints {@categories:off @cr_fields:hidden} \
             ]
 }
 
@@ -359,13 +377,13 @@ Action instproc unpublish_link {obj} {
   if {$ctx ne $container} {
     $ctx forward load_form $container %proc $ctx
   }
-  set :QM [$container set QM]
+  :forward QM ::xowf::test_item::question_manager
 
   ${container}::Property return_url -default "" -allow_query_parameter true
 
   if {${:state} eq "done"} {
     set done_actions republish
-    set combined_form_info [${:QM} combined_question_form [self]]
+    set combined_form_info [:QM combined_question_form [self]]
 
     #
     # We could allow open_submission_review only when autograde is
@@ -394,7 +412,7 @@ Action instproc unpublish_link {obj} {
     # to some "render" method?
     #
     #ns_log notice "==== check for randomization"
-    set combined_form_info [${:QM} combined_question_form [self]]
+    set combined_form_info [:QM combined_question_form [self]]
     set randomizationOk [dict get $combined_form_info randomization_for_exam]
     #ns_log notice "==== check for randomization DONE"
     ${container}::${:state} actions \
@@ -430,7 +448,7 @@ Action instproc unpublish_link {obj} {
 
     set wf [xowf::test_item::answer_manager get_answer_wf [self]]
     if {$wf ne ""} {
-      #set form_info [${:QM} combined_question_form -with_numbers [self]]
+      #set form_info [:QM combined_question_form -with_numbers [self]]
 
       set items [xowf::test_item::answer_manager get_wf_instances $wf]
       set items2 [$items deep_copy]
@@ -508,12 +526,12 @@ Action instproc unpublish_link {obj} {
   }
 
   ########################################################################
-  # web-callable method "exam-summary"
+  # web-callable method "question-summary"
   #
   # Print a summary of the exam-questions.
   #
-  :proc www-exam-summary {} {
-    :www-view [${:QM} exam_summary [self]]
+  :proc www-question-summary {} {
+    :www-view [:QM question_summary [self]]
   }
 
   ########################################################################
@@ -546,7 +564,7 @@ Action instproc unpublish_link {obj} {
                -form_objs     [:query_parameter fos:int32 ""] \
                -export        [:query_parameter export:boolean 0] \
                -orderby       [:query_parameter orderby:token "online-exam-userName"] \
-               -grading       [:query_parameter grading:alnum [:property grading]] \
+               -grading       [:query_parameter grading:token [:property grading]] \
                -with_grading_table [expr {!$as_student}] \
                [self]]
 
@@ -750,7 +768,6 @@ Action instproc unpublish_link {obj} {
     :www-view $HTML
   }
 
-
   ########################################################################
   # AJAX call "poll", acts as responder
   #
@@ -759,8 +776,8 @@ Action instproc unpublish_link {obj} {
     # Return statistics about working and finished exams.
     #
     set wf [xowf::test_item::answer_manager get_answer_wf [self]]
-    set answers [xowf::test_item::answer_manager get_answers $wf]
-    set answered [xowf::test_item::answer_manager get_answers -state done $wf]
+    set answers [xowf::test_item::answer_manager get_answer_attributes $wf]
+    set answered [xowf::test_item::answer_manager get_answer_attributes -state done $wf]
     ns_return 200 text/plain [llength $answered]/[llength $answers]
     #ns_log notice "MASTER POLL [self] ${:name}, returned [llength $answered]/[llength $answers]"
     ad_script_abort
@@ -824,6 +841,35 @@ Action instproc unpublish_link {obj} {
     # Return the line for the panel as result of the AJAX call
     #
     ns_return 200 text/plain [dict get $gradingInfo panel]
+    ad_script_abort
+  }
+
+  ########################################################################
+  # AJAX call "update-config", acts as responder
+  #
+  :proc www-update-config {} {
+    #
+    # Received updates for form
+    #
+    set field_names [:QM exam_configuration_modifiable_field_names [self]]
+    set form_fields [:create_form_fields_from_names -lookup \
+                         -form_constraints [:get_fc_repository] \
+                         $field_names]
+    #ns_log notice "UPDATE CONFIG <[::xo::cc array names form_parameter]> [ns_set array [ns_conn form]] // $form_fields"
+
+    set last_instance_attributes ${:instance_attributes}
+    lassign [:get_form_data -field_names $field_names $form_fields] validation_errors category_ids
+    if {$validation_errors == 0} {
+      if {$last_instance_attributes eq ${:instance_attributes}} {
+        ns_log notice "UPDATE CONFIG ... nothing has changed"
+      } else {
+        ns_log notice "UPDATE CONFIG ... no validation_errors -> SAVE"
+        :update_attribute_from_slot [:find_slot instance_attributes] ${:instance_attributes}
+      }
+      ns_return 200 text/plain OK
+    } else {
+      ns_return 200 text/plain validation_errors
+    }
     ad_script_abort
   }
 

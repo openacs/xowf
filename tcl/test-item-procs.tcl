@@ -1526,7 +1526,7 @@ namespace eval ::xowf::test_item {
     :public method answers_for_form {formName answers} {
       #
       # Return a list of dicts for the provided formName from the
-      # answers (as returned from [answer_manager get_answers ...]).
+      # answers (as returned from [answer_manager get_answer_attributes ...]).
       #
       set stem [:form_name_based_attribute_stem $formName]
       set result ""
@@ -1624,7 +1624,8 @@ namespace eval ::xowf::test_item {
     #  - delete_all_answer_data
     #  - get_answer_wf
     #  - get_wf_instances
-    #  - get_answers
+    #  - get_answer_attributes
+    #  - student_submissions_exist
     #
     #  - runtime_panel
     #  - render_answers_with_edit_history
@@ -2045,15 +2046,17 @@ namespace eval ::xowf::test_item {
 
     #----------------------------------------------------------------------
     # Class:  Answer_manager
-    # Method: get_answers
+    # Method: get_answer_attributes
     #----------------------------------------------------------------------
-    :public method get_answers {{-state ""} {-extra_attributes {}} wf:object} {
+    :public method get_answer_attributes {{-state ""} {-extra_attributes {}} wf:object} {
       #
-      # Extracts wf instances as answers (e.g. extracting their
+      # Extracts wf instances as answers (e.g., extracting their
       # answer-specific attributes)
       #
       # @param wf the workflow
       # @param state retrieve only instances in this state
+      # @param extra_attributes return these attributes additionally
+      #        as key/value pairs per tuple
       #
       # @return a list of dicts
       #
@@ -2065,12 +2068,11 @@ namespace eval ::xowf::test_item {
           continue
         }
 
-        set answerAttributes \
-            [:FL answer_attributes [$i instance_attributes]]
+        set answerAttributes [:FL answer_attributes [$i instance_attributes]]
         foreach extra $extra_attributes {
           lappend answerAttributes $extra [$i property $extra]
         }
-        #ns_log notice "GETANSWERS $i: <$answerAttributes> ALL [$i instance_attributes]"
+        #ns_log notice "get_answer_attributes $i: <$answerAttributes> ALL [$i instance_attributes]"
         lappend results [list item $i answerAttributes $answerAttributes state [$i state]]
       }
       return $results
@@ -2792,7 +2794,7 @@ namespace eval ::xowf::test_item {
         return ""
       }
 
-      set submissions [:student_submissions -wf $wf]
+      set submissions [:submissions -wf $wf]
       set HTML [:render_submissions=edit_history -examWf $examWf -submissions $submissions]
 
       return $HTML
@@ -2867,9 +2869,32 @@ namespace eval ::xowf::test_item {
 
     #----------------------------------------------------------------------
     # Class:  Answer_manager
-    # Method: student_submissions
+    # Method: student_submissions_exist
     #----------------------------------------------------------------------
-    :method student_submissions {
+    :public method student_submissions_exist {wf:object} {
+      #
+      # Returns 1 if there are student submissions. The method returns
+      # already true, when a student has started to work on this exam.
+      #
+      # This method could be optimized if necessary via caching the
+      # wf_instances or a more specific database query.
+      #
+      set items [:get_wf_instances $wf]
+      foreach i [$items children] {
+        if {[$i property try_out_mode] ne "1"} {
+          #ns_log notice "==================== student_submissions_exist 1"
+          return 1
+        }
+      }
+      #ns_log notice "==================== student_submissions_exist 0"
+      return 0
+    }
+
+    #----------------------------------------------------------------------
+    # Class:  Answer_manager
+    # Method: submissions
+    #----------------------------------------------------------------------
+    :method submissions {
       {-creation_user:integer,0..1 ""}
       {-filter_id:integer,0..1 ""}
       {-revision_id:integer,0..1 ""}
@@ -3407,7 +3432,7 @@ namespace eval ::xowf::test_item {
     #----------------------------------------------------------------------
     :method grading_scheme {
       {-examWf:object,required}
-      {-grading:alnum,0..n ""}
+      {-grading:token,0..n ""}
       {-total_points}
     } {
       #
@@ -3461,7 +3486,7 @@ namespace eval ::xowf::test_item {
       {-form_objs:integer,0..n ""}
       {-export:boolean false}
       {-orderby:token "online-exam-userName"}
-      {-grading:alnum,0..n ""}
+      {-grading:token,0..n ""}
       {-with_grading_table:boolean false}
       examWf:object
     } {
@@ -3498,7 +3523,7 @@ namespace eval ::xowf::test_item {
       set :grade_dict {}
       set :grade_csv ""
 
-      set items [:student_submissions \
+      set items [:submissions \
                      -creation_user $creation_user \
                      -filter_id $filter_id \
                      -revision_id $revision_id \
@@ -3565,7 +3590,7 @@ namespace eval ::xowf::test_item {
       }
 
       if {$export} {
-        set recutil [:AM recutil_create \
+        set recutil [:recutil_create \
                          -clear \
                          -exam_id [$wf parent_id] \
                          -fn [expr {$filter_id eq "" ? "all.rec" : "$filter_id.rec"}]
@@ -4283,14 +4308,14 @@ namespace eval ::xowf::test_item {
       #        has to be provided with valid HTML markup.
       #
 
-      set answers [:AM get_answers $wf]
+      set answers [:get_answer_attributes $wf]
       set nrParticipants [llength $answers]
       if {$current_question ne ""} {
         set answered [:FL answers_for_form \
                           [$current_question name] \
                           $answers]
       } else {
-        set answered [:AM get_answers -state $target_state $wf]
+        set answered [:get_answer_attributes -state $target_state $wf]
       }
       set nrAnswered [llength $answered]
 
@@ -4593,6 +4618,9 @@ namespace eval ::xowf::test_item {
     #   - nth_question_obj
     #   - nth_question_form
     #
+    #   - exam_configuration_popup
+    #   - exam_configuration_modifiable_field_names
+    #
     #   - combined_question_form
     #   - question_objs
     #   - question_names
@@ -4609,7 +4637,7 @@ namespace eval ::xowf::test_item {
     #   - item_substitute_markup
     #
     #   - describe_form
-    #   - exam_summary
+    #   - question_summary
     #   - question_info_block
     #
 
@@ -5602,8 +5630,8 @@ namespace eval ::xowf::test_item {
       question_infos
     } {
       #
-      # Compute an aggregated form based on the chunks available in
-      # question_infos.
+      # Compute an aggregated form (containing potentially multiple
+      # questions) based on the chunks available in question_infos.
       #
       # @return HTML form content
       #
@@ -5644,6 +5672,7 @@ namespace eval ::xowf::test_item {
           }
 
       regsub -all {<[/]?form>} $full_form "" full_form
+      #ns_log notice "aggregated_form: STRIP FORM xxx times from full_form"
       return $full_form
     }
 
@@ -6043,36 +6072,212 @@ namespace eval ::xowf::test_item {
 
     #----------------------------------------------------------------------
     # Class:  Question_manager
-    # Method: exam_summary
+    # Method: exam_configuration_render_fields
     #----------------------------------------------------------------------
-    :public method exam_summary {obj} {
+    :method exam_configuration_render_fields {{-modifiable ""} fields} {
+      #ns_log notice "configuration_render called with modifiable <$modifiable>"
+      ::xo::require_html_procs
+
+      set content ""
+      foreach f $fields {
+        if {[$f name] ni $modifiable} {
+          $f set_disabled true
+          $f help_text ""
+        }
+        append content [tdom_render {
+          $f render
+        }]
+      }
+      return $content
+    }
+    #----------------------------------------------------------------------
+    # Class:  Question_manager
+    # Method: exam_configuration_block
+    #----------------------------------------------------------------------
+    :method exam_configuration_block {
+      {-modifiable ""}
+      -label
+      -id
+      -obj
+      -form_constraints
+      field_names
+    } {
+      set fields [$obj create_form_fields_from_names -lookup -set_values \
+                      -form_constraints $form_constraints \
+                      $field_names]
+      return [subst {
+        <p><button type="button" class="btn btn-small" data-toggle="collapse" data-target="#$id">
+        <span class="glyphicon glyphicon-chevron-down">&nbsp;</span>$label</button>
+        <div id="$id" class="collapse">
+        [:exam_configuration_render_fields -modifiable $modifiable $fields]
+        </div>
+      }]
+    }
+
+    #----------------------------------------------------------------------
+    # Class:  Question_manager
+    # Method: exam_configuration_modifiable_field_names
+    #----------------------------------------------------------------------
+    :public method exam_configuration_modifiable_field_names {obj} {
+      #
+      # Return the names of the modifiable field names in the current
+      # state. The state is in essence defined on whether or not
+      # students have started to work on this exam. This method can be
+      # used to correct small things, even when the students are
+      # already working on the exam.
+      #
+      set modifiable {
+        allow_paste allow_spellcheck show_minutes show_points show_ip
+        countdown_audio_alarm grading
+      }
+      set wf [:AM get_answer_wf $obj]
+      if {![:AM student_submissions_exist $wf]} {
+        lappend modifiable {*}{
+          shuffle_items max_items
+          time_budget synchronized time_window
+          proctoring proctoring_options proctoring_record signature
+        }
+      }
+      return $modifiable
+    }
+
+    #----------------------------------------------------------------------
+    # Class:  Question_manager
+    # Method: exam_configuration_popup
+    #----------------------------------------------------------------------
+    :public method exam_configuration_popup {obj} {
+      #
+      # Render the exam configuration popup, add it as a
+      # content_header (to avoid putting it to the main workflow form,
+      # since nested FORMS are not allowed) and return the rendering
+      # of the button for popping-ip the configuration modal.
+      #
+      # @return HTML
+
+      set modifiable [:exam_configuration_modifiable_field_names $obj]
+      #ns_log notice "exam_configuration_popup modifiable '$modifiable'"
+
+      set fcrepo [$obj get_fc_repository]
+      set content ""
+      append content \
+          [:exam_configuration_block \
+               -modifiable $modifiable \
+               -label #xowf.Question_management# \
+               -id config-question \
+               -form_constraints $fcrepo \
+               -obj $obj {
+                 shuffle_items max_items allow_paste allow_spellcheck
+                 show_minutes show_points show_ip
+               }] \
+          [:exam_configuration_block \
+               -modifiable $modifiable \
+               -label #xowf.Time_management# \
+               -id config-time \
+               -form_constraints $fcrepo \
+               -obj $obj {
+                 time_budget synchronized time_window countdown_audio_alarm
+               }] \
+          [:exam_configuration_block \
+               -modifiable $modifiable \
+               -label #xowf.Security# \
+               -id config-security \
+               -form_constraints $fcrepo \
+               -obj $obj {
+                 proctoring proctoring_options proctoring_record signature
+               }] \
+          [:exam_configuration_render_fields -modifiable $modifiable \
+               [$obj create_form_fields_from_names -lookup -set_values \
+                    -form_constraints $fcrepo \
+                    {grading}]]
+
+      ::template::add_body_script -script [ns_trim -delimiter | [subst -novariables {
+        |$(document).ready(function() {
+        |  $('.modal .confirm').on('click', function(ev) {
+        |    //
+        |    // Submit button of the dialog was pressed.
+        |    //
+        |    var data = new FormData(document.getElementById('configuration-form'));
+        |    console.log(data);
+        |    var xhttp = new XMLHttpRequest();
+        |    xhttp.open('POST', '[$obj pretty_link -query m=update-config]', true);
+        |    xhttp.onload = function () {
+        |      if (this.readyState == 4) {
+        |        if (this.status == 200) {
+        |          var text = this.responseText;
+        |          console.log('sent OK ok ' + text);
+        |          //window.location.reload(true);
+        |        } else {
+        |          console.log('sent NOT ok');
+        |        }
+        |      }
+        |    };
+        |    xhttp.send(data);
+        |  });
+        |});
+      }]]
+
+      $obj content_header_append [ns_trim -delimiter | [subst {
+        |<div class="modal fade" id="configuration-modal" tabindex="-1" role="dialog"
+        |     aria-labelledby="configuration-modal-label" aria-hidden="true">
+        |  <div class="modal-dialog" role="document">
+        |    <div class="modal-content">
+        |      <div class="modal-header">
+        |        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+        |          <span aria-hidden="true">&#215;</span>
+        |        </button>
+        |        <h4 class="modal-title" id="configurationModalTitle">#xowf.Configuration#:
+        |            <span id='configuration-participant'></span></h4>
+        |      </div>
+        |      <div class="modal-body">
+        |        <form class="form-horizontal" id="configuration-form" role="form" action="#" method="post">
+        |        $content
+        |        </form>
+        |      </div>
+        |      <div class="modal-footer">
+        |        <button type="button" class="btn btn-secondary"
+        |                data-dismiss="modal">#acs-kernel.common_Cancel#
+        |        </button>
+        |        <button id="configuration-modal-confirm" type="button" class="btn btn-primary confirm"
+        |                data-dismiss="modal">#acs-subsite.Confirm#
+        |        </button>
+        |      </div>
+        |    </div>
+        |  </div>
+        |</div>
+      }]]
+
+      return [ns_trim -delimiter | [subst {
+        |<a class="configuration-button" href="#" data-toggle="modal" data-target='#configuration-modal'>
+        |  <span class="glyphicon glyphicon-cog" aria-hidden="true" style="float: right;"></span>
+        |</a>
+      }]]
+    }
+
+    #----------------------------------------------------------------------
+    # Class:  Question_manager
+    # Method: question_summary
+    #----------------------------------------------------------------------
+    :public method question_summary {obj} {
       #
       # Provide a summary of all questions of an exam.
       #
-      set HTML [subst {
-        <div class="panel panel-default">
-        <div class="panel-heading">#xowf.exam_summary#</div>
-        <div class="panel-body">
-        [:exam_info_block $obj]
-        </div>
-        </div>
-      }]
-
-      append HTML [:question_info_block $obj]
-
       set results [$obj property __results]
       if {$results ne ""} {
         set href [$obj pretty_link -query m=exam-results]
-        append HTML [subst {
+        set results_summary [subst {
           <p>#xowf.export_results#: <a title="#xowf.export_results_title#" href="$href">
           CSV <span class="glyphicon glyphicon-download" aria-hidden="true"></span></a>
         }]
+      } else {
+        set results_summary ""
       }
 
       set return_url [::xo::cc query_parameter local_return_url:localurl [$obj pretty_link]]
-      append HTML "<hr><p><a class='btn btn-default' href='$return_url'>#xowiki.back#</a></p>\n"
-
-      return $HTML
+      return [ns_trim -delimiter | [subst {
+        | [:question_info_block $obj]
+        | $results_summary
+        | <hr><p><a class="btn btn-default" href="$return_url">#xowiki.back#</a></p>
+      }]]
     }
 
     #----------------------------------------------------------------------
@@ -6717,15 +6922,16 @@ namespace eval ::xowf::test_item {
       view           admin
       poll           admin
       send-participant-message admin
-      grade-single-item admin
-      edit           admin
-      exam-results   admin
-      print-answers  admin
+      grade-single-item  admin
+      edit               admin
+      exam-results       admin
+      question-summary   admin
+      print-answers      admin
       proctoring-display admin
       print-answer-table admin
       print-participants admin
-      delete         admin
-      qrcode         admin
+      delete             admin
+      qrcode             admin
       make-live-revision admin
     }
   }
