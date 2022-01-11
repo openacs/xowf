@@ -293,5 +293,6 @@
   <msg key="Grading_scheme_help_text">The grading scheme defines grade boundaries and rounding rules for determining grades from achieved percentages</msg>
   <msg key="Grading_scheme-None">No grading</msg>
   <msg key="Configuration">Configuration</msg>
+  <msg key="Configuration_button_title">Configuration options</msg>
   
 </message_catalog>

@@ -2316,7 +2316,7 @@ namespace eval ::xowf::test_item {
         if {$achieved ne ""} {
           set totalPoints [expr {$totalPoints + $achieved}]
         } else {
-          ns_log warning "$a: no points in correction_data, ignoring in points calculation"
+          ns_log warning "$a: no points via automatical or manual grading, ignoring question in achieved points calculation"
         }
         lappend details [dict create \
                              attributeName $a \
@@ -2588,7 +2588,7 @@ namespace eval ::xowf::test_item {
       }
       set toClock [clock scan [::xo::db::tcl_date [ns_set get [lindex $revision_sets end] last_modified] tz]]
       set last_published [:last_time_switched_to_state $parent_revsion_sets -state published -before $toClock]
-      ns_log notice "LAST PUBL $last_published"
+      #ns_log notice "LAST PUBLISHED $last_published"
       set duration [:get_duration -exam_published_time $last_published $revision_sets]
 
       set state [$answerObj state]
@@ -6247,7 +6247,8 @@ namespace eval ::xowf::test_item {
       }]]
 
       return [ns_trim -delimiter | [subst {
-        |<a class="configuration-button" href="#" data-toggle="modal" data-target='#configuration-modal'>
+        |<a class="configuration-button" href="#" title="#xowf.Configuration_button_title#"
+        |  data-toggle="modal" data-target='#configuration-modal'>
         |  <span class="glyphicon glyphicon-cog" aria-hidden="true" style="float: right;"></span>
         |</a>
       }]]

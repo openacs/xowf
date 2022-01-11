@@ -267,5 +267,6 @@
   <msg key="Grading_scheme_help_text">Das Benotungsschema definiertdie Notengrenzen und die Rundungsregeln, um von dem erreichten Ergebnis (in Prozenten) eine Note abzuleiten</msg>
   <msg key="Grading_scheme-None">Keine Notenvergabe</msg>
   <msg key="Configuration">Einstellungen</msg>
+  <msg key="Configuration_button_title">Einstellungsoptionen für diese Prüfung</msg>
   
 </message_catalog>
