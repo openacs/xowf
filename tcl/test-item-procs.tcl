@@ -337,7 +337,7 @@ namespace eval ::xowiki::formfield {
       set shuffle_dict {_name shuffle _type radio}
       dict set shuffle_dict horizontal true
       dict set shuffle_dict form_item_wrapper_CSSclass form-inline
-      dict set shuffle_dict default none
+      dict set shuffle_dict default peruser
       dict set shuffle_dict label #xowf.Shuffle#
       dict set shuffle_dict options \
           "{#xowf.shuffle_none# none} {#xowf.shuffle_peruser# peruser} {#xowf.shuffle_always# always}"
