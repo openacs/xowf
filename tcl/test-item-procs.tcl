@@ -395,7 +395,7 @@ namespace eval ::xowiki::formfield {
     if {${:question_type} eq "pool"} {
       set twocolDict ""
     }
-    set twocolDict ""
+
     :create_components [subst {
       $pointsSpec
       $shuffleSpec
