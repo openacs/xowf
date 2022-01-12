@@ -395,12 +395,13 @@ namespace eval ::xowiki::formfield {
     if {${:question_type} eq "pool"} {
       set twocolDict ""
     }
+    set twocolDict ""
     :create_components [subst {
       $pointsSpec
       $shuffleSpec
       $gradingSpec
       $typeSpecificComponentSpec
-      [expr {$twocolDict ne "" ? [list [:dict_to_spec -aspair $twocolDict]] : ""}]
+      [list [:dict_to_spec -aspair $twocolDict]]
       {interaction {$interaction_class,$options,feedback_level=${:feedback_level},auto_correct=${:auto_correct},label=}}
       [:feed_back_definition]
     }]
