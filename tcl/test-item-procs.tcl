@@ -400,7 +400,7 @@ namespace eval ::xowiki::formfield {
       $shuffleSpec
       $gradingSpec
       $typeSpecificComponentSpec
-      [list [:dict_to_spec -aspair $twocolDict]]
+      [expr {$twocolDict ne "" ? [list [:dict_to_spec -aspair $twocolDict]] : ""}]
       {interaction {$interaction_class,$options,feedback_level=${:feedback_level},auto_correct=${:auto_correct},label=}}
       [:feed_back_definition]
     }]
