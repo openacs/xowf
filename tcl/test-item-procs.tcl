@@ -6343,7 +6343,7 @@ namespace eval ::xowf::test_item {
       foreach chunk $chunks {
         append HTML [subst {
           <tr>
-          <td>[:dict_value $chunk title_value]</a></td>
+          <td>[:dict_value $chunk title_value]</td>
           <td>[:dict_value $chunk type]: [:dict_value $chunk structure]</td>
           <td style='text-align: center;'>[:dict_value $chunk Minutes]</td>
           <td style='text-align: center;'>[:dict_value $chunk Points]</td>
