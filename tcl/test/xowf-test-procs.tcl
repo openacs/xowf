@@ -365,6 +365,77 @@ namespace eval ::xowf::test {
         aa_equals "conditional test, false branch list" [x get_value "? false {a b} default {b c}"] "b c"
     }
 
+    aa_register_case \
+        -cats {api} \
+        -init_classes {xowf_require_test_instance} \
+        -procs {
+            "::xowf::Package proc create_new_workflow_page"
+        } create_new_workflow_page {
+
+            Test ::xowf::Package create_new_workflow_page
+
+        } {
+            aa_run_with_teardown -rollback -test_code {
+                set instance $_xowf_test_instance_name
+                set testfolder .testfolder
+
+                set n [site_node::get_from_url -url $instance]
+                set package_id [dict get $n object_id]
+
+                ::xowf::Package initialize -package_id $package_id
+                set parent_id [$package_id folder_id]
+
+                set item_ref_info [$package_id item_ref \
+                                       -use_site_wide_pages true \
+                                       -default_lang en \
+                                       -parent_id $parent_id \
+                                       en:Workflow.form]
+                set page_template [dict get $item_ref_info item_id]
+
+                set name testWF
+                set title testWFTitle
+                set wf [::xowf::Package create_new_workflow_page \
+                            -package_id $package_id \
+                            -parent_id $parent_id \
+                            -name $name \
+                            -title $title \
+                            -instance_attributes {
+                                a b
+                                c d
+                            }]
+
+                aa_equals "$wf: name is correct" $name [$wf name]
+                aa_equals "$wf: title is correct" $title [$wf title]
+                aa_equals "$wf: property 'a' is correct" b [$wf property a]
+                aa_equals "$wf: property 'c' is correct" d [$wf property c]
+
+                aa_false "$wf: package_id is not set on the fresh object" [$wf exists package_id]
+
+                $wf set package_id $package_id
+                $wf save_new
+
+                set item_id [$wf item_id]
+                set found_p [::xo::dc 0or1row check_wf {
+                    select instance_attributes from
+                    xowiki_form_instance_item_index i,
+                    cr_revisions r,
+                    xowiki_page_instance pi
+                    where i.item_id = :item_id
+                    and r.item_id = i.item_id
+                    and r.revision_id = pi.page_instance_id
+                    and i.package_id = :package_id
+                    and i.page_template = :page_template
+                    and i.name like '%' || name
+                    and r.title = :title
+                }]
+                aa_true "Workflow was created in the database" $found_p
+                if {$found_p} {
+                    aa_equals "Properties have been stored correctly" \
+                        [dict create {*}$instance_attributes] [dict create a b c d]
+                }
+            }
+        }
+
 }
 
 #
