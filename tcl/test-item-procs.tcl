@@ -2270,9 +2270,10 @@ namespace eval ::xowf::test_item {
     # Class:  Answer_manager
     # Method: achieved_points
     #----------------------------------------------------------------------
-    :public method achieved_points {
+    :method achieved_points {
       {-manual_grading ""}
       -submission:object
+      -exam_question_dict
       -answer_attributes:required
     } {
       #
@@ -2287,6 +2288,41 @@ namespace eval ::xowf::test_item {
       # @return dict containing "achievedPoints", "achievablePoints" and "details"
       #
       set all_form_fields [::xowiki::formfield::FormField info instances -closure]
+      set question_dict $exam_question_dict
+
+      if {[$submission property question] ne ""} {
+        #
+        # When the submission has a property "question" set then we
+        # have a submission from a pool question. In this case, we
+        # want - at least for the time being - the id of the pool
+        # question and not the id of the replacement
+        # question. Therefore, we have to create a dict for the
+        # mapping of these values and to create a question_dict
+        # (mapping from question_names to ids) updated with the id of
+        # the pool question.
+        #
+        set question_ids_exam [lmap {k v} $exam_question_dict {set v}]
+        set form_objs_submission [:QM load_question_objs $submission [$submission property question]]
+        set question_ids_submission [lmap form_obj $form_objs_submission {$form_obj item_id}]
+        #ns_log notice "=== achieved_points IDs examwf     <$question_ids_exam>"
+        #ns_log notice "=== achieved_points IDs submission <$question_ids_submission>"
+        set map ""
+        foreach id_exam $question_ids_exam id_submission $question_ids_submission {
+          if {$id_exam != $id_submission} {
+            #ns_log notice "=== achieved_points must use $id_exam instead of $id_submission"
+            dict set map $id_submission $id_exam
+          }
+        }
+        set question_dict [:FL name_to_question_obj_dict $form_objs_submission]
+        foreach {k v} $question_dict {
+          if {[dict exists $map $v]} {
+            dict set question_dict $k [dict get $map $v]
+          }
+        }
+      }
+
+      #ns_log notice "=== achieved_points question_dict <$question_dict>"
+
       set totalPoints 0
       set achievableTotalPoints 0
       set details {}
@@ -2317,14 +2353,17 @@ namespace eval ::xowf::test_item {
         if {$achieved ne ""} {
           set totalPoints [expr {$totalPoints + $achieved}]
         } else {
-          ns_log warning "$a: no points via automatical or manual grading, ignoring question in achieved points calculation"
+          ns_log warning "$a: no points via automated or manual grading," \
+              "ignoring question in achieved points calculation"
         }
         lappend details [dict create \
                              attributeName $a \
+                             question_id [dict get $question_dict $a] \
                              achieved $achieved \
                              auto_correct_achieved $auto_correct_achieved \
                              achievable $achievablePoints]
       }
+      #ns_log notice "final details <$details>"
       return [list achievedPoints $totalPoints \
                   details $details \
                   achievablePoints $achievableTotalPoints]
@@ -3262,6 +3301,7 @@ namespace eval ::xowf::test_item {
       {-autograde:boolean false}
       {-combined_form_info}
       {-examWf:object}
+      {-exam_question_dict}
       {-filter_id:integer,0..1 ""}
       {-form_objs:integer,0..n ""}
       {-grading_scheme:object}
@@ -3331,6 +3371,7 @@ namespace eval ::xowf::test_item {
       set achieved_points [:achieved_points \
                                -manual_grading [:dict_value $manual_gradings $user_id] \
                                -submission $submission \
+                               -exam_question_dict $exam_question_dict \
                                -answer_attributes $answerAttributes]
       dict set achieved_points totalPoints $totalPoints
 
@@ -3341,6 +3382,7 @@ namespace eval ::xowf::test_item {
         set qn [dict get $pd attributeName]
         dict set results $qn achieved [dict get $pd achieved]
         dict set results $qn achievable [dict get $pd achievable]
+        dict set results $qn question_id [dict get $pd question_id]
       }
 
       set question_form [:postprocess_question_html \
@@ -3626,6 +3668,9 @@ namespace eval ::xowf::test_item {
 
       set file_submission_exists 0
 
+      set form_objs_exam [:QM load_question_objs $examWf [$examWf property question]]
+      set question_dict [:FL name_to_question_obj_dict $form_objs_exam]
+
       #
       # Iterate over the items sorted by orderby.
       #
@@ -3636,6 +3681,7 @@ namespace eval ::xowf::test_item {
                    -submission $submission \
                    -wf $wf \
                    -examWf $examWf \
+                   -exam_question_dict $question_dict \
                    -autograde $autograde \
                    -combined_form_info $combined_form_info \
                    -filter_id $filter_id \
@@ -3710,10 +3756,11 @@ namespace eval ::xowf::test_item {
           {m print-answers} {create-file-submission-zip-file 1}
           fos rid id
         }]]
-        append HTML \
-            "<a href='$href'>" \
-            "<span class='download-submissions glyphicon glyphicon-download' aria-hidden='true'>" \
-            "</span> #xowf.Download_file_submissions#</a>"
+        append HTML [ns_trim -delimiter | [subst {
+          |<a href='$href'>
+          |<span class='download-submissions glyphicon glyphicon-download' aria-hidden='true'></span>
+          |#xowf.Download_file_submissions#</a>
+        }]]
       }
 
       #
@@ -5010,6 +5057,7 @@ namespace eval ::xowf::test_item {
       if {![:list_equal $original_question_names $exam_question_names]} {
         ns_log notice "YYYY store question names in user's answer workflow"
         $answer_obj set_property -new 1 question $exam_question_names
+        #$answer_obj set_property -new 1 question_ids [lmap obj $replaced_form_objs {$obj item_id}]
       }
     }
 
@@ -5164,7 +5212,7 @@ namespace eval ::xowf::test_item {
     # Class:  Question_manager
     # Method: load_question_objs
     #----------------------------------------------------------------------
-    :method load_question_objs {obj:object names} {
+    :public method load_question_objs {obj:object names} {
       #
       # Load the question objects for the provided question names and
       # return the question objs.
