@@ -115,39 +115,57 @@ namespace eval ::xowf::test {
             aa_section "Create a simple text interaction"
             ###########################################################
 
-            ::xowiki::test::create_form_page \
+            set r [::xowiki::test::create_form_page \
                 -last_request $d \
                 -instance $instance \
                 -path $testfolder \
                 -parent_id $folder_id \
                 -form_name en:edit-interaction.wf \
                 -extra_url_parameter {{p.item_type Text}} \
-                -update [subst {
+                -update {
                     _title "Sample Text Interaction"
                     _name sample_text_0
                     _nls_language en_US
                     question.points 4
-                    question.interaction.text "Given is a very complex situation.<p> How can this be solved?"
+                    question.interaction.text {
+                        Given is a very complex situation.<p> How can this be solved?
+                        [[.SELF./image:sample_text_0_image|Sample Text Interaction Image]]
+                    }
                 }]
+
+            # Save an image under the question
+            set file_object [::xowiki::File new -destroy_on_cleanup \
+                                 -title "Sample Text Interaction Image" \
+                                 -name file:sample_text_0_image \
+                                 -parent_id [dict get $r page_info item_id] \
+                                 -mime_type image/png \
+                                 -package_id $package_id \
+                                 -creation_user [dict get $user_info user_id]]
+            $file_object set import_file \
+                [acs_root_dir]/packages/acs-templating/www/resources/sort-ascending.png
+            $file_object save_new
 
             ###########################################################
             aa_section "Create an MC interaction"
             ###########################################################
 
-            ::xowiki::test::create_form_page \
+            set r [::xowiki::test::create_form_page \
                 -last_request $d \
                 -instance $instance \
                 -path $testfolder \
                 -parent_id $folder_id \
                 -form_name en:edit-interaction.wf \
                 -extra_url_parameter {{p.item_type MC}} \
-                -update [subst {
+                -update {
                     _title "Sample MC Interaction"
                     _name sample_mc_0
                     _nls_language en_US
                     question.points 3
                     question.shuffle peruser
-                    question.interaction.text "Which of the following colors are used in a traffic lights?"
+                    question.interaction.text {
+                        Which of the following colors are used in a traffic lights?
+                        [[.SELF./image:sample_mc_0_image|Sample MC Interaction Image]]
+                    }
                     question.interaction.answer.1.text "Red"
                     question.interaction.answer.1.correct "t"
                     question.interaction.answer.2.text "Green"
@@ -156,53 +174,81 @@ namespace eval ::xowf::test {
                     question.interaction.answer.3.correct "f"
                 }]
 
+            # Save an image under the question
+            set file_object [::xowiki::File new -destroy_on_cleanup \
+                                 -title "Sample MC Interaction Image" \
+                                 -name file:sample_mc_0_image \
+                                 -parent_id [dict get $r page_info item_id] \
+                                 -mime_type image/png \
+                                 -package_id $package_id \
+                                 -creation_user [dict get $user_info user_id]]
+            $file_object set import_file \
+                [acs_root_dir]/packages/acs-templating/www/resources/sort-ascending.png
+            $file_object save_new
+
             ###########################################################
             aa_section "Create a ShortText interaction with a file submission"
             ###########################################################
 
-            ::xowiki::test::create_form_page \
+            set r [::xowiki::test::create_form_page \
                 -last_request $d \
                 -instance $instance \
                 -path $testfolder \
                 -parent_id $folder_id \
                 -form_name en:edit-interaction.wf \
                 -extra_url_parameter {{p.item_type ShortText}} \
-                -update [subst {
+                -update {
                     _title "Sample ShortText Interaction"
                     _name sample_st_0
                     _nls_language en_US
                     question.points 2
                     question.shuffle none
-                    question.interaction.text "Write a program, which loops forever"
+                    question.interaction.text {
+                        Write a program, which loops forever
+                        [[.SELF./image:sample_st_0_image|Sample ShortText Interaction]]
+                    }
                     question.interaction.answer.1.text "Please, upload your submission"
                     question.interaction.answer.1.options "file_upload"
                 }]
+
+            # Save an image under the question
+            set file_object [::xowiki::File new -destroy_on_cleanup \
+                                 -title "Sample ShortText Interaction Image" \
+                                 -name file:sample_st_0_image \
+                                 -parent_id [dict get $r page_info item_id] \
+                                 -mime_type image/png \
+                                 -package_id $package_id \
+                                 -creation_user [dict get $user_info user_id]]
+            $file_object set import_file \
+                [acs_root_dir]/packages/acs-templating/www/resources/sort-ascending.png
+            $file_object save_new
 
             ###########################################################
             aa_section "Create an inclass-exam"
             ###########################################################
 
             set d [::xowiki::test::create_form_page \
-                       -last_request $d \
-                       -instance $instance \
-                       -path $testfolder \
-                       -parent_id $folder_id \
-                       -form_name en:inclass-exam.wf \
-                       -update [subst {
-                           _title "Sample Inclass Exam"
-                           _nls_language en_US
-                           question {
-                               $testfolder/en:sample_mc_0
-                               $testfolder/en:sample_st_0
-                               $testfolder/sample_text_0
-                           }
-                       }]]
+                -last_request $d \
+                -instance $instance \
+                -path $testfolder \
+                -parent_id $folder_id \
+                -form_name en:inclass-exam.wf \
+                -update [subst {
+                    _title "Sample Inclass Exam"
+                    _nls_language en_US
+                    question {
+                        $testfolder/en:sample_mc_0
+                        $testfolder/en:sample_st_0
+                        $testfolder/sample_text_0
+                    }
+                }]]
             aa_log "inclass exam created d=[ns_quotehtml $d]"
 
             ###########################################################
             aa_section "Create exam with the selected question"
             ###########################################################
 
+            ns_log warning $d
             #set page_name [dict get $d page_info stripped_name]
             set page_name [dict get $d page_info link]
             set d [::xowiki::test::edit_form_page \
@@ -250,6 +296,35 @@ namespace eval ::xowf::test {
             acs::test::reply_has_status_code $d1 200
 
             aa_section "... fill out question 1 (MC)"
+
+            ##
+            # Make sure images that were stored and linked in
+            # questions are rendered as part of the exam.
+            ##
+            set image_urls [list]
+            acs::test::dom_html root [dict get $d1 body] {
+                set images [$root getElementsByTagName img]
+                foreach name {sample_mc_0 sample_st_0 sample_text_0} {
+                    unset -nocomplain image_url
+                    foreach img $images {
+                        if {[string match *$name* [$img getAttribute src]]} {
+                            set image_url [$img getAttribute src]
+                            lappend image_urls $image_url
+                            break
+                        }
+                    }
+
+                    aa_true "Image was found" [info exists image_url]
+                }
+            }
+
+            foreach image_url $image_urls {
+                set d [acs::test::http -last_request $request_info $image_url]
+                acs::test::reply_has_status_code $d 200
+                set content_type [ns_set iget [dict get $d headers] content-type]
+                aa_equals "Content type is an image" image/png $content_type
+            }
+            ##
 
             set path [string range $location [string length $instance] end]
             set url_info [ns_parseurl $path]
