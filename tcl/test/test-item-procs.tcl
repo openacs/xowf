@@ -305,7 +305,7 @@ namespace eval ::xowf::test {
             #
             # The answer page for a student consists of a single
             # question. In case randomization is activated, we can't
-            # be sure, which quesion this will be. Since every page
+            # be sure, which question this will be. Since every page
             # has an image, check this.
             #
             acs::test::dom_html root [dict get $d1 body] {
@@ -492,7 +492,7 @@ namespace eval ::xowf::test {
             #
             # When the text interaction is opened with preview, and a
             # file is provided of the unresolved link, it is saved as
-            # a child the the question.
+            # a child the question.
             #
             set text_page [::xo::db::CrClass get_instance_from_db -item_id [dict get $dt item_id]]
 
