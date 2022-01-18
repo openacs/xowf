@@ -415,7 +415,7 @@ namespace eval ::xowf::test {
             aa_true "lookup of en:sample_text_0 succeeded" {$text_page_id != 0}
             set text_page [::xo::db::CrClass get_instance_from_db -item_id $text_page_id]
 
-            aa_section "Create image 'file:somefile' as child of '[$text_page name]'"
+            aa_section "Create file 'file:somefile' as child of '[$text_page name]'"
             set file_object [::xowiki::File new \
                                  -destroy_on_cleanup \
                                  -title "somefile" \
@@ -428,27 +428,32 @@ namespace eval ::xowf::test {
                 $::acs::rootdir/packages/xowf/tcl/test/test-item-procs.tcl
             $file_object save_new
 
+            #############################################################
             aa_section "Call preview workflow for '[$text_page name]'"
-            #
-            # we should make here a POST with button "__action_preview" for
-            #
-            aa_log "=============== call edit with PREVIEW"
+
             set d [::xowiki::test::edit_form_page \
                        -last_request $dt \
+                       -refetch=0 \
                        -path $testfolder/[$text_page name] \
                        -update {
                            __action_preview ""
+                           __form_action "save-form-data"
                        }]
-            #aa_log "inclass exam edited d=[ns_quotehtml $d]"
             acs::test::reply_has_status_code $d 302
             set location /[::acs::test::get_url_from_location $d]
-            aa_log "fill-out page=[ns_quotehtml $location]"
+            set d [acs::test::http -last_request $d $location]
+            acs::test::reply_has_status_code $d 302
+            set location /[::acs::test::get_url_from_location $d]
+            set d [acs::test::http -last_request $d $location]
 
             set response [dict get $d body]
             set results ""; set hrefs ""
-            ns_log notice RESPONSE=$response
+            #ns_log notice RESPONSE1=$response
             acs::test::dom_html root $response {
                 foreach e [$root getElementsByTagName a] {
+                    if {![$e hasAttribute href]} {
+                        continue
+                    }
                     set href [$e getAttribute href]
                     lappend hrefs $href
                     if {[string match "*somefile*" $href]} {
@@ -457,34 +462,36 @@ namespace eval ::xowf::test {
                         dict set results unresolved [$e getAttribute class]
                     }
                 }
-                aa_log "results '$results' hrefs <pre>[join $hrefs \n]</pre>"
                 aa_log "results '$results'"
             }
+            aa_true "link 'somefile' is resolved" {[dict get $results somefile] eq "file"}
+            aa_true "link 'unresolved' is not resolved" {[dict get $results unresolved] eq "missing"}
 
+            ##########################################################################################
             aa_section "create composite page 'sample_composite_0'"
 
-            ::xowiki::test::create_form_page \
-                -last_request $d \
-                -instance $instance \
-                -path $testfolder \
-                -parent_id $folder_id \
-                -form_name en:edit-interaction.wf \
-                -extra_url_parameter {{p.item_type Composite}} \
-                -update {
-                    _title "Sample composite Interaction"
-                    _name sample_composite_0
-                    _nls_language en_US
-                    question.points 4
-                    question.twocol f
-                    question.interaction.text {Given a text with an [[file:otherfile]].}
-                    question.interaction.selection .testfolder/en:sample_text_0
-                }
+            set dt [::xowiki::test::create_form_page \
+                        -last_request $d \
+                        -instance $instance \
+                        -path $testfolder \
+                        -parent_id $folder_id \
+                        -form_name en:edit-interaction.wf \
+                        -extra_url_parameter {{p.item_type Composite}} \
+                        -update {
+                            _title "Sample composite Interaction"
+                            _name sample_composite_0
+                            _nls_language en_US
+                            question.points 4
+                            question.twocol f
+                            question.interaction.text {Given a text with an [[file:otherfile]].}
+                            question.interaction.selection .testfolder/en:sample_text_0
+                        }]
 
             set composite_page_id [::xo::db::CrClass lookup -name en:sample_composite_0 -parent_id $folder_id]
             aa_true "lookup of en:sample_text_0 succeeded" {$composite_page_id != 0}
             set composite_page [::xo::db::CrClass get_instance_from_db -item_id $composite_page_id]
 
-            aa_section "Create image 'file:somefile' as child of '[$text_page name]'"
+            aa_section "Create file 'file:somefile' as child of '[$text_page name]'"
             set file_object [::xowiki::File new \
                                  -destroy_on_cleanup \
                                  -title "otherfile" \
@@ -496,6 +503,48 @@ namespace eval ::xowf::test {
             $file_object set import_file \
                 $::acs::rootdir/packages/xowf/tcl/test/test-item-procs.tcl
             $file_object save_new
+
+            #############################################################
+            aa_section "Call preview workflow for '[$composite_page name]'"
+
+            set d [::xowiki::test::edit_form_page \
+                       -last_request $dt \
+                       -refetch=0 \
+                       -path $testfolder/[$composite_page name] \
+                       -update {
+                           __action_preview ""
+                           __form_action "save-form-data"
+                       }]
+            acs::test::reply_has_status_code $d 302
+            set location /[::acs::test::get_url_from_location $d]
+            set d [acs::test::http -last_request $d $location]
+            acs::test::reply_has_status_code $d 302
+            set location /[::acs::test::get_url_from_location $d]
+            set d [acs::test::http -last_request $d $location]
+
+            set response [dict get $d body]
+            set results ""; set hrefs ""
+            #ns_log notice RESPONSE2=$response
+            acs::test::dom_html root $response {
+                foreach e [$root getElementsByTagName a] {
+                    if {![$e hasAttribute href]} {
+                        continue
+                    }
+                    set href [$e getAttribute href]
+                    lappend hrefs $href
+                    if {[string match "*somefile*" $href]} {
+                        dict set results somefile [$e getAttribute class]
+                    } elseif {[string match "*unresolved*" $href]} {
+                        dict set results unresolved [$e getAttribute class]
+                    } elseif {[string match "*otherfile*" $href]} {
+                        dict set results otherfile [$e getAttribute class]
+                    }
+                }
+                aa_log "results '$results'"
+            }
+            aa_true "link 'somefile' is resolved" {[dict get $results somefile] eq "file"}
+            aa_true "link 'otherfile' is resolved" {[dict get $results otherfile] eq "file"}
+            aa_true "link 'unresolved' is not resolved" {[dict get $results unresolved] eq "missing"}
 
 
         } on error {errorMsg} {
