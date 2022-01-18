@@ -116,22 +116,22 @@ namespace eval ::xowf::test {
             ###########################################################
 
             set r [::xowiki::test::create_form_page \
-                -last_request $d \
-                -instance $instance \
-                -path $testfolder \
-                -parent_id $folder_id \
-                -form_name en:edit-interaction.wf \
-                -extra_url_parameter {{p.item_type Text}} \
-                -update {
-                    _title "Sample Text Interaction"
-                    _name sample_text_0
-                    _nls_language en_US
-                    question.points 4
-                    question.interaction.text {
-                        Given is a very complex situation.<p> How can this be solved?
-                        [[.SELF./image:sample_text_0_image|Sample Text Interaction Image]]
-                    }
-                }]
+                       -last_request $d \
+                       -instance $instance \
+                       -path $testfolder \
+                       -parent_id $folder_id \
+                       -form_name en:edit-interaction.wf \
+                       -extra_url_parameter {{p.item_type Text}} \
+                       -update {
+                           _title "Sample Text Interaction"
+                           _name sample_text_0
+                           _nls_language en_US
+                           question.points 4
+                           question.interaction.text {
+                               Given is a very complex situation.<p> How can this be solved?
+                               [[image:sample_text_0_image|Sample Text Interaction Image]]
+                           }
+                       }]
 
             # Save an image under the question
             set file_object [::xowiki::File new -destroy_on_cleanup \
@@ -164,7 +164,7 @@ namespace eval ::xowf::test {
                     question.shuffle peruser
                     question.interaction.text {
                         Which of the following colors are used in a traffic lights?
-                        [[.SELF./image:sample_mc_0_image|Sample MC Interaction Image]]
+                        [[image:sample_mc_0_image|Sample MC Interaction Image]]
                     }
                     question.interaction.answer.1.text "Red"
                     question.interaction.answer.1.correct "t"
@@ -191,25 +191,25 @@ namespace eval ::xowf::test {
             ###########################################################
 
             set r [::xowiki::test::create_form_page \
-                -last_request $d \
-                -instance $instance \
-                -path $testfolder \
-                -parent_id $folder_id \
-                -form_name en:edit-interaction.wf \
-                -extra_url_parameter {{p.item_type ShortText}} \
-                -update {
-                    _title "Sample ShortText Interaction"
-                    _name sample_st_0
-                    _nls_language en_US
-                    question.points 2
-                    question.shuffle none
-                    question.interaction.text {
-                        Write a program, which loops forever
-                        [[.SELF./image:sample_st_0_image|Sample ShortText Interaction]]
-                    }
-                    question.interaction.answer.1.text "Please, upload your submission"
-                    question.interaction.answer.1.options "file_upload"
-                }]
+                       -last_request $d \
+                       -instance $instance \
+                       -path $testfolder \
+                       -parent_id $folder_id \
+                       -form_name en:edit-interaction.wf \
+                       -extra_url_parameter {{p.item_type ShortText}} \
+                       -update {
+                           _title "Sample ShortText Interaction"
+                           _name sample_st_0
+                           _nls_language en_US
+                           question.points 2
+                           question.shuffle none
+                           question.interaction.text {
+                               Write a program, which loops forever
+                               [[image:sample_st_0_image|Sample ShortText Interaction]]
+                           }
+                           question.interaction.answer.1.text "Please, upload your submission"
+                           question.interaction.answer.1.options "file_upload"
+                       }]
 
             # Save an image under the question
             set file_object [::xowiki::File new -destroy_on_cleanup \
@@ -228,20 +228,20 @@ namespace eval ::xowf::test {
             ###########################################################
 
             set d [::xowiki::test::create_form_page \
-                -last_request $d \
-                -instance $instance \
-                -path $testfolder \
-                -parent_id $folder_id \
-                -form_name en:inclass-exam.wf \
-                -update [subst {
-                    _title "Sample Inclass Exam"
-                    _nls_language en_US
-                    question {
-                        $testfolder/en:sample_mc_0
-                        $testfolder/en:sample_st_0
-                        $testfolder/sample_text_0
-                    }
-                }]]
+                       -last_request $d \
+                       -instance $instance \
+                       -path $testfolder \
+                       -parent_id $folder_id \
+                       -form_name en:inclass-exam.wf \
+                       -update [subst {
+                           _title "Sample Inclass Exam"
+                           _nls_language en_US
+                           question {
+                               $testfolder/en:sample_mc_0
+                               $testfolder/en:sample_st_0
+                               $testfolder/sample_text_0
+                           }
+                       }]]
             aa_log "inclass exam created d=[ns_quotehtml $d]"
 
             ###########################################################
@@ -301,31 +301,37 @@ namespace eval ::xowf::test {
             # Make sure images that were stored and linked in
             # questions are rendered as part of the exam.
             ##
-            set image_urls [list]
-            acs::test::dom_html root [dict get $d1 body] {
-                set images [$root getElementsByTagName img]
-                foreach name {sample_mc_0 sample_st_0 sample_text_0} {
-                    unset -nocomplain image_url
-                    foreach img $images {
-                        if {[string match *$name* [$img getAttribute src]]} {
-                            set image_url [$img getAttribute src]
-                            lappend image_urls $image_url
-                            break
-                        }
-                    }
 
-                    aa_true "Image was found" [info exists image_url]
-                }
+            #
+            # The answer page for a student consists of a single
+            # question. In case randomization is activated, we can't
+            # be sure, which quesion this will be. Since every page
+            # has an image, check this.
+            #
+            acs::test::dom_html root [dict get $d1 body] {
+                set hrefs [$root selectNodes {//img[@class='image']/@src}]
+                set found_one_image [lmap qn {sample_mc_0 sample_st_0 sample_text_0} {
+                    if {![string match *$qn* $hrefs]} {
+                        continue
+                    }
+                    set _ 1
+                }]
+                aa_true "Images '$hrefs' were found" $found_one_image
             }
 
-            foreach image_url $image_urls {
-                set d [acs::test::http -last_request $request_info $image_url]
-                acs::test::reply_has_status_code $d 200
-                set content_type [ns_set iget [dict get $d headers] content-type]
+            #
+            # Can we download these images?
+            #
+            foreach pair $hrefs {
+                set d2 [acs::test::http -last_request $d1 [dict get $pair src]]
+                acs::test::reply_has_status_code $d2 200
+                set content_type [ns_set iget [dict get $d2 headers] content-type]
                 aa_equals "Content type is an image" image/png $content_type
             }
-            ##
 
+            #
+            # Click on next page
+            #
             set path [string range $location [string length $instance] end]
             set url_info [ns_parseurl $path]
             set d2 [::xowiki::test::edit_form_page \
@@ -467,41 +473,52 @@ namespace eval ::xowf::test {
             # {config -use test-items}
 
             set dt [::xowiki::test::create_form_page \
-                -last_request $d \
-                -instance $instance \
-                -path $testfolder \
-                -parent_id $folder_id \
-                -form_name en:edit-interaction.wf \
-                -extra_url_parameter {{p.item_type Text}} \
-                -update {
-                    _title "Sample Text Interaction"
-                    _name sample_text_0
-                    _nls_language en_US
-                    question.points 4
-                    question.interaction.text {Given a text with a file filled out for the page [[file:somefile]]
-                        and some unresolved link [[file:unresolved]].}
-                }]
+                        -last_request $d \
+                        -instance $instance \
+                        -path $testfolder \
+                        -parent_id $folder_id \
+                        -form_name en:edit-interaction.wf \
+                        -extra_url_parameter {{p.item_type Text}} \
+                        -update {
+                            _title "Sample Text Interaction"
+                            _name sample_text_0
+                            _nls_language en_US
+                            question.points 4
+                            question.interaction.text {Given a text with a file filled out for the page [[file:somefile]]
+                                and some unresolved link [[file:unresolved]]
+                                and as an image [[image:img.png|Some image1]]
+                                and a SELF image [[.SELF./file:img.png|Some image2]].}
+                        }]
             #
             # When the text interaction is opened with preview, and a
             # file is provided of the unresolved link, it is saved as
             # a child the the question.
             #
-            set text_page_id [::xo::db::CrClass lookup -name en:sample_text_0 -parent_id $folder_id]
-            aa_true "lookup of en:sample_text_0 succeeded" {$text_page_id != 0}
-            set text_page [::xo::db::CrClass get_instance_from_db -item_id $text_page_id]
+            set text_page [::xo::db::CrClass get_instance_from_db -item_id [dict get $dt item_id]]
 
-            aa_section "Create file 'file:somefile' as child of '[$text_page name]'"
+            aa_section "Create file 'file:somefile' as child of '[$text_page name]' [$text_page item_id]"
             set file_object [::xowiki::File new \
                                  -destroy_on_cleanup \
                                  -title "somefile" \
                                  -name file:somefile \
                                  -parent_id [$text_page item_id] \
-                                 -mime_type text_plain \
+                                 -mime_type text/plain \
                                  -package_id $package_id \
                                  -creation_user [dict get $user_info user_id]]
             $file_object set import_file \
                 $::acs::rootdir/packages/xowf/tcl/test/test-item-procs.tcl
             $file_object save_new
+            set image_object [::xowiki::File new \
+                                 -destroy_on_cleanup \
+                                 -title "img.png" \
+                                 -name file:img.png \
+                                 -parent_id [$text_page item_id] \
+                                 -mime_type image/png \
+                                 -package_id $package_id \
+                                 -creation_user [dict get $user_info user_id]]
+            $image_object set import_file \
+                $::acs::rootdir/packages/acs-subsite/www/resources/attach.png
+            $image_object save_new
 
             #############################################################
             aa_section "Call preview workflow for '[$text_page name]'"
@@ -521,26 +538,15 @@ namespace eval ::xowf::test {
             set location /[::acs::test::get_url_from_location $d]
             set d [acs::test::http -last_request $d $location]
 
-            set response [dict get $d body]
-            set results ""; set hrefs ""
-            #ns_log notice RESPONSE1=$response
-            acs::test::dom_html root $response {
-                foreach e [$root getElementsByTagName a] {
-                    if {![$e hasAttribute href]} {
-                        continue
-                    }
-                    set href [$e getAttribute href]
-                    lappend hrefs $href
-                    if {[string match "*somefile*" $href]} {
-                        dict set results somefile [$e getAttribute class]
-                    } elseif {[string match "*unresolved*" $href]} {
-                        dict set results unresolved [$e getAttribute class]
-                    }
-                }
-                aa_log "results '$results'"
+            acs::test::dom_html root [dict get $d body] {
+                set resolved   [lmap p [$root selectNodes {//a[@class='file']/@href}] {file tail [lindex $p 1]}]
+                set unresolved [lmap p [$root selectNodes {//a[@class='missing']/@href}] {file tail [lindex $p 1]}]
             }
-            aa_true "link 'somefile' is resolved" {[dict get $results somefile] eq "file"}
-            aa_true "link 'unresolved' is not resolved" {[dict get $results unresolved] eq "missing"}
+            aa_log "RESOLVED='$resolved'"
+            aa_log "UNRESOLVED='$unresolved'"
+
+            aa_true "link 'somefile' is resolved" {"somefile" in $resolved}
+            aa_true "link 'unresolved' is not resolved" [string match "*file:unresolved*" $unresolved]
 
             ##########################################################################################
             aa_section "create composite page 'sample_composite_0'"
@@ -558,13 +564,14 @@ namespace eval ::xowf::test {
                             _nls_language en_US
                             question.points 4
                             question.twocol f
-                            question.interaction.text {Given a text with an [[file:otherfile]].}
+                            question.interaction.text {
+                                Given a text with an [[file:otherfile]]
+                                img [[image:img2.png|Some image2]]
+                                SELF img [[.SELF./image:img2.png|Some image2-self]].}
                             question.interaction.selection .testfolder/en:sample_text_0
                         }]
 
-            set composite_page_id [::xo::db::CrClass lookup -name en:sample_composite_0 -parent_id $folder_id]
-            aa_true "lookup of en:sample_text_0 succeeded" {$composite_page_id != 0}
-            set composite_page [::xo::db::CrClass get_instance_from_db -item_id $composite_page_id]
+            set composite_page [::xo::db::CrClass get_instance_from_db -item_id [dict get $dt item_id]]
 
             aa_section "Create file 'file:somefile' as child of '[$text_page name]'"
             set file_object [::xowiki::File new \
@@ -572,12 +579,24 @@ namespace eval ::xowf::test {
                                  -title "otherfile" \
                                  -name file:otherfile \
                                  -parent_id [$composite_page item_id] \
-                                 -mime_type text_plain \
+                                 -mime_type text/plain \
                                  -package_id $package_id \
                                  -creation_user [dict get $user_info user_id]]
             $file_object set import_file \
                 $::acs::rootdir/packages/xowf/tcl/test/test-item-procs.tcl
             $file_object save_new
+
+            set image_object [::xowiki::File new \
+                                 -destroy_on_cleanup \
+                                 -title "img2.png" \
+                                 -name file:img2.png \
+                                 -parent_id [$composite_page item_id] \
+                                 -mime_type image/png \
+                                 -package_id $package_id \
+                                 -creation_user [dict get $user_info user_id]]
+            $image_object set import_file \
+                $::acs::rootdir/packages/acs-subsite/www/resources/attach.png
+            $image_object save_new
 
             #############################################################
             aa_section "Call preview workflow for '[$composite_page name]'"
@@ -597,30 +616,20 @@ namespace eval ::xowf::test {
             set location /[::acs::test::get_url_from_location $d]
             set d [acs::test::http -last_request $d $location]
 
-            set response [dict get $d body]
-            set results ""; set hrefs ""
-            #ns_log notice RESPONSE2=$response
-            acs::test::dom_html root $response {
-                foreach e [$root getElementsByTagName a] {
-                    if {![$e hasAttribute href]} {
-                        continue
-                    }
-                    set href [$e getAttribute href]
-                    lappend hrefs $href
-                    if {[string match "*somefile*" $href]} {
-                        dict set results somefile [$e getAttribute class]
-                    } elseif {[string match "*unresolved*" $href]} {
-                        dict set results unresolved [$e getAttribute class]
-                    } elseif {[string match "*otherfile*" $href]} {
-                        dict set results otherfile [$e getAttribute class]
-                    }
-                }
-                aa_log "results '$results'"
+            acs::test::dom_html root [dict get $d body] {
+                set resolved   [lmap p [$root selectNodes {//a[@class='file']/@href}] {file tail [lindex $p 1]}]
+                set unresolved [lmap p [$root selectNodes {//a[@class='missing']/@href}] {file tail [lindex $p 1]}]
+                set images     [lmap p [$root selectNodes {//img[@class='image']/@src}] {file tail [lindex $p 1]}]
             }
-            aa_true "link 'somefile' is resolved" {[dict get $results somefile] eq "file"}
-            aa_true "link 'otherfile' is resolved" {[dict get $results otherfile] eq "file"}
-            aa_true "link 'unresolved' is not resolved" {[dict get $results unresolved] eq "missing"}
+            aa_log "RESOLVED='$resolved'"
+            aa_log "UNRESOLVED='$unresolved'"
+            aa_log "IMAGES='$images'"
 
+            aa_true "link 'somefile' is resolved" {"somefile" in $resolved}
+            aa_true "link 'otherfile' is resolved" {"otherfile" in $resolved}
+
+            aa_true "image 'img' is resolved" {"img.png" in $images}
+            aa_true "image 'img2' is resolved" {"img2.png" in $images}
 
         } on error {errorMsg} {
             aa_true "Error msg: $errorMsg" 0
