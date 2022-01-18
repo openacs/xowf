@@ -332,6 +332,180 @@ namespace eval ::xowf::test {
             #
         }
     }
+
+    aa_register_init_class \
+        xowf_require_test_instance {
+            Make sure the test instance is there and create it if necessary.
+        } {
+            aa_export_vars {_xowf_test_instance_name}
+            set _xowf_test_instance_name /xowf-test
+            ::acs::test::require_package_instance \
+                -package_key xowf \
+                -instance_name $_xowf_test_instance_name
+        } {
+            # Here one might unmount the package afterwards. Right now
+            # we decide to keep it so it is possible to e.g. inspect
+            # the results or test further in the mounted instance.
+        }
+
+    aa_register_case -init_classes {xowf_require_test_instance} -cats {web} -procs {
+        "::lang::system::locale"
+        "::xowiki::test::create_form_page"
+        "::xowiki::test::require_test_folder"
+        "::xowiki::Page instproc www-create-new"
+
+    } create_composite_test_item {
+
+        Create a folder in various test-items and an exam with one item.
+
+    } {
+        set instance $_xowf_test_instance_name
+        set testfolder .testfolder
+        set locale [lang::system::locale]
+        set lang [string range $locale 0 1]
+
+        #
+        # Setup of test user_id and login
+        #
+        set user_info [::acs::test::user::create -email xowf@acs-testing.test -admin]
+        set d [::acs::test::login $user_info]
+
+        try {
+            ###########################################################
+            aa_section "Make sure we have a fresh test folder"
+            ############################################################
+            set folder_info [::xowiki::test::require_test_folder \
+                                 -last_request $d \
+                                 -instance $instance \
+                                 -folder_name $testfolder \
+                                 -fresh \
+                                ]
+
+            set folder_id  [dict get $folder_info folder_id]
+            set package_id [dict get $folder_info package_id]
+
+            aa_true "folder_id '$folder_id' is not 0" {$folder_id != 0}
+
+            ##############################################################
+            aa_section "Create a simple text interaction with a file link"
+            ##############################################################
+            # {config -use test-items}
+
+            set dt [::xowiki::test::create_form_page \
+                -last_request $d \
+                -instance $instance \
+                -path $testfolder \
+                -parent_id $folder_id \
+                -form_name en:edit-interaction.wf \
+                -extra_url_parameter {{p.item_type Text}} \
+                -update {
+                    _title "Sample Text Interaction"
+                    _name sample_text_0
+                    _nls_language en_US
+                    question.points 4
+                    question.interaction.text {Given a text with a file filled out for the page [[file:somefile]]
+                        and some unresolved link [[file:unresolved]].}
+                }]
+            #
+            # When the text interaction is opened with preview, and a
+            # file is provided of the unresolved link, it is saved as
+            # a child the the question.
+            #
+            set text_page_id [::xo::db::CrClass lookup -name en:sample_text_0 -parent_id $folder_id]
+            aa_true "lookup of en:sample_text_0 succeeded" {$text_page_id != 0}
+            set text_page [::xo::db::CrClass get_instance_from_db -item_id $text_page_id]
+
+            aa_section "Create image 'file:somefile' as child of '[$text_page name]'"
+            set file_object [::xowiki::File new \
+                                 -destroy_on_cleanup \
+                                 -title "somefile" \
+                                 -name file:somefile \
+                                 -parent_id [$text_page item_id] \
+                                 -mime_type text_plain \
+                                 -package_id $package_id \
+                                 -creation_user [dict get $user_info user_id]]
+            $file_object set import_file \
+                $::acs::rootdir/packages/xowf/tcl/test/test-item-procs.tcl
+            $file_object save_new
+
+            aa_section "Call preview workflow for '[$text_page name]'"
+            #
+            # we should make here a POST with button "__action_preview" for
+            #
+            aa_log "=============== call edit with PREVIEW"
+            set d [::xowiki::test::edit_form_page \
+                       -last_request $dt \
+                       -path $testfolder/[$text_page name] \
+                       -update {
+                           __action_preview ""
+                       }]
+            #aa_log "inclass exam edited d=[ns_quotehtml $d]"
+            acs::test::reply_has_status_code $d 302
+            set location /[::acs::test::get_url_from_location $d]
+            aa_log "fill-out page=[ns_quotehtml $location]"
+
+            set response [dict get $d body]
+            set results ""; set hrefs ""
+            ns_log notice RESPONSE=$response
+            acs::test::dom_html root $response {
+                foreach e [$root getElementsByTagName a] {
+                    set href [$e getAttribute href]
+                    lappend hrefs $href
+                    if {[string match "*somefile*" $href]} {
+                        dict set results somefile [$e getAttribute class]
+                    } elseif {[string match "*unresolved*" $href]} {
+                        dict set results unresolved [$e getAttribute class]
+                    }
+                }
+                aa_log "results '$results' hrefs <pre>[join $hrefs \n]</pre>"
+                aa_log "results '$results'"
+            }
+
+            aa_section "create composite page 'sample_composite_0'"
+
+            ::xowiki::test::create_form_page \
+                -last_request $d \
+                -instance $instance \
+                -path $testfolder \
+                -parent_id $folder_id \
+                -form_name en:edit-interaction.wf \
+                -extra_url_parameter {{p.item_type Composite}} \
+                -update {
+                    _title "Sample composite Interaction"
+                    _name sample_composite_0
+                    _nls_language en_US
+                    question.points 4
+                    question.twocol f
+                    question.interaction.text {Given a text with an [[file:otherfile]].}
+                    question.interaction.selection .testfolder/en:sample_text_0
+                }
+
+            set composite_page_id [::xo::db::CrClass lookup -name en:sample_composite_0 -parent_id $folder_id]
+            aa_true "lookup of en:sample_text_0 succeeded" {$composite_page_id != 0}
+            set composite_page [::xo::db::CrClass get_instance_from_db -item_id $composite_page_id]
+
+            aa_section "Create image 'file:somefile' as child of '[$text_page name]'"
+            set file_object [::xowiki::File new \
+                                 -destroy_on_cleanup \
+                                 -title "otherfile" \
+                                 -name file:otherfile \
+                                 -parent_id [$composite_page item_id] \
+                                 -mime_type text_plain \
+                                 -package_id $package_id \
+                                 -creation_user [dict get $user_info user_id]]
+            $file_object set import_file \
+                $::acs::rootdir/packages/xowf/tcl/test/test-item-procs.tcl
+            $file_object save_new
+
+
+        } on error {errorMsg} {
+            aa_true "Error msg: $errorMsg" 0
+        } finally {
+            #
+            # In case something has to be cleaned manually, do it here.
+            #
+        }
+    }
 }
 
 
