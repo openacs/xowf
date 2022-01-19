@@ -2358,7 +2358,7 @@ namespace eval ::xowf::test_item {
         }
         lappend details [dict create \
                              attributeName $a \
-                             question_id [dict get $question_dict $a] \
+                             question_id [:dict_value $question_dict $a] \
                              achieved $achieved \
                              auto_correct_achieved $auto_correct_achieved \
                              achievable $achievablePoints]
