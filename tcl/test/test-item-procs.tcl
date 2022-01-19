@@ -473,8 +473,8 @@ namespace eval ::xowf::test {
                             question.points 4
                             question.interaction.text {Given a text with a file filled out for the page [[file:somefile]]
                                 and some unresolved link [[file:unresolved]]
-                                and as an image [[image:sample_text_0_image.png|Some image1]]
-                                and a SELF image [[.SELF./file:sample_text_0_image2.png|Some image2]].}
+                                and as an image [[image:sample_text_0_image1.png|Some image1]]
+                                and a SELF image [[.SELF./image:sample_text_0_image2.png|Some image2]].}
                         }]
             #
             # When the text interaction is opened with preview, and a
@@ -496,29 +496,20 @@ namespace eval ::xowf::test {
                 $::acs::rootdir/packages/xowf/tcl/test/test-item-procs.tcl
             $file_object save_new
 
-            set image_object [::xowiki::File new \
-                                 -destroy_on_cleanup \
-                                 -title "sample_text_0_image.png" \
-                                 -name file:sample_text_0_image.png \
-                                 -parent_id [$text_page item_id] \
-                                 -mime_type image/png \
-                                 -package_id $package_id \
-                                 -creation_user [dict get $user_info user_id]]
-            $image_object set import_file \
-                $::acs::rootdir/packages/acs-subsite/www/resources/attach.png
-            $image_object save_new
-
-            set image_object [::xowiki::File new \
-                                  -destroy_on_cleanup \
-                                  -title "sample_text_0_image2.png" \
-                                  -name file:sample_text_0_image2.png \
-                                  -parent_id [$text_page item_id] \
-                                  -mime_type image/png \
-                                  -package_id $package_id \
-                                  -creation_user [dict get $user_info user_id]]
-            $image_object set import_file \
-                $::acs::rootdir/packages/acs-subsite/www/resources/attach.png
-            $image_object save_new
+            foreach img {image1.png image2.png} {
+                aa_section "Create image 'file:sample_text_0_$img' as child of '[$text_page name]' [$text_page item_id]"
+                set image_object [::xowiki::File new \
+                                      -destroy_on_cleanup \
+                                      -title "sample_text_0_$img" \
+                                      -name file:sample_text_0_$img \
+                                      -parent_id [$text_page item_id] \
+                                      -mime_type image/png \
+                                      -package_id $package_id \
+                                      -creation_user [dict get $user_info user_id]]
+                $image_object set import_file \
+                    $::acs::rootdir/packages/acs-subsite/www/resources/attach.png
+                $image_object save_new
+            }
 
             #############################################################
             aa_section "Call preview workflow for '[$text_page name]'"
@@ -541,12 +532,16 @@ namespace eval ::xowf::test {
             acs::test::dom_html root [dict get $d body] {
                 set resolved   [lmap p [$root selectNodes {//a[@class='file']/@href}] {file tail [lindex $p 1]}]
                 set unresolved [lmap p [$root selectNodes {//a[@class='missing']/@href}] {file tail [lindex $p 1]}]
+                set images     [lmap p [$root selectNodes {//img[@class='image']/@src}] {file tail [lindex $p 1]}]
             }
             aa_log "RESOLVED='$resolved'"
             aa_log "UNRESOLVED='$unresolved'"
+            aa_log "IMAGES='$images'"
 
             aa_true "link 'somefile' is resolved" {"somefile" in $resolved}
             aa_true "link 'unresolved' is not resolved" [string match "*file:unresolved*" $unresolved]
+            aa_true "image 'sample_text_0_image1' is resolved" {"sample_text_0_image1.png" in $images}
+            aa_true "image 'sample_text_0_image2' is resolved" {"sample_text_0_image2.png" in $images}
 
             ##########################################################################################
             aa_section "create composite page 'sample_composite_0'"
@@ -566,7 +561,7 @@ namespace eval ::xowf::test {
                             question.twocol f
                             question.interaction.text {
                                 Given a text with an [[file:otherfile]]
-                                img [[image:sample_composite_0_image.png|Some image]]
+                                img [[image:sample_composite_0_image1.png|Some image]]
                                 SELF img [[.SELF./image:sample_composite_0_image2.png|Some image2-self]].}
                             question.interaction.selection .testfolder/en:sample_text_0
                         }]
@@ -586,17 +581,19 @@ namespace eval ::xowf::test {
                 $::acs::rootdir/packages/xowf/tcl/test/test-item-procs.tcl
             $file_object save_new
 
-            set image_object [::xowiki::File new \
-                                 -destroy_on_cleanup \
-                                 -title "sample_composite_0_image2.png" \
-                                 -name file:sample_composite_0_image2.png \
-                                 -parent_id [$composite_page item_id] \
-                                 -mime_type image/png \
-                                 -package_id $package_id \
-                                 -creation_user [dict get $user_info user_id]]
-            $image_object set import_file \
-                $::acs::rootdir/packages/acs-subsite/www/resources/attach.png
-            $image_object save_new
+            foreach img {image1.png image2.png} {
+                set image_object [::xowiki::File new \
+                                      -destroy_on_cleanup \
+                                      -title "sample_composite_0_$img" \
+                                      -name file:sample_composite_0_$img \
+                                      -parent_id [$composite_page item_id] \
+                                      -mime_type image/png \
+                                      -package_id $package_id \
+                                      -creation_user [dict get $user_info user_id]]
+                $image_object set import_file \
+                    $::acs::rootdir/packages/acs-subsite/www/resources/attach.png
+                $image_object save_new
+            }
 
             #############################################################
             aa_section "Call preview workflow for '[$composite_page name]'"
@@ -629,9 +626,9 @@ namespace eval ::xowf::test {
             aa_true "link 'otherfile' is resolved" {"otherfile" in $resolved}
 
             foreach filename {
-                sample_text_0_image.png
-                sample_text_0_image_2.png
-                sample_composite_0_image.png
+                sample_text_0_image1.png
+                sample_text_0_image2.png
+                sample_composite_0_image1.png
                 sample_composite_0_image2.png
             } {
                 aa_true "image '$filename' is resolved" {$filename in $images}

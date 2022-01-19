@@ -2011,10 +2011,14 @@ namespace eval ::xowf {
         #:log "after allocate lookup of $lang:$stripped_name returned $id, default-lang(${:name})=$default_lang [:nls_language]"
         if {$id != 0} {
           #
-          # The instance exists already. Either use method "m" (if
-          # provided) or redirect to the item.
+          # The instance exists already. Either call method "m"
+          # directly (if provided) or redirect to the item.
           #
           if {$m eq ""} {
+            set base [$package pretty_link -parent_id $parent_id $lang:$stripped_name]
+            ns_log notice "AFTER ALLOCATE www-create-or-use exists already\n[export_vars -no_base_encode \
+                             -base $base {return_url template_file}]"
+
             return [$package returnredirect \
                         [export_vars -no_base_encode \
                              -base [$package pretty_link -parent_id $parent_id $lang:$stripped_name] \
@@ -2022,7 +2026,7 @@ namespace eval ::xowf {
           } else {
             set item [::xo::db::CrClass get_instance_from_db -item_id $id]
             # missing: policy check.
-            return [$item $m]
+            return [$item www-$m]
           }
         } else {
           if {$lang ne $default_lang} {
@@ -2032,6 +2036,7 @@ namespace eval ::xowf {
           }
           #:msg "We want to create $lang:$stripped_name"
           set name $lang:$stripped_name
+          ns_log notice "AFTER ALLOCATE www-create-or-use wanna create $lang:$stripped_name"
         }
       }
     }
