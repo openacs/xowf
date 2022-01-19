@@ -2015,10 +2015,6 @@ namespace eval ::xowf {
           # directly (if provided) or redirect to the item.
           #
           if {$m eq ""} {
-            set base [$package pretty_link -parent_id $parent_id $lang:$stripped_name]
-            ns_log notice "AFTER ALLOCATE www-create-or-use exists already\n[export_vars -no_base_encode \
-                             -base $base {return_url template_file}]"
-
             return [$package returnredirect \
                         [export_vars -no_base_encode \
                              -base [$package pretty_link -parent_id $parent_id $lang:$stripped_name] \
@@ -2036,7 +2032,6 @@ namespace eval ::xowf {
           }
           #:msg "We want to create $lang:$stripped_name"
           set name $lang:$stripped_name
-          ns_log notice "AFTER ALLOCATE www-create-or-use wanna create $lang:$stripped_name"
         }
       }
     }
