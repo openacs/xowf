@@ -165,6 +165,7 @@ namespace eval ::xowf::test {
                     question.interaction.text {
                         Which of the following colors are used in a traffic lights?
                         [[image:sample_mc_0_image|Sample MC Interaction Image]]
+                        [[.SELF./image:sample_mc_0_image|Sample MC Interaction Image via SELF]]
                     }
                     question.interaction.answer.1.text "Red"
                     question.interaction.answer.1.correct "t"
@@ -317,6 +318,7 @@ namespace eval ::xowf::test {
                     set _ 1
                 }]
                 aa_true "Images '$hrefs' were found" $found_one_image
+                aa_true "raw and self could be rendered" {[llength $hrefs] > 1}
             }
 
             #
