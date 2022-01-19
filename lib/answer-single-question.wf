@@ -97,7 +97,7 @@ proc basic_form_loader {ctx form_name} {
   if {[$form_obj property item_type] eq "PoolQuestion"} {
     #
     # In the case of a PoolQuestion, we have to replace the question.
-    #    
+    #
     set form_obj [::xowf::test_item::question_manager replace_pool_question \
                       -position 1 \
                       -seed [clock seconds] \
@@ -105,6 +105,13 @@ proc basic_form_loader {ctx form_name} {
                       -pool_question_obj $form_obj \
                       -exam_question_names ""]
   }
+  #
+  # Perform same substitutions as in other test-item workflows.
+  #
+  set d [::xowf::test_item::question_manager item_substitute_markup -form_obj $form_obj -obj $obj -position 1]
+  $form_obj set_property form [dict get $d form]
+  $form_obj set_property form_constraints [dict get $d form_constraints]
+
   return $form_obj
 }
 
