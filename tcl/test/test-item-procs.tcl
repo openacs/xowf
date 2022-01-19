@@ -473,8 +473,8 @@ namespace eval ::xowf::test {
                             question.points 4
                             question.interaction.text {Given a text with a file filled out for the page [[file:somefile]]
                                 and some unresolved link [[file:unresolved]]
-                                and as an image [[image:img.png|Some image1]]
-                                and a SELF image [[.SELF./file:img.png|Some image2]].}
+                                and as an image [[image:sample_text_0_image.png|Some image1]]
+                                and a SELF image [[.SELF./file:sample_text_0_image2.png|Some image2]].}
                         }]
             #
             # When the text interaction is opened with preview, and a
@@ -495,14 +495,27 @@ namespace eval ::xowf::test {
             $file_object set import_file \
                 $::acs::rootdir/packages/xowf/tcl/test/test-item-procs.tcl
             $file_object save_new
+
             set image_object [::xowiki::File new \
                                  -destroy_on_cleanup \
-                                 -title "img.png" \
-                                 -name file:img.png \
+                                 -title "sample_text_0_image.png" \
+                                 -name file:sample_text_0_image.png \
                                  -parent_id [$text_page item_id] \
                                  -mime_type image/png \
                                  -package_id $package_id \
                                  -creation_user [dict get $user_info user_id]]
+            $image_object set import_file \
+                $::acs::rootdir/packages/acs-subsite/www/resources/attach.png
+            $image_object save_new
+
+            set image_object [::xowiki::File new \
+                                  -destroy_on_cleanup \
+                                  -title "sample_text_0_image2.png" \
+                                  -name file:sample_text_0_image2.png \
+                                  -parent_id [$text_page item_id] \
+                                  -mime_type image/png \
+                                  -package_id $package_id \
+                                  -creation_user [dict get $user_info user_id]]
             $image_object set import_file \
                 $::acs::rootdir/packages/acs-subsite/www/resources/attach.png
             $image_object save_new
@@ -553,8 +566,8 @@ namespace eval ::xowf::test {
                             question.twocol f
                             question.interaction.text {
                                 Given a text with an [[file:otherfile]]
-                                img [[image:img2.png|Some image2]]
-                                SELF img [[.SELF./image:img2.png|Some image2-self]].}
+                                img [[image:sample_composite_0_image.png|Some image]]
+                                SELF img [[.SELF./image:sample_composite_0_image2.png|Some image2-self]].}
                             question.interaction.selection .testfolder/en:sample_text_0
                         }]
 
@@ -575,8 +588,8 @@ namespace eval ::xowf::test {
 
             set image_object [::xowiki::File new \
                                  -destroy_on_cleanup \
-                                 -title "img2.png" \
-                                 -name file:img2.png \
+                                 -title "sample_composite_0_image2.png" \
+                                 -name file:sample_composite_0_image2.png \
                                  -parent_id [$composite_page item_id] \
                                  -mime_type image/png \
                                  -package_id $package_id \
@@ -615,8 +628,14 @@ namespace eval ::xowf::test {
             aa_true "link 'somefile' is resolved" {"somefile" in $resolved}
             aa_true "link 'otherfile' is resolved" {"otherfile" in $resolved}
 
-            aa_true "image 'img' is resolved" {"img.png" in $images}
-            aa_true "image 'img2' is resolved" {"img2.png" in $images}
+            foreach filename {
+                sample_text_0_image.png
+                sample_text_0_image_2.png
+                sample_composite_0_image.png
+                sample_composite_0_image2.png
+            } {
+                aa_true "image '$filename' is resolved" {$filename in $images}
+            }
 
         } on error {errorMsg} {
             aa_true "Error msg: $errorMsg" 0
