@@ -4868,6 +4868,9 @@ namespace eval ::xowf::test_item {
         } elseif {$item_minutes ne "" && $item_points eq ""} {
           set item_points $item_minutes
         }
+        #ns_log notice "get_pool_replacement_candidates filter" \
+            "minutes '$minutes' <-> '$item_minutes'," \
+            "points '$points ' <-> '$item_points'"
         if {$minutes ne "" && $item_minutes ne $minutes} {
           continue
         } elseif {$points ne "" && $item_points ne $points} {
@@ -4918,6 +4921,10 @@ namespace eval ::xowf::test_item {
             set field_name answer
           }
         }
+      } elseif {![dict exists $query_dict $field_name]} {
+        ns_log warning "QM get_pool_questions: the provided field name '$field_name'" \
+            "is not defined in the form_constraints, fall back to '[lindex [dict keys $query_dict] 0]'"
+        set field_name [lindex [dict keys $query_dict] 0]
       }
       set question_attributes [dict get [$pool_question_obj instance_attributes] question]
       set minutes [dict get $question_attributes question.minutes]
@@ -6091,6 +6098,21 @@ namespace eval ::xowf::test_item {
       # @result list of dicts describing the form fields.
       #
 
+      if {[$form_obj property item_type] eq "Composite"} {
+        #
+        # In the case of a composite Composite question type, describe
+        # the components rather then the compound part (maybe, we
+        # should descibe in the future also the container, but this
+        # actually less interesting).
+        #
+        set selection [dict get [$form_obj instance_attributes] \
+                           question question.interaction question.interaction.selection]
+        set form_objs [[$form_obj package_id] instantiate_forms \
+                           -forms [join [split $selection \n] |] \
+                           -default_lang en]
+        return [join [lmap form_obj $form_objs {:describe_form -asHTML=$asHTML -field_name $field_name $form_obj}]]
+      }
+
       set fc [$form_obj property form_constraints]
 
       #
@@ -6773,7 +6795,7 @@ namespace eval ::xowiki::formfield {
     # to message keys to ease multi-language communication.
     #
     set qa [${:object} property question]
-    #ns_log notice "FormField describe gets <$qa> from ${:object}"
+    #ns_log notice "FormField describe gets question attributes <$qa> from ${:object}"
 
     foreach {key name} {
       question.minutes Minutes
