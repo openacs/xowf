@@ -1077,7 +1077,7 @@ namespace eval ::xowiki::formfield {
 
     :create_components [subst {
       {text        {$widget,height=150px,label=#xowf.exercise-text#,plugins=OacsFs}}
-      {selection   {form_page,form=en:edit-interaction.wf,unless=item_type=Composite,multiple=true}}
+      {selection   {form_page,form=en:edit-interaction.wf,unless=item_type=Composite|PoolQuestion,multiple=true}}
     }]
 
     set :__initialized 1
