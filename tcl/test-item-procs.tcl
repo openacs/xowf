@@ -6101,7 +6101,7 @@ namespace eval ::xowf::test_item {
       if {[$form_obj property item_type] eq "Composite"} {
         #
         # In the case of a composite Composite question type, describe
-        # the components rather then the compound part (maybe, we
+        # the components rather than the compound part (maybe, we
         # should descibe in the future also the container, but this
         # actually less interesting).
         #
@@ -6982,8 +6982,12 @@ namespace eval ::xowf::test_item {
   ::xowiki::policy1 copy ::xowf::test_item::test-item-policy-edit
 
   #
-  # Add policy rules as used in two demo workflows. We are permissive
-  # for student actions and require admin right for teacher activities.
+  # Add policy rules as used in the demo workflows. We are permissive
+  # for student actions and require admin right for teacher
+  # activities.
+  #
+  #
+  # Policy for creating and publishing of exams.
   #
   test-item-policy-publish contains {
     Class create FormPage -array set require_permission {
@@ -7007,7 +7011,24 @@ namespace eval ::xowf::test_item {
       make-live-revision admin
     }
   }
+
+  #
+  # Policy for editing test items.
+  #
+  test-item-policy-edit contains {
+    Class create FormPage -array set require_permission {
+      revisions       admin
+      diff            admin
+    }
+  }
+
+  #
+  # Policy for answering test items.
+  #
   test-item-policy-answer contains {
+    Class create Package -array set require_permission {
+      create-from-prototype admin
+    }
     Class create FormPage -array set require_permission {
       poll            {{item_id read}}
       edit            creator
@@ -7015,12 +7036,7 @@ namespace eval ::xowf::test_item {
       message-dismiss {{item_id read}}
     }
   }
-  test-item-policy-edit contains {
-    Class create FormPage -array set require_permission {
-      revisions       admin
-      diff            admin
-    }
-  }
+
 
   #ns_log notice [::xowf::test_item::test-item-policy1 serialize]
   #ns_log notice ===================================
