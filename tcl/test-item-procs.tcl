@@ -7028,12 +7028,6 @@ namespace eval ::xowf::test_item {
   test-item-policy-answer contains {
     Class create Package -array set require_permission {
       create-from-prototype admin
-      edit-new            {
-        {{has_class ::xowiki::Object} swa}
-        {{has_class ::xowiki::FormPage} nobody}
-        {{has_name {[.](js|css)$}} id admin}
-        {id create}
-      }
     }
     Class create FormPage -array set require_permission {
       poll            {{item_id read}}

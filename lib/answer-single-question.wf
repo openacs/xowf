@@ -6,7 +6,7 @@
 #
 
 set :autoname 1   ;# to avoid editable name field
-set :policy ::xowf::test_item::test-item-policy-answer
+set :policy ::xowf::test_item::test-item-policy-edit
 set :debug 0
 
 ########################################################################
