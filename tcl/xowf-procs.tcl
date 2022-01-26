@@ -1635,7 +1635,7 @@ namespace eval ::xowf {
     if {[$container exists fc_repository]} {
       return [$container set fc_repository]
     }
-    ad_log warning "get_fc_repository returns empty"
+    #ns_log warning "get_fc_repository returns empty"
     return ""
   }
 
