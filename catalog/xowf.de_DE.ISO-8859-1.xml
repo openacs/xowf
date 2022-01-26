@@ -114,7 +114,7 @@
 
   <msg key="select_question_help_text">Wählen Sie Fragen mittels Drag &amp; Drop aus</msg>
 
-  <msg key="randomized_items">Randomisierte Fragenfolge</msg>
+  <msg key="randomized_items">Randomisierte Fragefolge</msg>
   <msg key="randomized_items_help_text">Zeige die Fragen der Prüfung für jeden Studierenden in einer anderen Reihenfolge</msg>
 
   <msg key="Shuffle">Zufallsauswahl</msg>
@@ -175,18 +175,18 @@
   <msg key="Show_points">Punkteanzeige</msg>
   <msg key="Show_points_help_text">Zeige Studierenden während der Prüfung die erreichbaren Punkte pro Beispiel</msg>
   <msg key="Show_minutes">Minutenanzeige</msg>
-  <msg key="Show_minutes_help_text">Zeige Studierenden während der Prüfung die vorgesehen Bearbeitungsdauer pro Beispiel</msg>
+  <msg key="Show_minutes_help_text">Zeige Studierenden während der Prüfung die vorgesehene Bearbeitungsdauer pro Beispiel</msg>
   <msg key="Show_IP">Anzeige der IP-Adresse</msg>
   <msg key="Show_IP_help_text">Zeige Studierenden während der Prüfung eigene IP-Adresse</msg>
   <msg key="Time_budget">Zeitbudget</msg>
   <msg key="Time_budget_help_text">Erhöhe die Bearbeitungsdauer auf den angeführten relativen Wert</msg>
   <msg key="Countdown_audio_alarm">Countdown Zeitmesser mit akustischem Signal</msg>
-  <msg key="Countdown_audio_alarm_help_text">Inkludiere optionales Audiosignal für den Zeitmesser (ungeeigenet für Prüfungen in Schulungsräumen)</msg>
+  <msg key="Countdown_audio_alarm_help_text">Inkludiere optionales Audiosignal für den Zeitmesser (ungeeignet für Prüfungen in Schulungsräumen)</msg>
 
-  <msg key="Max_items">Beschränkte Fragenzahl</msg>
+  <msg key="Max_items">Beschränkte Fragenanzahl</msg>
   <msg key="Max_items_help_text">Beschränke die Zahl der Fragen auf
-  diesen Wert. Sinnvoll in Kombination mit randomisierter Fragenfolge,
-  jeder Student sieht potentiell andere X von Y Fragen. Einschränkung:
+  diesen Wert. Sinnvoll in Kombination mit randomisierter Fragefolge,
+  jeder Student sieht potenziell andere X von Y Fragen. Einschränkung:
   Alle Fragen müssen gleiche Dauer/Punkte aufweisen.</msg>
   <msg key="Max_items_ok">Beschränkung auf %n% Fragen ok, zeige Studierenden %n% von </msg>
   <msg key="Max_items_not_ok_duration">Beschränkung auf %n% Fragen NICHT ok (unterschiedliche Dauer), </msg>
@@ -194,7 +194,7 @@
 
   <msg key="Automatically_published_from_to">Automatische Freischaltung der Prüfung von %from% bis %to%</msg>
   <msg key="Exam_time_window">Zeitfenster für Prüfung</msg>
-  <msg key="Exam_time_window_help_text">Optionales automatisches Freischalten/Schließen der Prüfung. Auch wenn das Zeitfenster aktiviert ist, kann die Prüfung manuell freigeschalten/geschlossen werden.</msg>
+  <msg key="Exam_time_window_help_text">Optionales automatisches Freischalten/Schließen der Prüfung. Auch wenn das Zeitfenster aktiviert ist, kann die Prüfung manuell freigeschaltet/geschlossen werden.</msg>
 
   <msg key="Exam_published">Veröffentlichung der Prüfung</msg>
   <msg key="since_published">seit der Veröffentlichung</msg>
@@ -235,7 +235,7 @@
   <msg key="question_structure">Aufbau</msg>
   <msg key="Twocol_layout">2-Spaltig</msg>
 
-  <msg key="autosave_rejected_overdue">Automatische Speicherung nicht möglich, da die Bearbeitungszeit abgelaufen ist. Speichern Sie das Ergebnis und geben sie ab!</msg> 
+  <msg key="autosave_rejected_overdue">Automatische Speicherung nicht möglich, da die Bearbeitungszeit abgelaufen ist. Speichern Sie das Ergebnis und geben Sie ab!</msg> 
 
   <msg key="menu-New-Item-PoolQuestionInteraction">Pool-Frage</msg>
   <msg key="pool_question">Pool-Frage</msg>
@@ -264,7 +264,7 @@
   <msg key="Grade_boundaries">Notengrenzen</msg>
   <msg key="Grade">Note</msg>
   <msg key="Grading_scheme">Benotungsschema</msg>
-  <msg key="Grading_scheme_help_text">Das Benotungsschema definiertdie Notengrenzen und die Rundungsregeln, um von dem erreichten Ergebnis (in Prozenten) eine Note abzuleiten</msg>
+  <msg key="Grading_scheme_help_text">Das Benotungsschema definiert die Notengrenzen und die Rundungsregeln, um von dem erreichten Ergebnis (in Prozenten) eine Note abzuleiten</msg>
   <msg key="Grading_scheme-None">Keine Notenvergabe</msg>
   <msg key="Configuration">Einstellungen</msg>
   <msg key="Configuration_button_title">Einstellungsoptionen für diese Prüfung</msg>
