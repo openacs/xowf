@@ -3340,8 +3340,24 @@ namespace eval ::xowf::test_item {
           return ""
         }
       }
-      set answerAttributes \
+
+      #
+      # We have to distinguish between the answered attributes (based
+      # on the instance attributes in the database) and the answer
+      # attributes, which should be rendered. The latter one might be
+      # a subset, especially in cases, where filtering (e.g., show
+      # only one question of all candidates) happens.
+      #
+      set answeredAnswerAttributes \
           [:FL answer_attributes [$submission instance_attributes]]
+      set formAnswerAttributeNames \
+          [dict keys [:FL name_to_question_obj_dict $form_objs]]
+      set usedAnswerAttributes {}
+      foreach {k v} $answeredAnswerAttributes {
+        if {$k in $formAnswerAttributeNames} {
+          dict set usedAnswerAttributes $k $v
+        }
+      }
 
       #
       # "render_full_submission_form" calls "summary_form" to obtain the
@@ -3372,7 +3388,7 @@ namespace eval ::xowf::test_item {
                                -manual_grading [:dict_value $manual_gradings $user_id] \
                                -submission $submission \
                                -exam_question_dict $exam_question_dict \
-                               -answer_attributes $answerAttributes]
+                               -answer_attributes $usedAnswerAttributes]
       dict set achieved_points totalPoints $totalPoints
 
       #ns_log notice "achieved_points [dict get $achieved_points details]"
