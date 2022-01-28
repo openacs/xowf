@@ -196,6 +196,7 @@
   <msg key="Proctoring_record_help_text">Record images and audio files (as requested in proctoring options) of participants</msg>
   <msg key="question">Question</msg>
   <msg key="Question_management">Question Management</msg>
+  <msg key="question_selection">Selection of Questions</msg>
   <msg key="question_structure">Structure</msg>
   <msg key="question_summary">Questions</msg>
   <msg key="questions">Questions</msg>

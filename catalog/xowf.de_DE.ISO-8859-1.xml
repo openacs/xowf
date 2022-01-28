@@ -175,6 +175,7 @@
   <msg key="Proctoring_record_help_text">Speichere die Aufnahmen der Teilnehmer</msg>
   <msg key="question">Frage</msg>
   <msg key="Question_management">Fragenenstellungen</msg>
+  <msg key="question_selection">Fragenauswahl</msg>
   <msg key="question_structure">Aufbau</msg>
   <msg key="question_summary">Fragenübersicht</msg>
   <msg key="questions">Fragen</msg>
