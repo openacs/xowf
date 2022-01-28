@@ -25,8 +25,8 @@
   <msg key="Correct">Korrekt</msg>
   <msg key="correct">Richtig?</msg>
   <msg key="correct_when">Richtig, wenn...</msg>
-  <msg key="Countdown_audio_alarm">Countdown Zeitmesser mit akustischem Signal</msg>
-  <msg key="Countdown_audio_alarm_help_text">Inkludiere optionales Audiosignal für den Zeitmesser (ungeeignet für Prüfungen in Schulungsräumen)</msg>
+  <msg key="Countdown_audio_alarm">Audioalarm für den Countdown-Timer</msg>
+  <msg key="Countdown_audio_alarm_help_text">Inkludiere akustisches Signal, das Studierende vor Ablauf der Bearbeitungsfrist alarmiert (ungeeignet für Prüfungen in Schulungsräumen)</msg>
   <msg key="Created_Assessments">Verfügbare Assessments</msg>
   <msg key="Created_Questions">Verfügbare Fragen</msg>
   <msg key="Cut_and_paste_allowed">Ausschneiden und Einfügen in mehrzeiligen Textfeldern ist erlaubt</msg>
@@ -63,12 +63,11 @@
   <msg key="Goto_this_revision">Gehe zu dieser Version</msg>
   <msg key="Grade">Note</msg>
   <msg key="Grade_boundaries">Notengrenzen</msg>
-  <msg key="grading">Beurteilung</msg>
   <msg key="Grading-Scheme">Bewertungsschema</msg>
   <msg key="Grading-Score">Bewertung</msg>
   <msg key="Grading_scheme">Benotungsschema</msg>
   <msg key="Grading_scheme-None">Keine Notenvergabe</msg>
-  <msg key="Grading_scheme_help_text">Das Benotungsschema definiert die Notengrenzen und die Rundungsregeln, um von dem erreichten Ergebnis (in Prozenten) eine Note abzuleiten</msg>
+  <msg key="Grading_scheme_help_text">Das Benotungsschema definiertdie Notengrenzen und die Rundungsregeln, um von dem erreichten Ergebnis (in Prozenten) eine Note abzuleiten</msg>
   <msg key="Hour">Stunde</msg>
   <msg key="Hours">Stunden</msg>
   <msg key="inclass-exam-already_answered">Ihre Prüfung ist abgegeben und gespeichert.</msg>
@@ -94,9 +93,9 @@
   <msg key="Make_live_revision">Verwende angezeigte Version als Abgabe</msg>
   <msg key="Max_items">Beschränkte Fragenanzahl</msg>
   <msg key="Max_items_help_text">Beschränke die Zahl der Fragen auf
-  diesen Wert. Sinnvoll in Kombination mit randomisierter Fragefolge,
-  jeder Student sieht potenziell andere X von Y Fragen. Einschränkung:
-  Alle Fragen müssen gleiche Dauer/Punkte aufweisen.</msg>
+  diesen Wert. Sinnvoll in Kombination mit randomisierter Fragenfolge,
+  jeder Student sieht potentiell andere X von Y Fragen. Einschränkung:
+  Alle Fragen müssen gleiche Dauer und Punkte aufweisen.</msg>
   <msg key="Max_items_not_ok_duration">Beschränkung auf %n% Fragen NICHT ok (unterschiedliche Dauer), </msg>
   <msg key="Max_items_not_ok_number">Beschränkung auf %n% Fragen NICHT ok (Fragenanzahl zu gering), </msg>
   <msg key="Max_items_ok">Beschränkung auf %n% Fragen ok, zeige Studierenden %n% von </msg>
@@ -181,7 +180,7 @@
   <msg key="questions">Fragen</msg>
   <msg key="randomization_for_exam_not_ok">Randomisierung für Prüfung nicht geeignet (keine Zufallsauswahl &#34;immer&#34; verwenden)</msg>
   <msg key="randomization_for_exam_ok">Randomisierung für Prüfung geeignet</msg>
-  <msg key="randomized_items">Randomisierte Fragefolge</msg>
+  <msg key="randomized_items">Randomisierte Fragenfolge</msg>
   <msg key="randomized_items_help_text">Zeige die Fragen der Prüfung für jeden Studierenden in einer anderen Reihenfolge</msg>
   <msg key="refresh">Aktualisieren</msg>
   <msg key="remaining">verbleibend</msg>
@@ -204,9 +203,9 @@
   <msg key="Show_IP">Anzeige der IP-Adresse</msg>
   <msg key="Show_IP_help_text">Zeige Studierenden während der Prüfung eigene IP-Adresse</msg>
   <msg key="show_max">Zeige maximal</msg>
-  <msg key="Show_minutes">Minutenanzeige</msg>
+  <msg key="Show_minutes">Anzeige der Minuten pro Frage</msg>
   <msg key="Show_minutes_help_text">Zeige Studierenden während der Prüfung die vorgesehene Bearbeitungsdauer pro Beispiel</msg>
-  <msg key="Show_points">Punkteanzeige</msg>
+  <msg key="Show_points">Anzeige der Punkte pro Frage</msg>
   <msg key="Show_points_help_text">Zeige Studierenden während der Prüfung die erreichbaren Punkte pro Beispiel</msg>
   <msg key="show_results">Zeige Antwortstatistik</msg>
   <msg key="Shuffle">Zufallsauswahl</msg>
