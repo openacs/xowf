@@ -62,6 +62,7 @@ set :debug 0
 set :live_updates 1
 
 :forward QM ::xowf::test_item::question_manager
+:forward AM ::xowf::test_item::answer_manager
 
 set :fc_repository {
   {countdown_audio_alarm:boolean,horizontal=true,default=t,label=#xowf.Countdown_audio_alarm#,help_text=#xowf.Countdown_audio_alarm_help_text#}
@@ -127,8 +128,7 @@ State submission_review -actions {close_submission_review} -form_loader load_for
 # exercises, the answer workflow is created.
 #
 select proc activate {obj} {
-  xowf::test_item::answer_manager create_workflow \
-      -answer_workflow /packages/xowf/lib/inclass-exam-answer.wf \
+  $obj AM create_workflow -answer_workflow /packages/xowf/lib/inclass-exam-answer.wf \
       $obj
 }
 
@@ -144,9 +144,9 @@ publish proc activate {obj} {
   # cleanup is performed to avoid potential loss of submission data.
   #
   set revision_sets     [$obj get_revision_sets]
-  set published_periods [xowf::test_item::answer_manager state_periods $revision_sets -state published]
+  set published_periods [$obj AM state_periods $revision_sets -state published]
   if {[llength $published_periods] == 0} {
-    xowf::test_item::answer_manager delete_all_answer_data $obj
+    $obj AM delete_all_answer_data $obj
   }
   :publish_link $obj
 }
@@ -171,7 +171,7 @@ unpublish proc activate {obj} {
 # atjobs are removed.
 #
 restart proc activate {obj} {
-  xowf::test_item::answer_manager delete_scheduled_atjobs $obj
+  $obj AM delete_scheduled_atjobs $obj
 }
 
 ########################################################################
@@ -239,7 +239,7 @@ Action instproc unpublish_link {obj} {
     </div>
   }]
 
-  set wf [xowf::test_item::answer_manager get_answer_wf $obj]
+  set wf [$obj AM get_answer_wf $obj]
   if {$wf eq ""} {
     :msg "cannot get current workflow for [$obj name]"
     set tLink "."
@@ -268,7 +268,7 @@ Action instproc unpublish_link {obj} {
       #
     }
 
-    set answers [xowf::test_item::answer_manager get_answer_attributes $wf]
+    set answers [$obj AM get_answer_attributes $wf]
 
     #
     # Per default, the entries are disabled. When there are answers,
@@ -319,10 +319,10 @@ Action instproc unpublish_link {obj} {
 
     if {$state in {published done submission_review} || [llength $answers] > 0 } {
       if {$state eq "done"} {
-        set marked [xowf::test_item::answer_manager marked_results -obj $obj -wf $wf $combined_form_info]
+        set marked [$obj AM marked_results -obj $obj -wf $wf $combined_form_info]
         set marked ""  ;# not needed right now
       }
-      set answerStatus [xowf::test_item::answer_manager answers_panel  \
+      set answerStatus [$obj AM answers_panel  \
                             -heading "#xowf.online-exam-submitted_exams_heading#" \
                             -submission_msg "#xowf.online-exam-submitted_exams_msg#" \
                             -polling=[expr {${:live_updates} && $state ni {initial created done}}] \
@@ -339,8 +339,7 @@ Action instproc unpublish_link {obj} {
       set qrCode [subst {<div><img class="img-thumbnail qrcode" src="[ns_quotehtml $src]" ></div>}]
       set target_time [:QM exam_target_time \
                            -manager $obj -base_time [$obj last_modified]]
-      set countdownHTML [xowf::test_item::answer_manager countdown_timer \
-                             -target_time $target_time -id "countdown"]
+      set countdownHTML [$obj AM countdown_timer -target_time $target_time -id "countdown"]
     }
     #ns_log notice ALL=$text
 
@@ -378,6 +377,7 @@ Action instproc unpublish_link {obj} {
     $ctx forward load_form $container %proc $ctx
   }
   :forward QM ::xowf::test_item::question_manager
+  :forward AM ::xowf::test_item::answer_manager
 
   ${container}::Property return_url -default "" -allow_query_parameter true
 
@@ -433,7 +433,7 @@ Action instproc unpublish_link {obj} {
   #
   :proc www-delete {} {
     ::xo::cc set_query_parameter return_url [:property return_url]
-    xowf::test_item::answer_manager delete_all_answer_data [self]
+    :AM delete_all_answer_data [self]
     next
   }
 
@@ -446,17 +446,17 @@ Action instproc unpublish_link {obj} {
     set HTML ""
     set withAnswerColumns [${:package_id} query_parameter with_answers:boolean 0]
 
-    set wf [xowf::test_item::answer_manager get_answer_wf [self]]
+    set wf [:AM get_answer_wf [self]]
     if {$wf ne ""} {
       #set form_info [:QM combined_question_form -with_numbers [self]]
 
-      set items [xowf::test_item::answer_manager get_wf_instances $wf]
+      set items [:AM get_wf_instances $wf]
       set items2 [$items deep_copy]
       foreach i [$items2 children] {
         $i set online-exam-userName [acs_user::get_element -user_id [$i creation_user] -element username]
         $i set online-exam-fullName [::xo::get_user_name [$i creation_user]]
       }
-      set HTML [::xowf::test_item::answer_manager results_table \
+      set HTML [:AM results_table \
                     -package_id ${:package_id} \
                     -items $items2 \
                     -state * \
@@ -483,15 +483,15 @@ Action instproc unpublish_link {obj} {
   #
   :proc www-print-participants {} {
     set HTML ""
-    set wf [xowf::test_item::answer_manager get_answer_wf [self]]
+    set wf [:AM get_answer_wf [self]]
     if {$wf ne ""} {
-      set items [xowf::test_item::answer_manager get_wf_instances $wf]
+      set items [:AM get_wf_instances $wf]
       set items2 [$items deep_copy]
       foreach i [$items2 children] {
         $i set online-exam-userName [acs_user::get_element -user_id [$i creation_user] -element username]
         $i set online-exam-fullName [::xo::get_user_name [$i creation_user]]
       }
-      set HTML [::xowf::test_item::answer_manager participants_table \
+      set HTML [:AM participants_table \
                     -package_id ${:package_id} \
                     -items $items2 \
                     -state * \
@@ -541,10 +541,10 @@ Action instproc unpublish_link {obj} {
   #
   :proc www-exam-results {} {
     #set manual_gradings [:property manual_gradings]
-    set manual_gradings [xowf::test_item::answer_manager get_exam_results -obj [self] manual_gradings]
+    set manual_gradings [:AM get_exam_results -obj [self] manual_gradings]
     #set results [:property __results]
-    set results [xowf::test_item::answer_manager get_exam_results -obj [self] results]
-    xowf::test_item::answer_manager results_export -reply -manual_gradings $manual_gradings $results
+    set results [:AM get_exam_results -obj [self] results]
+    :AM results_export -reply -manual_gradings $manual_gradings $results
     ad_script_abort
   }
 
@@ -558,7 +558,7 @@ Action instproc unpublish_link {obj} {
     template::head::add_link -rel stylesheet -href /resources/xowf/test-item.css
 
     set as_student [:query_parameter as_student:boolean false]
-    set d [xowf::test_item::answer_manager render_answers \
+    set d [:AM render_answers \
                -as_student    $as_student \
                -filter_id     [:query_parameter id:int32 ""] \
                -creation_user [:query_parameter creation_user:int32 ""] \
@@ -608,7 +608,7 @@ Action instproc unpublish_link {obj} {
     if {[:property _state] ne "published"} {
       :util_user_message -html -message "Cannot start answer workflow in this state"
     } else {
-      set wf [xowf::test_item::answer_manager get_answer_wf [self]]
+      set wf [:AM get_answer_wf [self]]
       set proctoring [:property proctoring]
       if {$proctoring ne "" && $proctoring} {
         set po [:property proctoring_options]
@@ -666,7 +666,7 @@ Action instproc unpublish_link {obj} {
     if {[:property _state] ne "published"} {
       :util_user_message -html -message "Cannot start answer workflow in this state"
     } else {
-      set wf [xowf::test_item::answer_manager get_answer_wf [self]]
+      set wf [:AM get_answer_wf [self]]
       $wf www-create-or-use -parent_id [:item_id]
     }
   }
@@ -759,7 +759,7 @@ Action instproc unpublish_link {obj} {
     # is "cleared" between revisions.
     #
     template::head::add_link -rel stylesheet -href /resources/xowf/test-item.css
-    set HTML [xowf::test_item::answer_manager render_answers_with_edit_history [self]]
+    set HTML [:AM render_answers_with_edit_history [self]]
 
     if {$HTML eq ""} {
       set HTML "#xowiki.no_data#"
@@ -777,9 +777,9 @@ Action instproc unpublish_link {obj} {
     #
     # Return statistics about working and finished exams.
     #
-    set wf [xowf::test_item::answer_manager get_answer_wf [self]]
-    set answers [xowf::test_item::answer_manager get_answer_attributes $wf]
-    set answered [xowf::test_item::answer_manager get_answer_attributes -state done $wf]
+    set wf [:AM get_answer_wf [self]]
+    set answers [:AM get_answer_attributes $wf]
+    set answered [:AM get_answer_attributes -state done $wf]
     ns_return 200 text/plain [llength $answered]/[llength $answers]
     #ns_log notice "MASTER POLL [self] ${:name}, returned [llength $answered]/[llength $answers]"
     ad_script_abort
@@ -812,15 +812,12 @@ Action instproc unpublish_link {obj} {
     #
     # Update property "manual_gradings" of the exam in the results page
     #
-    #set manual_gradings [:property manual_gradings]
-    set manual_gradings [xowf::test_item::answer_manager get_exam_results -obj [self] manual_gradings]    
+    set manual_gradings [:AM get_exam_results -obj [self] manual_gradings]
     set user_id [dict get $formDict user_id]
     set qn [dict get $formDict question_name]
     dict set manual_gradings $user_id $qn achieved [dict get $formDict achieved]
     dict set manual_gradings $user_id $qn comment [dict get $formDict comment]
-    xowf::test_item::answer_manager set_exam_results -obj [self] manual_gradings $manual_gradings
-    #dict set :instance_attributes manual_gradings $manual_gradings
-    #:update_attribute_from_slot [:find_slot instance_attributes] ${:instance_attributes}
+    :AM set_exam_results -obj [self] manual_gradings $manual_gradings
 
     #
     # Recompute the achieved points percentage for the full exam
