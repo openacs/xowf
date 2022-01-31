@@ -23,6 +23,7 @@ namespace eval ::xowf::test {
 
         "::xo::ConnectionContext instproc eval_as_user"
         "::xowf::Package instproc destroy"
+        "::xowf::WorkflowPage instproc childpage"
         "::xowf::WorkflowPage instproc get_revision_sets"
         "::xowf::WorkflowPage instproc is_wf"
         "::xowf::WorkflowPage instproc is_wf_instance"
@@ -40,6 +41,7 @@ namespace eval ::xowf::test {
         "::xowf::test_item::Answer_manager instproc get_answer_wf"
         "::xowf::test_item::Answer_manager instproc get_answers"
         "::xowf::test_item::Answer_manager instproc get_duration"
+        "::xowf::test_item::Answer_manager instproc get_exam_results"
         "::xowf::test_item::Answer_manager instproc get_wf_instances"
         "::xowf::test_item::Answer_manager instproc grading_dialog_setup"
         "::xowf::test_item::Answer_manager instproc grading_table"
@@ -51,6 +53,7 @@ namespace eval ::xowf::test {
         "::xowf::test_item::Answer_manager instproc render_answers"
         "::xowf::test_item::Answer_manager instproc revisions_up_to"
         "::xowf::test_item::Answer_manager instproc runtime_panel"
+        "::xowf::test_item::Answer_manager instproc set_exam_results"
         "::xowf::test_item::Answer_manager instproc state_periods"
         "::xowf::test_item::Answer_manager instproc student_submissions_exist"
         "::xowf::test_item::Question_manager instproc add_seeds"

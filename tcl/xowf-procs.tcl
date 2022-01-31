@@ -64,11 +64,12 @@ namespace eval ::xowf {
     online-exam.wf
     inclass-quiz.wf
     inclass-exam.wf
+    inclass-exam-statistics.wf
     edit-interaction.wf
     edit-grading-scheme.wf
     answer-single-question.wf
     topic-assignment.wf
-
+    
     quiz-select_question.form
     select_question.form
     select-topics.form
@@ -777,7 +778,7 @@ namespace eval ::xowf {
   Context instproc initialize_context {obj} {
     #:log "START-initialize_context <$obj>"
     #
-    # Keep the object in instance variable
+    # Keep the object in an instance variable.
     #
     set :object $obj
 
@@ -790,12 +791,18 @@ namespace eval ::xowf {
     :set_current_state $state
 
     if {![nsf::is object ${:current_state}]} {
-      # The state was probably deleted from the workflow definition,
-      # but the workflow instance does still need it. We complain an
-      # reset the state to initial, which should be always present.
-      :log "===== Workflow instance [$obj name] is in an undefined state '$state', reset to initial"
-      $obj msg "Workflow instance [$obj name] is in an undefined state '$state', reset to initial"
-      :set_current_state initial
+      if {$state eq "initial"} {
+        ns_log warning "no state object ${:current_state}"
+      } else {
+        #
+        # The state was probably deleted from the workflow definition,
+        # but the workflow instance does still need it. We complain an
+        # reset the state to "initial", which should be always present.
+        #
+        :log "===== Workflow instance [$obj name] is in an undefined state '$state', reset to initial"
+        $obj msg "Workflow instance [$obj name] is in an undefined state '$state', reset to initial"
+        :set_current_state initial
+      }
     }
 
     # Set the embedded_context to the workflow context,
@@ -2390,6 +2397,46 @@ namespace eval ::xowf {
     return [$actionObj invoke -attributes $attributes]
   }
 
+  
+  WorkflowPage ad_instproc childpage {-name:required -form} {
+    
+    Return the child page of the current object with the provided
+    name. In case the child object does not exist, create it as an
+    instance of the provided form.
+
+    @return page object
+  } {
+    if {[info exists form]} {
+      set child_page_id [::${:package_id} lookup \
+                             -use_package_path false \
+                             -default_lang en \
+                             -name $name \
+                             -parent_id ${:item_id}]
+      if {$child_page_id == 0} {
+        ns_log notice "child page '$name' does not exist"
+        set form_obj [::${:package_id} instantiate_forms \
+                          -default_lang "en" \
+                          -forms $form]
+        if {[llength $form_obj] == 0} {
+          error "childpage: cannot instantiate $form"
+        }
+        set p [$form_obj create_form_page_instance \
+                   -name $name \
+                   -nls_language en_US \
+                   -parent_id ${:item_id} \
+                   -package_id ${:package_id} \
+                   -instance_attributes {}]
+        $p save_new
+      } else {
+        #ns_log notice "child page '$name' exists already (item_id $child_page_id)"
+        set p [::xo::db::CrClass get_instance_from_db -item_id $child_page_id]
+      }
+      return $p
+    } else {
+      error "cannot create '$name': API supports so far only form pages"
+    }
+ }
+  
   #
   # Interface to atjobs
   #

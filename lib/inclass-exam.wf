@@ -60,7 +60,7 @@ set :autoname 1   ;# to avoid editable name field
 set :policy ::xowf::test_item::test-item-policy-publish
 set :debug 0
 set :live_updates 1
-set :QM ::xowf::test_item::question_manager
+
 :forward QM ::xowf::test_item::question_manager
 
 set :fc_repository {
@@ -540,8 +540,10 @@ Action instproc unpublish_link {obj} {
   # export results as CSV table
   #
   :proc www-exam-results {} {
-    set manual_gradings [:property manual_gradings]
-    set results [:property __results]
+    #set manual_gradings [:property manual_gradings]
+    set manual_gradings [xowf::test_item::answer_manager get_exam_results -obj [self] manual_gradings]
+    #set results [:property __results]
+    set results [xowf::test_item::answer_manager get_exam_results -obj [self] results]
     xowf::test_item::answer_manager results_export -reply -manual_gradings $manual_gradings $results
     ad_script_abort
   }
@@ -561,7 +563,7 @@ Action instproc unpublish_link {obj} {
                -filter_id     [:query_parameter id:int32 ""] \
                -creation_user [:query_parameter creation_user:int32 ""] \
                -revision_id   [:query_parameter rid:int32 ""] \
-               -form_objs     [:query_parameter fos:int32 ""] \
+               -filter_form_ids [:query_parameter fos:int32 ""] \
                -export        [:query_parameter export:boolean 0] \
                -orderby       [:query_parameter orderby:token "online-exam-userName"] \
                -grading       [:query_parameter grading:token [:property grading]] \
@@ -808,15 +810,17 @@ Action instproc unpublish_link {obj} {
     set formDict [ns_set array [ns_getform]]
 
     #
-    # Update property "manual_gradings" of the exam
+    # Update property "manual_gradings" of the exam in the results page
     #
-    set manual_gradings [:property manual_gradings]
+    #set manual_gradings [:property manual_gradings]
+    set manual_gradings [xowf::test_item::answer_manager get_exam_results -obj [self] manual_gradings]    
     set user_id [dict get $formDict user_id]
     set qn [dict get $formDict question_name]
     dict set manual_gradings $user_id $qn achieved [dict get $formDict achieved]
     dict set manual_gradings $user_id $qn comment [dict get $formDict comment]
-    dict set :instance_attributes manual_gradings $manual_gradings
-    :update_attribute_from_slot [:find_slot instance_attributes] ${:instance_attributes}
+    xowf::test_item::answer_manager set_exam_results -obj [self] manual_gradings $manual_gradings
+    #dict set :instance_attributes manual_gradings $manual_gradings
+    #:update_attribute_from_slot [:find_slot instance_attributes] ${:instance_attributes}
 
     #
     # Recompute the achieved points percentage for the full exam

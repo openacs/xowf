@@ -1,0 +1,28 @@
+# -*- tcl-*-
+# The variable package_id and parent_id are provided via the caller context
+xowf::Package create_new_workflow_page \
+    -package_id $package_id \
+    -parent_id $parent_id \
+    -name en:inclass-exam-statistics.wf \
+    -title "In-class Exam Statistics" \
+    -instance_attributes {
+	workflow_definition {
+            :auto_form_constraints {
+                _title:label=CHANGED
+                _page_order:omit _creator:omit _text:omit _description:omit _nls_language:omit
+                statistics:textarea
+                results:textarea
+                manual_gradings:textarea
+            }
+            set :auto_form_template {
+                @statistics@ @results@ @manual_gradings@
+            }
+            State initial
+        }
+	form_constraints {}
+	return_url {}
+    }
+
+
+
+

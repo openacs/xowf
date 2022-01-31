@@ -1322,6 +1322,13 @@ namespace eval ::xowiki::formfield {
 
 namespace eval ::xowf::test_item {
 
+  # the fillowing is not yet ready for prime time.
+  if {0 && [acs::icanuse "nx::alias object"]} {
+    set register_command "alias"
+  } else {
+    set register_command "forward"
+  }
+
   nx::Class create AssessmentInterface {
     #
     # Abstract class for common functionality
@@ -1449,7 +1456,6 @@ namespace eval ::xowf::test_item {
     # - form_name_based_attribute_stem
     # - name_to_question_obj_dict
     #
-    # - get_form_object
     # - rename_attributes
     #
 
@@ -1581,20 +1587,20 @@ namespace eval ::xowf::test_item {
       return $form_obj
     }
 
-    :public method -deprecated get_form_object {ctx:object form_name} {
-      #
-      # Return the form object based on the provided form name. This
-      # function performs attribute renaming on the returned form
-      # object.
-      #
-      set form_id [$ctx default_load_form_id $form_name]
-      set obj [$ctx object]
-      set form_obj [::xowiki::FormPage get_instance_from_db -item_id $form_id]
-      return [:rename_attributes $form_obj]
-    }
+    # :method -deprecated get_form_object {ctx:object form_name} {
+    #   #
+    #   # Return the form object based on the provided form name. This
+    #   # function performs attribute renaming on the returned form
+    #   # object.
+    #   #
+    #   set form_id [$ctx default_load_form_id $form_name]
+    #   set obj [$ctx object]
+    #   set form_obj [::xowiki::FormPage get_instance_from_db -item_id $form_id]
+    #   return [:rename_attributes $form_obj]
+    # }
   }
 
-  AssessmentInterface forward FL \
+  AssessmentInterface {*}$register_command FL \
       [Renaming_form_loader create renaming_form_loader]
 }
 
@@ -1968,7 +1974,8 @@ namespace eval ::xowf::test_item {
       #
       # Delete as well the manual gradings for this exam.
       #
-      $obj set_property -new 1 manual_gradings {}
+      #$obj set_property -new 1 manual_gradings {}
+      :AM set_exam_results -obj $obj manual_gradings {}
 
       return $wf
     }
@@ -2106,7 +2113,8 @@ namespace eval ::xowf::test_item {
         dict set r examPublished [clock format $examPublishedClock -format "%H:%M:%S"]
         set epTimeDiff [expr {$toClock - $examPublishedClock}]
         dict set r examPublishedDuration "[expr {$epTimeDiff/60}]m [expr {$epTimeDiff%60}]s"
-        ns_log notice "EP examPublishedDuration [dict get $r examPublishedDuration] EP [dict get $r examPublished] $exam_published_time"
+        #ns_log notice "EP examPublishedDuration [dict get $r examPublishedDuration]" \
+            "EP [dict get $r examPublished] $exam_published_time"
         dict set r examPublishedSeconds $epTimeDiff
       }
       return $r
@@ -2326,6 +2334,7 @@ namespace eval ::xowf::test_item {
       set totalPoints 0
       set achievableTotalPoints 0
       set details {}
+
       foreach a [dict keys $answer_attributes] {
         set f [$submission lookup_form_field -name $a $all_form_fields]
         set points {}
@@ -2341,6 +2350,7 @@ namespace eval ::xowf::test_item {
         } else {
           set auto_correct_achieved ""
         }
+        #ns_log notice "=== achieved_points <$a> auto_correct_achieved $auto_correct_achieved"
 
         #
         # Manual grading has higher priority than autograding.
@@ -2363,6 +2373,7 @@ namespace eval ::xowf::test_item {
                              auto_correct_achieved $auto_correct_achieved \
                              achievable $achievablePoints]
       }
+
       #ns_log notice "final details <$details>"
       return [list achievedPoints $totalPoints \
                   details $details \
@@ -3010,13 +3021,13 @@ namespace eval ::xowf::test_item {
     :method render_full_submission_form {
       -wf:object
       -submission:object
-      -form_objs
+      -filter_form_ids:integer,0..n
     } {
       #
       # Compute the HTML of the full submission with all form fields
       # instantiated according to randomization.
       #
-      # @param form_objs used for filtering questions
+      # @param filter_form_ids used for filtering questions
       # @return HTML of question form object containing all (wanted) questions
       #
 
@@ -3042,7 +3053,7 @@ namespace eval ::xowf::test_item {
       #
       xo::cc eval_as_user -user_id [$submission creation_user] {
         $submission set __feedback_mode 2
-        $submission set __form_objs $form_objs
+        $submission set __form_objs $filter_form_ids
         set question_form [$submission render_content]
       }
 
@@ -3303,7 +3314,7 @@ namespace eval ::xowf::test_item {
       {-examWf:object}
       {-exam_question_dict}
       {-filter_id:integer,0..1 ""}
-      {-form_objs:integer,0..n ""}
+      {-filter_form_ids:integer,0..n ""}
       {-grading_scheme:object}
       {-recutil:object,0..1 ""}
       {-zipFile:object,0..1 ""}
@@ -3318,7 +3329,7 @@ namespace eval ::xowf::test_item {
       set userName [$submission set online-exam-userName]
       set fullName [$submission set online-exam-fullName]
       set user_id  [$submission set creation_user]
-      set manual_gradings [$examWf property manual_gradings]
+      set manual_gradings [:get_exam_results -obj $examWf manual_gradings]
       set results ""
 
       #if {[$submission state] ne "done"} {
@@ -3348,16 +3359,24 @@ namespace eval ::xowf::test_item {
       # a subset, especially in cases, where filtering (e.g., show
       # only one question of all candidates) happens.
       #
+      set exam_question_objs [dict values $exam_question_dict]
+
       set answeredAnswerAttributes \
           [:FL answer_attributes [$submission instance_attributes]]
       set formAnswerAttributeNames \
-          [dict keys [:FL name_to_question_obj_dict $form_objs]]
+          [dict keys [:FL name_to_question_obj_dict $exam_question_objs]]
       set usedAnswerAttributes {}
       foreach {k v} $answeredAnswerAttributes {
         if {$k in $formAnswerAttributeNames} {
           dict set usedAnswerAttributes $k $v
         }
       }
+
+      #ns_log notice "filter_form_ids <$filter_form_ids>"
+      #ns_log notice "question_objs <[dict get $combined_form_info question_objs]>"
+      #ns_log notice "answeredAnswerAttributes <$answeredAnswerAttributes>"
+      #ns_log notice "formAnswerAttributeNames <$formAnswerAttributeNames> [:FL name_to_question_obj_dict $filter_form_ids]"
+      #ns_log notice "usedAnswerAttributes <$usedAnswerAttributes>"
 
       #
       # "render_full_submission_form" calls "summary_form" to obtain the
@@ -3366,7 +3385,7 @@ namespace eval ::xowf::test_item {
       set question_form [:render_full_submission_form \
                              -wf $wf \
                              -submission $submission \
-                             -form_objs $form_objs]
+                             -filter_form_ids $filter_form_ids]
 
       if {$recutil ne ""} {
         :export_answer \
@@ -3391,8 +3410,8 @@ namespace eval ::xowf::test_item {
                                -answer_attributes $usedAnswerAttributes]
       dict set achieved_points totalPoints $totalPoints
 
-      #ns_log notice "achieved_points [dict get $achieved_points details]"
-      #ns_log notice "manual_gradings [:dict_value $manual_gradings $user_id]"
+      #ns_log notice "user $user_id: achieved_points [dict get $achieved_points details]"
+      #ns_log notice "user $user_id: manual_gradings [:dict_value $manual_gradings $user_id]"
 
       foreach pd [:dict_value $achieved_points details] {
         set qn [dict get $pd attributeName]
@@ -3542,7 +3561,7 @@ namespace eval ::xowf::test_item {
       {-filter_id:integer,0..1 ""}
       {-creation_user:integer,0..1 ""}
       {-revision_id:integer,0..1 ""}
-      {-form_objs:integer,0..n ""}
+      {-filter_form_ids:integer,0..n ""}
       {-export:boolean false}
       {-orderby:token "online-exam-userName"}
       {-grading:token,0..n ""}
@@ -3570,10 +3589,10 @@ namespace eval ::xowf::test_item {
         return [list do_stream 0 HTML ""]
       }
 
-      if {$form_objs ne "" && $form_objs ni [dict get $combined_form_info question_objs]} {
-        ns_log warning "inclass-exam: ignore invalid form_obj '$form_objs';" \
+      if {$filter_form_ids ne "" && $filter_form_ids ni [dict get $combined_form_info question_objs]} {
+        ns_log warning "inclass-exam: ignore invalid form_obj '$filter_form_ids';" \
             "valid [dict get $combined_form_info question_objs]"
-        set form_objs ""
+        set filter_form_ids ""
       }
       ns_log notice "--- grading '$grading'"
       set grading_scheme [:grading_scheme -examWf $examWf -grading $grading -total_points $totalPoints]
@@ -3597,12 +3616,12 @@ namespace eval ::xowf::test_item {
       ::xo::cc set_parameter template_file view-plain-master
       ::xo::cc set_parameter MenuBar 0
 
-      if {[llength $form_objs] > 0} {
+      if {[llength $filter_form_ids] > 0} {
         #
         # Filter by questions. For the time being, we allow only a
         # single question, ... and we take the first ones.
         #
-        append HTML "<h2>#xowf.question#: [ns_quotehtml [[lindex $form_objs 0] title]]</h2>\n"
+        append HTML "<h2>#xowf.question#: [ns_quotehtml [[lindex $filter_form_ids 0] title]]</h2>\n"
         set runtime_panel_view ""
 
       } elseif {$as_student} {
@@ -3686,6 +3705,7 @@ namespace eval ::xowf::test_item {
 
       set form_objs_exam [:QM load_question_objs $examWf [$examWf property question]]
       set question_dict [:FL name_to_question_obj_dict $form_objs_exam]
+      #ns_log notice "passed filter_form_ids <$filter_form_ids> form_objs_exam <$form_objs_exam>"
 
       #
       # Iterate over the items sorted by orderby.
@@ -3701,7 +3721,7 @@ namespace eval ::xowf::test_item {
                    -autograde $autograde \
                    -combined_form_info $combined_form_info \
                    -filter_id $filter_id \
-                   -form_objs $form_objs \
+                   -filter_form_ids $filter_form_ids \
                    -grading_scheme $grading_scheme \
                    -recutil $recutil \
                    -zipFile $zipFile \
@@ -3742,6 +3762,7 @@ namespace eval ::xowf::test_item {
         # The following lines are conveniant for debugging
         #
         #set manual_gradings [$examWf property manual_gradings]
+        #set manual_gradings [:get_exam_results -obj $examWf manual_gradings]
         #append HTML <pre>$manual_gradings</pre>
         #append HTML <pre>[:results_export -manual_gradings $manual_gradings $results]</pre>
       }
@@ -3760,8 +3781,8 @@ namespace eval ::xowf::test_item {
         #
         # Avoid empty entries for query parameters
         #
-        if {[llength $form_objs] > 0} {
-          set fos $form_objs
+        if {[llength $filter_form_ids] > 0} {
+          set fos $filter_form_ids
         }
         foreach value {revision_id filter_id} var {rid id} {
           if {[set $value] ne ""} {
@@ -3798,10 +3819,9 @@ namespace eval ::xowf::test_item {
               $examWf unset $var
             }
           }
-          dict set ia __statistics $statistics
+          :AM set_exam_results -obj $examWf statistics $statistics
         }
-        dict set ia __results $results
-        $examWf update_attribute_from_slot [$examWf find_slot instance_attributes] $ia
+        :AM set_exam_results -obj $examWf results $results
       }
 
       return [list do_stream $do_stream HTML $HTML]
@@ -4656,9 +4676,62 @@ namespace eval ::xowf::test_item {
         }]
       }
     }
+    #----------------------------------------------------------------------
+    # Class:  Answer_manager
+    # Method: get_exam_results
+    #----------------------------------------------------------------------
+    :public method get_exam_results {
+      -obj:object,required
+      property
+      {default ""}
+    } {
+      set p [$obj childpage -name en:result -form inclass-exam-statistics.wf]
+      set instance_attributes [$p instance_attributes]
+      if {[dict exists $instance_attributes $property]} {
+        #ns_log notice "get_exam_results <$property> returns value from " \
+            "results page: [dict get $instance_attributes $property]"
+        return [dict get $instance_attributes $property]
+      }
+      #ns_log notice "get_exam_results <$property> returns default"
+      return $default
+    }
+
+    #----------------------------------------------------------------------
+    # Class:  Answer_manager
+    # Method: set_exam_results
+    #----------------------------------------------------------------------
+    :public method set_exam_results {
+      -obj:object,required
+      property
+      value
+    } {
+      #ns_log notice "SES '$property' bytes [string length $value]"
+      set p [$obj childpage -name en:result -form inclass-exam-statistics.wf]
+      set instance_attributes [$p instance_attributes]
+      dict set instance_attributes $property $value
+      $p update_attribute_from_slot [$p find_slot instance_attributes] ${instance_attributes}
+      #
+      # cleanup of legacy values
+      #
+      set instance_attributes [$obj instance_attributes]
+      foreach property_name [list $property __$property] {
+        if {[dict exists $instance_attributes $property_name]} {
+          ns_log notice "SES set_exam_results:" \
+              "clearing values from earlier releases for '$property_name'" \
+              "was <[dict get $instance_attributes $property_name]>"
+          dict unset instance_attributes $property_name
+          $obj set instance_attributes $instance_attributes
+          #ns_log notice "FINAL IA <$instance_attributes> for item_id [$obj item_id]" \
+              "revision_id [$obj revision_id]"
+          $obj update_attribute_from_slot [$obj find_slot instance_attributes] $instance_attributes
+          ::xo::xotcl_object_cache flush [$obj item_id]
+          ::xo::xotcl_object_cache flush [$obj revision_id]
+        }
+      }
+    }
   }
 
-  AssessmentInterface forward AM \
+  AssessmentInterface {*}$register_command AM \
       [Answer_manager create answer_manager]
 }
 
@@ -6349,7 +6422,7 @@ namespace eval ::xowf::test_item {
       #
       # Provide a summary of all questions of an exam.
       #
-      set results [$obj property __results]
+      set results [:AM get_exam_results -obj $obj results]
       if {$results ne ""} {
         set href [$obj pretty_link -query m=exam-results]
         set results_summary [subst {
@@ -6460,7 +6533,7 @@ namespace eval ::xowf::test_item {
         # instance. These statistics are computed when the exam
         # protocol is rendered.
         #
-        set statistics [$obj property  __statistics]
+        set statistics [:AM get_exam_results -obj $obj statistics]
         if {$statistics ne ""} {
           foreach var {success_statistics count_statistics} key {success count} {
             if {[dict exists $statistics $key]} {
@@ -6792,7 +6865,7 @@ namespace eval ::xowf::test_item {
     }
   }
   set qm [Question_manager create question_manager]
-  AssessmentInterface forward QM $qm
+  AssessmentInterface {*}$register_command QM $qm
   ::xowiki::formfield::TestItemField instforward QM  $qm
 }
 
