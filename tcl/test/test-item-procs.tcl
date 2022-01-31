@@ -326,14 +326,19 @@ namespace eval ::xowf::test {
             #
             acs::test::dom_html root [dict get $d1 body] {
                 set hrefs [$root selectNodes {//img[@class='image']/@src}]
-                set found_one_image [lmap qn {sample_mc_0 sample_st_0 sample_text_0} {
-                    if {![string match *$qn* $hrefs]} {
-                        continue
+                set found_one_image false
+                set has_raw_and_self false
+                foreach qn {sample_mc_0 sample_st_0 sample_text_0} {
+                    if {[string match *$qn* $hrefs]} {
+                        set has_raw_and_self [expr {$qn eq "sample_mc_0"}]
+                        set found_one_image true
+                        break
                     }
-                    set _ 1
-                }]
+                }
                 aa_true "Images '$hrefs' were found" $found_one_image
-                aa_true "raw and self could be rendered" {[llength $hrefs] > 1}
+                if {$has_raw_and_self} {
+                    aa_true "raw and self could be rendered" {[llength $hrefs] > 1}
+                }
             }
 
             #
