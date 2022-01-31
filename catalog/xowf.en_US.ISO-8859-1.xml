@@ -224,7 +224,7 @@
   <msg key="Show_IP">Show IP address</msg>
   <msg key="Show_IP_help_text">Show student his own IP address during exam</msg>
   <msg key="show_max">Show Max</msg>
-  <msg key="Show_minutes">>Show questions with minutes</msg>
+  <msg key="Show_minutes">Show questions with minutes</msg>
   <msg key="Show_minutes_help_text">Show student questions with time budget in minutes during exam</msg>
   <msg key="Show_points">Show questions with points</msg>
   <msg key="Show_points_help_text">Show student achievable points per question during exam</msg>
