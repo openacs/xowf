@@ -325,7 +325,7 @@ Action instproc unpublish_link {obj} {
                                ? [dict get ${:instance_attributes} signature]
                                : 0 }]
       set examTitle ${:title}
-      set filter_id [[$wf package_id] query_parameter id:integer ""]
+      set filter_submission_id [[$wf package_id] query_parameter id:integer ""]
 
       foreach i [$items children] {
         $i set online-exam-userName [acs_user::get_element -user_id [$i creation_user] -element username]
@@ -340,7 +340,7 @@ Action instproc unpublish_link {obj} {
           ns_log notice "online-exam: submission of $userName is not finished (state [$i state])"
           continue
         }
-        if {$filter_id ne "" && [$i item_id] ne $filter_id} {
+        if {$filter_submission_id ne "" && [$i item_id] ne $filter_submission_id} {
           continue
         }
 

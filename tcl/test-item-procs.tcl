@@ -2947,7 +2947,7 @@ namespace eval ::xowf::test_item {
     #----------------------------------------------------------------------
     :method submissions {
       {-creation_user:integer,0..1 ""}
-      {-filter_id:integer,0..1 ""}
+      {-filter_submission_id:integer,0..1 ""}
       {-revision_id:integer,0..1 ""}
       {-wf:object}
     } {
@@ -2966,7 +2966,7 @@ namespace eval ::xowf::test_item {
       } else {
         set submissions [:get_wf_instances \
                              {*}[expr {$creation_user ne "" ? "-creation_user $creation_user" : ""}] \
-                             {*}[expr {$filter_id ne "" ? "-item_id $filter_id" : ""}] \
+                             {*}[expr {$filter_submission_id ne "" ? "-item_id $filter_submission_id" : ""}] \
                              $wf]
       }
 
@@ -3313,7 +3313,7 @@ namespace eval ::xowf::test_item {
       {-combined_form_info}
       {-examWf:object}
       {-exam_question_dict}
-      {-filter_id:integer,0..1 ""}
+      {-filter_submission_id:integer,0..1 ""}
       {-filter_form_ids:integer,0..n ""}
       {-grading_scheme:object}
       {-recutil:object,0..1 ""}
@@ -3446,7 +3446,7 @@ namespace eval ::xowf::test_item {
       # If we filter by student and the exam is proctored, display
       # the procoring images as well.
       #
-      if {$filter_id ne "" && [$examWf property proctoring] eq "t"} {
+      if {$filter_submission_id ne "" && [$examWf property proctoring] eq "t"} {
         set markup [:render_proctor_images \
                         -submission $submission \
                         -revisions $revisions \
@@ -3558,7 +3558,7 @@ namespace eval ::xowf::test_item {
     #----------------------------------------------------------------------
     :public method render_answers {
       {-as_student:boolean false}
-      {-filter_id:integer,0..1 ""}
+      {-filter_submission_id:integer,0..1 ""}
       {-creation_user:integer,0..1 ""}
       {-revision_id:integer,0..1 ""}
       {-filter_form_ids:integer,0..n ""}
@@ -3603,7 +3603,7 @@ namespace eval ::xowf::test_item {
 
       set items [:submissions \
                      -creation_user $creation_user \
-                     -filter_id $filter_id \
+                     -filter_submission_id $filter_submission_id \
                      -revision_id $revision_id \
                      -wf $wf]
       #
@@ -3639,7 +3639,7 @@ namespace eval ::xowf::test_item {
         # Provide the full protocol (or a subset of it)
         #
         append HTML "<h2>#xowf.online-exam-protocol#</h2>\n"
-        if {$filter_id ne ""} {
+        if {$filter_submission_id ne ""} {
           set runtime_panel_view "revision_overview"
         } else {
           set runtime_panel_view "default"
@@ -3671,7 +3671,7 @@ namespace eval ::xowf::test_item {
         set recutil [:recutil_create \
                          -clear \
                          -exam_id [$wf parent_id] \
-                         -fn [expr {$filter_id eq "" ? "all.rec" : "$filter_id.rec"}]
+                         -fn [expr {$filter_submission_id eq "" ? "all.rec" : "$filter_submission_id.rec"}]
                     ]
       } else {
         set recutil ""
@@ -3720,7 +3720,7 @@ namespace eval ::xowf::test_item {
                    -exam_question_dict $question_dict \
                    -autograde $autograde \
                    -combined_form_info $combined_form_info \
-                   -filter_id $filter_id \
+                   -filter_submission_id $filter_submission_id \
                    -filter_form_ids $filter_form_ids \
                    -grading_scheme $grading_scheme \
                    -recutil $recutil \
@@ -3784,7 +3784,7 @@ namespace eval ::xowf::test_item {
         if {[llength $filter_form_ids] > 0} {
           set fos $filter_form_ids
         }
-        foreach value {revision_id filter_id} var {rid id} {
+        foreach value {revision_id filter_submission_id} var {rid id} {
           if {[set $value] ne ""} {
             set $var [set $value]
           }
@@ -3808,7 +3808,7 @@ namespace eval ::xowf::test_item {
       # might be partially relaxed in the future.
       #
       if {$with_grading_table
-          && !$as_student && $filter_id eq "" && $creation_user eq "" && $revision_id eq ""
+          && !$as_student && $filter_submission_id eq "" && $creation_user eq "" && $revision_id eq ""
         } {
         set statistics {}
         set ia [$examWf instance_attributes]
