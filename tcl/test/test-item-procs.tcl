@@ -318,27 +318,26 @@ namespace eval ::xowf::test {
             # questions are rendered as part of the exam.
             ##
 
-            #
-            # The answer page for a student consists of a single
-            # question. In case randomization is activated, we can't
-            # be sure, which question this will be. Since every page
-            # has an image, check this.
-            #
             acs::test::dom_html root [dict get $d1 body] {
                 set hrefs [$root selectNodes {//img[@class='image']/@src}]
                 set found_one_image false
-                set has_raw_and_self false
                 foreach qn {sample_mc_0 sample_st_0 sample_text_0} {
                     if {[string match *$qn* $hrefs]} {
-                        set has_raw_and_self [expr {$qn eq "sample_mc_0"}]
                         set found_one_image true
                         break
                     }
                 }
                 aa_true "Images '$hrefs' were found" $found_one_image
-                if {$has_raw_and_self} {
-                    aa_true "raw and self could be rendered" {[llength $hrefs] > 1}
-                }
+
+                #
+                # The answer page for a student consists of a single
+                # question. In case randomization is activated, we
+                # can't be sure, which question this will be. Since
+                # every page has one image and sample_mc_0, check
+                # this.
+                #
+                aa_equals "Expected images on the page could be rendered." \
+                    [llength $hrefs] [expr {$qn eq "sample_mc_0" ? 2 : 1}]
             }
 
             #
