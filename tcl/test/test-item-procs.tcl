@@ -333,8 +333,8 @@ namespace eval ::xowf::test {
                 # The answer page for a student consists of a single
                 # question. In case randomization is activated, we
                 # can't be sure, which question this will be. Since
-                # every page has one image and sample_mc_0, check
-                # this.
+                # every page has one image and sample_mc_0 has two,
+                # check this.
                 #
                 aa_equals "Expected images on the page could be rendered." \
                     [llength $hrefs] [expr {$qn eq "sample_mc_0" ? 2 : 1}]
