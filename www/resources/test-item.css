@@ -232,7 +232,7 @@ div.workarea h3 {
 
 .xowiki-content div.form-inline div {
     display: inline-block;
-    padding-left: 10px;
+    padding-right: 10px;
 }
 .xowiki-content div.form-inline {
     display: inline-block;
