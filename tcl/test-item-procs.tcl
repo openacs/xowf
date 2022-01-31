@@ -2395,8 +2395,12 @@ namespace eval ::xowf::test_item {
       #
       set url [$examWf pretty_link -query m=grade-single-item]
 
+      # jquery-ui is just needed for draggable()
+      ::template::add_body_script -src urn:ad:js:jquery-ui
+
       ::template::add_body_script -script [subst -novariables {
         $(document).ready(function(){
+          $('.modal-dialog').draggable();
           $('.modal .confirm').on('click', function(ev) {
             //
             // Submit button of grading dialog was pressed.
@@ -6354,7 +6358,7 @@ namespace eval ::xowf::test_item {
         |$(document).ready(function() {
         |  $('.modal .confirm').on('click', function(ev) {
         |    //
-        |    // Submit button of the dialog was pressed.
+        |    // Submit button of the configuration dialog was pressed.
         |    //
         |    var data = new FormData(document.getElementById('configuration-form'));
         |    console.log(data);
