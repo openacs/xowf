@@ -13,10 +13,13 @@
 } -parameter {
   {-m:token view}
 }
-::$package_id log "--starting... [ns_conn url] [ns_conn query] (user_id [xo::cc user_id])" \
-    "form vars = [ns_set array [ns_getform]]"    
-#   "form vars = [ns_set keys [ns_getform] *_.*]"
-#   "form vars = [ns_set array [ns_getform]]"
+
+#set form_vars [expr {[ns_getform] ne "" ? [ns_set keys [ns_getform] *_.*] : ""}]
+set form_vars [expr {[ns_getform] ne "" ? [ns_set array [ns_getform]] : ""}]
+
+::$package_id log "--starting... [ns_conn url] [ns_conn query]" \
+    "(user_id [xo::cc user_id])" \
+    "form vars = $form_vars"
 ::$package_id reply_to_user [::$package_id invoke -method $m]
 ::$package_id log "--done... [ns_conn url]"
 
