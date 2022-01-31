@@ -67,7 +67,7 @@
   <msg key="Grading-Score">Bewertung</msg>
   <msg key="Grading_scheme">Benotungsschema</msg>
   <msg key="Grading_scheme-None">Keine Notenvergabe</msg>
-  <msg key="Grading_scheme_help_text">Das Benotungsschema definiertdie Notengrenzen und die Rundungsregeln, um von dem erreichten Ergebnis (in Prozenten) eine Note abzuleiten</msg>
+  <msg key="Grading_scheme_help_text">Das Benotungsschema definiert die Notengrenzen und die Rundungsregeln, um von dem erreichten Ergebnis (in Prozenten) eine Note abzuleiten</msg>
   <msg key="Hour">Stunde</msg>
   <msg key="Hours">Stunden</msg>
   <msg key="inclass-exam-already_answered">Ihre Prüfung ist abgegeben und gespeichert.</msg>
