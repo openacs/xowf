@@ -4689,6 +4689,15 @@ namespace eval ::xowf::test_item {
       property
       {default ""}
     } {
+      #
+      # Retrieve a property value from the exam statistics result
+      # page. This page is an instance of the exam statistics workflow
+      # stored as a child of the exam object.
+      #
+      # @param obj the exam object
+      # @param property the property name
+      # @param deafult default value when property is not found
+      #
       set p [$obj childpage -name en:result -form inclass-exam-statistics.wf]
       set instance_attributes [$p instance_attributes]
       if {[dict exists $instance_attributes $property]} {
