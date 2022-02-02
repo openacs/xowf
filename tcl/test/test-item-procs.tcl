@@ -314,7 +314,7 @@ namespace eval ::xowf::test {
             set d1 [acs::test::http -last_request $d $location]
             acs::test::reply_has_status_code $d1 200
 
-            aa_section "... fill out question 1 (MC)"
+            aa_section "... fill out question 1"
 
             ##
             # Make sure images that were stored and linked in
@@ -354,35 +354,56 @@ namespace eval ::xowf::test {
             }
 
             #
+            # This internal utility returns the correct dict to be
+            # sent in the request for questions in the next pages of
+            # the exam: due to randomization we cannot know which
+            # exercise we got on a page in advance.
+            #
+            proc ::__test_get_answer_update req {
+                acs::test::dom_html root [dict get $req body] {
+                    set hrefs [$root selectNodes {//img[@class='image']/@src}]
+                    if {[string match *sample_mc_0* $hrefs]} {
+                        return {
+                            sample_mc_0_ 1
+                            sample_mc_0_ 2
+                        }
+                    } elseif {[string match *sample_st_0* $hrefs]} {
+                        set tmpfile [ad_tmpnam]
+                        file copy $::acs::rootdir/packages/xowf/tcl/test/test-item-procs.tcl $tmpfile
+                        return [list \
+                                    sample_st_0_.answer1 test-item-procs.tcl \
+                                    sample_st_0_.answer1.content-type text/plain \
+                                    sample_st_0_.answer1.tmpfile $tmpfile]
+                    }
+                }
+                return
+            }
+
+            #
             # Click on next page
             #
             set path [string range $location [string length $instance] end]
             set url_info [ns_parseurl $path]
+            set update [::__test_get_answer_update $d1]
+            dict set update __action_q.2 ""
             set d2 [::xowiki::test::edit_form_page \
                         -last_request $d \
                         -path [dict get $url_info path]/[dict get $url_info tail] \
                         -next_page_must_contain "#xowf.question# 2" \
-                        -update {
-                            __action_q.2 ""
-                            sample_mc_0_ 1
-                            sample_mc_0_ 2
-                        }]
+                        -update $update]
             acs::test::reply_has_status_code $d2 200
 
-            aa_section "... fill out question 2 (Short text with file submission)"
+            aa_section "... fill out question 2"
 
             set tmpfile [ad_tmpnam]
             file copy $::acs::rootdir/packages/xowf/tcl/test/test-item-procs.tcl $tmpfile
+            set update [::__test_get_answer_update $d2]
+            dict set update __action_q.3 ""
             set d3 [::xowiki::test::edit_form_page \
                         -last_request $d2 \
                         -path [dict get $url_info path]/[dict get $url_info tail] \
                         -next_page_must_contain "#xowf.question# 3" \
-                        -update [subst {
-                            __action_q.3 ""
-                            sample_st_0_.answer1 test-item-procs.tcl
-                            sample_st_0_.answer1.content-type text/plain
-                            sample_st_0_.answer1.tmpfile $tmpfile
-                        }]]
+                        -update $update]
             acs::test::reply_has_status_code $d3 200
             set d $d3
             ###########################################################
