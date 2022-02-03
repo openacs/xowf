@@ -20,6 +20,7 @@ namespace eval ::xowf::test {
         "::xowiki::test::create_form_page"
         "::xowiki::test::require_test_folder"
         "::xowiki::Page instproc www-create-new"
+        "::xowiki::test::edit_form_page"
 
         "::xo::ConnectionContext instproc eval_as_user"
         "::xowf::Package instproc destroy"
@@ -258,7 +259,7 @@ namespace eval ::xowf::test {
                            question {
                                $testfolder/en:sample_mc_0
                                $testfolder/en:sample_st_0
-                               $testfolder/sample_text_0
+                               $testfolder/en:sample_text_0
                            }
                        }]]
             aa_log "inclass exam created d=[ns_quotehtml $d]"
@@ -314,33 +315,50 @@ namespace eval ::xowf::test {
             set d1 [acs::test::http -last_request $d $location]
             acs::test::reply_has_status_code $d1 200
 
-            aa_section "... fill out question 1"
+            #
+            # Every answer page for a student consists of a single
+            # question. In case randomization is activated, we can't
+            # be sure, which question this will be. Therefore, we use
+            # a dict for the expected results.
+            #
+            dict set q_dict sample_mc_0 type MC
+            dict set q_dict sample_mc_0 nr_hrefs 2
+            dict set q_dict sample_mc_0 reply_fields {
+                sample_mc_0_ 1
+                sample_mc_0_ 2
+            }
 
-            ##
-            # Make sure images that were stored and linked in
-            # questions are rendered as part of the exam.
-            ##
+            set tmpfile [ad_tmpnam]
+            file copy $::acs::rootdir/packages/xowf/tcl/test/test-item-procs.tcl $tmpfile
 
-            acs::test::dom_html root [dict get $d1 body] {
+            dict set q_dict sample_st_0 type ShortText
+            dict set q_dict sample_st_0 nr_hrefs 1
+            dict set q_dict sample_st_0 reply_fields \
+                [list \
+                     sample_st_0_.answer1 test-item-procs.tcl \
+                     sample_st_0_.answer1.content-type text/plain \
+                     sample_st_0_.answer1.tmpfile $tmpfile]
+
+            dict set q_dict sample_text_0 type Text
+            dict set q_dict sample_text_0 nr_hrefs 1
+            dict set q_dict sample_text_0 reply_fields {
+                sample_text_0_ "Hello world"
+            }
+
+            set question_names [xowf::test::question_names_from_input_form $d1]
+            set question_name [lindex $question_names 0]
+
+            aa_section "... fill out question 1 ($question_name, [dict get $q_dict $question_name type])"
+
+            #
+            # Check, of images are successfully rendered.
+            #
+            acs::test::dom_html root [::xowiki::test::get_content $d1] {
                 set hrefs [$root selectNodes {//img[@class='image']/@src}]
-                set found_one_image false
-                foreach qn {sample_mc_0 sample_st_0 sample_text_0} {
-                    if {[string match *$qn* $hrefs]} {
-                        set found_one_image true
-                        break
-                    }
+                set expected_nr_hrefs [dict get $q_dict $question_name nr_hrefs]
+                aa_true "$expected_nr_hrefs images '$hrefs' were found on $question_name" {
+                    [llength $hrefs] == $expected_nr_hrefs
                 }
-                aa_true "Images '$hrefs' were found" $found_one_image
-
-                #
-                # The answer page for a student consists of a single
-                # question. In case randomization is activated, we
-                # can't be sure, which question this will be. Since
-                # every page has one image and sample_mc_0 has two,
-                # check this.
-                #
-                aa_equals "Expected images on the page could be rendered." \
-                    [llength $hrefs] [expr {$qn eq "sample_mc_0" ? 2 : 1}]
             }
 
             #
@@ -354,58 +372,39 @@ namespace eval ::xowf::test {
             }
 
             #
-            # This internal utility returns the correct dict to be
-            # sent in the request for questions in the next pages of
-            # the exam: due to randomization we cannot know which
-            # exercise we got on a page in advance.
-            #
-            proc ::__test_get_answer_update req {
-                acs::test::dom_html root [dict get $req body] {
-                    set hrefs [$root selectNodes {//img[@class='image']/@src}]
-                    if {[string match *sample_mc_0* $hrefs]} {
-                        return {
-                            sample_mc_0_ 1
-                            sample_mc_0_ 2
-                        }
-                    } elseif {[string match *sample_st_0* $hrefs]} {
-                        set tmpfile [ad_tmpnam]
-                        file copy $::acs::rootdir/packages/xowf/tcl/test/test-item-procs.tcl $tmpfile
-                        return [list \
-                                    sample_st_0_.answer1 test-item-procs.tcl \
-                                    sample_st_0_.answer1.content-type text/plain \
-                                    sample_st_0_.answer1.tmpfile $tmpfile]
-                    }
-                }
-                return
-            }
-
-            #
-            # Click on next page
+            # Fill in answer for question 1 and click on question "2".
             #
             set path [string range $location [string length $instance] end]
             set url_info [ns_parseurl $path]
-            set update [::__test_get_answer_update $d1]
-            dict set update __action_q.2 ""
+
+            set reply_fields [dict get $q_dict $question_name reply_fields]
+
             set d2 [::xowiki::test::edit_form_page \
                         -last_request $d \
                         -path [dict get $url_info path]/[dict get $url_info tail] \
                         -next_page_must_contain "#xowf.question# 2" \
-                        -update $update]
+                        -update [list {*}$reply_fields __action_q.2 "" ] \
+                       ]
+
             acs::test::reply_has_status_code $d2 200
 
-            aa_section "... fill out question 2"
+            set question_names [xowf::test::question_names_from_input_form $d2]
+            set question_name [lindex $question_names 0]
 
-            set tmpfile [ad_tmpnam]
-            file copy $::acs::rootdir/packages/xowf/tcl/test/test-item-procs.tcl $tmpfile
-            set update [::__test_get_answer_update $d2]
-            dict set update __action_q.3 ""
+            aa_section "... fill out question 2 ($question_name, [dict get $q_dict $question_name type])"
+
+            set reply_fields [dict get $q_dict $question_name reply_fields]
+
             set d3 [::xowiki::test::edit_form_page \
                         -last_request $d2 \
                         -path [dict get $url_info path]/[dict get $url_info tail] \
                         -next_page_must_contain "#xowf.question# 3" \
-                        -update $update]
+                        -update [list {*}$reply_fields __action_q.3 "" ] \
+                        ]
+
             acs::test::reply_has_status_code $d3 200
             set d $d3
+
             ###########################################################
             aa_section "Check participants during exam"
             ###########################################################
