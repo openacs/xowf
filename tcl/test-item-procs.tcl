@@ -4286,9 +4286,9 @@ namespace eval ::xowf::test_item {
 
         #
         # Provide a notification dialog only before the student has
-        # submitted her exam.
+        # submitted her exam and the exam is published.
         #
-        if {[$p state] ne "done"} {
+        if {[$p state] ne "done" && [$wf state] eq "published"} {
           set dialog_info [::xowiki::includelet::personal-notification-messages \
                                modal_message_dialog -to_user_id [$p creation_user]]
           append dialogs [dict get $dialog_info dialog] \n
