@@ -4293,9 +4293,8 @@ namespace eval ::xowf::test_item {
                                modal_message_dialog -to_user_id [$p creation_user]]
           append dialogs [dict get $dialog_info dialog] \n
           set notification_dialog_button [dict get $dialog_info link]
+          $p set online-exam-fullName "$notification_dialog_button [$p set online-exam-fullName]</a>"
           lappend user_list [$p creation_user]
-        } else {
-          set notification_dialog_button ""
         }
 
         #
@@ -4304,7 +4303,6 @@ namespace eval ::xowf::test_item {
         #
         set duration [:get_duration [$p get_revision_sets]]
         $p set_property -new 1 _online-exam-seconds [dict get $duration seconds]
-        $p set online-exam-fullName "$notification_dialog_button [$p set online-exam-fullName]"
       }
 
       ::xowiki::includelet::personal-notification-messages \
@@ -4326,7 +4324,7 @@ namespace eval ::xowf::test_item {
                                modal_message_dialog -to_user_id $user_list]
           append dialogs [dict get $dialog_info dialog] \n
           set notification_dialog_button [dict get $dialog_info link]
-          set bulk_notification_HTML "<div class='bulk-personal-notification-message'>$notification_dialog_button #xowiki.Send_message_to# [llength $user_list] #xowf.Participants#</div>"
+          set bulk_notification_HTML "<div class='bulk-personal-notification-message'>$notification_dialog_button #xowiki.Send_message_to# [llength $user_list] #xowf.Participants#</a></div>"
         }
       }
       #
