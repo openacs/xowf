@@ -4694,7 +4694,7 @@ namespace eval ::xowf::test_item {
       #
       # @param obj the exam object
       # @param property the property name
-      # @param deafult default value when property is not found
+      # @param default default value when property is not found
       #
       set p [$obj childpage -name en:result -form inclass-exam-statistics.wf]
       set instance_attributes [$p instance_attributes]

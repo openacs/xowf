@@ -52,6 +52,7 @@
 #  - "print-participants" (for lecturers),
 #  - "question-summary" (for lecturers),
 #  - "delete" (for lecturers),
+#  - "toggle-publish-status" (for lecturers),
 #  - "qrcode" (for lecturers)
 #
 # Gustaf Neumann, Feb 2012-2021
@@ -422,8 +423,10 @@ Action instproc unpublish_link {obj} {
   #
   # Unset the actual query return_url, since we want to use it via
   # property.  In some cases, we have to set it explicitly from the
-  # property, e.g. in www-delete.
+  # property (like in www-delete), or we have to use the actual
+  # passed-in values (like in toggle_publish_status)
   #
+  set ::__passed_in_return_url [:query_parameter return_url:localurl ""]
   ::xo::cc unset_query_parameter return_url
 
   ########################################################################
@@ -435,6 +438,20 @@ Action instproc unpublish_link {obj} {
     ::xo::cc set_query_parameter return_url [:property return_url]
     :AM delete_all_answer_data [self]
     next
+  }
+
+  ########################################################################
+  # web-callable method "toggle-publish-status"
+  #
+  # Toggle the status of the workflow. This is needed to avoid a bad
+  # interaction with [ad_return_url] as it is used in
+  # www-toggle-publish-status in xowiki, since the workflow definition
+  # unsets the actual return_url, which causes ad_return_url to use
+  # the URL leading to this call (m=toggle-publish-status), causing a
+  # redirection loop.
+  #
+  :proc www-toggle-publish-status {} {
+    next -return_url $::__passed_in_return_url
   }
 
   ########################################################################
