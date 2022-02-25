@@ -3433,7 +3433,7 @@ namespace eval ::xowf::test_item {
                              -runtime_panel_view $runtime_panel_view]
 
       if {$with_signature} {
-        set sha256 [ns_md string -digest sha256 $answerAttributes]
+        set sha256 [ns_md string -digest sha256 $answeredAnswerAttributes]
         set signatureString "<div class='signature'>online-exam-actual_signature: $sha256</div>\n"
         set submissionSignature [$submission property signature ""]
         if {$submissionSignature ne ""} {
