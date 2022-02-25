@@ -202,11 +202,8 @@ namespace eval ::xowiki::formfield {
     # Return the definition of the feed_back widgets depending on the
     # value of :feedback_level.
     #
-    if {${:feedback_level} eq "none"} {
-      return ""
-    }
-
     set widget [test_item set richtextWidget]
+    
     switch ${:feedback_level} {
       "none" {
         set definition ""
