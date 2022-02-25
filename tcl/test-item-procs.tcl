@@ -2000,8 +2000,8 @@ namespace eval ::xowf::test_item {
       }]
 
       foreach id $to_delete {
-        ns_log notice "#### xo::db::sql::content_item proc delete -item_id $id"
-        xo::db::sql::content_item delete -item_id $id
+        ns_log notice "#### acs::dc call content_item proc delete -item_id $id"
+        acs::dc call content_item delete -item_id $id
       }
     }
 

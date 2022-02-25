@@ -39,7 +39,6 @@ namespace eval ::xowf::test {
         "::xo::db::CrClass proc lookup"
         "::xo::db::CrItem instproc is_package_root_folder"
         "::xo::db::CrItem instproc set_live_revision"
-        "::xo::db::sql::content_item proc set_live_revision"
         "::xotcl::Class instproc instmixin"
         "::xowf::Package instproc initialize"
         "::xowiki::BootstrapNavbar instproc render"

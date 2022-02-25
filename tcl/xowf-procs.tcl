@@ -661,7 +661,7 @@ namespace eval ::xowf {
 
       set revision_id [$source_obj revision_id]
       if {$revision_id == 0} {
-        set revision_id [::xo::db::sql::content_item get_live_revision \
+        set revision_id [::acs::dc call content_item get_live_revision \
                              -item_id [$source_obj item_id]]
         ns_log warning "xowf: tried to create a wf_container with revision_id 0 -> fixed to $revision_id"
       }
