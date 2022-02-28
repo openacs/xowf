@@ -203,7 +203,7 @@ namespace eval ::xowiki::formfield {
     # value of :feedback_level.
     #
     set widget [test_item set richtextWidget]
-    
+
     switch ${:feedback_level} {
       "none" {
         set definition ""
@@ -3199,6 +3199,18 @@ namespace eval ::xowf::test_item {
       }
 
       #
+      # The aggregated form (method :aggregated_form) is generated
+      # before submissions are available. For e.g., the exam protocol,
+      # the same grading-box with the same raw data will be reused
+      # potentially per submission. To ensure uniqueness of the HTML
+      # IDs for the dialogs, we have to fill in the submission IDs.
+      #
+      set grading_boxes [$root selectNodes {//div[contains(@class,'grading-box')]}]
+      foreach grading_box $grading_boxes {
+        $grading_box setAttribute id [$grading_box getAttribute id]-[$submission item_id]
+      }
+
+      #
       # For every composite question:
       #
       # - update the question_name of the subquestion by prefixing it
@@ -3228,7 +3240,7 @@ namespace eval ::xowf::test_item {
       #set noManualGrading [expr {$submission_state ne "done" || $exam_state eq "published"}]
       set noManualGrading [expr {$exam_state eq "published"}]
 
-      set grading_boxes [${root} selectNodes {//div[contains(@class,'grading-box')]}]
+      set grading_boxes [$root selectNodes {//div[contains(@class,'grading-box')]}]
       foreach grading_box $grading_boxes {
         set qn [$grading_box getAttribute "data-question_name"]
         set item_node [$grading_box parentNode]
