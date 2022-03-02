@@ -385,7 +385,7 @@ namespace eval ::xowiki::formfield {
       }
     } else {
       set pointsSpec {
-        {minutes number,form_item_wrapper_CSSclass=form-inline,min=1,default=2,label=#xowf.Minutes#}
+        {minutes number,form_item_wrapper_CSSclass=form-inline,min=0,default=2,step=0.1,label=#xowf.Minutes#}
         {points number,form_item_wrapper_CSSclass=form-inline,min=0.0,step=0.1,label=#xowf.Points#}
       }
     }
