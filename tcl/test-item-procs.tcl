@@ -2888,7 +2888,7 @@ namespace eval ::xowf::test_item {
       #ns_log notice "start date $start_date end_date $end_date / $start_clock $end_clock"
       foreach f $files {
         #ns_log notice "check: $f"
-        if {[regexp {/([^/]+)-(\d+)[.](webm|png|jpeg)$} $f . type stamp ext]} {
+        if {[regexp {/([^/]+)-(\d+|\d+[.]\d+)[.](webm|png|jpeg)$} $f . type stamp ext]} {
           set inWindow [expr {$stamp >= $start_clock && $stamp <= $end_clock}]
           ns_log notice "parsed $type $stamp $ext $inWindow $stamp " \
               [clock format $stamp -format {%m-%d %H:%M:%S}] >= \
