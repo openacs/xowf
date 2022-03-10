@@ -11,7 +11,7 @@
   <msg key="answer_incorrect">Falsch.</msg>
   <msg key="answer_lines">Antwortzeilen</msg>
   <msg key="answers">Antworten</msg>
-  <msg key="Automatically_published_from_to">Automatische Freischaltung der Prüfung von %from% bis %to%</msg>
+  <msg key="Automatically_published_from_to">Automatische Freischaltung der Prüfung von %from% bis %to%.</msg>
   <msg key="autosave_rejected_overdue">Automatische Speicherung nicht möglich, da die Bearbeitungszeit abgelaufen ist. Speichern Sie das Ergebnis und geben Sie ab!</msg>
   <msg key="available_pool_item_stats">Pool-Fragen nach Typ</msg>
   <msg key="available_pool_items">Verfügbare Pool-Fragen</msg>
@@ -29,8 +29,8 @@
   <msg key="Countdown_audio_alarm_help_text">Inkludiere akustisches Signal, das Studierende vor Ablauf der Bearbeitungsfrist alarmiert (ungeeignet für Prüfungen in Schulungsräumen)</msg>
   <msg key="Created_Assessments">Verfügbare Assessments</msg>
   <msg key="Created_Questions">Verfügbare Fragen</msg>
-  <msg key="Cut_and_paste_allowed">Ausschneiden und Einfügen in mehrzeiligen Textfeldern ist erlaubt</msg>
-  <msg key="Cut_and_paste_not_allowed">Ausschneiden und Einfügen in mehrzeiligen Textfeldern ist nicht erlaubt</msg>
+  <msg key="Cut_and_paste_allowed">Ausschneiden und Einfügen in mehrzeiligen Textfeldern ist erlaubt.</msg>
+  <msg key="Cut_and_paste_not_allowed">Ausschneiden und Einfügen in mehrzeiligen Textfeldern ist nicht erlaubt.</msg>
   <msg key="Day">Tag</msg>
   <msg key="Days">Tage</msg>
   <msg key="Detail_configuration">Detaileinstellungen</msg>
@@ -39,8 +39,8 @@
   <msg key="Duration">Bearbeitungsdauer</msg>
   <msg key="Exam-review-not-open">Die Einsicht für diese Prüfung ist nicht geöffnet.</msg>
   <msg key="Exam_published">Veröffentlichung der Prüfung</msg>
-  <msg key="exam_review_not_possible">automatische Einsicht nicht möglich</msg>
-  <msg key="exam_review_possible">automatische Einsicht möglich</msg>
+  <msg key="exam_review_not_possible">Automatische Einsicht nicht möglich.</msg>
+  <msg key="exam_review_possible">Automatische Einsicht möglich.</msg>
   <msg key="exam_summary">Zusammenfassung</msg>
   <msg key="Exam_time_window">Zeitfenster für Prüfung</msg>
   <msg key="Exam_time_window_help_text">Optionales automatisches Freischalten/Schließen der Prüfung. Auch wenn das Zeitfenster aktiviert ist, kann die Prüfung manuell freigeschaltet/geschlossen werden.</msg>
@@ -178,8 +178,8 @@
   <msg key="question_structure">Aufbau</msg>
   <msg key="question_summary">Fragenübersicht</msg>
   <msg key="questions">Fragen</msg>
-  <msg key="randomization_for_exam_not_ok">Randomisierung für Prüfung nicht geeignet (keine Zufallsauswahl &#34;immer&#34; verwenden)</msg>
-  <msg key="randomization_for_exam_ok">Randomisierung für Prüfung geeignet</msg>
+  <msg key="randomization_for_exam_not_ok">Randomisierung für Prüfung nicht geeignet (keine Zufallsauswahl &#34;immer&#34; verwenden).</msg>
+  <msg key="randomization_for_exam_ok">Randomisierung für Prüfung geeignet.</msg>
   <msg key="randomized_items">Randomisierte Fragenfolge</msg>
   <msg key="randomized_items_help_text">Zeige die Fragen der Prüfung für jeden Studierenden in einer anderen Reihenfolge</msg>
   <msg key="refresh">Aktualisieren</msg>
