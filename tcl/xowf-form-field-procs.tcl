@@ -283,6 +283,10 @@ namespace eval ::xowiki::formfield {
     next
     set :is_party_id 1
   }
+  role_member instproc check=options {value} {
+    return 1
+  }
+
   role_member instproc render_input {} {
     #:msg role=${:role},obj=${:object}
     if {[nsf::is object ::xo::role::${:role}]} {
