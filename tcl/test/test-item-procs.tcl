@@ -161,7 +161,7 @@ namespace eval ::xowf::test {
                                  -package_id $package_id \
                                  -creation_user [dict get $user_info user_id]]
             $file_object set import_file \
-                [acs_root_dir]/packages/acs-templating/www/resources/sort-ascending.png
+                $::acs::rootdir/packages/acs-templating/www/resources/sort-ascending.png
             $file_object save_new
 
             ###########################################################
@@ -203,7 +203,7 @@ namespace eval ::xowf::test {
                                  -package_id $package_id \
                                  -creation_user [dict get $user_info user_id]]
             $file_object set import_file \
-                [acs_root_dir]/packages/acs-templating/www/resources/sort-ascending.png
+                $::acs::rootdir/packages/acs-templating/www/resources/sort-ascending.png
             $file_object save_new
 
             ###########################################################
@@ -240,7 +240,7 @@ namespace eval ::xowf::test {
                                  -package_id $package_id \
                                  -creation_user [dict get $user_info user_id]]
             $file_object set import_file \
-                [acs_root_dir]/packages/acs-templating/www/resources/sort-ascending.png
+                $::acs::rootdir/packages/acs-templating/www/resources/sort-ascending.png
             $file_object save_new
 
             ###########################################################
