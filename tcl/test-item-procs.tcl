@@ -678,7 +678,7 @@ namespace eval ::xowiki::formfield {
   ###########################################################
 
   Class create short_text_interaction -superclass TestItemField -parameter {
-    {nr 15}
+    {nr 25}
   }
   short_text_interaction set item_type ShortText
   short_text_interaction set closed_question_type false
@@ -822,7 +822,7 @@ namespace eval ::xowiki::formfield {
   ###########################################################
 
   Class create reorder_interaction -superclass TestItemField -parameter {
-    {nr 15}
+    {nr 25}
   }
   reorder_interaction set item_type {Reorder}
   reorder_interaction set closed_question_type true
@@ -891,7 +891,7 @@ namespace eval ::xowiki::formfield {
   ###########################################################
 
   Class create mc_interaction2 -superclass TestItemField -parameter {
-    {nr 15}
+    {nr 25}
     {multiple true}
   }
   mc_interaction2 set item_type {SC MC}
@@ -1760,7 +1760,7 @@ namespace eval ::xowf::test_item {
       #
       # @see http://www.gnu.org/software/recutils/
       #
-      set export_dir [acs_root_dir]/log/exam-exports/$exam_id/
+      set export_dir $::acs::rootdir/log/exam-exports/$exam_id/
       if {![file isdirectory $export_dir]} {
         file mkdir $export_dir
       }
