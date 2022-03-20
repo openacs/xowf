@@ -237,4 +237,9 @@
   <msg key="ul_question">Dateiabgabefrage</msg>
   <msg key="Value_max">Wert muss kleiner oder gleich sein als</msg>
   <msg key="Value_min">Wert muss größer oder gleich sein als</msg>
+
+  <msg key="IPrange">Erlaube Zugriff für folgende IP-Adressen</msg>
+  <msg key="IPrange_help_text">Erlaube Zugriff auf dieses Prüfung nur
+  für ausgewählte IP-Adressen. Nur Benutzer mit zugelassenen IP-Adressen können die Prüfung ablegen.</msg>
+  <msg key="IPrange_not_allowed">Eingeschränkter Zugang: Es ist Ihnen nicht gestattet, von Ihrer IP-Adresse (%ip%) aus an dieser Prüfung teilzunehmen.</msg>
 </message_catalog>

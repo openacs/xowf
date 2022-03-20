@@ -259,4 +259,9 @@
   <msg key="ul_question">File Upload Question</msg>
   <msg key="Value_max">Value must smaller or equal</msg>
   <msg key="Value_min">Value must larger or equal</msg>
+
+  <msg key="IPrange">Allow Access for the following IP Addresses</msg>
+  <msg key="IPrange_help_text">Allow access to this exam only for certain IP addresses. Only those users who are on approved IP addresses can fill out the exam.</msg>
+  <msg key="IPrange_not_allowed">Restricted access: You are not allowed to work on this exam from your IP address: %ip%</msg>
+
 </message_catalog>

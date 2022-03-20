@@ -1626,6 +1626,7 @@ namespace eval ::xowf::test_item {
     #
     #  - create_workflow
     #  - delete_all_answer_data
+    #  - allow_answering
     #  - get_answer_wf
     #  - get_wf_instances
     #  - get_answer_attributes
@@ -2014,6 +2015,25 @@ namespace eval ::xowf::test_item {
                   -parent_id    [$obj item_id] \
                   -default_lang [$obj lang] \
                   -forms        [$obj property wfName]]
+    }
+
+
+    #----------------------------------------------------------------------
+    # Class:  Answer_manager
+    # Method: allow_answering
+    #----------------------------------------------------------------------
+    :public method allow_answering {-examwf:object -ip:required} {
+      set iprange [$examwf property iprange]
+      set iprangeObj ::xowf::iprange::$iprange
+      if {$iprange ne "all"
+          && (![nsf::is object $iprangeObj]
+              || ![$iprangeObj allow_access $ip]
+              )} {
+        ns_log notice "ANSWER: [list $iprangeObj allow_access $ip] ->" \
+            [$iprangeObj allow_access $ip]
+        return 0
+      }
+      return 1
     }
 
     #----------------------------------------------------------------------
@@ -6363,7 +6383,7 @@ namespace eval ::xowf::test_item {
                -id config-security \
                -form_constraints $fcrepo \
                -obj $obj {
-                 proctoring proctoring_options proctoring_record signature
+                 proctoring proctoring_options proctoring_record signature iprange
                }] \
           [:exam_configuration_render_fields -modifiable $modifiable \
                [$obj create_form_fields_from_names -lookup -set_values \

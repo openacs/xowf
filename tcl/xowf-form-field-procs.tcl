@@ -461,6 +461,28 @@ namespace eval ::xowiki::formfield {
 
   ###########################################################
   #
+  # ::xowiki::formfield::iprange
+  #
+  ###########################################################
+
+  Class create iprange -superclass select -parameter {
+  }
+
+  iprange instproc initialize {} {
+    if {${:__state} ne "after_specs"} return
+
+    set :options [lsort [lmap rangeObject [::xowf::IpRange info instances -closure] {
+      set intrep [namespace tail $rangeObject]
+      list [$rangeObject cget -title] $intrep
+    }]]
+    next
+
+    set :__initialized 1
+  }
+
+
+  ###########################################################
+  #
   # ::xowiki::formfield::grade_boundary
   #
   ###########################################################
