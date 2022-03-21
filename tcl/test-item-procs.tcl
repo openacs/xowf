@@ -2023,6 +2023,11 @@ namespace eval ::xowf::test_item {
     # Method: allow_answering
     #----------------------------------------------------------------------
     :public method allow_answering {-examwf:object -ip:required} {
+      #
+      # Tell if specified IP address is allowed to answer the exam.
+      #
+      # @return boolean
+      #
       set iprange [$examwf property iprange]
       set iprangeObj ::xowf::iprange::$iprange
       if {$iprange ne "all"
