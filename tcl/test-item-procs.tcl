@@ -34,6 +34,7 @@ namespace eval ::xowiki::formfield {
   ###########################################################
   Class create TestItemField -superclass FormGeneratorField -parameter {
     {feedback_level full}
+    {with_correction_notes:boolean true}
     {auto_correct:boolean false}
     {nr_attachments 15}
   } -ad_doc {
@@ -197,7 +198,7 @@ namespace eval ::xowiki::formfield {
   #
   test_item set richtextWidget {richtext,editor=ckeditor4,ck_package=basic,displayMode=inline,extraPlugins=}
 
-  test_item instproc feed_back_definition {} {
+  test_item instproc feedback_definition {} {
     #
     # Return the definition of the feed_back widgets depending on the
     # value of :feedback_level.
@@ -220,6 +221,12 @@ namespace eval ::xowiki::formfield {
         }]
       }
     }
+    if {${:with_correction_notes}} {
+      append definition [subst {
+        {correction_notes  {$widget,height=150px,label=#xowf.Correction_notes#}}
+      }]
+    }
+
     return $definition
   }
 
@@ -303,7 +310,7 @@ namespace eval ::xowiki::formfield {
     #:log test_item-auto_correct=$auto_correct
 
     #
-    # Handle feedback_level.
+    # Handle feedback_level (typically defined in "TestItem*.form.page")
     #
     # The object might be a form, just use the property, if we are on
     # a FormPage.
@@ -314,6 +321,7 @@ namespace eval ::xowiki::formfield {
         set :feedback_level $feedback_level_property
       }
     }
+    #set :feedback_level "full"
 
     if {${:grading} ne "none" && [llength ${:grading}] >1} {
       set grading_dict {_name grading _type select}
@@ -400,7 +408,7 @@ namespace eval ::xowiki::formfield {
       $typeSpecificComponentSpec
       [list [:dict_to_spec -aspair $twocolDict]]
       {interaction {$interaction_class,$options,feedback_level=${:feedback_level},auto_correct=${:auto_correct},label=}}
-      [:feed_back_definition]
+      [:feedback_definition]
     }]
     set :__initialized 1
   }
@@ -2029,14 +2037,16 @@ namespace eval ::xowf::test_item {
       # @return boolean
       #
       set iprange [$examwf property iprange]
-      set iprangeObj ::xowf::iprange::$iprange
-      if {$iprange ne "all"
-          && (![nsf::is object $iprangeObj]
-              || ![$iprangeObj allow_access $ip]
-              )} {
-        ns_log notice "ANSWER: [list $iprangeObj allow_access $ip] ->" \
-            [$iprangeObj allow_access $ip]
-        return 0
+      if {$iprange ne ""} {
+        set iprangeObj ::xowf::iprange::$iprange
+        if {$iprange ne "all"
+            && (![nsf::is object $iprangeObj]
+                || ![$iprangeObj allow_access $ip]
+                )} {
+          ns_log notice "ANSWER: [list $iprangeObj allow_access $ip] ->" \
+              [$iprangeObj allow_access $ip]
+          return 0
+        }
       }
       return 1
     }
@@ -3048,17 +3058,19 @@ namespace eval ::xowf::test_item {
       -wf:object
       -submission:object
       -filter_form_ids:integer,0..n
+      -with_feedback:switch
+      -with_correction_notes:switch
     } {
       #
-      # Compute the HTML of the full submission with all form fields
-      # instantiated according to randomization.
+      # Compute the HTML of the full submission of the user with all
+      # form fields instantiated according to randomization.
       #
       # @param filter_form_ids used for filtering questions
       # @return HTML of question form object containing all (wanted) questions
       #
 
       #
-      # Flush all form fields, since their contents depends on
+      # Flush all form fields, since their contents depend on
       # randomization. In later versions, we should introduce a more
       # intelligent caching respecting randomization.
       #
@@ -3080,6 +3092,8 @@ namespace eval ::xowf::test_item {
       xo::cc eval_as_user -user_id [$submission creation_user] {
         $submission set __feedback_mode 2
         $submission set __form_objs $filter_form_ids
+        $submission set __aggregated_form_options \
+            "-with_feedback=$with_feedback -with_correction_notes=$with_correction_notes"
         set question_form [$submission render_content]
       }
 
@@ -3258,6 +3272,30 @@ namespace eval ::xowf::test_item {
           $grading_box setAttribute data-question_name $new_qn
           $grading_box setAttribute id ${composite_qn}_[$grading_box getAttribute id]
           :dom class remove $grading_box {.} hidden
+          #
+          # The composite questions are prerendered and do not have
+          # hint boxes, since we do not want to have even hidden in
+          # the HTML rendering show to the student during the
+          # exam. Therefore, we add these now for the exam protocol in
+          # an extra step. We try to add here both, feedback and
+          # correction notes (if available). The loop over all grading
+          # boxes below should care for the visibility of the hint
+          # boxes due to percentages.
+          #
+          set subquestion_id [$grading_box getAttribute data-question_id]
+          set subquestion_obj [::xowiki::FormPage get_instance_from_db -item_id $subquestion_id]
+          #ns_log notice "CHILD of Composite has form_id $subquestion_id [nsf::is object ::$subquestion_id]"
+          set HTML [:QM hint_boxes \
+                        -question_obj $subquestion_obj \
+                        -with_feedback=1 \
+                        -with_correction_notes=1]
+          if {$HTML ne ""} {
+            dom parse -simple -html <body>$HTML</body> hintsDoc
+            $hintsDoc documentElement hintsBody
+            foreach child $hintsBody {
+              [$grading_box parentNode] appendChild $child
+            }
+          }
         }
       }
 
@@ -3304,6 +3342,7 @@ namespace eval ::xowf::test_item {
         }
         #ns_log notice "... QN '$qn' item_type $item_type achieved '$achieved' achievable '$achievable'"
 
+        set percentage ""
         if {$achieved eq ""} {
           :dom node replace $grading_box {span[@class='points']} {
             ::html::span -class "glyphicon glyphicon-alert text-warn" -aria-hidden "true" {}
@@ -3333,9 +3372,38 @@ namespace eval ::xowf::test_item {
         $grading_box setAttribute data-comment $comment
 
         #
-        # In student review mode ('Einsicht'), remove edit controls.
+        # Feedback handling (should be merged with the individual feedback)
+        #
+        set correct_feedback_node [$item_node selectNodes {div[contains(@class,'feedback-correct')]}]
+        set incorrect_feedback_node [$item_node selectNodes {div[contains(@class,'feedback-incorrect')]}]
+        set correction_notes_node [$item_node selectNodes {div[contains(@class,'correction-notes')]}]
+
+        if {$percentage ne "" && $percentage < 50 && $incorrect_feedback_node ne ""} {
+          #
+          # Remove positive and keep negative feedback.
+          #
+          if {$correct_feedback_node ne ""} {
+            $correct_feedback_node delete
+            set correct_feedback_node ""
+          }
+        }
+        if {$correct_feedback_node ne "" &&  $incorrect_feedback_node ne ""} {
+          #
+          # If we still have a positive feedback, remove negative
+          # feedback.
+          #
+          $incorrect_feedback_node delete
+        }
+
+        #
+        # In student review mode ('Einsicht'), remove
+        # - correction notes, and
+        # - edit controls.
         #
         if {$runtime_panel_view eq "student"} {
+          if {$correction_notes_node ne ""} {
+            $correction_notes_node delete
+          }
           :dom node delete $grading_box {a}
         }
       }
@@ -3423,7 +3491,10 @@ namespace eval ::xowf::test_item {
       set question_form [:render_full_submission_form \
                              -wf $wf \
                              -submission $submission \
-                             -filter_form_ids $filter_form_ids]
+                             -filter_form_ids $filter_form_ids \
+                             -with_correction_notes=[expr {$runtime_panel_view ne "student"}] \
+                             -with_feedback \
+                            ]
 
       if {$recutil ne ""} {
         :export_answer \
@@ -5810,12 +5881,67 @@ namespace eval ::xowf::test_item {
       return $autoGrade
     }
 
+
+    #----------------------------------------------------------------------
+    # Class:  Question_manager
+    # Method: hint_box
+    #----------------------------------------------------------------------
+    :method hint_box {-title -body -CSSclass } {
+      #
+      #
+      # @return HTML
+      #
+      set HTML ""
+      if {$body ne ""} {
+        #ns_log notice "FFF adding $CSSclass '$body'"
+        append HTML "<div class='panel panel-default $CSSclass'>" \
+          "<div class='panel-heading'>$title</div>\n" \
+          "<div class='panel-body'>$body</div>" \
+            </div>\n
+      }
+      return $HTML
+    }
+
+    #----------------------------------------------------------------------
+    # Class:  Question_manager
+    # Method: hint_boxes
+    #----------------------------------------------------------------------
+    :public method hint_boxes {-question_obj:object -with_feedback:switch -with_correction_notes:switch} {
+      #
+      # Render the hint boxes (feedback and correction notes) for a
+      # question object.
+      #
+      # @return HTML
+      #
+      set HTML ""
+      if {$with_feedback} {
+        set question_data [$question_obj property question]
+        foreach feedback {feedback_correct feedback_incorrect} {
+          regsub -all _ $feedback - feedback_class
+          append HTML [:hint_box \
+                           -title #xowf.General_feedback# \
+                           -body [:dict_value $question_data question.$feedback ""] \
+                           -CSSclass $feedback_class]
+        }
+      }
+      if {$with_correction_notes} {
+        append HTML [:hint_box \
+                         -title #xowf.Correction_notes# \
+                         -body [:dict_value $question_data question.correction_notes ""] \
+                         -CSSclass correction-notes]
+      }
+      return $HTML
+    }
+
+
     #----------------------------------------------------------------------
     # Class:  Question_manager
     # Method: exam_form
     #----------------------------------------------------------------------
     :public method aggregated_form {
       {-titleless_form:switch false}
+      {-with_feedback:switch false}
+      {-with_correction_notes:switch false}
       {-with_grading_box ""}
       question_infos
     } {
@@ -5823,6 +5949,7 @@ namespace eval ::xowf::test_item {
       # Compute an aggregated form (containing potentially multiple
       # questions) based on the chunks available in question_infos.
       #
+      # @param with_grading_box might be: "hidden" (but included), "true", "" (omitted)
       # @return HTML form content
       #
       set full_form ""
@@ -5858,7 +5985,13 @@ namespace eval ::xowf::test_item {
                 |</div>
               }]]
             }
-            append full_form $question_form \n</div>
+            append full_form \
+                $question_form \
+                [:hint_boxes \
+                     -question_obj $question_obj \
+                     -with_feedback=$with_feedback \
+                     -with_correction_notes=$with_correction_notes] \
+                </div>\n
           }
 
       regsub -all {<[/]?form>} $full_form "" full_form

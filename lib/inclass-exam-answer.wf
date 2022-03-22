@@ -438,8 +438,10 @@ proc done_form_loader {ctx form_name} {
                      -form_objs $form_objs \
                      $parent_obj]
   #ns_log notice "SUMMARY FORM shuffle_id $shuffle_id $form_info"
-
-  set summary_form [:QM aggregated_form -with_grading_box true $form_info]
+  set aggregated_form_options [expr {[$obj exists __aggregated_form_options]
+                                     ? [$obj set __aggregated_form_options]
+                                     : ""}]
+  set summary_form [:QM aggregated_form -with_grading_box true {*}$aggregated_form_options $form_info]
   set summary_fc [dict get $form_info disabled_form_constraints]
 
   #

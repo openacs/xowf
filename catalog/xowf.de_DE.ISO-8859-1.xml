@@ -242,4 +242,7 @@
   <msg key="IPrange_help_text">Erlaube Zugriff auf dieses Prüfung nur
   für ausgewählte IP-Adressen. Nur Benutzer mit zugelassenen IP-Adressen können die Prüfung ablegen.</msg>
   <msg key="IPrange_not_allowed">Eingeschränkter Zugang: Es ist Ihnen nicht gestattet, von Ihrer IP-Adresse (%ip%) aus an dieser Prüfung teilzunehmen.</msg>
+  <msg key="General_feedback">Generelles Feedback</msg>
+  <msg key="Correction_notes">Korrekturhinweise</msg>
+  
 </message_catalog>

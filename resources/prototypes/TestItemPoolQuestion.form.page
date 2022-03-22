@@ -6,6 +6,6 @@
     -text {} \
     -form {{<form>@question@ @_nls_language@</form>} text/html} \
     -form_constraints {
-	question:test_item,question_type=pool,feedback_level=single,label=#xowf.pool_question#
+	question:test_item,question_type=pool,feedback_level=none,with_correction_notes=false,label=#xowf.pool_question#
 	_name:test_item_name _description:omit _page_order:omit
     }

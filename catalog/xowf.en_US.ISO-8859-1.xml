@@ -263,5 +263,7 @@
   <msg key="IPrange">Allow Access for the following IP Addresses</msg>
   <msg key="IPrange_help_text">Allow access to this exam only for certain IP addresses. Only those users who are on approved IP addresses can fill out the exam.</msg>
   <msg key="IPrange_not_allowed">Restricted access: You are not allowed to work on this exam from your IP address: %ip%</msg>
+  <msg key="General_feedback">General Feedback</msg>
+  <msg key="Correction_notes">Correction Notes</msg>
 
 </message_catalog>
