@@ -4374,6 +4374,7 @@ namespace eval ::xowf::test_item {
       set table_widget [::xowiki::TableWidget create_from_form_fields \
                             -package_id $package_id \
                             -form_field_objs $form_field_objs \
+                            -type_map {_online-exam-seconds integer} \
                             -orderby $orderby]
       #
       # Extend properties of individual answers and add notification
