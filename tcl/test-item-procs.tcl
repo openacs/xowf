@@ -2575,7 +2575,7 @@ namespace eval ::xowf::test_item {
         |        </form>
         |      </div>
         |      <div class="modal-footer">
-        |        <button type="button" class="btn btn-secondary"
+        |        <button type="button" class="btn [::xowiki::CSS class btn-default]"
         |                data-dismiss="modal">#acs-kernel.common_Cancel#
         |        </button>
         |        <button id="grading-modal-confirm" type="button" class="btn btn-primary confirm"
@@ -6573,7 +6573,7 @@ namespace eval ::xowf::test_item {
         |        </form>
         |      </div>
         |      <div class="modal-footer">
-        |        <button type="button" class="btn btn-secondary"
+        |        <button type="button" class="btn [::xowiki::CSS class btn-default]"
         |                data-dismiss="modal">#acs-kernel.common_Cancel#
         |        </button>
         |        <button id="configuration-modal-confirm" type="button" class="btn btn-primary confirm"
@@ -6616,7 +6616,7 @@ namespace eval ::xowf::test_item {
       return [ns_trim -delimiter | [subst {
         | [:question_info_block $obj]
         | $results_summary
-        | <hr><p><a class="btn btn-default" href="$return_url">#xowiki.back#</a></p>
+        | <hr><p><a class="btn [::xowiki::CSS class btn-default]" href="$return_url">#xowiki.back#</a></p>
       }]]
     }
 
