@@ -21,7 +21,7 @@ Action allocate -proc activate {obj} {
   # via a workflow definition ($obj is a workflow definition)
   #
   set package_id [$obj package_id]
-  set parent_id [$package_id query_parameter parent_id:int32]
+  set parent_id [$package_id query_parameter parent_id:cr_item_of_package,arg=$package_id]
   set parent_obj [::xo::db::CrClass get_instance_from_db -item_id $parent_id]
   set name [ns_md5 $parent_id-[::xo::cc set untrusted_user_id]]
 

@@ -2000,7 +2000,7 @@ namespace eval ::xowf {
       # If these values are not set, try to obtain it the old-fashioned way.
       #
       if {$parent_id == 0} {
-        set parent_id [:query_parameter parent_id:int32 [$package folder_id]]
+        set parent_id [:query_parameter parent_id:cr_item_of_package,arg=${:package_id} [$package folder_id]]
       }
       if {$name eq ""} {
         set name [:property name ""]
