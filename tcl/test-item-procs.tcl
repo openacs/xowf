@@ -3042,12 +3042,12 @@ namespace eval ::xowf::test_item {
           -preventdefault=false \
           -script "window.print();"
 
-      return [subst {
-        <button id="print-button">
-        <span class='glyphicon glyphicon-print' aria-hidden='true'></span> print
-        </button>
-        [template::collect_body_scripts]
-      }]
+      return [ns_trim -delimiter | [subst {
+        |<button class="btn [::xowiki::CSS class btn-default]" id="print-button">
+        |<span class='glyphicon glyphicon-print' aria-hidden='true'></span> print
+        |</button>
+        |[template::collect_body_scripts]
+      }]]
     }
 
     #----------------------------------------------------------------------
