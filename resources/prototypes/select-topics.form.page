@@ -7,7 +7,7 @@
     -form {{<form>
         @question@
         @with_team_preferences@        
-        <p><button type="button" class="btn btn-small" data-toggle="collapse" data-target="#time_management"><span class="glyphicon glyphicon-chevron-down">&nbsp;</span>#xowf.Time_management#</button><div id="time_management" class="collapse">
+        <p><button type="button" class="btn btn-secondary" data-toggle="collapse" data-target="#time_management"><span class="glyphicon glyphicon-chevron-down">&nbsp;</span>#xowf.Time_management#</button><div id="time_management" class="collapse">
         @synchronized@
         </div><p>
         </form>

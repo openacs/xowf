@@ -6445,7 +6445,7 @@ namespace eval ::xowf::test_item {
                       -form_constraints $form_constraints \
                       $field_names]
       return [subst {
-        <p><button type="button" class="btn btn-small" data-toggle="collapse" data-target="#$id">
+        <p><button type="button" class="btn btn-secondary" data-toggle="collapse" data-target="#$id">
         <span class="glyphicon glyphicon-chevron-down">&nbsp;</span>$label</button>
         <div id="$id" class="collapse">
         [:exam_configuration_render_fields -modifiable $modifiable $fields]
