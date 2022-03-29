@@ -5,6 +5,8 @@
   @creation-date 2008-03-05
 }
 
+::xo::library require -package xowiki form-field-procs
+
 namespace eval ::xowiki::formfield {
   ###########################################################
   #
