@@ -14,7 +14,6 @@
 # - workflow-assignment includelet (over multiple workflows and
 #   package instances)
 
-::xo::db::require package xowiki
 ::xo::library require -package xowiki xowiki-procs
 ::xo::library require -package xotcl-core 06-package-procs
 ::xo::library require -package xowiki menu-procs

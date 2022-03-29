@@ -4,7 +4,6 @@
   @author Gustaf Neumann
 }
 
-::xo::db::require package xowiki
 ::xo::library require xowf-procs
 ::xo::library require -package xowiki menu-procs
 ::xo::library require -package xowiki form-field-procs

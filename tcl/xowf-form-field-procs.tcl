@@ -5,8 +5,6 @@
   @creation-date 2008-03-05
 }
 
-::xo::db::require package xowiki
-
 namespace eval ::xowiki::formfield {
   ###########################################################
   #
