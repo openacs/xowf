@@ -221,23 +221,16 @@ Action instproc unpublish_link {obj} {
 
   #<a href=''><span class='glyphicon glyphicon-cog' style="float: right"></span></a>
 
-  append text [subst {<p>
-    <div class="col-sm-9">
-    <div class="panel panel-default">
-    <div class="panel-heading">
-    #xowf.exam_summary#
-    [:QM exam_configuration_popup $obj]
-    </div>
-    <div class="panel-body">
-    [:QM exam_info_block -combined_form_info $combined_form_info $obj]
-    </div>
-    </div>
-    </div>
-  }]
+  append text \
+      "<p><div class='row'><div class='col-sm-9'>" \
+      [::xowiki::bootstrap::card \
+           -title "#xowf.exam_summary# [:QM exam_configuration_popup $obj]" \
+           -body [:QM exam_info_block -combined_form_info $combined_form_info $obj]] \
+      "</div></div>"
 
   set detail_link [$obj pretty_link -query m=question-summary]
   append text [subst {<div class="col-sm-12">
-    <p><a class='btn btn-default' href='$detail_link'>#xowf.question_summary#</a>
+    <p><a class='[xowiki::CSS class action]' href='$detail_link'>#xowf.question_summary#</a>
     </div>
   }]
 
@@ -303,7 +296,7 @@ Action instproc unpublish_link {obj} {
     "created"   {
       append extraAction "<br>" \
           "#xowf.online-exam-try_out# " \
-          "<a class='btn btn-default' href='[ns_quotehtml $tLink]' target=”_blank”>#xowf.testrun#</a>"
+          "<a class='[xowiki::CSS class action]' href='[ns_quotehtml $tLink]' target=”_blank”>#xowf.testrun#</a>"
     }
     "published" {
       append extraAction "<br>" \
@@ -346,11 +339,11 @@ Action instproc unpublish_link {obj} {
     #ns_log notice ALL=$text
 
     append text [subst {
-      <div class='container-fluid'><div class='row'>
+      <div class="row">
       <div class="col-sm-9">$answerStatus</div>
       <div class="col-sm-3">$qrCode</div>
       <div class="col-sm-6">$countdownHTML</div>
-      </div></div>
+      </div>
     }]
   }
 
@@ -488,7 +481,7 @@ Action instproc unpublish_link {obj} {
       set HTML "<h1>#xowf.online-exam-results-table#</h1>$HTML"
     }
     set return_url [[$wf package_id] query_parameter local_return_url:localurl [:pretty_link]]
-    append HTML "<hr><p><a class='btn btn-default' href='$return_url'>#xowiki.back#</a></p>\n"
+    append HTML "<hr><p><a class='[xowiki::CSS class action]' href='$return_url'>#xowiki.back#</a></p>\n"
 
     xo::Page requireCSS /resources/xowf/test-item.css
     :www-view $HTML
@@ -522,7 +515,7 @@ Action instproc unpublish_link {obj} {
       set HTML "<h3>#xowf.Participants#</h3>$HTML"
     }
     set return_url [[$wf package_id] query_parameter local_return_url:localurl [:pretty_link]]
-    append HTML "<hr><p><a class='btn btn-default' href='$return_url'>#xowiki.back#</a></p>\n"
+    append HTML "<hr><p><a class='[xowiki::CSS class action]' href='$return_url'>#xowiki.back#</a></p>\n"
 
     :www-view $HTML
 
@@ -597,7 +590,7 @@ Action instproc unpublish_link {obj} {
 
     if {!$as_student} {
       set return_url [:query_parameter local_return_url:localurl [:pretty_link]]
-      append HTML "<hr><p><a class='btn btn-default' href='$return_url'>#xowiki.back#</a></p>\n"
+      append HTML "<hr><p><a class='[xowiki::CSS class action]' href='$return_url'>#xowiki.back#</a></p>\n"
     }
 
     if {$do_stream} {
@@ -785,7 +778,7 @@ Action instproc unpublish_link {obj} {
       set HTML "#xowiki.no_data#"
     }
     set return_url [:query_parameter local_return_url:localurl [:pretty_link]]
-    append HTML "<hr><p><a class='btn btn-default' href='$return_url'>#xowiki.back#</a></p>\n"
+    append HTML "<hr><p><a class='[xowiki::CSS class action]' href='$return_url'>#xowiki.back#</a></p>\n"
 
     :www-view $HTML
   }

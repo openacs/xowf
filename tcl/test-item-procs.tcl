@@ -2541,13 +2541,38 @@ namespace eval ::xowf::test_item {
         });
       }]
 
+      return [::xowiki::bootstrap::modal_dialog \
+                  -id grading-modal \
+                  -title "#xowf.Grading#: <span id='grading-participant'></span>" \
+                  -subtitle "#xowf.question#: <span id='grading-question-title'></span>" \
+                  -body [ns_trim -delimiter | {
+                    |<form class="form-horizontal" role="form" action='#' method="post">
+                    |  <div class="form-group">
+                    |    <label for="grading-points" class="control-label col-sm-2">#xowf.Points#:</label>
+                    |    <div class="col-sm-9">
+                    |      <input class="form-control" id="grading-points" placeholder="#xowf.Points#"
+                    |             type="number" step="0.1" min="0">
+                    |      <span id="grading-points-help-block" class="help-block hidden"></span>
+                    |    </div>
+                    |  </div>
+                    |  <div class="form-group">
+                    |    <label for="grading-comment" class="control-label col-sm-2">#xowf.feedback#:</label>
+                    |    <div class="col-sm-9">
+                    |      <textarea lines="2" class="form-control" id="grading-comment"
+                    |                placeholder="..."></textarea>
+                    |    </div>
+                    |  </div>
+                    |</form>
+                  }] \
+             ]
+
       return [ns_trim -delimiter | {
         |<div class="modal fade" id="grading-modal" tabindex="-1" role="dialog"
         |     aria-labelledby="grading-modal-label" aria-hidden="true">
         |  <div class="modal-dialog" role="document">
         |    <div class="modal-content">
         |      <div class="modal-header">
-        |        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+        |        <button type="button" class="[xowiki::CSS class close]" data-dismiss="modal" aria-label="Close">
         |          <span aria-hidden="true">&#215;</span>
         |        </button>
         |        <h4 class="modal-title" id="gradingModalTitle">#xowf.Grading#:
@@ -3043,7 +3068,7 @@ namespace eval ::xowf::test_item {
 
       return [ns_trim -delimiter | [subst {
         |<button class="btn [::xowiki::CSS class btn-default]" id="print-button">
-        |<span class='glyphicon glyphicon-print' aria-hidden='true'></span> print
+        |[::xowiki::bootstrap::icon -name print] print
         |</button>
         |[template::collect_body_scripts]
       }]]
@@ -3344,7 +3369,11 @@ namespace eval ::xowf::test_item {
         set percentage ""
         if {$achieved eq ""} {
           :dom node replace $grading_box {span[@class='points']} {
-            ::html::span -class "glyphicon glyphicon-alert text-warn" -aria-hidden "true" {}
+            if {[::xowiki::CSS toolkit] eq "bootstrap5"} {
+              ::html::i -class "bi bi-exclamation-triangle-fill text-warning" -aria-hidden "true" {}
+            } else {
+              ::html::span -class "glyphicon glyphicon-alert text-warn" -aria-hidden "true" {}
+            }
           }
         } else {
           :dom node replace $grading_box {span[@class='points']} {::html::t $achieved}
@@ -3682,6 +3711,7 @@ namespace eval ::xowf::test_item {
       #
       # @return dict containing "do_stream" and "HTML"
       #
+      ns_log notice "RENDER ANSWERS 0"
       set combined_form_info [:QM combined_question_form $examWf]
       set autograde   [dict get $combined_form_info autograde]
       set totalPoints [:QM total_points \
@@ -3754,6 +3784,7 @@ namespace eval ::xowf::test_item {
         }
       }
       append HTML [:grading_dialog_setup $examWf]
+      ns_log notice "RENDER ANSWERS 1"
 
       if {$do_stream} {
         # ns_log notice STREAM-[info level]-$::template::parse_level
@@ -3784,6 +3815,7 @@ namespace eval ::xowf::test_item {
       } else {
         set recutil ""
       }
+      ns_log notice "RENDER ANSWERS 2"
 
       #
       # Create zip file from file submissions
@@ -3808,6 +3840,7 @@ namespace eval ::xowf::test_item {
       } else {
         set zipFile ""
       }
+      ns_log notice "RENDER ANSWERS 3 (submissions: [llength [$items children]])"
 
       set file_submission_exists 0
 
@@ -3840,6 +3873,8 @@ namespace eval ::xowf::test_item {
                    -with_signature $withSignature]
 
         set html [:dict_value $d HTML]
+        ns_log notice "RENDER ANSWERS setting result"
+
         dict set results [$submission set creation_user] [:dict_value $d results]
 
         if {$do_stream && $html ne ""} {
@@ -3859,6 +3894,7 @@ namespace eval ::xowf::test_item {
         }
 
       }
+      ns_log notice "RENDER ANSWERS 4"
 
       if {$export} {
         $recutil destroy
@@ -3903,10 +3939,11 @@ namespace eval ::xowf::test_item {
         }]]
         append HTML [ns_trim -delimiter | [subst {
           |<a href='$href'>
-          |<span class='download-submissions glyphicon glyphicon-download' aria-hidden='true'></span>
+          |[::xowiki::bootstrap::icon -name download -CSSclass download-submissions]
           |#xowf.Download_file_submissions#</a>
         }]]
       }
+      ns_log notice "RENDER ANSWERS 5"
 
       #
       # Store statistics only in autograding cases, and only, when it
@@ -4510,15 +4547,10 @@ namespace eval ::xowf::test_item {
       }
       set nrAnswered [llength $answered]
 
-      set answerStatus [subst {
-        <div class='panel panel-default'>
-        <div class='panel-heading'>$heading</div>
-        <div class='panel-body'>
-        <span id="answer-status">$nrAnswered/$nrParticipants</span> $submission_msg
-        </div>
-        $extra_text
-        </div>
-      }]
+      set answerStatus [::xowiki::bootstrap::card \
+                            -title $heading \
+                            -body [subst {<p><span id='answer-status'>$nrAnswered/$nrParticipants</span>
+                              $submission_msg<p>$extra_text}]]
 
       if {$polling} {
         #
@@ -4696,8 +4728,8 @@ namespace eval ::xowf::test_item {
         # when the user does a full reload, then the user has to
         # activate the audio alarm again.
         #
-        # The state is symbolized using bootstrap 3 glyphicons.  The
-        # code is tested primarily with chrome.
+        # The state is symbolized using bootstrap 3 glyphicons or
+        # bootstrap icons.  The code is tested primarily with chrome.
         #
         template::add_body_script -script [subst {
           var audioContext = new AudioContext();
@@ -4705,16 +4737,26 @@ namespace eval ::xowf::test_item {
             var container = document.getElementById('$id').parentNode;
             //console.log('--- state = ' + audioContext.state + ' want ' + targetState);
             if (targetState == 'active') {
-              var span = container.getElementsByTagName('span')\[0\];
-              span.classList.remove('glyphicon-volume-off');
-              span.classList.add('glyphicon-volume-up');
+              var elements = container.getElementsByTagName('i')\[0\];
+              var prefix = 'bi';
+              if (elements.length == 0) {
+                elements = container.getElementsByTagName('span')\[0\];
+                prefix = 'glyphicon';
+              }
+              elements.classList.remove(prefix + '-volume-off');
+              elements.classList.add(prefix + '-volume-up');
               container.dataset.alarm = 'active';
               document.cookie = '$audio_alarm_cookie=active; sameSite=strict';
               audioContext.resume().then(() => {console.log('Playback resumed successfully ' + targetState);});
             } else {
-              var span = container.getElementsByTagName('span')\[0\];
-              span.classList.remove('glyphicon-volume-up');
-              span.classList.add('glyphicon-volume-off');
+              var elements = container.getElementsByTagName('i')\[0\];
+              var prefix = 'bi';
+              if (elements.length == 0) {
+                elements = container.getElementsByTagName('span')\[0\];
+                prefix = 'glyphicon';
+              }
+              elements.classList.remove(prefix + '-volume-up');
+              elements.classList.add(prefix + '-volume-off');
               container.dataset.alarm = 'inactive';
               document.cookie = '$audio_alarm_cookie=inactive; sameSite=strict';
               audioContext.suspend().then(() => {console.log('Playback suspended successfully ' + targetState);});
@@ -4764,16 +4806,16 @@ namespace eval ::xowf::test_item {
 
         if {[ns_conn isconnected]} {
           set alarmState [ns_getcookie $audio_alarm_cookie "inactive"]
-          set glypphIcon [expr {$alarmState eq "inactive" ? "glyphicon-volume-off":"glyphicon-volume-up"}]
+          set glypphIcon [expr {$alarmState eq "inactive" ? "volume-off":"volume-up"}]
         } else {
           set alarmState "inactive"
-          set glypphIcon "glyphicon-volume-off"
+          set glypphIcon "volume-off"
         }
         #ns_log notice "C=$alarmState"
 
         return [subst {
           <div data-alarm='$alarmState' data-alarmseconds='\[$audio_alarm_times\]'>
-          <span class='glyphicon $glypphIcon'></span>
+          [::xowiki::bootstrap::icon -name $glypphIcon]
           <div style='display: inline-block;' id='$id'></div>
           </div>
         }]
@@ -5349,7 +5391,8 @@ namespace eval ::xowf::test_item {
         for {set count 1} {$count <= $question_count} {incr count} {
           set visited_css [expr {($count - 1) in $visited ? "visited" : ""}]
           set flag_label [expr {($count - 1) in $flagged
-                                ? " <span class='glyphicon glyphicon-flag text-danger'></span>" : ""}]
+                                ? " [::xowiki::bootstrap::icon -name flag -CSSclass text-danger]"
+                                : ""}]
           set extra_css [:pagination_button_css \
                              -CSSclass "$CSSclass $visited_css" \
                              -cond [expr {$current_position == $count - 1 }] \
@@ -5972,6 +6015,7 @@ namespace eval ::xowf::test_item {
               if {$with_grading_box eq "hidden"} {
                 set question_name answer_$question_name
               }
+              set data_attribute [expr {[::xowiki::CSS toolkit] eq "bootstrap5" ? "data-bs" : "bs"}]
               append full_form [subst [ns_trim -delimiter | {
                 |<div id='grading-box-[incr count]' class='grading-box $visible'
                 |     data-question_name='$question_name' data-title='[$question_obj title]'
@@ -5979,8 +6023,8 @@ namespace eval ::xowf::test_item {
                 |  #xowf.Points#: <span class='points'></span>
                 |  <span class='percentage'></span>
                 |  <span class='feedback-label'>#xowf.feedback#: </span><span class='comment'></span>
-                |  <a class='manual-grade' href='#' data-toggle='modal' data-target='#grading-modal'>
-                |    <span class='glyphicon glyphicon-pencil' aria-hidden='true'></span>
+                |  <a class='manual-grade' href='#' $data_attribute-toggle='modal' $data_attribute-target='#grading-modal'>
+                |    [::xowiki::bootstrap::icon -name pencil]
                 |  </a>
                 |</div>
               }]]
@@ -6443,9 +6487,11 @@ namespace eval ::xowf::test_item {
       set fields [$obj create_form_fields_from_names -lookup -set_values \
                       -form_constraints $form_constraints \
                       $field_names]
+      set data_attribute [expr {[::xowiki::CSS toolkit] eq "bootstrap5" ? "data-bs" : "bs"}]
       return [subst {
-        <p><button type="button" class="btn btn-secondary" data-toggle="collapse" data-target="#$id">
-        <span class="glyphicon glyphicon-chevron-down">&nbsp;</span>$label</button>
+        <p><button type="button" class="btn btn-secondary"
+        $data_attribute-toggle="collapse" $data_attribute-target="#$id">
+        [::xowiki::bootstrap::icon -name chevron-down] $label</button>
         <div id="$id" class="collapse">
         [:exam_configuration_render_fields -modifiable $modifiable $fields]
         </div>
@@ -6554,42 +6600,19 @@ namespace eval ::xowf::test_item {
         |});
       }]]
 
-      $obj content_header_append [ns_trim -delimiter | [subst {
-        |<div class="modal fade" id="configuration-modal" tabindex="-1" role="dialog"
-        |     aria-labelledby="configuration-modal-label" aria-hidden="true">
-        |  <div class="modal-dialog" role="document">
-        |    <div class="modal-content">
-        |      <div class="modal-header">
-        |        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-        |          <span aria-hidden="true">&#215;</span>
-        |        </button>
-        |        <h4 class="modal-title" id="configurationModalTitle">#xowf.Configuration#:
-        |            <span id='configuration-participant'></span></h4>
-        |      </div>
-        |      <div class="modal-body">
-        |        <form class="form-horizontal" id="configuration-form" role="form" action="#" method="post">
-        |        $content
-        |        </form>
-        |      </div>
-        |      <div class="modal-footer">
-        |        <button type="button" class="btn [::xowiki::CSS class btn-default]"
-        |                data-dismiss="modal">#acs-kernel.common_Cancel#
-        |        </button>
-        |        <button id="configuration-modal-confirm" type="button" class="btn btn-primary confirm"
-        |                data-dismiss="modal">#acs-subsite.Confirm#
-        |        </button>
-        |      </div>
-        |    </div>
-        |  </div>
-        |</div>
-      }]]
 
-      return [ns_trim -delimiter | [subst {
-        |<a class="configuration-button" href="#" title="#xowf.Configuration_button_title#"
-        |  data-toggle="modal" data-target='#configuration-modal'>
-        |  <span class="glyphicon glyphicon-cog" aria-hidden="true" style="float: right;"></span>
-        |</a>
-      }]]
+      $obj content_header_append \
+          [::xowiki::bootstrap::modal_dialog \
+               -id configuration-modal \
+               -title "#xowf.Configuration#: <span id='configuration-participant'></span>" \
+               -body $content]
+
+      return \
+          [::xowiki::bootstrap::modal_dialog_popup_button \
+               -target configuration-modal \
+               -label [::xowiki::bootstrap::icon -name cog -style "float: right;"] \
+               -title #xowf.Configuration_button_title# \
+               -CSSclass configuration-button]
     }
 
     #----------------------------------------------------------------------
@@ -6605,7 +6628,7 @@ namespace eval ::xowf::test_item {
         set href [$obj pretty_link -query m=exam-results]
         set results_summary [subst {
           <p>#xowf.export_results#: <a title="#xowf.export_results_title#" href="$href">
-          CSV <span class="glyphicon glyphicon-download" aria-hidden="true"></span></a>
+          CSV [xowiki::boostrap::icon -name download]</a>
         }]
       } else {
         set results_summary ""
@@ -6615,7 +6638,7 @@ namespace eval ::xowf::test_item {
       return [ns_trim -delimiter | [subst {
         | [:question_info_block $obj]
         | $results_summary
-        | <hr><p><a class="btn [::xowiki::CSS class btn-default]" href="$return_url">#xowiki.back#</a></p>
+        | <hr><p><a class="[::xowiki::CSS class action]" href="$return_url">#xowiki.back#</a></p>
       }]]
     }
 
@@ -6663,6 +6686,7 @@ namespace eval ::xowf::test_item {
         dict set chunk structure $structure
         lappend chunks $chunk
       }
+
 
       append HTML [subst {
         <div class="panel panel-default">
