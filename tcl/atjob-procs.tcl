@@ -1,8 +1,11 @@
-namespace eval ::xowf {
-  #
-  # simple at-handler
-  #
+::xo::library doc {
 
+  Routines for AT handler (performing operations on cr objects at certain times)
+
+  @author Gustaf Neumann (neumann@wu-wien.ac.at)
+}
+
+namespace eval ::xowf {
   #
   # Define a simple Class for atjobs. In future versions, this is a
   # good candidate to be turned into a nx class.
