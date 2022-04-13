@@ -6015,7 +6015,7 @@ namespace eval ::xowf::test_item {
               if {$with_grading_box eq "hidden"} {
                 set question_name answer_$question_name
               }
-              set data_attribute [expr {[::xowiki::CSS toolkit] eq "bootstrap5" ? "data-bs" : "bs"}]
+              set data_attribute [expr {[::xowiki::CSS toolkit] eq "bootstrap5" ? "data-bs" : "data"}]
               append full_form [subst [ns_trim -delimiter | {
                 |<div id='grading-box-[incr count]' class='grading-box $visible'
                 |     data-question_name='$question_name' data-title='[$question_obj title]'
@@ -6487,7 +6487,7 @@ namespace eval ::xowf::test_item {
       set fields [$obj create_form_fields_from_names -lookup -set_values \
                       -form_constraints $form_constraints \
                       $field_names]
-      set data_attribute [expr {[::xowiki::CSS toolkit] eq "bootstrap5" ? "data-bs" : "bs"}]
+      set data_attribute [expr {[::xowiki::CSS toolkit] eq "bootstrap5" ? "data-bs" : "data"}]
       return [subst {
         <p><button type="button" class="btn btn-secondary"
         $data_attribute-toggle="collapse" $data_attribute-target="#$id">
