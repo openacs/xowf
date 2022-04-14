@@ -4737,10 +4737,10 @@ namespace eval ::xowf::test_item {
             var container = document.getElementById('$id').parentNode;
             //console.log('--- state = ' + audioContext.state + ' want ' + targetState);
             if (targetState == 'active') {
-              var elements = container.getElementsByTagName('i')\[0\];
+              var elements = container.querySelector('i');
               var prefix = 'bi';
-              if (elements.length == 0) {
-                elements = container.getElementsByTagName('span')\[0\];
+              if (!elements) {
+                elements = container.querySelector('span');
                 prefix = 'glyphicon';
               }
               elements.classList.remove(prefix + '-volume-off');
@@ -4749,10 +4749,10 @@ namespace eval ::xowf::test_item {
               document.cookie = '$audio_alarm_cookie=active; sameSite=strict';
               audioContext.resume().then(() => {console.log('Playback resumed successfully ' + targetState);});
             } else {
-              var elements = container.getElementsByTagName('i')\[0\];
+              var elements = container.querySelector('i');
               var prefix = 'bi';
-              if (elements.length == 0) {
-                elements = container.getElementsByTagName('span')\[0\];
+              if (!elements) {
+                elements = container.querySelector('span');
                 prefix = 'glyphicon';
               }
               elements.classList.remove(prefix + '-volume-up');
