@@ -3306,19 +3306,26 @@ namespace eval ::xowf::test_item {
           # boxes below should care for the visibility of the hint
           # boxes due to percentages.
           #
-          set subquestion_id [$grading_box getAttribute data-question_id]
-          set subquestion_obj [::xowiki::FormPage get_instance_from_db -item_id $subquestion_id]
-          #ns_log notice "CHILD of Composite has form_id $subquestion_id [nsf::is object ::$subquestion_id]"
-          set HTML [:QM hint_boxes \
-                        -question_obj $subquestion_obj \
-                        -with_feedback=1 \
-                        -with_correction_notes=1]
-          if {$HTML ne ""} {
-            dom parse -simple -html <body>$HTML</body> hintsDoc
-            $hintsDoc documentElement hintsBody
-            foreach child $hintsBody {
-              [$grading_box parentNode] appendChild $child
+          if {[$grading_box hasAttribute data-question_id]} {
+            set subquestion_id [$grading_box getAttribute data-question_id]
+            set subquestion_obj [::xowiki::FormPage get_instance_from_db -item_id $subquestion_id]
+            #ns_log notice "CHILD of Composite has form_id $subquestion_id [nsf::is object ::$subquestion_id]"
+            set HTML [:QM hint_boxes \
+                          -question_obj $subquestion_obj \
+                          -with_feedback=1 \
+                          -with_correction_notes=1]
+            if {$HTML ne ""} {
+              dom parse -simple -html <body>$HTML</body> hintsDoc
+              $hintsDoc documentElement hintsBody
+              foreach child $hintsBody {
+                [$grading_box parentNode] appendChild $child
+              }
             }
+          } else {
+            #
+            # Probably some legacy item
+            #
+            ad_log warning "composite_grading_box has no data-question_id"
           }
         }
       }
@@ -6628,7 +6635,7 @@ namespace eval ::xowf::test_item {
         set href [$obj pretty_link -query m=exam-results]
         set results_summary [subst {
           <p>#xowf.export_results#: <a title="#xowf.export_results_title#" href="$href">
-          CSV [xowiki::boostrap::icon -name download]</a>
+          CSV [xowiki::bootstrap::icon -name download]</a>
         }]
       } else {
         set results_summary ""
