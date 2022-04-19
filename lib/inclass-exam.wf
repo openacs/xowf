@@ -222,15 +222,16 @@ Action instproc unpublish_link {obj} {
   #<a href=''><span class='glyphicon glyphicon-cog' style="float: right"></span></a>
 
   append text \
-      "<div class='row'><div class='col-sm-4'>" \
+      "<p><div class='row'><div class='col-sm-9'>" \
       [::xowiki::bootstrap::card \
            -title "#xowf.exam_summary# [:QM exam_configuration_popup $obj]" \
-           -body [:QM exam_info_block -combined_form_info $combined_form_info $obj]]
+           -body [:QM exam_info_block -combined_form_info $combined_form_info $obj]] \
+      "</div></div>"
 
   set detail_link [$obj pretty_link -query m=question-summary]
-  append text [subst {<div>
-    <a class='[xowiki::CSS class action]' href='$detail_link'>#xowf.question_summary#</a>
-    </div></div>
+  append text [subst {<div class="col-sm-12">
+    <p><a class='[xowiki::CSS class action]' href='$detail_link'>#xowf.question_summary#</a>
+    </div>
   }]
 
   set wf [$obj AM get_answer_wf $obj]
@@ -334,13 +335,14 @@ Action instproc unpublish_link {obj} {
       set target_time [:QM exam_target_time \
                            -manager $obj -base_time [$obj last_modified]]
       set countdownHTML [$obj AM countdown_timer -target_time $target_time -id "countdown"]
-      set countdownHTML "<div class='countdown-timer'>$countdownHTML</div>"
     }
     #ns_log notice ALL=$text
 
     append text [subst {
-      <div class="col-sm-4">$answerStatus</div>
-      <div class="col-sm-4">$qrCode $countdownHTML</div>
+      <div class="row">
+      <div class="col-sm-9">$answerStatus</div>
+      <div class="col-sm-3">$qrCode</div>
+      <div class="col-sm-6">$countdownHTML</div>
       </div>
     }]
   }

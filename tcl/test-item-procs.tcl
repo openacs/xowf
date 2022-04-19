@@ -6635,7 +6635,7 @@ namespace eval ::xowf::test_item {
         set href [$obj pretty_link -query m=exam-results]
         set results_summary [subst {
           <p>#xowf.export_results#: <a title="#xowf.export_results_title#" href="$href">
-          CSV [xowiki::bootstrap::icon -name download]</a>
+          <adp:icon name="filetype-csv" title="CSV"></a>
         }]
       } else {
         set results_summary ""
