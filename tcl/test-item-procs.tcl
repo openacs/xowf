@@ -6657,69 +6657,7 @@ namespace eval ::xowf::test_item {
       #
       # Provide question info block.
       #
-      set href [$obj pretty_link -query m=print-answers]
-
-      set form_objs [:question_objs $obj]
-
-      set chunks {}
-      foreach form_obj $form_objs {
-        set chunk [lindex [:describe_form $form_obj] 0]
-        set structure ""
-        foreach att {
-          question_structure choice_options sub_questions
-        } {
-          if {[dict exists $chunk $att]} {
-            append structure [dict get $chunk $att]
-            break
-          }
-        }
-        if {[dict exists $chunk available_pool_items]} {
-          append structure \
-              " " [dict get $chunk available_pool_items] " " #xowf.questions# \
-              " " ([dict get $chunk available_pool_item_stats])
-        }
-        if {[dict exists $chunk nrcorrect]} {
-          append structure " " [:pretty_ncorrect [dict get $chunk nrcorrect]]
-        }
-        if {[$obj state] in {done submission_review}
-            && ![dict exists $chunk available_pool_items]
-          } {
-          dict set chunk title_value [subst {
-            <a href='$href&fos=[$form_obj item_id]'>[ns_quotehtml [$form_obj title]]</a>
-          }]
-        } else {
-          dict set chunk title_value [ns_quotehtml [$form_obj title]]
-        }
-        dict set chunk structure $structure
-        lappend chunks $chunk
-      }
-
-
-      append HTML [subst {
-        <div class="panel panel-default">
-        <div class="panel-heading">#xowf.question_summary#</div>
-        <div class="panel-body">
-        <div class='table-responsive'><table class='question_summary table table-condensed'>
-        <tr><th></th><th>#xowf.question_structure#</th>
-        <th style='text-align: center;'>#xowf.Minutes#</th>
-        <th style='text-align: center;'>#xowf.Points#</th>
-        <th style='text-align: center;'>#xowf.Shuffle#</th>
-        <th style='text-align: center;'></th>
-        </tr>
-      }]
-
-      foreach chunk $chunks {
-        append HTML [subst {
-          <tr>
-          <td>[:dict_value $chunk title_value]</td>
-          <td>[:dict_value $chunk type]: [:dict_value $chunk structure]</td>
-          <td style='text-align: center;'>[:dict_value $chunk Minutes]</td>
-          <td style='text-align: center;'>[:dict_value $chunk Points]</td>
-          <td style='text-align: center;'>[:pretty_shuffle [:dict_value $chunk shuffle]]</td>
-          <td style='text-align: center;'>[:dict_value $chunk grading]</td>
-          </tr>}]
-      }
-      append HTML "</table></div></div></div>\n"
+      set HTML [:question_overview_block $obj]
 
       #
       # When we have results, we can provide statistics
@@ -6786,6 +6724,74 @@ namespace eval ::xowf::test_item {
 
         append HTML $form
       }
+      return $HTML
+    }
+
+    :method question_overview_block {obj} {
+      set href [$obj pretty_link -query m=print-answers]
+
+      set form_objs [:question_objs $obj]
+
+      set chunks {}
+      foreach form_obj $form_objs {
+        set chunk [lindex [:describe_form $form_obj] 0]
+        set structure ""
+        foreach att {
+          question_structure choice_options sub_questions
+        } {
+          if {[dict exists $chunk $att]} {
+            append structure [dict get $chunk $att]
+            break
+          }
+        }
+        if {[dict exists $chunk available_pool_items]} {
+          append structure \
+              " " [dict get $chunk available_pool_items] " " #xowf.questions# \
+              " " ([dict get $chunk available_pool_item_stats])
+        }
+        if {[dict exists $chunk nrcorrect]} {
+          append structure " " [:pretty_ncorrect [dict get $chunk nrcorrect]]
+        }
+        if {[$obj state] in {done submission_review}
+            && ![dict exists $chunk available_pool_items]
+          } {
+          dict set chunk title_value [subst {
+            <a href='$href&fos=[$form_obj item_id]'>[ns_quotehtml [$form_obj title]]</a>
+          }]
+        } else {
+          dict set chunk title_value [ns_quotehtml [$form_obj title]]
+        }
+        dict set chunk structure $structure
+        lappend chunks $chunk
+      }
+
+
+      append HTML [subst {
+        <div class="panel panel-default">
+        <div class="panel-heading">#xowf.question_summary#</div>
+        <div class="panel-body">
+        <div class='table-responsive'><table class='question_summary table table-condensed'>
+        <tr><th></th><th>#xowf.question_structure#</th>
+        <th style='text-align: center;'>#xowf.Minutes#</th>
+        <th style='text-align: center;'>#xowf.Points#</th>
+        <th style='text-align: center;'>#xowf.Shuffle#</th>
+        <th style='text-align: center;'></th>
+        </tr>
+      }]
+
+      foreach chunk $chunks {
+        append HTML [subst {
+          <tr>
+          <td>[:dict_value $chunk title_value]</td>
+          <td>[:dict_value $chunk type]: [:dict_value $chunk structure]</td>
+          <td style='text-align: center;'>[:dict_value $chunk Minutes]</td>
+          <td style='text-align: center;'>[:dict_value $chunk Points]</td>
+          <td style='text-align: center;'>[:pretty_shuffle [:dict_value $chunk shuffle]]</td>
+          <td style='text-align: center;'>[:dict_value $chunk grading]</td>
+          </tr>}]
+      }
+      append HTML "</table></div></div></div>\n"
+
       return $HTML
     }
 
