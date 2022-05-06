@@ -25,6 +25,7 @@
   <msg key="Correct">Korrekt</msg>
   <msg key="correct">Richtig?</msg>
   <msg key="correct_when">Richtig, wenn...</msg>
+  <msg key="Correction_notes">Korrekturhinweise</msg>
   <msg key="Countdown_audio_alarm">Audioalarm für den Countdown-Timer</msg>
   <msg key="Countdown_audio_alarm_help_text">Inkludiere akustisches Signal, das Studierende vor Ablauf der Bearbeitungsfrist alarmiert (ungeeignet für Prüfungen in Schulungsräumen)</msg>
   <msg key="Created_Assessments">Verfügbare Assessments</msg>
@@ -60,6 +61,7 @@
   <msg key="flag_delete_title">Markierung dieser Frage löschen</msg>
   <msg key="flag_set">Frage markieren</msg>
   <msg key="flag_set_title">Frage für eine spätere Bearbeitung markieren</msg>
+  <msg key="General_feedback">Generelles Feedback</msg>
   <msg key="Goto_this_revision">Gehe zu dieser Version</msg>
   <msg key="Grade">Note</msg>
   <msg key="Grade_boundaries">Notengrenzen</msg>
@@ -88,6 +90,10 @@
   <msg key="inclass-quiz-submit">Abgabe</msg>
   <msg key="inclass-quiz-unpublish">Quiz beenden</msg>
   <msg key="inclass-quiz-waiting_for_next">Warte auf nächste Frage ...</msg>
+  <msg key="IPrange">Erlaube Zugriff für folgende IP-Adressen</msg>
+  <msg key="IPrange_help_text">Erlaube Zugriff auf dieses Prüfung nur
+  für ausgewählte IP-Adressen. Nur Benutzer mit zugelassenen IP-Adressen können die Prüfung ablegen.</msg>
+  <msg key="IPrange_not_allowed">Eingeschränkter Zugang: Es ist Ihnen nicht gestattet, von Ihrer IP-Adresse (%ip%) aus an dieser Prüfung teilzunehmen.</msg>
   <msg key="lines">Zeilen</msg>
   <msg key="Live_revision">Abgabeversion</msg>
   <msg key="Make_live_revision">Verwende angezeigte Version als Abgabe</msg>
@@ -237,12 +243,4 @@
   <msg key="ul_question">Dateiabgabefrage</msg>
   <msg key="Value_max">Wert muss kleiner oder gleich sein als</msg>
   <msg key="Value_min">Wert muss größer oder gleich sein als</msg>
-
-  <msg key="IPrange">Erlaube Zugriff für folgende IP-Adressen</msg>
-  <msg key="IPrange_help_text">Erlaube Zugriff auf dieses Prüfung nur
-  für ausgewählte IP-Adressen. Nur Benutzer mit zugelassenen IP-Adressen können die Prüfung ablegen.</msg>
-  <msg key="IPrange_not_allowed">Eingeschränkter Zugang: Es ist Ihnen nicht gestattet, von Ihrer IP-Adresse (%ip%) aus an dieser Prüfung teilzunehmen.</msg>
-  <msg key="General_feedback">Generelles Feedback</msg>
-  <msg key="Correction_notes">Korrekturhinweise</msg>
-  
 </message_catalog>

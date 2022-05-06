@@ -32,6 +32,7 @@
   <msg key="Correct">Correct</msg>
   <msg key="correct">Correct?</msg>
   <msg key="correct_when">Correct When</msg>
+  <msg key="Correction_notes">Correction Notes</msg>
   <msg key="Countdown_audio_alarm">Audio alarm for countdown timer</msg>
   <msg key="Countdown_audio_alarm_help_text">Include acoustic audio signal to alert students about the approaching time expiration (maybe not wanted for class-room exams)</msg>
   <msg key="Created_Assessments">Created Assessments</msg>
@@ -68,6 +69,7 @@
   <msg key="flag_delete_title">Remove flag for this question</msg>
   <msg key="flag_set">Flag this Question</msg>
   <msg key="flag_set_title">Flag this question for later</msg>
+  <msg key="General_feedback">General Feedback</msg>
   <msg key="Goto_this_revision">Go to this revision</msg>
   <msg key="Grade">Grade</msg>
   <msg key="Grade_boundaries">Grade Boundaries</msg>
@@ -103,6 +105,9 @@
   <msg key="inclass-quiz-submit">Submit</msg>
   <msg key="inclass-quiz-unpublish">Close quiz</msg>
   <msg key="inclass-quiz-waiting_for_next">Waiting for next question ...</msg>
+  <msg key="IPrange">Allow Access for the following IP Addresses</msg>
+  <msg key="IPrange_help_text">Allow access to this exam only for certain IP addresses. Only those users who are on approved IP addresses can fill out the exam.</msg>
+  <msg key="IPrange_not_allowed">Restricted access: You are not allowed to work on this exam from your IP address: %ip%</msg>
   <msg key="lines">Lines</msg>
   <msg key="Live_revision">Submission revision</msg>
   <msg key="Make_live_revision">Use displayed revision as submission</msg>
@@ -259,11 +264,4 @@
   <msg key="ul_question">File Upload Question</msg>
   <msg key="Value_max">Value must smaller or equal</msg>
   <msg key="Value_min">Value must larger or equal</msg>
-
-  <msg key="IPrange">Allow Access for the following IP Addresses</msg>
-  <msg key="IPrange_help_text">Allow access to this exam only for certain IP addresses. Only those users who are on approved IP addresses can fill out the exam.</msg>
-  <msg key="IPrange_not_allowed">Restricted access: You are not allowed to work on this exam from your IP address: %ip%</msg>
-  <msg key="General_feedback">General Feedback</msg>
-  <msg key="Correction_notes">Correction Notes</msg>
-
 </message_catalog>
