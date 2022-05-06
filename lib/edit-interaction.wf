@@ -17,7 +17,8 @@ Action initialize -proc activate {obj} {
     if {[$obj is_new_entry $name]} {
         set container [[$obj wf_context] wf_container]
         set item_type [$container item_type $obj]
-        $obj title "Fresh '$item_type' interaction ($name)"
+        $obj title [_ xowf.Fresh_item_type_interaction_name \
+                        [list item_type $item_type name $name]]
     }
 }
 

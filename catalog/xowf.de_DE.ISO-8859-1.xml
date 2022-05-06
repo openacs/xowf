@@ -61,6 +61,7 @@
   <msg key="flag_delete_title">Markierung dieser Frage löschen</msg>
   <msg key="flag_set">Frage markieren</msg>
   <msg key="flag_set_title">Frage für eine spätere Bearbeitung markieren</msg>
+  <msg key="Fresh_item_type_interaction_name">Frische &#39;%item_type%&#39; Interaktion (%name%)</msg>
   <msg key="General_feedback">Generelles Feedback</msg>
   <msg key="Goto_this_revision">Gehe zu dieser Version</msg>
   <msg key="Grade">Note</msg>

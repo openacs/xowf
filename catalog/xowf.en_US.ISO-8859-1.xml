@@ -69,6 +69,7 @@
   <msg key="flag_delete_title">Remove flag for this question</msg>
   <msg key="flag_set">Flag this Question</msg>
   <msg key="flag_set_title">Flag this question for later</msg>
+  <msg key="Fresh_item_type_interaction_name">Fresh &#39;%item_type%&#39; interaction (%name%)</msg>
   <msg key="General_feedback">General Feedback</msg>
   <msg key="Goto_this_revision">Go to this revision</msg>
   <msg key="Grade">Grade</msg>
