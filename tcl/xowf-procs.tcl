@@ -68,7 +68,7 @@ namespace eval ::xowf {
     edit-grading-scheme.wf
     answer-single-question.wf
     topic-assignment.wf
-    
+
     quiz-select_question.form
     select_question.form
     select-topics.form
@@ -234,7 +234,7 @@ namespace eval ::xowf {
       }
       #
       # If called without args, return the current value, otherwise
-      # aggregated the values.
+      # aggregate the values.
       #
       set l [llength $args]
       switch $l {
@@ -257,6 +257,53 @@ namespace eval ::xowf {
         }
       }
     }
+
+    #
+    # The methods "object-specific" and "wf-specific" are pretty
+    # similar but these define different instance
+    # variables. "object-specific" is for instances of a workflow,
+    # "wf-specific" is for the workflow object itself.
+    #
+    WorkflowContainer instproc object-specific args {
+      :specific object {*}$args
+    }
+    WorkflowContainer instproc wf-specific args {
+      :specific wf {*}$args
+    }
+
+    WorkflowContainer instproc specific {type args} {
+      #
+      # Make sure, we have always a value.
+      #
+      if {![info exists :$type-specific]} {
+        set :$type-specific ""
+      }
+      #
+      # If called without args, return the current value, otherwise
+      # aggregate the values.
+      #
+      set l [llength $args]
+      switch $l {
+        0 {
+          #
+          # Called without args, return the current value
+          #
+          return [set :$type-specific]
+        }
+        1 {
+          #
+          # Called with a single value, aggregate partial values (and
+          # separate these by an empty line for safety)
+          #
+          append :$type-specific \n [lindex $args 0]
+          #ns_log notice "=== $type-specific [self] [set :$type-specific]"
+        }
+        default {
+          error "wrong number of arguments"
+        }
+      }
+    }
+
 
     WorkflowContainer instproc init {} {
       set :creation_time [clock seconds]
@@ -660,6 +707,12 @@ namespace eval ::xowf {
 
       set revision_id [$source_obj revision_id]
       if {$revision_id == 0} {
+        #
+        # We have no "revision_id", but we have to have an
+        # "item_id". Therefore, get then "item_id" from the
+        # "revision_id" via SQL function
+        # content_item.get_live_revision.
+        #
         set revision_id [::acs::dc call content_item get_live_revision \
                              -item_id [$source_obj item_id]]
         ns_log warning "xowf: tried to create a wf_container with revision_id 0 -> fixed to $revision_id"
@@ -723,10 +776,12 @@ namespace eval ::xowf {
       # Evaluate once per request the object-specific code of the
       # workflow.
       #
-      set os_code [${:wf_container} object-specific]
-      if {$os_code ne ""} {
-        #:log "=== object-specific ${:object} eval <$os_code>"
-        ${:object} eval $os_code
+      if {[${:object} is_wf_instance]} {
+        set os_code [${:wf_container} object-specific]
+        if {$os_code ne ""} {
+          #:log "=== object-specific ${:object} eval <$os_code>"
+          ${:object} eval $os_code
+        }
       }
     }
 
@@ -750,11 +805,14 @@ namespace eval ::xowf {
 
   # -debug
   Context proc require {{-new:switch false} obj} {
+    #
+    # Make sure, the context object for workflow '$obj exists. The
+    # flag "-new" can be used to make sure, a new and fresh context is
+    # available.
+    #
     #:log "START-require"
     #
     set ctx $obj-wfctx
-    #:log "... ctx <$ctx> exists [nsf::is object $ctx]"
-
     if {$new && [nsf::is object $ctx]} {
       $ctx destroy
     }
@@ -2047,15 +2105,17 @@ namespace eval ::xowf {
 
   WorkflowPage instproc initialize_loaded_object {} {
     next
-    if {[:is_wf_instance]} {
+    #
+    # Call "initialize" for workflows and workflow instances.  Before,
+    # we called "initialize" only, when [:is_wf_instance] was true.
+    #
+    if {[:is_wf_instance] || [:is_wf]} {
       :initialize
     }
   }
 
-  # -debug
   WorkflowPage instproc initialize {} {
-    #:log START-initialize
-    #:log "is_wf_instance [:is_wf_instance]"
+    #:log "START-initialize is_wf_instance [:is_wf_instance]"
     #
     # A fresh workflow page was created (called only once per
     # workflow page at initial creation)
@@ -2073,6 +2133,23 @@ namespace eval ::xowf {
       # Ignore the returned next_state, since the initial state is
       # always set to the same value from the ctx (initial)
       #:msg "[self] is=${:instance_attributes}"
+      
+    } elseif {[:is_wf] && [info exists :item_id]} {
+      #
+      # We are initializing a fully created workflow object.
+      #
+      # The test for "exists :item_id" is important, since when a
+      # workflow is created via "create_form_page_instance", the
+      # workflow object is create via "new", it has not been saved yet
+      # and has therefore no "item_id" yet.
+      #
+      
+      set ctx [::xowf::Context require -new [self]]
+      set code [[$ctx wf_container] wf-specific]
+      #ns_log notice "...initialize wf, wf-specific code: $code"
+      if {$code ne ""} {
+        eval $code
+      }
     }
     next
     #:log END-initialize
@@ -2396,9 +2473,9 @@ namespace eval ::xowf {
     return [$actionObj invoke -attributes $attributes]
   }
 
-  
+
   WorkflowPage ad_instproc childpage {-name:required -form} {
-    
+
     Return the child page of the current object with the provided
     name. In case the child object does not exist, create it as an
     instance of the provided form.
@@ -2435,7 +2512,7 @@ namespace eval ::xowf {
       error "cannot create '$name': API supports so far only form pages"
     }
  }
-  
+
   #
   # Interface to atjobs
   #
