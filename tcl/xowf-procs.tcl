@@ -416,6 +416,10 @@ namespace eval ::xowf {
     return 0
   }
 
+  Context instproc wf-specific args {
+    ns_log Warning "wf-specific NOT SUPPORTED for non shared workflows"
+  }
+
   Context instproc object-specific {code} {
     #:log "=== legacy call <$code>"
     :uplevel [list ${:object} eval $code]
