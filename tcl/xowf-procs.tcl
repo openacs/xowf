@@ -1853,7 +1853,7 @@ namespace eval ::xowf {
           }
         }
       }
-      ns_log notice "===== get_form_data returns [list $validation_errors $category_ids]"
+      #ns_log notice "===== get_form_data returns [list $validation_errors $category_ids]"
       return [list $validation_errors $category_ids]
     } else {
       next
