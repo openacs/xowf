@@ -67,7 +67,6 @@ namespace eval ::xowf {
     edit-interaction.wf
     edit-grading-scheme.wf
     answer-single-question.wf
-    topic-assignment.wf
 
     quiz-select_question.form
     select_question.form
