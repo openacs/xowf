@@ -417,7 +417,10 @@ namespace eval ::xowf {
   }
 
   Context instproc wf-specific args {
-    ns_log Warning "wf-specific NOT SUPPORTED for non shared workflows"
+    if {[llength $args] > 0} {
+      ns_log warning "wf-specific NOT SUPPORTED for non shared workflow " \
+          "${:object} [${:object} name]: $args"
+    }
   }
 
   Context instproc object-specific {code} {
@@ -2137,7 +2140,7 @@ namespace eval ::xowf {
       # Ignore the returned next_state, since the initial state is
       # always set to the same value from the ctx (initial)
       #:msg "[self] is=${:instance_attributes}"
-      
+
     } elseif {[:is_wf] && [info exists :item_id]} {
       #
       # We are initializing a fully created workflow object.
@@ -2147,7 +2150,7 @@ namespace eval ::xowf {
       # workflow object is create via "new", it has not been saved yet
       # and has therefore no "item_id" yet.
       #
-      
+
       set ctx [::xowf::Context require -new [self]]
       set code [[$ctx wf_container] wf-specific]
       #ns_log notice "...initialize wf, wf-specific code: $code"
