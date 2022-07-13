@@ -350,7 +350,7 @@ Action instproc unpublish_link {obj} {
   set f [::xowiki::Form new \
              -destroy_on_cleanup \
              -set name en:question \
-             -form [subst {<form>$text$marked $extraAction</form> text/html}] \
+             -form [subst {{<form>$text$marked $extraAction</form>} text/html}] \
              -text {} \
              -anon_instances t \
              -form_constraints {@categories:off @cr_fields:hidden} \
