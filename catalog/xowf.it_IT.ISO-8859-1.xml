@@ -32,6 +32,7 @@
   <msg key="Correct">Corretto</msg>
   <msg key="correct">Corretto?</msg>
   <msg key="correct_when">Corretto Quando</msg>
+  <msg key="Correction_notes">Note Correzione</msg>
   <msg key="Countdown_audio_alarm">Allarme audio per il timer del conto alla rovescia</msg>
   <msg key="Countdown_audio_alarm_help_text">Includere un segnale audio per avvisare gli studenti dell&#39;avvicinarsi della scadenza (probabilmente non desiderato per esami svolti in aula)</msg>
   <msg key="Created_Assessments">Valutazioni create</msg>
@@ -68,6 +69,9 @@
   <msg key="flag_delete_title">Rimuovi il segnalino per questa domanda</msg>
   <msg key="flag_set">Contrassegna questa Domanda</msg>
   <msg key="flag_set_title">Segnala questa domanda per ispezione futura</msg>
+  <msg key="Fresh_item_type_interaction_name">Nuova interazione &#39;%item_type%&#39; (%name%)
+</msg>
+  <msg key="General_feedback">Feedback Generale</msg>
   <msg key="Goto_this_revision">Vai a questa revisione</msg>
   <msg key="Grade">Voto</msg>
   <msg key="Grade_boundaries">Vincoli Voto</msg>
@@ -103,6 +107,9 @@
   <msg key="inclass-quiz-submit">Invia</msg>
   <msg key="inclass-quiz-unpublish">Chiudi quiz</msg>
   <msg key="inclass-quiz-waiting_for_next">In attesa della prossima domanda...</msg>
+  <msg key="IPrange">Permetti l&#39;accesso ai seguenti indirizzi IP</msg>
+  <msg key="IPrange_help_text">Permette l&#39;accesso all&#39;esame solo per alcuni indirizzi IP. Solo gli utenti provenienti da un indirizzo IP approvato possono partecipare all&#39;esame.</msg>
+  <msg key="IPrange_not_allowed">Accesso non consentito: non ti è permesso partecipare a questo esame dal tuo indirizzo IP: %ip%</msg>
   <msg key="lines">Righe</msg>
   <msg key="Live_revision">Revisioni consegna</msg>
   <msg key="Make_live_revision">Usa la revisione mostrata come consegna</msg>
