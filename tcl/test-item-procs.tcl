@@ -2469,7 +2469,7 @@ namespace eval ::xowf::test_item {
               }
 
             } else {
-              pointsFormGroup.removeClass('has-error');
+              pointsFormGroup.classList.remove('has-error');
               helpBlock.classList.add('hidden');
             }
 
