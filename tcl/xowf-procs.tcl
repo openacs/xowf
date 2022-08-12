@@ -669,7 +669,7 @@ namespace eval ::xowf {
       ns_log error "Error in workflow definition ([${:object} name]): $errorMsg\n$::errorInfo\n\
          ===== default_definition: [:default_definition] \n\
          ===== workflow_definition: $workflow_definition"
-      :msg -html t "Error in workflow definition: [ns_quotehtml $errorMsg]"
+      :msg -html t "Error in workflow definition of [${:object} name]: [ns_quotehtml $errorMsg]"
     }
 
     #
@@ -868,9 +868,21 @@ namespace eval ::xowf {
       }
     }
 
+    #
+    # In most cases, the package_id is initialized here already
+    #
+    set package_id [$obj package_id]
+    #:log "... OBJECT $obj HAS $package_id /[info commands ::$package_id/]"
+    if {[info commands ::$package_id] eq ""}  {
+      :log "... OBJECT $obj HAS $package_id, which is not initialized yet"
+      xo::Package require $package_id
+    }
+
+    #
     # Set the embedded_context to the workflow context,
-    # used e.g. by "behavior" of form-fields
-    [[$obj package_id] context] set embedded_context [self]
+    # used e.g. by "behavior" of form-fields.
+    #
+    [::$package_id context] set embedded_context [self]
 
     set stateObj ${:current_state}
     catch {$stateObj eval [$stateObj eval_when_active]}
@@ -1085,8 +1097,10 @@ namespace eval ::xowf {
       foreach role [array names :handled_roles] {
         set role_ctx [self]-$role
         if {[nsf::is object $role_ctx]} {
-          array set "" [$role_ctx check]
-          if {$(rc) == 1} {return [array get ""]}
+          set info [$role_ctx check]
+          if {[dict get $info rc] == 1} {
+            return $info
+          }
           array set :forms [$role_ctx array get forms]
           array set :parampage [$role_ctx array get parampage]
         }

@@ -36,8 +36,10 @@ namespace eval ::xowiki::formfield {
       $ctx initialize_context ${:object}
       ${:object} wf_context $ctx
       unset errorMsg
-      array set "" [$ctx check]
-      if {$(rc) == 1} {set errorMsg $(errorMsg)}
+      set info [$ctx check]
+      if {[dict get $info rc] == 1} {
+        set errorMsg [dict get $info errorMsg]
+      }
     }
 
     if {[info exists errorMsg]} {
