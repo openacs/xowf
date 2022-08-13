@@ -3288,14 +3288,14 @@ namespace eval ::xowf::test_item {
       foreach composite_grading_box $composite_grading_boxes {
         set composite_qn [$composite_grading_box getAttribute "data-question_name"]
         set parentNode [$composite_grading_box parentNode]
-        :dom class add $composite_grading_box {.} hidden
+        :dom class add $composite_grading_box {.} [::xowiki::CSS class d-none]
         foreach grading_box [$parentNode selectNodes {div//div[contains(@class,'grading-box')]}] {
           set qn [$grading_box getAttribute data-question_name]
           regsub {^answer_} $qn ${composite_qn}_ new_qn
           #ns_log notice "CHILD of Composite: rename QN from $qn to $new_qn"
           $grading_box setAttribute data-question_name $new_qn
           $grading_box setAttribute id ${composite_qn}_[$grading_box getAttribute id]
-          :dom class remove $grading_box {.} hidden
+          :dom class remove $grading_box {.} [::xowiki::CSS class d-none]
           #
           # The composite questions are prerendered and do not have
           # hint boxes, since we do not want to have even hidden in
@@ -3325,6 +3325,7 @@ namespace eval ::xowf::test_item {
             #
             # Probably some legacy item
             #
+            ::util_user_message -message "Composite Exercise looks like legacy data; please edit+save"
             ad_log warning "composite_grading_box has no data-question_id"
           }
         }
@@ -3345,7 +3346,8 @@ namespace eval ::xowf::test_item {
             "submission state $submission_state" \
             "exam state $exam_state noManualGrading $noManualGrading"
         if {$noManualGrading} {
-          :dom class add $grading_box {a[contains(@class,'manual-grade')]} hidden
+          :dom class add $grading_box {a[contains(@class,'manual-grade')]} \
+              [::xowiki::CSS class d-none]
         }
 
         #
@@ -3394,9 +3396,11 @@ namespace eval ::xowf::test_item {
         #
         :dom node replace $grading_box {span[@class='comment']} {::html::t $comment}
         if {$comment eq ""} {
-          :dom class add $grading_box {span[@class='feedback-label']} hidden
+          :dom class add $grading_box {span[@class='feedback-label']} \
+              [::xowiki::CSS class d-none]
         } else {
-          :dom class remove $grading_box {span[@class='feedback-label']} hidden
+          :dom class remove $grading_box {span[@class='feedback-label']} \
+              [::xowiki::CSS class d-none]
         }
 
         $grading_box setAttribute data-user_id [$submission creation_user]
