@@ -271,26 +271,26 @@ Action instproc unpublish_link {obj} {
     #
     set link_disabled [expr {[llength $answers] == 0 ? "link-disabled" : ""}]
     set md [subst {
-      listing      {obj $wf  m list label #xowf.online-exam-exam_instances# glyph list}
-      participants {obj $obj m print-participants label #xowf.Participants# glyph user}
-      protocol     {obj $obj m print-answers label #xowf.online-exam-protocol# glyph list-alt}
-      results      {obj $obj m print-answer-table label #xowf.online-exam-results-table# glyph th-list}
+      listing      {obj $wf  m list label #xowf.online-exam-exam_instances# icon list}
+      participants {obj $obj m print-participants label #xowf.Participants# icon user}
+      protocol     {obj $obj m print-answers label #xowf.online-exam-protocol# icon list-alt}
+      results      {obj $obj m print-answer-table label #xowf.online-exam-results-table# icon th-list}
     }]
 
     if {![acs_user::site_wide_admin_p -user_id [::xo::cc user_id]]} {
       dict unset md listing
     }
-    dict unset md results
+    dict unset md results ;# deactivate results for now
     #ns_log notice ALL=$text
 
-    set menu ""
+    set menu "<ul class='list-group list-group-flush'>\n"
     dict for {name d} $md {
       set href [[dict get $d obj] pretty_link -query m=[dict get $d m]]
-      append menu "<a class='list-group-item $link_disabled' href='[ns_quotehtml $href]'>" \
-          "<span class='glyphicon glyphicon-[dict get $d glyph]'></span> [ns_quotehtml [dict get $d label]]</a>\n"
+      append menu "<li class='list-group-item $link_disabled' href='[ns_quotehtml $href]'>" \
+          "<adp:icon name='[dict get $d icon]'> [ns_quotehtml [dict get $d label]]</li>\n"
     }
+    append menu "</ul>\n"
   }
-
   set extraAction ""
   switch $state {
     "created"   {
