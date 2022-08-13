@@ -286,8 +286,10 @@ Action instproc unpublish_link {obj} {
     set menu "<ul class='list-group list-group-flush'>\n"
     dict for {name d} $md {
       set href [[dict get $d obj] pretty_link -query m=[dict get $d m]]
-      append menu "<li class='list-group-item $link_disabled' href='[ns_quotehtml $href]'>" \
-          "<adp:icon name='[dict get $d icon]'> [ns_quotehtml [dict get $d label]]</li>\n"
+      append menu "<li class='list-group-item $link_disabled'>" \
+          "<a href='[ns_quotehtml $href]'>" \
+          "<adp:icon name='[dict get $d icon]'> " \
+          "[ns_quotehtml [dict get $d label]]</a></li>\n"
     }
     append menu "</ul>\n"
   }
