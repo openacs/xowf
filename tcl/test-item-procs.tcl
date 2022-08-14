@@ -3201,6 +3201,15 @@ namespace eval ::xowf::test_item {
         :uplevel [list $node appendFromScript $script]
       }
     }
+    :method "dom node replaceXML" {domNode xquery XML} {
+      set node [$domNode selectNodes $xquery]
+      if {$node ne ""} {
+        foreach child [$node childNodes] {
+          $child delete
+        }
+        :uplevel [list $node appendXML $XML]
+      }
+    }
     :method "dom node delete" {domNode xquery} {
       set nodes [$domNode selectNodes $xquery]
       foreach node $nodes {
@@ -3342,7 +3351,7 @@ namespace eval ::xowf::test_item {
         set item_type [expr {[$item_node hasAttribute "data-item_type"]
                              ? [$item_node getAttribute "data-item_type"]
                              : ""}]
-        ns_log notice "... QN '$qn' item_type '$item_type'" \
+        #ns_log notice "... QN '$qn' item_type '$item_type'" \
             "submission state $submission_state" \
             "exam state $exam_state noManualGrading $noManualGrading"
         if {$noManualGrading} {
@@ -3377,13 +3386,17 @@ namespace eval ::xowf::test_item {
 
         set percentage ""
         if {$achieved eq ""} {
-          :dom node replace $grading_box {span[@class='points']} {
-            if {[::xowiki::CSS toolkit] eq "bootstrap5"} {
-              ::html::i -class "bi bi-exclamation-triangle-fill text-warning" -aria-hidden "true" {}
-            } else {
-              ::html::span -class "glyphicon glyphicon-alert text-warn" -aria-hidden "true" {}
-            }
-          }
+          set warning [::template::icon \
+                           -class [xowiki::CSS class text-warning] \
+                           -name warn ]
+          set pencil [::template::icon -name pencil]          
+          :dom node replaceXML $grading_box \
+              {span[@class='points']} \
+              [dict get $warning HTML]
+          :dom node replaceXML $grading_box \
+              {a[@class='manual-grade']/span/..} \
+              [dict get $pencil HTML]
+          
         } else {
           :dom node replace $grading_box {span[@class='points']} {::html::t $achieved}
           if {$achievable ne ""} {
