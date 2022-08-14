@@ -123,7 +123,7 @@ div.sc_interaction label {
     padding: 0px 0px 4px 0px;
 }
 label div.richtext-label {
-    /*display: inline-block;*/
+    display: inline-block;
     /*   width: 450px;*/
     padding: 0px 0px 0px 35px;
     margin: 0px 0px 6px 0px;
@@ -141,6 +141,7 @@ div.sc_interaction div.progress div.progress-bar {
 }
 div.mc_interaction label input[type="checkbox"],
 div.sc_interaction label input[type="radio"] {
+    position: absolute;
     vertical-align: top;
     margin: 2px 0px 0px 10px;
 }
