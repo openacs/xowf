@@ -149,7 +149,7 @@
   <msg key="online-exam-submission_signature">Abgegebene Signatur</msg>
   <msg key="online-exam-submit">Finale Abgabe</msg>
   <msg key="online-exam-submitted_exams_heading">Abgegebene Prüfungen</msg>
-  <msg key="online-exam-submitted_exams_msg">Studierende haben eine Prüfung abgegeben</msg>
+  <msg key="online-exam-submitted_exams_msg">Teilnehmer haben eine Prüfung abgegeben</msg>
   <msg key="online-exam-try_out">Wollen Sie einen Probelauf durchführen?</msg>
   <msg key="online-exam-unpublish">Schließe Prüfung</msg>
   <msg key="open_submission_review">Einsicht öffnen</msg>

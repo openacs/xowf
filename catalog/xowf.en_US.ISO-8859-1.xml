@@ -165,7 +165,7 @@
   <msg key="online-exam-submission_signature">Submission Signature</msg>
   <msg key="online-exam-submit">Final submission</msg>
   <msg key="online-exam-submitted_exams_heading">Submitted exams</msg>
-  <msg key="online-exam-submitted_exams_msg">Persons have submitted exam</msg>
+  <msg key="online-exam-submitted_exams_msg">Participants have submitted an exam</msg>
   <msg key="online-exam-title-publish">Publish exam (clean test run data on first publish operation)</msg>
   <msg key="online-exam-title-republish">Publish exam again, existing answers are NOT deleted.</msg>
   <msg key="online-exam-title-restart">Go back to start where questions can be selected (existing answers will be deleted).</msg>
