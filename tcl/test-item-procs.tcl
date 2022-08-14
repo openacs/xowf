@@ -1326,7 +1326,7 @@ namespace eval ::xowiki::formfield {
 
 namespace eval ::xowf::test_item {
 
-  # the fillowing is not yet ready for prime time.
+  # the following is not yet ready for prime time.
   if {0 && [acs::icanuse "nx::alias object"]} {
     set register_command "alias"
   } else {
@@ -3393,6 +3393,15 @@ namespace eval ::xowf::test_item {
           :dom node replaceXML $grading_box \
               {span[@class='points']} \
               [dict get $warning HTML]
+          :dom node replaceXML $grading_box \
+              {a[@class='manual-grade-edit']/span/..} \
+              [dict get $pencil HTML]
+          #
+          # The last case with "span/.." is for legacy cases, where
+          # composite items were generated before bootstrap5 support
+          # and/or where composite items were generated under
+          # bootstrap5 but are rendered with bootstrap3
+          #
           :dom node replaceXML $grading_box \
               {a[@class='manual-grade']/span/..} \
               [dict get $pencil HTML]
@@ -6047,8 +6056,9 @@ namespace eval ::xowf::test_item {
                 |  #xowf.Points#: <span class='points'></span>
                 |  <span class='percentage'></span>
                 |  <span class='feedback-label'>#xowf.feedback#: </span><span class='comment'></span>
-                |  <a class='manual-grade' href='#' $data_attribute-toggle='modal' $data_attribute-target='#grading-modal'>
-                |    [::xowiki::bootstrap::icon -name pencil]
+                |  <a class='manual-grade' href='#' $data_attribute-toggle='modal'
+                |    $data_attribute-target='#grading-modal'>
+                |    <span class='manual-grade-edit'>[::xowiki::bootstrap::icon -name pencil]</span>
                 |  </a>
                 |</div>
               }]]
@@ -6437,7 +6447,7 @@ namespace eval ::xowf::test_item {
         #
         # In the case of a composite Composite question type, describe
         # the components rather than the compound part (maybe, we
-        # should descibe in the future also the container, but this
+        # should describe in the future also the container, but this
         # actually less interesting).
         #
         set selection [dict get [$form_obj instance_attributes] \
