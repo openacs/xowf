@@ -1374,6 +1374,90 @@ namespace eval ::xowf::test_item {
       }
     }
 
+    #----------------------------------------------------------------------
+    # Class:  AssessmentInterface
+    # Method: render_feedback_files
+    #----------------------------------------------------------------------
+    :public method render_feedback_files {
+      {-question_name:required}
+      {-feedbackFiles {}}
+    } {
+      #
+      # Render feedback files which are children of the submit
+      # instances. Note that one submit instances contains the
+      # feedback files for all questions. For associating the files
+      # with the right quesitions, the content repository name has to
+      # start with "file:${questions_name}/*
+      #
+      # @param question_name name (prefix) for selecting files to be shown
+      # @param feedbackFiles is of pairs containing "item_id" and "name"
+      #
+      # @return HTML rendering
+      #
+      set chunkList [lmap pair $feedbackFiles {
+        lassign $pair item_id name
+        #ns_log warning "render_feedback_files: check '$name'"
+        if {![regexp {^file:(.*)/(.*)$} $name . qn fileName]} {
+          ns_log warning "render_feedback_files: ignoring file with unexpected name '$name'"
+          continue
+        }
+        if {$qn ne $question_name} {
+          #
+          # The found file is for a different question
+          #
+          #ns_log notice "render_feedback_files: required '$question_name' found '$qn'"
+          continue
+        }
+        set fileObj [::xowiki::File get_instance_from_db -item_id $item_id]
+
+        #
+        # Provide markup for delete likn. When the user has no rights
+        # to delete the file, do not offer the delete link.
+        #
+        set local_return_url [ad_return_url]
+        set package_id [$fileObj package_id]
+        set deleteLink [::$package_id make_link $fileObj delete local_return_url]
+        if {$deleteLink ne ""} {
+          set deleteLinkHTML \
+              [subst [ns_trim -delimiter | {
+                |<a class="delete" href="[ns_quotehtml $deleteLink]">
+                |   <adp:icon name="trash" title="#xowiki.delete#">
+                |</a>
+              }]]
+        } else {
+          set deleteLinkHTML ""
+        }
+        set viewLink [::$package_id make_link $fileObj download]
+        if {$viewLink ne ""} {
+          set viewHref [subst {href="[ns_quotehtml $viewLink]"}]
+          set viewTitle {title="#xowiki.view#"}
+        } else {
+          set viewHref ""
+          set viewTitle ""
+        }
+        set iconName [::xowiki::CSS icon_name $fileName]
+        subst [ns_trim -delimiter | {
+          |<div class="thumbnail-file">
+          |  <a class="thumbnail-file-icon" $viewHref><adp:icon name="$iconName" $viewTitle></a>
+          |  <div class="thumbnail-file-text">
+          |   [ns_quotehtml $fileName]$deleteLinkHTML
+          |  </div>
+          |</div>}]
+      }]
+
+      set HTML ""
+      if {[llength $chunkList] > 0} {
+        #
+        # Since the content will be post-processed via tDOM, we have
+        # to resolve the ADP tags already here.
+        #
+        append HTML \
+            {<div class="thumbnail-files">} \
+            [template::adp_parse_tags [join $chunkList \n]] \
+            {</div>}
+      }
+      return $HTML
+    }
 
     #----------------------------------------------------------------------
     # Class:  AssessmentInterface
@@ -2430,11 +2514,41 @@ namespace eval ::xowf::test_item {
       ::template::add_body_script -src urn:ad:js:jquery-ui
 
       ::template::add_body_script -script [subst -novariables {
+
+        function thumbnail_files_setup(element) {
+          // to be called on the elements of class ".thumbnail-file"
+          element.querySelectorAll('.thumbnail-file-text a.delete')
+              .forEach(el => el.addEventListener('click', event => {
+                // Get the "href" of the a.delete element
+                // and call this actions in the background
+                var href = event.currentTarget.getAttribute('href');
+                if (!href) {
+                  console.log(".thumbnail-file does not have a proper delete link");
+                  return
+                }
+                var fileIcon = event.currentTarget.parentElement.parentElement;
+                var request = new XMLHttpRequest();
+                request.open('GET', href, true);
+                request.onload = function() {
+                  if (this.status >= 200 && this.status < 400) {
+                    // Success!
+                    fileIcon.parentNode.removeChild(fileIcon);
+                  } else {
+                    console.log('AJAX request returned bad return code: ' + this.status);
+                  }
+                };
+                request.send();
+                event.preventDefault();
+              }));
+        };
+
         $(document).ready(function(){
+          document.querySelectorAll('.thumbnail-file').forEach(el => thumbnail_files_setup(el));
+
           $('.modal-dialog').draggable();
           $('.modal .confirm').on('click', function(ev) {
             //
-            // Submit button of grading dialog was pressed.
+            // Popdown: "submit" button of grading dialog was pressed.
             //
             var id = ev.currentTarget.dataset.id;
             var gradingBox  = document.getElementById(id);
@@ -2484,6 +2598,19 @@ namespace eval ::xowf::test_item {
               document.querySelector('#' + id + ' .feedback-label').classList.remove('hidden');
             }
 
+            // Copy the content of the thumbnail files wrapper from the dialog
+            // to the main document and register the event handler.
+            let thumbnailFilesWrapper =  document.querySelector('#' + id + ' .thumbnail-files-wrapper');
+            if (!thumbnailFilesWrapper) {
+              thumbnailFilesWrapper = document.createElement('div');
+              thumbnailFilesWrapper.className = 'thumbnail-files-wrapper';
+              document.querySelector('#' + id).appendChild(thumbnailFilesWrapper);
+            }
+            thumbnailFilesWrapper.innerHTML = document.querySelector('#thumbnail-files-wrapper').innerHTML;
+            //document.querySelector('#' + id + ' .thumbnail-files-wrapper').innerHTML =
+            //    document.querySelector('#thumbnail-files-wrapper').innerHTML;
+            gradingBox.querySelectorAll('.thumbnail-file').forEach(el => thumbnail_files_setup(el));
+
             var user_id = gradingBox.dataset.user_id;
             var examGradingBox = document.getElementById('runtime-panel-' + user_id);
 
@@ -2522,7 +2649,7 @@ namespace eval ::xowf::test_item {
 
           $('#grading-modal').on('shown.bs.modal', function (ev) {
             //
-            // Pop-up of grading dialog.
+            // Popup of grading dialog.
             // Copy values from data attributes to input fields.
             //
             var gradingBox = ev.relatedTarget.parentElement;
@@ -2533,6 +2660,23 @@ namespace eval ::xowf::test_item {
             pointsInput.value = gradingBox.dataset.achieved;
             pointsInput.max = gradingBox.dataset.achievable;
             document.getElementById('grading-comment').value = gradingBox.dataset.comment;
+            //document.getElementById('drop-zone').dataset.link = gradingBox.dataset.link;
+
+            var filesUpload = document.getElementById('js-upload-files');
+            filesUpload.dataset.file_name_prefix = gradingBox.dataset.question_name;
+            filesUpload.dataset.url = gradingBox.dataset.link;
+            filesUpload.dataset.disposition = "FileIconified";
+            //console.log("... URL "    + filesUpload.dataset.url);
+
+            var feedBackFiles = gradingBox.getElementsByClassName("thumbnail-files-wrapper")\[0\];
+            //
+            // For legacy composite items, there is no "thumbnail-files-wrapper"
+            //
+            // console.log(feedBackFiles);
+            document.getElementById('thumbnail-files-wrapper').innerHTML =
+                (feedBackFiles ? feedBackFiles.innerHTML : "");
+
+            document.querySelectorAll('#grading-modal .thumbnail-file').forEach(el => thumbnail_files_setup(el));
 
             // Tell confirm button to which grading box it belongs
             var confirmButton = document.querySelector('#grading-modal-confirm');
@@ -2541,11 +2685,21 @@ namespace eval ::xowf::test_item {
         });
       }]
 
+      set uploader_link [::[$examWf package_id] make_link $examWf file-upload]
+      set dropZone [::xowiki::BootstrapNavbarDropzone new \
+                        -href $uploader_link \
+                        -label #xowf.Feedback_files_dnd# \
+                        -text "Text for SUBMIT label" \
+                        -file_name_prefix "" \
+                        -disposition File]
+      set dropZoneHTML [$dropZone asHTML]
+      #ns_log notice "dropZoneHTML=$dropZoneHTML"
+
       return [::xowiki::bootstrap::modal_dialog \
                   -id grading-modal \
                   -title "#xowf.Grading#: <span id='grading-participant'></span>" \
                   -subtitle "#xowf.question#: <span id='grading-question-title'></span>" \
-                  -body [ns_trim -delimiter | {
+                  -body [subst [ns_trim -delimiter | {
                     |<form class="form-horizontal" role="form" action='#' method="post">
                     |  <div class="form-group">
                     |    <label for="grading-points" class="control-label col-sm-2">#xowf.Points#:</label>
@@ -2563,54 +2717,11 @@ namespace eval ::xowf::test_item {
                     |    </div>
                     |  </div>
                     |</form>
-                  }] \
-             ]
-
-      return [ns_trim -delimiter | {
-        |<div class="modal fade" id="grading-modal" tabindex="-1" role="dialog"
-        |     aria-labelledby="grading-modal-label" aria-hidden="true">
-        |  <div class="modal-dialog" role="document">
-        |    <div class="modal-content">
-        |      <div class="modal-header">
-        |        <button type="button" class="[xowiki::CSS class close]" data-dismiss="modal" aria-label="Close">
-        |          <span aria-hidden="true">&#215;</span>
-        |        </button>
-        |        <h4 class="modal-title" id="gradingModalTitle">#xowf.Grading#:
-        |            <span id='grading-participant'></span></h4>
-        |         <p class="modal-subtitle">#xowf.question#: <span id='grading-question-title'></span></p>
-        |      </div>
-        |      <div class="modal-body">
-        |        <form class="form-horizontal" role="form" action='#' method="post">
-        |          <div class="form-group">
-        |             <label for="grading-points" class="control-label col-sm-2">#xowf.Points#:</label>
-        |             <div class="col-sm-9">
-        |                <input class="form-control" id="grading-points" placeholder="#xowf.Points#"
-        |                       type="number" step="0.1" min="0">
-        |                <span id="grading-points-help-block" class="help-block hidden"></span>
-        |             </div>
-        |          </div>
-        |          <div class="form-group">
-        |             <label for="grading-comment" class="control-label col-sm-2">#xowf.feedback#:</label>
-        |             <div class="col-sm-9">
-        |                <textarea lines="2" class="form-control" id="grading-comment"
-        |                 placeholder="..."></textarea>
-        |             </div>
-        |          </div>
-        |        </form>
-        |      </div>
-        |      <div class="modal-footer">
-        |        <button type="button" class="btn [::xowiki::CSS class btn-default]"
-        |                data-dismiss="modal">#acs-kernel.common_Cancel#
-        |        </button>
-        |        <button id="grading-modal-confirm" type="button" class="btn btn-primary confirm"
-        |                data-dismiss="modal">#acs-subsite.Confirm#
-        |        </button>
-        |      </div>
-        |    </div>
-        |  </div>
-        |</div>
-      }]
-
+                    |#xowf.Feedback_files#:
+                    |<div id="thumbnail-files-wrapper"></div>
+                    |<ul class="dropZone">$dropZoneHTML</ul>
+                  }]] \
+                 ]
     }
 
     #----------------------------------------------------------------------
@@ -3035,12 +3146,20 @@ namespace eval ::xowf::test_item {
       # userName and fullName.
       #
       foreach submission [$submissions children] {
+
+        set submission_item_id [$submission set item_id]
+        set feedbackFiles [xo::dc list_of_lists . {
+          select item_id, name from cr_items where parent_id = :submission_item_id
+        }]
+        #ns_log notice "item_id $submission_item_id : children <$feedbackFiles>"
+
         $submission set online-exam-userName \
             [acs_user::get_element \
                  -user_id [$submission creation_user] \
                  -element username]
         $submission set online-exam-fullName \
             [::xo::get_user_name [$submission creation_user]]
+        $submission set online-exam-feedbackFiles $feedbackFiles
       }
 
       return $submissions
@@ -3210,6 +3329,10 @@ namespace eval ::xowf::test_item {
         :uplevel [list $node appendXML $XML]
       }
     }
+    :method "dom node appendXML" {domNode xquery XML} {
+      set node [$domNode selectNodes $xquery]
+      :uplevel [list $node appendXML $XML]
+    }
     :method "dom node delete" {domNode xquery} {
       set nodes [$domNode selectNodes $xquery]
       foreach node $nodes {
@@ -3247,6 +3370,7 @@ namespace eval ::xowf::test_item {
       {-submission:object,required}
       {-runtime_panel_view:required}
       {-exam_state:required}
+      {-feedbackFiles ""}
     } {
       #
       # Post-process the HTML of a question by adding information of
@@ -3340,6 +3464,10 @@ namespace eval ::xowf::test_item {
         }
       }
 
+      #
+      # Composite grading-boxes are done, now general code over all
+      # grading-boxes.
+      #
       set submission_state [$submission state]
       #set noManualGrading [expr {$submission_state ne "done" || $exam_state eq "published"}]
       set noManualGrading [expr {$exam_state eq "published"}]
@@ -3351,9 +3479,16 @@ namespace eval ::xowf::test_item {
         set item_type [expr {[$item_node hasAttribute "data-item_type"]
                              ? [$item_node getAttribute "data-item_type"]
                              : ""}]
+
+        set feedbackFilesHTML [:render_feedback_files \
+                                   -question_name $qn \
+                                   -feedbackFiles $feedbackFiles]
+        
+        #ns_log notice "FEEDBACK '$qn' feedbackFiles $feedbackFiles HTML\n$feedbackFilesHTML"
         #ns_log notice "... QN '$qn' item_type '$item_type'" \
             "submission state $submission_state" \
             "exam state $exam_state noManualGrading $noManualGrading"
+        
         if {$noManualGrading} {
           :dom class add $grading_box {a[contains(@class,'manual-grade')]} \
               [::xowiki::CSS class d-none]
@@ -3389,7 +3524,7 @@ namespace eval ::xowf::test_item {
           set warning [::template::icon \
                            -class [xowiki::CSS class text-warning] \
                            -name warn ]
-          set pencil [::template::icon -name pencil]          
+          set pencil [::template::icon -name pencil]
           :dom node replaceXML $grading_box \
               {span[@class='points']} \
               [dict get $warning HTML]
@@ -3405,13 +3540,42 @@ namespace eval ::xowf::test_item {
           :dom node replaceXML $grading_box \
               {a[@class='manual-grade']/span/..} \
               [dict get $pencil HTML]
-          
+
         } else {
           :dom node replace $grading_box {span[@class='points']} {::html::t $achieved}
           if {$achievable ne ""} {
             set percentage [format %.2f [expr {$achieved*100.0/$achievable}]]
             :dom node replace $grading_box {span[@class='percentage']} {::html::t ($percentage%)}
           }
+        }
+        #
+        # handling of legacy items
+        #
+        set changes [expr {[::xowiki::CSS toolkit] eq "bootstrap"
+                           ? {bs-toggle toggle bs-target target}
+                           : {toggle bs-toggle target bs-target}}]
+        foreach node [$grading_box selectNodes {a[@class='manual-grade']}] {
+          foreach {old new} $changes {
+            if {[$node hasAttribute data-$old]} {
+              $node setAttribute data-$new [$node getAttribute data-$old]
+              $node removeAttribute data-$old
+            }
+          }
+        }
+
+        if {$feedbackFilesHTML ne ""} {
+          #ns_log notice "REPLACE thumbnail-files-wrapper in\n[$grading_box asXML]"
+          if {[llength [$grading_box selectNodes {div[@class='thumbnail-files-wrapper']}]] == 0} {
+            #
+            # Must be a legacy composite item without the thumbnail
+            # wrapper.
+            #
+            $grading_box appendXML \
+                {<div class="thumbnail-files-wrapper"></div>}
+          }
+          :dom node replaceXML $grading_box \
+              {div[@class='thumbnail-files-wrapper']} \
+              $feedbackFilesHTML
         }
         #
         # When "comment" is empty, do not show the label.
@@ -3431,6 +3595,7 @@ namespace eval ::xowf::test_item {
         $grading_box setAttribute data-achieved $achieved
         $grading_box setAttribute data-achievable $achievable
         $grading_box setAttribute data-comment $comment
+        $grading_box setAttribute data-link [::[$submission package_id] make_link $submission file-upload]
 
         #
         # Feedback handling (should be merged with the individual feedback)
@@ -3596,7 +3761,8 @@ namespace eval ::xowf::test_item {
                              -manual_grading [:dict_value $manual_gradings $user_id] \
                              -submission $submission \
                              -exam_state [$examWf state] \
-                             -runtime_panel_view $runtime_panel_view]
+                             -runtime_panel_view $runtime_panel_view \
+                             -feedbackFiles [$submission set online-exam-feedbackFiles]]
 
       if {$with_signature} {
         set sha256 [ns_md string -digest sha256 $answeredAnswerAttributes]
@@ -3663,7 +3829,7 @@ namespace eval ::xowf::test_item {
         <div class='runtime-panel' id='runtime-panel-$user_id'
              data-grading_scheme='[namespace tail $grading_scheme]'
              data-achieved_points='$achieved_points'>
-        [expr {$with_exam_heading ? "<h2>$heading</h2>" : ""}]
+        [expr {$with_exam_heading ? "<h3>$heading</h3>" : ""}]
         $runtime_panel
         </div>
         $signatureString
@@ -6060,6 +6226,7 @@ namespace eval ::xowf::test_item {
                 |    $data_attribute-target='#grading-modal'>
                 |    <span class='manual-grade-edit'>[::xowiki::bootstrap::icon -name pencil]</span>
                 |  </a>
+                | <div class="thumbnail-files-wrapper"></div>
                 |</div>
               }]]
             }
@@ -7299,6 +7466,30 @@ namespace eval ::xowiki {
 #   }
 # }
 
+namespace eval ::xowf {
+  ::xowf::WorkflowPage ad_instproc render_thumbnails {upload_info} {
+
+    Renderer of the thumbnail file(s)
+
+    @param upload_info dict containing the "file_object" and "file_name"
+    @return HTML content
+  } {
+    dict with upload_info {
+      set parent_id ${:item_id}
+      set feedbackFiles [xo::dc list_of_lists . {
+        select item_id, name from cr_items where parent_id = :parent_id
+      }]
+      if {[regexp {^([^/]+)/} $file_name . qn]} {
+        set HTML [:QM render_feedback_files \
+                      -question_name $qn \
+                      -feedbackFiles $feedbackFiles]
+      } else {
+        set HTML "$file_name created"
+      }
+    }
+    return $HTML
+  }
+}
 
 namespace eval ::xowf::test_item {
   #

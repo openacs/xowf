@@ -20,6 +20,17 @@ div.single_exam div.runtime-panel {
     color: black;
     padding: 2px 10px 4px 10px;
 }
+div.xowiki-content div.single_exam div.runtime-panel h3 {
+    font-weight: normal;
+    font-size: 20px;
+}
+div.single_exam div.grading-box .thumbnail-files-wrapper {
+    margin-top: 4px;   
+}
+div.xowiki-content div.single_exam h4 {
+    font-size: 16px;
+    margin-bottom: 4px;
+}
 div.single_exam div.runtime-panel .data {
     color: #888;
 }
@@ -101,9 +112,17 @@ div.question_text {
 
 /* keep display for div.upload_interaction div.form-label */
 
+/* Definition for Bootstrap 3 */
 div.mc_interaction div.form-label,
 div.sc_interaction div.form-label,
 div.text_interaction div.form-label
+{
+    display: none;
+}
+/* Definition for Bootstrap 5 */
+div.mc_interaction label.form-label,
+div.sc_interaction label.form-label,
+div.text_interaction label.form-label
 {
     display: none;
 }
@@ -114,6 +133,7 @@ div.short_text_interaction,
 div.composite_interaction,
 div.text_interaction,
 div.reorder_interaction {
+    margin: 0 3em 0 3em;
     padding: 15px 0px 15px 0px;
 }
 div.mc_interaction label,
@@ -393,3 +413,31 @@ form.Form-edit-grading-scheme div input[type="number"].form-control.inline {
 form.Form-edit-grading-scheme input::-webkit-outer-spin-button,
 form.Form-edit-grading-scheme input::-webkit-inner-spin-button { margin-left: 2px; }
 */
+
+#grading-modal ul.dropZone {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+}
+.thumbnail-file {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    border: 1px solid #CAD0D2;
+    border-radius: 4px;
+    background-color: #FCFCFC;
+    padding: 2px;    
+}
+.thumbnail-file-icon {
+    font-size: larger;
+}
+.thumbnail-file-text {
+    gap: 3px;
+    font-family: sans-serif;
+    font-size: 0.8em;
+}
+.thumbnail-files {
+    display: flex;
+    gap: 10px;
+}
