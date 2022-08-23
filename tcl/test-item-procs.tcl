@@ -6658,6 +6658,14 @@ namespace eval ::xowf::test_item {
     # Method: exam_configuration_render_fields
     #----------------------------------------------------------------------
     :method exam_configuration_render_fields {{-modifiable ""} fields} {
+      #
+      # Render the provided fields via tDOM. Non-modifiable
+      # form-fields are disabled.
+      #
+      # @param modifiable list of field names which are modifiable
+      # @return HTML
+      #
+      
       #ns_log notice "configuration_render called with modifiable <$modifiable>"
       ::xo::require_html_procs
 
