@@ -24,6 +24,7 @@ namespace eval ::xowf::test {
 
         "::xo::ConnectionContext instproc eval_as_user"
         "::xowf::Package instproc destroy"
+        "::xowf::Package instproc initialize"
         "::xowf::WorkflowPage instproc childpage"
         "::xowf::WorkflowPage instproc get_revision_sets"
         "::xowf::WorkflowPage instproc is_wf"

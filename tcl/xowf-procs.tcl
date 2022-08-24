@@ -1429,7 +1429,10 @@ namespace eval ::xowf {
     if {![nsf::is object ::${:page_template}]} {
       ::xo::db::CrClass get_instance_from_db -item_id ${:page_template}
     }
-    if {${:state} ne "" && [${:page_template} istype ::xowiki::FormPage]} {
+    if {${:state} ne ""
+        && [${:page_template} hasclass ::xowf::WorkflowPage]
+        && [${:page_template} is_wf]
+      } {
       array set :__wfi [${:page_template} instance_attributes]
       return 1
     }
