@@ -25,7 +25,7 @@ div.xowiki-content div.single_exam div.runtime-panel h3 {
     font-size: 20px;
 }
 div.single_exam div.grading-box .thumbnail-files-wrapper {
-    margin-top: 4px;   
+    margin-top: 4px;
 }
 div.xowiki-content div.single_exam h4 {
     font-size: 16px;
@@ -386,6 +386,17 @@ div.grading-box span.text-warn {
 }
 
 /*
+ * Grading modal dialog
+ */
+
+#grading-modal div.modal-dialog .control-label {
+    margin-top: 0.5rem;
+    margin-bottom: 0.5rem;
+    font-weight: bold;
+}
+
+
+/*
  * Configuration modal dialog
  */
 #configuration-modal {
@@ -427,7 +438,7 @@ form.Form-edit-grading-scheme input::-webkit-inner-spin-button { margin-left: 2p
     border: 1px solid #CAD0D2;
     border-radius: 4px;
     background-color: #FCFCFC;
-    padding: 2px;    
+    padding: 2px;
 }
 .thumbnail-file-icon {
     font-size: larger;

@@ -2717,7 +2717,7 @@ namespace eval ::xowf::test_item {
                     |    </div>
                     |  </div>
                     |</form>
-                    |#xowf.Feedback_files#:
+                    |<div class="control-label">#xowf.Feedback_files#:</div>
                     |<div id="thumbnail-files-wrapper"></div>
                     |<ul class="dropZone">$dropZoneHTML</ul>
                   }]] \
@@ -3483,12 +3483,12 @@ namespace eval ::xowf::test_item {
         set feedbackFilesHTML [:render_feedback_files \
                                    -question_name $qn \
                                    -feedbackFiles $feedbackFiles]
-        
+
         #ns_log notice "FEEDBACK '$qn' feedbackFiles $feedbackFiles HTML\n$feedbackFilesHTML"
         #ns_log notice "... QN '$qn' item_type '$item_type'" \
             "submission state $submission_state" \
             "exam state $exam_state noManualGrading $noManualGrading"
-        
+
         if {$noManualGrading} {
           :dom class add $grading_box {a[contains(@class,'manual-grade')]} \
               [::xowiki::CSS class d-none]
@@ -5958,13 +5958,14 @@ namespace eval ::xowf::test_item {
       # original question) and also percent-substitutions (if
       # desired).
       #
-      ns_log notice "=== item_substitute_markup [$form_obj name] do percent subst [info exists position]"
+      #ns_log notice "=== item_substitute_markup [$form_obj name] do percent subst (have pos [info exists position])"
       :assert_answer_instance $obj
+
       $obj do_substitutions $do_substitutions
       set html [$obj substitute_markup \
                     -context_obj $form_obj \
                     [$form_obj property form]]
-
+      #ns_log notice "after subst [$obj serialize]\nhtml"
       if {[info exists position]} {
         return [:percent_substitute_in_form \
                     -obj $obj \
@@ -6667,7 +6668,7 @@ namespace eval ::xowf::test_item {
       # @param modifiable list of field names which are modifiable
       # @return HTML
       #
-      
+
       #ns_log notice "configuration_render called with modifiable <$modifiable>"
       ::xo::require_html_procs
 
