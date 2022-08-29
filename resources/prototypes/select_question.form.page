@@ -19,6 +19,7 @@
         @proctoring_record@
         @signature@
         @iprange@
+        @show_pagination_actions@
         </div>
         @grading@
         </form>
@@ -36,6 +37,7 @@
         {show_points:}
         {show_ip:}
         {iprange:}
+        {show_pagination_actions:}
         {time_budget:}
 	{synchronized:}
 	{time_window:}

@@ -234,6 +234,8 @@
   <msg key="show_max">Show Max</msg>
   <msg key="Show_minutes">Show questions with minutes</msg>
   <msg key="Show_minutes_help_text">Show student questions with time budget in minutes during exam</msg>
+  <msg key="Show_pagination_actions">Allow free navigation</msg>
+  <msg key="Show_pagination_actions_help_text">Is the student alllowed to freely navigate through the questions?</msg>
   <msg key="Show_points">Show questions with points</msg>
   <msg key="Show_points_help_text">Show student achievable points per question during exam</msg>
   <msg key="show_results">Show Results</msg>

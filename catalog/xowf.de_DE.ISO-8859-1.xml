@@ -214,6 +214,8 @@
   <msg key="show_max">Zeige maximal</msg>
   <msg key="Show_minutes">Anzeige der Minuten pro Frage</msg>
   <msg key="Show_minutes_help_text">Zeige Studierenden während der Prüfung die vorgesehene Bearbeitungsdauer pro Beispiel</msg>
+  <msg key="Show_pagination_actions">Freie Fragennavigation erlaubt</msg>
+  <msg key="Show_pagination_actions_help_text">Dürfen Studierende frei zwischen den Fragen navigieren?</msg>
   <msg key="Show_points">Anzeige der Punkte pro Frage</msg>
   <msg key="Show_points_help_text">Zeige Studierenden während der Prüfung die erreichbaren Punkte pro Beispiel</msg>
   <msg key="show_results">Zeige Antwortstatistik</msg>

@@ -5576,40 +5576,42 @@ namespace eval ::xowf::test_item {
       set actions ""
 
       if {$question_count > 1} {
-        set extra_css [:pagination_button_css \
-                           -CSSclass $CSSclass \
-                           -cond [expr {$current_position == 0}] \
-                           -extra "disabled"]
-        ${container}::previousQuestion configure \
-            -extra_css_class $extra_css \
-            -label "&laquo;" \
-            -label_noquote true \
-            -wrapper_CSSclass "pagination"
-        lappend actions previousQuestion
-
-        for {set count 1} {$count <= $question_count} {incr count} {
-          set visited_css [expr {($count - 1) in $visited ? "visited" : ""}]
-          set flag_label [expr {($count - 1) in $flagged
-                                ? " [::xowiki::bootstrap::icon -name flag -CSSclass text-danger]"
-                                : ""}]
+        if {[[${:wfi} get_parent_object] property show_pagination_actions t]} {
           set extra_css [:pagination_button_css \
-                             -CSSclass "$CSSclass $visited_css" \
-                             -cond [expr {$current_position == $count - 1 }] \
-                             -extra "active current"]
-          ${container}::Action create ${container}::q.$count \
-              -label "$count$flag_label" \
-              -label_noquote true \
-              -state_safe true \
-              -next_state working \
-              -wrapper_CSSclass "pagination" \
+                             -CSSclass $CSSclass \
+                             -cond [expr {$current_position == 0}] \
+                             -extra "disabled"]
+          ${container}::previousQuestion configure \
               -extra_css_class $extra_css \
-              -proc activate {obj} [subst {
-                #ns_log notice "===== NAVIGATE next"
-                next
-                #ns_log notice "===== NAVIGATE goto [expr {$count - 1}]"
-                :goto_page [expr {$count - 1}]
-              }]
-          lappend actions q.$count
+              -label "&laquo;" \
+              -label_noquote true \
+              -wrapper_CSSclass "pagination"
+          lappend actions previousQuestion
+  
+          for {set count 1} {$count <= $question_count} {incr count} {
+            set visited_css [expr {($count - 1) in $visited ? "visited" : ""}]
+            set flag_label [expr {($count - 1) in $flagged
+                                  ? " [::xowiki::bootstrap::icon -name flag -CSSclass text-danger]"
+                                  : ""}]
+            set extra_css [:pagination_button_css \
+                               -CSSclass "$CSSclass $visited_css" \
+                               -cond [expr {$current_position == $count - 1 }] \
+                               -extra "active current"]
+            ${container}::Action create ${container}::q.$count \
+                -label "$count$flag_label" \
+                -label_noquote true \
+                -state_safe true \
+                -next_state working \
+                -wrapper_CSSclass "pagination" \
+                -extra_css_class $extra_css \
+                -proc activate {obj} [subst {
+                  #ns_log notice "===== NAVIGATE next"
+                  next
+                  #ns_log notice "===== NAVIGATE goto [expr {$count - 1}]"
+                  :goto_page [expr {$count - 1}]
+                }]
+            lappend actions q.$count
+          }
         }
         set extra_css [:pagination_button_css \
                            -CSSclass $CSSclass \
@@ -6728,7 +6730,7 @@ namespace eval ::xowf::test_item {
         lappend modifiable {*}{
           shuffle_items max_items
           time_budget synchronized time_window
-          proctoring proctoring_options proctoring_record signature
+          proctoring proctoring_options proctoring_record signature show_pagination_actions
         }
       }
       return $modifiable
