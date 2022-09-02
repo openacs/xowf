@@ -6309,7 +6309,7 @@ namespace eval ::xowf::test_item {
         }
         set title ""
         if {$number ne ""} {
-          append title "$question_number_label $number:"
+          append title "$question_number_label $number / [:question_count $obj] :"
         }
 
         set title_components {}
