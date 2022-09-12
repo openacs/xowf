@@ -15,6 +15,10 @@
 
 namespace eval ::xowf::test_item::grading {
   nx::Class create Grading {
+    #
+    # Superclass representing a generic grading
+    #
+
     :property {precision ""}
     :property {title ""}
     #
@@ -165,6 +169,9 @@ namespace eval ::xowf::test_item::grading {
   # Class: xowf::test_item::grading::GradingRoundPoints
   #----------------------------------------------------------------------
   nx::Class create GradingRoundPoints -superclass Grading {
+    #
+    # Implements a grading expressed as a rounded number of points
+    #
     :property {csv {$achievedPoints\t$achievedPointsRounded\t$percentage%\t$grade}}
 
     :public method grade {-achieved_points:required} {
@@ -183,6 +190,9 @@ namespace eval ::xowf::test_item::grading {
   # Class: xowf::test_item::grading::GradingRoundPercentage
   #----------------------------------------------------------------------
   nx::Class create GradingRoundPercentage -superclass Grading {
+    #
+    # Implements a grading expressed as a rounded percentage
+    #
     :property {csv {$achievedPoints\t$percentage%\t$percentageRounded%\t$grade}}
 
     :public method grade {-achieved_points:required} {
@@ -203,6 +213,9 @@ namespace eval ::xowf::test_item::grading {
   # Class: xowf::test_item::grading::GradingRoundNone
   #----------------------------------------------------------------------
   nx::Class create GradingRoundNone -superclass Grading {
+    #
+    # Implements a grading with no special rounding.
+    #
     :property {csv {$achievedPoints\t$percentage%\t$grade}}
 
     :public method grade {-achieved_points:required} {
