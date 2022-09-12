@@ -1,7 +1,10 @@
 ::xo::library doc {
-  Test Item grading procs - support for different kind of grading types and schemes
+
+  Test Item grading procs - support for different kind of grading
+  types and schemes.
 
   @author Gustaf Neumann
+
 }
 
 #
@@ -43,7 +46,7 @@ namespace eval ::xowf::test_item::grading {
       }
       next
     }
-    
+
     :method calc_grade {-percentage -points -achievable_points} {
       #
       # Return a numeric grade for an exam submission based on
