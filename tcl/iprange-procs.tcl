@@ -11,11 +11,12 @@
 }
 
 namespace eval ::xowf {
-  #
-  # Class representing a range of IPs to be used to enforce access
-  # control.
-  #
   nx::Class create IpRange {
+    #
+    # Class representing a range of IPs to be used to enforce access
+    # control.
+    #
+
     :property {allowed ""}
     :property {disallowed ""}
     :property {title ""}
