@@ -6,7 +6,7 @@
   typically site specific, it is expected that sites define
   interesting IP ranges (such as e.g., WLAN, on-site, VPN, ...) in the
   iprange-init.tcl file.
-  
+
   @author Gustaf Neumann
 }
 
@@ -14,7 +14,7 @@ namespace eval ::xowf {
   nx::Class create IpRange {
     :property {allowed ""}
     :property {disallowed ""}
-    :property {title ""}    
+    :property {title ""}
 
     :method match {spec ip} {
       if {[string first / $spec] > -1 && [ns_subnetmatch $spec $ip]} {
@@ -26,7 +26,7 @@ namespace eval ::xowf {
       }
       return 0
     }
-    
+
     :public method allow_access {ip} {
       #
       # Check, if provided IP address is in the provided ranges of
@@ -40,7 +40,7 @@ namespace eval ::xowf {
       #  <li> literal IP address
       # </ul>
       # @return boolean value expressing success
-      
+
       foreach spec ${:disallowed} {
         if {[:match $spec $ip]} {
           return 0
