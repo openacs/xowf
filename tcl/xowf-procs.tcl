@@ -1567,6 +1567,8 @@ namespace eval ::xowf {
   }
 
   WorkflowPage ad_instproc post_process_form_fields {form_fields} {
+    Propagate the feedback mode setting of this workflow page to the
+    supplied formfields.
   } {
     #:log ------------------post_process_form_fields-feedback_mode=[info exists :__feedback_mode]
     if {[info exists :__feedback_mode]} {
@@ -1943,6 +1945,7 @@ namespace eval ::xowf {
     -name
     -correctly_answered:boolean
   } {
+    Record the stat detail of the question.
   } {
     dict set :__stats_label $name label $value $label
     if {[info exists :__stats_success] && [dict exists ${:__stats_success} $name $value]} {
