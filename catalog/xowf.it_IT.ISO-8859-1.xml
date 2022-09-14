@@ -62,6 +62,8 @@
   <msg key="export_results_title">Esporta i risultati e i commenti per domanda</msg>
   <msg key="feedback">Feedback</msg>
   <msg key="feedback_correct">Feedback corretto</msg>
+  <msg key="Feedback_files">File di Feedback</msg>
+  <msg key="Feedback_files_dnd">Trascina qui i File di Feedback</msg>
   <msg key="feedback_incorrect">Feedback scorretto</msg>
   <msg key="first_question">Prima domanda</msg>
   <msg key="first_question_title">Salva e vai alla prima domanda</msg>
@@ -233,6 +235,8 @@
   <msg key="show_max">Mosta il massimo</msg>
   <msg key="Show_minutes">Mostra minuti</msg>
   <msg key="Show_minutes_help_text">Mostra i minuti agli studenti durante l&#39;esame</msg>
+  <msg key="Show_pagination_actions">Permetti la navigazione libera</msg>
+  <msg key="Show_pagination_actions_help_text">Consentire allo studente di navigare liberamente tra le domande?</msg>
   <msg key="Show_points">Mostra punti</msg>
   <msg key="Show_points_help_text">Mostra i punti agli studenti durante l&#39;esame</msg>
   <msg key="show_results">Mostra risultati</msg>
