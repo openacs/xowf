@@ -6286,6 +6286,11 @@ namespace eval ::xowf::test_item {
         set positions [lmap form_obj $form_objs {incr position}]
       }
 
+      set question_count_label ""
+      if {!$no_position} {
+        set question_count_label " / [:question_count $obj] "
+      }
+
       foreach form_obj $form_objs number $numbers position $positions {
         set form_obj [:FL rename_attributes $form_obj]
         set form_title [$form_obj title]
@@ -6309,7 +6314,7 @@ namespace eval ::xowf::test_item {
         }
         set title ""
         if {$number ne ""} {
-          append title "$question_number_label $number / [:question_count $obj] :"
+          append title "$question_number_label $number $question_count_label:"
         }
 
         set title_components {}
