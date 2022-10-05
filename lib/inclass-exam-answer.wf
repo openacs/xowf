@@ -594,7 +594,7 @@ proc done_form_loader {ctx form_name} {
 
       set actions $pagination
       if {${:state} in {initial working} } {
-        if {$question_count > 1} {
+        if {$question_count > 1 && [$parent_obj property show_pagination_actions t]} {
           lappend actions flag
         }
         lappend actions save

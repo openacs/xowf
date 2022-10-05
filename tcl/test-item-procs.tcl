@@ -5583,7 +5583,7 @@ namespace eval ::xowf::test_item {
                              -extra "disabled"]
           ${container}::previousQuestion configure \
               -extra_css_class $extra_css \
-              -label "&laquo;" \
+              -label "<small><adp:icon name='previous'> #acs-kernel.common_Previous#</small>" \
               -label_noquote true \
               -wrapper_CSSclass "pagination"
           lappend actions previousQuestion
@@ -5619,7 +5619,7 @@ namespace eval ::xowf::test_item {
                            -extra "disabled"]
         ${container}::nextQuestion configure \
             -extra_css_class $extra_css \
-            -label "&raquo;" \
+            -label "<small>#acs-kernel.common_Next# <adp:icon name='next'></small>" \
             -label_noquote true \
             -wrapper_CSSclass "pagination"
 

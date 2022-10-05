@@ -271,6 +271,7 @@ form button.current {
 }
 form div.pagination button.visited {
     background-color: #E6F4D6;
+    color: #555;
 }
 form div.pagination button span.text-danger {
     color: #a94442;
