@@ -1549,6 +1549,7 @@ namespace eval ::xowf {
             #$f append form_button_CSSclass " " [$action extra_css_class]
             $f CSSclass_list_add form_button_CSSclass [$action extra_css_class]
           }
+          $f CSSclass_list_add form_button_CSSclass prevent-double-click
           #ns_log notice "RENDER BUTTON has CSSclass [$f CSSclass] // [$f form_button_CSSclass]"
           if {[$action exists title]} {
             $f title [$action title]
