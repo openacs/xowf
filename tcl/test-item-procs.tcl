@@ -5545,9 +5545,9 @@ namespace eval ::xowf::test_item {
 
     #----------------------------------------------------------------------
     # Class:  Question_manager
-    # Method: pagination_button_css
+    # Method: pagination_button_css_class
     #----------------------------------------------------------------------
-    :method pagination_button_css {
+    :method pagination_button_css_class {
       {-CSSclass "btn-sm"}
       {-cond:boolean,required}
       {-extra ""}
@@ -5577,7 +5577,7 @@ namespace eval ::xowf::test_item {
 
       if {$question_count > 1} {
         if {[[${:wfi} get_parent_object] property show_pagination_actions t]} {
-          set extra_css [:pagination_button_css \
+          set extra_css [:pagination_button_css_class \
                              -CSSclass $CSSclass \
                              -cond [expr {$current_position == 0}] \
                              -extra "disabled"]
@@ -5587,13 +5587,13 @@ namespace eval ::xowf::test_item {
               -label_noquote true \
               -wrapper_CSSclass "pagination"
           lappend actions previousQuestion
-  
+
           for {set count 1} {$count <= $question_count} {incr count} {
             set visited_css [expr {($count - 1) in $visited ? "visited" : ""}]
             set flag_label [expr {($count - 1) in $flagged
                                   ? " [::xowiki::bootstrap::icon -name flag -CSSclass text-danger]"
                                   : ""}]
-            set extra_css [:pagination_button_css \
+            set extra_css [:pagination_button_css_class \
                                -CSSclass "$CSSclass $visited_css" \
                                -cond [expr {$current_position == $count - 1 }] \
                                -extra "active current"]
@@ -5613,7 +5613,7 @@ namespace eval ::xowf::test_item {
             lappend actions q.$count
           }
         }
-        set extra_css [:pagination_button_css \
+        set extra_css [:pagination_button_css_class \
                            -CSSclass $CSSclass \
                            -cond [expr {$current_position+2 > $question_count}] \
                            -extra "disabled"]
