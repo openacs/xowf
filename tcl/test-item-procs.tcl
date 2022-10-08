@@ -3310,7 +3310,7 @@ namespace eval ::xowf::test_item {
 
     #----------------------------------------------------------------------
     # Class:  Answer_manager
-    # Method: dom ensemble for tdom manipluations
+    # Method: dom ensemble for tDOM manipluations
     #----------------------------------------------------------------------
     :method "dom node replace" {domNode xquery script} {
       set node [$domNode selectNodes $xquery]
@@ -3326,6 +3326,17 @@ namespace eval ::xowf::test_item {
       if {$node ne ""} {
         foreach child [$node childNodes] {
           $child delete
+        }
+        #
+        # There is in tDOM only an appendXML and no appendHTML. If the
+        # replace-text is an <img>" XML-parse fails since there is no
+        # ending tag. So, we use the following heuristic. Note, that
+        # this does not happen in full installations, where icon sets
+        # are available, but it might show up in a native regression
+        # test with minimal packages.
+        #
+        if {[string match "<img*" $XML]} {
+          append XML </img>
         }
         :uplevel [list $node appendXML $XML]
       }
