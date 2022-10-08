@@ -3835,7 +3835,7 @@ namespace eval ::xowf::test_item {
         set grading_scheme ""
         set achieved_points ""
       }
-      set heading "$userName · $fullName · $pretty_date"
+      set heading "$userName 𐄁 $fullName 𐄁 $pretty_date"
       append HTML [subst [ns_trim {
         <div class='single_exam'>
         <div class='runtime-panel' id='runtime-panel-$user_id'

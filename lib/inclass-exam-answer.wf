@@ -367,9 +367,8 @@ proc done_form_loader {ctx form_name} {
   if {[$parent_obj property show_ip t]} {
     lappend title "IP: [$obj property ip]"
   }
-  #ns_log notice "SETTING $obj title [join $title { · }]"
-  $obj title [join $title " · "]
-  #:msg title=[join $title " · "]
+  $obj title [join $title " 𐄁 "]
+  #ns_log notice "TITLE [binary encode hex $title]"
 
   #:msg set_title-set_parameter-MenuBar-[$obj state]
   :plain_template -prevent_multiple_tabs $prevent_multiple_tabs $obj
