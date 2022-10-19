@@ -572,16 +572,17 @@ Action instproc unpublish_link {obj} {
     template::head::add_link -rel stylesheet -href /resources/xowf/test-item.css
 
     set as_student [:query_parameter as_student:boolean false]
+    set fos [:query_parameter fos:int32 ""]
     set d [:AM render_answers \
                -as_student    $as_student \
                -creation_user [:query_parameter creation_user:int32 ""] \
                -revision_id   [:query_parameter rid:int32 ""] \
                -filter_submission_id  [:query_parameter id:int32 ""] \
-               -filter_form_ids [:query_parameter fos:int32 ""] \
+               -filter_form_ids $fos \
                -export        [:query_parameter export:boolean 0] \
                -orderby       [:query_parameter orderby:token "online-exam-userName"] \
                -grading       [:query_parameter grading:token [:property grading]] \
-               -with_grading_table [expr {!$as_student}] \
+               -with_grading_table [expr {!$as_student && $fos eq ""}] \
                [self]]
 
     set do_stream [dict get $d do_stream]
