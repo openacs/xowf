@@ -3330,7 +3330,7 @@ namespace eval ::xowf::test_item {
         #
         # There is in tDOM only an appendXML and no appendHTML. If the
         # replace-text is an <img>" XML-parse fails since there is no
-        # ending tag. So, we use the following heuristic. Note, that
+        # ending tag. So, we use the following heuristic. Note that
         # this does not happen in full installations, where icon sets
         # are available, but it might show up in a native regression
         # test with minimal packages.
@@ -3922,7 +3922,7 @@ namespace eval ::xowf::test_item {
       #
       # @return dict containing "do_stream" and "HTML"
       #
-      ns_log notice "RENDER ANSWERS 0"
+      #ns_log notice "RENDER ANSWERS 0"
       set combined_form_info [:QM combined_question_form $examWf]
       set autograde   [dict get $combined_form_info autograde]
       set totalPoints [:QM total_points \
@@ -3995,7 +3995,7 @@ namespace eval ::xowf::test_item {
         }
       }
       append HTML [:grading_dialog_setup $examWf]
-      ns_log notice "RENDER ANSWERS 1"
+      #ns_log notice "RENDER ANSWERS 1"
 
       if {$do_stream} {
         # ns_log notice STREAM-[info level]-$::template::parse_level
@@ -4026,7 +4026,7 @@ namespace eval ::xowf::test_item {
       } else {
         set recutil ""
       }
-      ns_log notice "RENDER ANSWERS 2"
+      #ns_log notice "RENDER ANSWERS 2"
 
       #
       # Create zip file from file submissions
@@ -4051,7 +4051,7 @@ namespace eval ::xowf::test_item {
       } else {
         set zipFile ""
       }
-      ns_log notice "RENDER ANSWERS 3 (submissions: [llength [$items children]])"
+      #ns_log notice "RENDER ANSWERS 3 (submissions: [llength [$items children]])"
 
       set file_submission_exists 0
 
@@ -4084,7 +4084,7 @@ namespace eval ::xowf::test_item {
                    -with_signature $withSignature]
 
         set html [:dict_value $d HTML]
-        ns_log notice "RENDER ANSWERS setting result"
+        #ns_log notice "RENDER ANSWERS setting result"
 
         dict set results [$submission set creation_user] [:dict_value $d results]
 
@@ -4105,7 +4105,7 @@ namespace eval ::xowf::test_item {
         }
 
       }
-      ns_log notice "RENDER ANSWERS 4"
+      #ns_log notice "RENDER ANSWERS 4"
 
       if {$export} {
         $recutil destroy
@@ -4154,7 +4154,7 @@ namespace eval ::xowf::test_item {
           |#xowf.Download_file_submissions#</a>
         }]]
       }
-      ns_log notice "RENDER ANSWERS 5"
+      #ns_log notice "RENDER ANSWERS 5"
 
       #
       # Store statistics only in autograding cases, and only, when it
