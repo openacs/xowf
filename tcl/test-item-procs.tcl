@@ -6300,7 +6300,7 @@ namespace eval ::xowf::test_item {
 
       set question_count_label ""
       if {!$no_position} {
-        set question_count_label " / [:question_count $obj] "
+        set question_count_label " / [:question_count $obj]"
       }
 
       foreach form_obj $form_objs number $numbers position $positions {
