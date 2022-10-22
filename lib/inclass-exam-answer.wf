@@ -363,11 +363,17 @@ proc done_form_loader {ctx form_name} {
     set titleString [dict get $title_info full_title]
     set title [list [string trim $titleString]]
   }
+  #
+  # Add the exam name to the title
+  #
   lappend title [$parent_obj title]
   if {[$parent_obj property show_ip t]} {
+    #
+    # Add the IP address to the title
+    #
     lappend title "IP: [$obj property ip]"
   }
-  $obj title [join $title " 𐄁 "]
+  $obj title [join $title "; "]
   #ns_log notice "TITLE [binary encode hex $title]"
 
   #:msg set_title-set_parameter-MenuBar-[$obj state]
