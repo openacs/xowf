@@ -35,6 +35,8 @@
   <msg key="Correction_notes">Correction Notes</msg>
   <msg key="Countdown_audio_alarm">Audio alarm for countdown timer</msg>
   <msg key="Countdown_audio_alarm_help_text">Include acoustic audio signal to alert students about the approaching time expiration (maybe not wanted for class-room exams)</msg>
+  <msg key="Countdown_timer_expired">The time is up!</msg>
+  <msg key="Countdown_timer_is_not_displayed">Countdown timer is not displayed</msg>  
   <msg key="Created_Assessments">Created Assessments</msg>
   <msg key="Created_Questions">Created Questions</msg>
   <msg key="Cut_and_paste_allowed">Cut and Paste is allowed in multi-line text fields</msg>
@@ -48,8 +50,8 @@
   <msg key="Duration">Duration</msg>
   <msg key="Exam-review-not-open">Exam review for this exam is not open</msg>
   <msg key="Exam_published">Exam Published</msg>
-  <msg key="exam_review_not_possible">automated exam review not possible</msg>
-  <msg key="exam_review_possible">automated exam review possible</msg>
+  <msg key="exam_review_not_possible">Automated exam review not possible</msg>
+  <msg key="exam_review_possible">Automated exam review possible</msg>
   <msg key="exam_summary">Summary</msg>
   <msg key="Exam_time_window">Exam Time Window</msg>
   <msg key="Exam_time_window_help_text">Optional time window for automatically open/close exam. When these values are set, manual opening and closing of the exam is still possible.</msg>
@@ -207,8 +209,8 @@
   <msg key="question_structure">Structure</msg>
   <msg key="question_summary">Questions</msg>
   <msg key="questions">Questions</msg>
-  <msg key="randomization_for_exam_not_ok">randomization for exam NOT ok (&#34;always&#34; should not be used)</msg>
-  <msg key="randomization_for_exam_ok">randomization for exam ok</msg>
+  <msg key="randomization_for_exam_not_ok">Randomization for exam NOT ok (&#34;always&#34; should not be used)</msg>
+  <msg key="randomization_for_exam_ok">Randomization for exam ok</msg>
   <msg key="randomized_items">Randomized Item Order</msg>
   <msg key="randomized_items_help_text">Present question of exam to every student in different order</msg>
   <msg key="refresh">Refresh</msg>
@@ -269,4 +271,5 @@
   <msg key="ul_question">File Upload Question</msg>
   <msg key="Value_max">Value must smaller or equal</msg>
   <msg key="Value_min">Value must larger or equal</msg>
+  <msg key="without_minutes">without specified minutes</msg>
 </message_catalog>

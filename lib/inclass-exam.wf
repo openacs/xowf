@@ -335,11 +335,13 @@ Action instproc unpublish_link {obj} {
     if {$state eq "published"} {
       set src [$obj pretty_link -query m=qrcode]
       set qrCode [subst {<div><img class="img-thumbnail qrcode" src="[ns_quotehtml $src]" ></div>}]
-      set target_time [:QM exam_target_time \
-                           -manager $obj -base_time [$obj last_modified]]
-      set countdownHTML [$obj AM countdown_timer -target_time $target_time -id "countdown"]
+      set total_minutes [:QM total_minutes_for_exam -manager $obj]
+      if {$total_minutes > 1} {
+        set target_time [:QM exam_target_time \
+                             -manager $obj -base_time [$obj last_modified]]
+        set countdownHTML [$obj AM countdown_timer -target_time $target_time -id "countdown"]
+      }
     }
-    #ns_log notice ALL=$text
 
     append text [subst {
       <div class="row">
@@ -348,6 +350,7 @@ Action instproc unpublish_link {obj} {
       <div class="col-sm-6">$countdownHTML</div>
       </div>
     }]
+    #ns_log notice ALL=$text
   }
 
   set f [::xowiki::Form new \

@@ -380,21 +380,24 @@ proc done_form_loader {ctx form_name} {
   :plain_template -prevent_multiple_tabs $prevent_multiple_tabs $obj
 
   if {[$parent_obj state] eq "published" && [$obj state] ne "done"} {
-    set base_time [:QM exam_base_time -manager $parent_obj -answer_obj $obj]
-    set target_time [:QM exam_target_time \
-                         -manager $parent_obj \
-                         -base_time $base_time \
-                        ]
-    set url_poll [$obj pretty_link -query m=message-poll]
-    set url_dismiss [$obj pretty_link -query m=message-dismiss]
-    ::xo::cc set_parameter top_includelet \
-        [list exam-top-includelet \
-             -countdown_audio_alarm [$parent_obj property countdown_audio_alarm t] \
-             -target_time $target_time \
-             -url_poll $url_poll \
-             -url_dismiss $url_dismiss \
-             -poll_interval 5000 \
-            ]
+    set total_minutes [:QM total_minutes_for_exam -manager $parent_obj]
+    if {$total_minutes > 1} {
+      set base_time [:QM exam_base_time -manager $parent_obj -answer_obj $obj]
+      set target_time [:QM exam_target_time \
+                           -manager $parent_obj \
+                           -base_time $base_time \
+                          ]
+      set url_poll [$obj pretty_link -query m=message-poll]
+      set url_dismiss [$obj pretty_link -query m=message-dismiss]
+      ::xo::cc set_parameter top_includelet \
+          [list exam-top-includelet \
+               -countdown_audio_alarm [$parent_obj property countdown_audio_alarm t] \
+               -target_time $target_time \
+               -url_poll $url_poll \
+               -url_dismiss $url_dismiss \
+               -poll_interval 5000 \
+              ]
+    }
   }
 }
 

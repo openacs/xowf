@@ -1995,7 +1995,7 @@ namespace eval ::xowf::test_item {
 
         if {$dtend eq ""} {
           #
-          # No end given. set it to start + exam time + 5 minutes.
+          # No end given. Set it to start + exam time + 5 minutes.
           # The value of "total_minutes" might contain fractions of a
           # minute, so make sure that the end_clock is an integer as
           # needed by "clock format",
@@ -4883,6 +4883,11 @@ namespace eval ::xowf::test_item {
             }
           }
 
+          if (seconds_left < -60) {
+            countdown.innerHTML = "<span style='color:red;'>&nbsp;[_ xowf.Countdown_timer_expired]</span>"
+            return
+          }
+
           if (countdown_days != 0) {
             HTML += '<span class="days">' + countdown_days + ' <b> '
             + (countdown_days != 1 ? '[_ xowf.Days]' : '[_ xowf.Day]')
@@ -5010,23 +5015,30 @@ namespace eval ::xowf::test_item {
               }
             }
           });
+          console.log('onload');
+          console.log(document.getElementById('$id'));
 
+          console.log('register audiocontext_toggle');
           document.getElementById('$id').parentNode.addEventListener('click', audioContext_toggle);
           window.addEventListener('load', audioContext_onload);
         }]
 
         if {[ns_conn isconnected]} {
+          #
+          # The icon names "volume-off" and "volume-up" exist in the
+          # glyph icons and for the bootstrap icons (Bootstrap 5)
+          #
           set alarmState [ns_getcookie $audio_alarm_cookie "inactive"]
-          set glypphIcon [expr {$alarmState eq "inactive" ? "volume-off":"volume-up"}]
+          set icon [expr {$alarmState eq "inactive" ? "volume-off":"volume-up"}]
         } else {
           set alarmState "inactive"
-          set glypphIcon "volume-off"
+          set icon "volume-off"
         }
         #ns_log notice "C=$alarmState"
 
         return [subst {
           <div data-alarm='$alarmState' data-alarmseconds='\[$audio_alarm_times\]'>
-          [::xowiki::bootstrap::icon -name $glypphIcon]
+          <adp:icon name='$icon'>
           <div style='display: inline-block;' id='$id'></div>
           </div>
         }]
@@ -5135,6 +5147,7 @@ namespace eval ::xowf::test_item {
     #   - add_seeds
     #   - total_minutes
     #   - total_points
+    #   - questions_without_minutes
     #   - total_minutes_for_exam
     #   - exam_target_time
     #   - exam_base_time
@@ -7049,6 +7062,7 @@ namespace eval ::xowf::test_item {
       set review_periods    [:AM state_periods $revision_sets -state submission_review]
       set total_minutes     [:total_minutes -max_items $max_items $combined_form_info]
       set total_points      [:total_points -max_items $max_items $combined_form_info]
+      set questions_without_minutes [:questions_without_minutes -max_items $max_items $combined_form_info]
       set max_items_msg     ""
 
       if {$max_items ne ""} {
@@ -7074,12 +7088,18 @@ namespace eval ::xowf::test_item {
           set time_window_msg "<br>Automatische Freischaltung der Prüfung von $dtstart bis $dtend"
         }
       }
+      set question_hint_html ""
+      if {$questions_without_minutes > 0} {
+        append question_hint_html \
+            " ($questions_without_minutes #xowf.without_minutes#)"
+      }
 
       append text [subst {
         <p>
         [expr {$max_items_msg ne "" ? "$max_items_msg" : ""}]
-        $nrQuestions [expr {$nrQuestions == 1 ? "#xowf.question#" : "#xowf.questions#"}],
+        $nrQuestions [expr {$nrQuestions == 1 ? "#xowf.question#" : "#xowf.questions#"}]$question_hint_html,
         $total_minutes #xowf.Minutes#, $total_points #xowf.Points#<br>
+        [expr {$total_minutes <= 1 ? "#xowf.Countdown_timer_is_not_displayed#<br>" : ""}]
         [expr {$autograde ? "#xowf.exam_review_possible#" : "#xowf.exam_review_not_possible#"}]<br>
         [expr {$randomizationOk ? "#xowf.randomization_for_exam_ok#" : "#xowf.randomization_for_exam_not_ok#"}]<br>
         [expr {$allow_paste ? "#xowf.Cut_and_paste_allowed#" : "#xowf.Cut_and_paste_not_allowed#"}]<br>
@@ -7103,7 +7123,7 @@ namespace eval ::xowf::test_item {
       set total 0
       foreach title_info $title_infos {
         if {[dict exists $title_info $property]} {
-          set value [dict get $title_info  $property]
+          set value [dict get $title_info $property]
           if {$value eq ""} {
             ns_log notice "missing property '$property' in '$title_info'"
             set value 0
@@ -7147,6 +7167,29 @@ namespace eval ::xowf::test_item {
       # form_info dict.
       #
       return [:total -property points [:title_infos -max_items $max_items $form_info]]
+    }
+
+    #----------------------------------------------------------------------
+    # Class:  Question_manager
+    # Method: questions_without_minutes
+    #----------------------------------------------------------------------
+    :public method questions_without_minutes {{-max_items:integer,0..1 ""} form_info} {
+      #
+      # Compute the number of questions without provided time
+      #
+      set number 0
+      foreach title_info [:title_infos -max_items $max_items $form_info] {
+        if {[dict exists $title_info minutes]} {
+          set value [dict get $title_info minutes]
+          if {$value eq ""} {
+            set value 0
+          }
+          if {$value == 0} {
+            incr number
+          }
+        }
+      }
+      return $number
     }
 
     #----------------------------------------------------------------------

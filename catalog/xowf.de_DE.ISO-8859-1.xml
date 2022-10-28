@@ -28,6 +28,8 @@
   <msg key="Correction_notes">Korrekturhinweise</msg>
   <msg key="Countdown_audio_alarm">Audioalarm für den Countdown-Timer</msg>
   <msg key="Countdown_audio_alarm_help_text">Inkludiere akustisches Signal, das Studierende vor Ablauf der Bearbeitungsfrist alarmiert (ungeeignet für Prüfungen in Schulungsräumen)</msg>
+  <msg key="Countdown_timer_expired">Die Zeit ist abgelaufen!</msg>
+  <msg key="Countdown_timer_is_not_displayed">Countdown-Timer wird nicht angezeigt</msg>  
   <msg key="Created_Assessments">Verfügbare Assessments</msg>
   <msg key="Created_Questions">Verfügbare Fragen</msg>
   <msg key="Cut_and_paste_allowed">Ausschneiden und Einfügen in mehrzeiligen Textfeldern ist erlaubt.</msg>
@@ -248,4 +250,5 @@
   <msg key="ul_question">Dateiabgabefrage</msg>
   <msg key="Value_max">Wert muss kleiner oder gleich sein als</msg>
   <msg key="Value_min">Wert muss größer oder gleich sein als</msg>
+  <msg key="without_minutes">ohne Bearbeitungszeit</msg>
 </message_catalog>
