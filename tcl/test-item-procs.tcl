@@ -7612,7 +7612,7 @@ namespace eval ::xowf::test_item {
     Class create FormPage -array set require_permission {
       revisions       admin
       diff            admin
-    }
+    } -set default_permission {{package_id admin}}
   }
 
   #
