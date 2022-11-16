@@ -6731,7 +6731,7 @@ namespace eval ::xowf::test_item {
                       $field_names]
       set data_attribute [expr {[::xowiki::CSS toolkit] eq "bootstrap5" ? "data-bs" : "data"}]
       return [subst {
-        <p><button type="button" class="btn btn-secondary"
+        <p><button type="button" class="btn [::xowiki::CSS class btn-default]"
         $data_attribute-toggle="collapse" $data_attribute-target="#$id">
         [::xowiki::bootstrap::icon -name chevron-down] $label</button>
         <div id="$id" class="collapse">
