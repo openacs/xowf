@@ -879,13 +879,27 @@ Action instproc unpublish_link {obj} {
     #ns_log notice "UPDATE CONFIG <[::xo::cc array names form_parameter]> [ns_set array [ns_conn form]] // $form_fields"
 
     set last_instance_attributes ${:instance_attributes}
-    lassign [:get_form_data -field_names $field_names $form_fields] validation_errors category_ids
+    set field_names_with_child_components [lmap f [::xowiki::formfield::child_components $form_fields] {$f name}]
+    #ns_log notice "\nORIG $field_names \NEW $field_names_with_child_components"
+    
+    lassign [:get_form_data -field_names $field_names_with_child_components $form_fields] validation_errors category_ids
     if {$validation_errors == 0} {
       if {$last_instance_attributes eq ${:instance_attributes}} {
         ns_log notice "UPDATE CONFIG ... nothing has changed"
       } else {
         ns_log notice "UPDATE CONFIG ... no validation_errors -> SAVE"
+        
         :update_attribute_from_slot [:find_slot instance_attributes] ${:instance_attributes}
+        
+        if {[dict exists $last_instance_attributes time_window]} {
+          set old_time_window [dict get $last_instance_attributes time_window]
+          set new_time_window [dict get ${:instance_attributes} time_window]          
+          if {$old_time_window ne $new_time_window} {
+            ns_log notice "UPDATE CONFIG time_window $new_time_window"
+            :AM time_window_setup [self] -time_window $new_time_window
+            ns_log notice "UPDATE CONFIG time_window $new_time_window DONE"
+          }
+        }        
       }
       ns_return 200 text/plain OK
     } else {
