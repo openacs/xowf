@@ -1741,6 +1741,7 @@ namespace eval ::xowf::test_item {
     #  - last_time_in_state
     #  - last_time_switched_to_state
     #  - state_periods
+    #  - time_window_setup
     #
 
     #----------------------------------------------------------------------
@@ -1980,10 +1981,15 @@ namespace eval ::xowf::test_item {
     # Class:  Answer_manager
     # Method: time_window_setup
     #----------------------------------------------------------------------
-    :method time_window_setup {parentObj:object {-time_window:required}} {
+    :public method time_window_setup {parentObj:object {-time_window:required}} {
       #
       # Check the provided time_window values, adjust it if necessary,
       # and make sure, according atjobs are provided.
+      #
+      # This method was made public, since there configuration window
+      # update in inclass-exam.wf requires this for the update via
+      # update_attribute_from_slot.  Probably, we should move the core
+      # of this function to this file, and make it pretected again.
       #
       set dtstart [dict get $time_window time_window.dtstart]
       set dtend [dict get $time_window time_window.dtend]
