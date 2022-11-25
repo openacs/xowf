@@ -24,7 +24,7 @@ namespace eval ::xowiki::formfield {
     set ctx [::xowf::Context new -destroy_on_cleanup -object ${:object} \
                  -all_roles true -in_role none \
                  -workflow_definition [:value] ]
-    return [$ctx as_graph -dpi [:dpi] -style "max-width: 35%;"]
+    return [$ctx as_graph -dpi ${:dpi} -style "max-width: 20%;"]
   }
 
   workflow_definition instproc check=workflow {value} {

@@ -973,14 +973,10 @@ namespace eval ::xowf {
     return $result
   }
 
-  Context instproc as_graph {{-current_state ""} {-visited ""} {-dpi 96} {-style "width:100%"}} {
-    set dot ""
-    catch {set dot [::util::which dot]}
-    # final resort for cases, where ::util::which is not available
-    if {$dot eq "" && [file executable /usr/bin/dot]} {set dot /usr/bin/dot}
-    if {$dot eq ""} {return "<font color='red'>Program 'dot' is not available! No graph displayed.</font>"}
+
+  Context instproc dotcode {{-current_state ""} {-visited ""} {-dpi 96}} {
     set obj_id [namespace tail ${:object}]
-    set result [subst {digraph workflow_$obj_id \{
+    set dotcode [subst {digraph workflow_$obj_id \{
       dpi = $dpi;
       node \[shape=doublecircle, margin=0.001, fontsize=8, fixedsize=1, width=0.4, style=filled\]; start;
       node \[shape=ellipse, fontname="Courier", color=lightblue2, style=filled,
@@ -995,20 +991,20 @@ namespace eval ::xowf {
       } else {
         set color ""
       }
-      append result "  state_[$s name] \[label=\"[$s label]\"$color\];\n"
+      append dotcode "  state_[$s name] \[label=\"[$s label]\"$color\];\n"
     }
     set initializeObj [:wf_definition_object initialize]
     if {[nsf::is object $initializeObj]} {
-      append result "start->state_initial \[label=\"[$initializeObj label]\"\];\n"
+      append dotcode "start->state_initial \[label=\"[$initializeObj label]\"\];\n"
     } else {
-      append result "start->state_initial;\n"
+      append dotcode "start->state_initial;\n"
     }
 
     set :condition_count 0
     foreach s [:defined State] {
       foreach a [$s get_actions -set true] {
         set actionObj [:wf_definition_object $a]
-        append result [:draw_transition $s $actionObj ""]
+        append dotcode [:draw_transition $s $actionObj ""]
         set drawn($actionObj) 1
       }
       foreach role [$s set handled_roles] {
@@ -1016,7 +1012,7 @@ namespace eval ::xowf {
         #:msg exists?role=$role->[self]-$role->[nsf::is object ${role_ctx}]
         if {[nsf::is object ${role_ctx}::[$s name]]} {
           foreach a [${role_ctx}::[$s name] get_actions] {
-            append result [:draw_transition $s ${role_ctx}::$a "$role:"]
+            append dotcode [:draw_transition $s ${role_ctx}::$a "$role:"]
           }
         }
       }
@@ -1029,22 +1025,29 @@ namespace eval ::xowf {
       if {[info exists drawn($action)]} {continue}
       if {[$action state_safe]} {
         foreach s [:defined State] {
-          append result [:draw_transition $s $action ""]
+          append dotcode [:draw_transition $s $action ""]
         }
       }
     }
 
-    append result "\}\n"
-    set package_id [${:object} package_id]
-    set path [acs_package_root_dir [::$package_id package_key]]/www/
-    set fn $path/g.dot
-    set ofn dot-$obj_id.png
-    set f [open $fn w]; fconfigure $f -encoding utf-8; puts $f $result; close $f
-    if {[catch {exec $dot -Tpng $fn -o $path/$ofn} errorMsg]} {
-      :msg "Error during execution of $dot: $errorMsg"
+    append dotcode "\}\n"
+    return $dotcode
+  }
+
+
+  Context instproc as_graph {{-current_state ""} {-visited ""} {-dpi 72} {-style "width:20%"}} {
+    set dot ""
+    set dot [::util::which dot]
+    if {$dot eq ""} {
+      return "<font color='red'>Program 'dot' is not available! No graph displayed.</font>"
     }
-    file delete -- $fn
-    return "<img style='$style' src='[::$package_id package_url]/$ofn'>\n"
+    set dotcode [:dotcode -current_state $current_state -visited $visited -dpi $dpi]
+
+    set svg [util::inline_svg_from_dot -css [subst {
+      svg g a:link {text-decoration: none;}
+      div.inner svg {height:100%; overflow: visible; $style; margin: 0 auto;}
+    }] $dotcode]
+    return $svg
   }
 
   Context instproc check {} {
