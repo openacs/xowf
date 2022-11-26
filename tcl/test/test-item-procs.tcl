@@ -329,8 +329,10 @@ namespace eval ::xowf::test {
                 sample_mc_0_ 2
             }
 
-            set tmpfile [ad_tmpnam]
-            file copy $::acs::rootdir/packages/xowf/tcl/test/test-item-procs.tcl $tmpfile
+            set fn $::acs::rootdir/packages/xowf/tcl/test/test-item-procs.tcl
+            set F [ad_opentmpfile tmpfile test]
+            set F0 [open $fn]; set content [read $F0]; close $F0
+            close $F
 
             dict set q_dict sample_st_0 type ShortText
             dict set q_dict sample_st_0 nr_hrefs 1
