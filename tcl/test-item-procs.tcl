@@ -1989,7 +1989,7 @@ namespace eval ::xowf::test_item {
       # This method was made public, since there configuration window
       # update in inclass-exam.wf requires this for the update via
       # update_attribute_from_slot.  Probably, we should move the core
-      # of this function to this file, and make it pretected again.
+      # of this function to this file, and make it protected again.
       #
       set dtstart [dict get $time_window time_window.dtstart]
       set dtend [dict get $time_window time_window.dtend]
@@ -4120,7 +4120,7 @@ namespace eval ::xowf::test_item {
       if {$with_grading_table && $autograde} {
         append HTML <p>[:grading_table -csv ${:grade_csv} ${:grade_dict}]</p>
         #
-        # The following lines are conveniant for debugging
+        # The following lines are convenient for debugging
         #
         #set manual_gradings [$examWf property manual_gradings]
         #set manual_gradings [:get_exam_results -obj $examWf manual_gradings]
