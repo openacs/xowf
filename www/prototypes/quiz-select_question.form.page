@@ -1,0 +1,14 @@
+# -*- tcl-*-
+::xowiki::Form new \
+    -name quiz-select_question.form \
+    -title "Select Question" \
+    -anon_instances f \
+    -text {} \
+    -form {{<form>@question@ @_nls_language@</form>} text/html} \
+    -form_constraints {
+	@cr_fields:hidden
+	{_title:text,label=#xowf.inclass-quiz-name#,default=#xowf.inclass-quiz-default_name#}
+	{question:form_page,multiple=true,form=en:TestItemText.form|en:TestItemShortText.form|en:TestItemMC.form|en:TestItemSC.form|en:TestItemReorder.form,required,help_text=#xowf.select_question_help_text#,label=#xowiki.questions#}
+	_description:omit _page_order:omit
+    }
+
