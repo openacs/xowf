@@ -164,7 +164,6 @@ Action create logout \
       # When "return_url" is provided, redirect to it.
       #
       set return_url [$obj property return_url .]
-      set return_url /xowf/online-exam/inclass-exam64
       if {$return_url ne ""} {
         next
         ad_returnredirect $return_url
