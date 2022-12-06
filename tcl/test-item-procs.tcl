@@ -7436,6 +7436,12 @@ namespace eval ::xowiki::formfield {
         dict set d available_pool_items [dict size $item_dict]
         dict set d available_pool_item_stats $counts
       }
+      ::xowiki::formfield::reorder_box {
+        set type Reorder
+      }
+      ::xowiki::formfield::file {
+        set type Upload
+      }
 
       default {
         set type [:info class]
