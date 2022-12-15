@@ -86,7 +86,7 @@ namespace eval ::xowf::test_item::grading {
       return $grade
     }
 
-    :method complete_dict {achieved_points} {
+    :public method grading_dict {achieved_points} {
 
       # Important dict members of "achieved_points":
       #  - achievedPoints: points that the student has achieved in her exam
@@ -115,9 +115,9 @@ namespace eval ::xowf::test_item::grading {
         } {
         set achievablePoints 0
         set achievedPoints 0
-        #ns_log notice "RECALC in complete_dict "
+        #ns_log notice "RECALC in grading_dict "
         foreach detail [dict get $achieved_points details] {
-          #ns_log notice "RECALC in complete_dict '$detail'"
+          #ns_log notice "RECALC in grading_dict '$detail'"
           set achievedPoints   [expr {$achievedPoints   + [dict get $detail achieved]}]
           set achievablePoints [expr {$achievablePoints + [dict get $detail achievable]}]
         }
@@ -157,7 +157,7 @@ namespace eval ::xowf::test_item::grading {
       # Return a dict containing the members "panel" and "csv"
       # depending on the type of rounding options
       #
-      set achieved_points  [:complete_dict $achieved_points]
+      set achieved_points  [:grading_dict $achieved_points]
       set grade            [:grade -achieved_points $achieved_points]
       dict with achieved_points {
         return [list panel [_ xowf.panel_[namespace tail [:info class]]] csv [subst ${:csv}]]
@@ -179,7 +179,7 @@ namespace eval ::xowf::test_item::grading {
       # Return a numeric grade for an exam submission based on rounded
       # points. On invalid data, return 0.
       #
-      set achieved_points [:complete_dict $achieved_points]
+      set achieved_points [:grading_dict $achieved_points]
       dict with achieved_points {
         return [:calc_grade -points $achievedPointsRounded -achievable_points $totalPoints]
       }
@@ -200,7 +200,7 @@ namespace eval ::xowf::test_item::grading {
       # Return a numeric grade for an exam submission based on rounded
       # percentage. On invalid data, return 0.
       #
-      set achieved_points [:complete_dict $achieved_points]
+      set achieved_points [:grading_dict $achieved_points]
       if {[dict exists $achieved_points achievedPoints]} {
         dict with achieved_points {
           return [:calc_grade -percentage $percentageRounded]
@@ -224,7 +224,7 @@ namespace eval ::xowf::test_item::grading {
       # special rounding (2 digits). On invalid data, return 0.
       #
       if {[dict exists $achieved_points achievedPoints]} {
-        set achieved_points [:complete_dict $achieved_points]
+        set achieved_points [:grading_dict $achieved_points]
         dict with achieved_points {
           return [:calc_grade -percentage $percentage]
         }

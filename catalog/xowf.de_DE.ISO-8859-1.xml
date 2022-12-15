@@ -2,6 +2,7 @@
 <message_catalog package_key="xowf" locale="de_DE" charset="ISO-8859-1">
 
   <msg key="Achieved_points">Erreichte Punkte</msg>
+  <msg key="Achievable_points">Erreichbare Punkte</msg>
   <msg key="Allow_paste">Ausschneiden und Einfügen erlaubt</msg>
   <msg key="Allow_paste_help_text">Darf der Studierende in mehrzeiligen Textfeldern Ausschneiden und Einfügen verwenden?</msg>
   <msg key="alternative">Alternative</msg>
@@ -45,6 +46,8 @@
   <msg key="exam_review_not_possible">Automatische Einsicht nicht möglich.</msg>
   <msg key="exam_review_possible">Automatische Einsicht möglich.</msg>
   <msg key="exam_summary">Zusammenfassung</msg>
+  <msg key="exam_statistics_participant">Prüfungsstatistik nach Teilnehmern</msg>
+  <msg key="exam_statistics_question">Prüfungsstatistik nach Beispielen</msg>  
   <msg key="Exam_time_window">Zeitfenster für Prüfung</msg>
   <msg key="Exam_time_window_help_text">Optionales automatisches Freischalten/Schließen der Prüfung. Auch wenn das Zeitfenster aktiviert ist, kann die Prüfung manuell freigeschaltet/geschlossen werden.</msg>
   <msg key="Exercise">Beispiel</msg>
@@ -54,6 +57,9 @@
   <msg key="exercise_sc">Single-Choice-Übung</msg>
   <msg key="export_results">Exportiere Ergebnisse</msg>
   <msg key="export_results_title">Exportiere Ergebnisse und Kommentare pro Frage</msg>
+  <msg key="export_points_title">Exportiere Punkte</msg>
+  <msg key="export_grades_title">Exportiere Noten</msg>
+  <msg key="export_points_and_grades_title">Exportiere Punkte und Noten</msg>  
   <msg key="feedback">Feedback</msg>
   <msg key="feedback_correct">Feedback richtig</msg>
   <msg key="feedback_incorrect">Feedback falsch</msg>
@@ -169,6 +175,7 @@
   <msg key="please_answer">Bitte beantworten Sie</msg>
   <msg key="Point">Punkt</msg>
   <msg key="Points">Punkte</msg>
+  <msg key="Points_and_grades">Punkte und Noten</msg>  
   <msg key="pool_question">Pool-Frage</msg>
   <msg key="pool_question_folder">Fragenpool</msg>
   <msg key="pool_question_item_types">Fragentypen</msg>
@@ -183,6 +190,7 @@
   <msg key="Proctoring_options_help_text">Detailangaben, welche Funktionen der Online-Beaufsichtigung genutzt werden sollen</msg>
   <msg key="Proctoring_record">Aufnahmen speichern</msg>
   <msg key="Proctoring_record_help_text">Speichere die Aufnahmen der Teilnehmer</msg>
+  <msg key="Percentage">Prozent</msg>
   <msg key="question">Frage</msg>
   <msg key="Question_management">Fragenenstellungen</msg>
   <msg key="question_selection">Fragenauswahl</msg>

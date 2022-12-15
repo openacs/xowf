@@ -1730,8 +1730,9 @@ namespace eval ::xowf::test_item {
     #
     #  - marked_results
     #  - answers_panel
-    #  - results_table
+    #  - exam_results
     #  - grading_table
+    #  - grading_scheme
     #  - grade
     #  - participants_table
     #
@@ -3862,10 +3863,10 @@ namespace eval ::xowf::test_item {
     # Class:  Answer_manager
     # Method: grading_scheme
     #----------------------------------------------------------------------
-    :method grading_scheme {
+    :public method grading_scheme {
       {-examWf:object,required}
       {-grading:token,0..n ""}
-      {-total_points}
+      {-total_points 100}
     } {
       #
       # Return the grading scheme object based on the provided short
@@ -3882,6 +3883,10 @@ namespace eval ::xowf::test_item {
       #
       # @return fully qualified grading scheme object
       #
+
+      #
+      # When not grading is provided, this muse be a legacy question.
+      #
       if {$grading eq ""} {
         #set grading [expr {$total_points < 40 ? "round-none" : "round-points"}]
         set grading "none"
@@ -3893,6 +3898,8 @@ namespace eval ::xowf::test_item {
         #
         # Maybe we have to load this grading scheme...
         #
+        #ns_log notice "grading_scheme_name load loaded yet: '$grading'"
+        #::xo::show_stack
         ::xowf::test_item::grading::load_grading_schemes \
             -package_id [$examWf package_id] \
             -parent_id [$examWf parent_id]
@@ -4125,7 +4132,7 @@ namespace eval ::xowf::test_item {
         #set manual_gradings [$examWf property manual_gradings]
         #set manual_gradings [:get_exam_results -obj $examWf manual_gradings]
         #append HTML <pre>$manual_gradings</pre>
-        #append HTML <pre>[:results_export -manual_gradings $manual_gradings $results]</pre>
+        #append HTML <pre>[:exam_results -manual_gradings $manual_gradings $results]</pre>
       }
 
       if {$create_zip_file} {
@@ -4283,18 +4290,162 @@ namespace eval ::xowf::test_item {
       }
     }
 
+    :method "result_table per_question" {
+      {-manual_gradings "" }
+      results_dict
+    } {
+      set table [::xowiki::TableWidget new \
+                     -name results \
+                     -columns {
+                       Field create participant -label #xowf.participant# \
+                           -orderby participant
+                       Field create question -label #xowf.question#
+                       Field create achieved -label #xowf.Achieved_points# \
+                           -orderby achieved -html {align right}
+                       Field create achievable -label #xowf.Achievable_points# \
+                           -orderby achievable -html {align right}
+                       Field create comment -label #xowf.feedback#
+                     }]
+      foreach user_id [dict keys $results_dict] {
+        set manual_grading [:dict_value $manual_gradings $user_id]
+        set participant [acs_user::get_element -user_id $user_id -element username]
+        foreach qn [dict keys [dict get $results_dict $user_id]] {
+          set achievable [dict get $results_dict $user_id $qn achievable]
+          set achieved [dict get $results_dict $user_id $qn achieved]
+          $table add \
+              -participant $participant \
+              -question [string trimright $qn _] \
+              -achievable $achievable \
+              -achieved [format %.2f $achieved] \
+              -comment [:dict_value [:dict_value $manual_grading $qn] comment]
+        }
+      }
+      return $table
+    }
+
+    :method "result_table per_participant" {
+      {-manual_gradings ""}
+      {-gradingScheme}
+      {-only_grades:boolean false}
+      results_dict
+    } {
+      ns_log notice "per_participant gradingScheme $gradingScheme"
+      #
+      # In case "only_grades" is specified, hide field "achieved".
+      #
+      set fieldType [expr {$only_grades ? "HiddenField" : "Field"}]
+      set fieldTypeGrade [expr {$gradingScheme eq "::xowf::test_item::grading::none"
+                                ? "HiddenField"
+                                : "Field"}]
+      set grade_dict {}
+      set table \
+          [::xowiki::TableWidget new \
+               -name results \
+               -columns [subst {
+                 Field create participant -label #xowf.participant# \
+                     -orderby participant
+                 $fieldType create achieved -label #xowf.Achieved_points# \
+                     -orderby achieved -html {align right}
+                 HiddenField create achievable -label #xowf.Achievable_points# \
+                     -orderby achievable -html {align right}
+                 $fieldType create percentage -label #xowf.Percentage# \
+                     -orderby percentage -html {align right}
+                 $fieldTypeGrade create grade -label #xowf.Grade# \
+                     -orderby grade -html {align right}
+               }]]
+      #ns_log notice "We have in results_dict the following users: [dict keys $results_dict]"
+      foreach {user_id properties} $results_dict {
+        if {[llength $properties] == 0} {
+          #
+          # The user has not seen any exercises, probably in "initial"
+          # state, ignore it.
+          #
+          continue
+        }
+        set manual_grading [:dict_value $manual_gradings $user_id]
+        set achievedPoints 0.0
+        set achievablePoints 0.0
+        set participant [acs_user::get_element -user_id $user_id -element username]
+        foreach qn [dict keys [dict get $results_dict $user_id]] {
+          set achievable [dict get $results_dict $user_id $qn achievable]
+          #
+          # Respect manual_grading, since these are eagerly updated
+          # via exam protocol.
+          #
+          set achieved [:dict_value [:dict_value $manual_grading $qn] achieved]
+          if {$achieved eq ""} {
+            set achieved [dict get $results_dict $user_id $qn achieved]
+          }
+
+          #
+          # When a participant has not done yet this exercise, the
+          # value might be empty.
+          #
+          if {$achieved eq ""} {
+            set achieved 0
+          }
+          set achievedPoints [expr {$achievedPoints + $achieved}]
+          set achievablePoints [expr {$achievablePoints + $achievable}]
+        }
+        set gradingDict [$gradingScheme grading_dict [list achievedPoints $achievedPoints \
+                                                          achievablePoints $achievablePoints \
+                                                          totalPoints $achievablePoints]]
+        #ns_log notice "COMPLETED DICT $gradingDict"
+        set grade [$gradingScheme grade -achieved_points $gradingDict]
+        dict incr grade_dict $grade
+
+        set l [::xo::Table::Line new]
+        $table add \
+            -participant $participant \
+            -achievable $achievablePoints \
+            -achieved [dict get $gradingDict achievedPoints] \
+            -percentage [dict get $gradingDict percentageRounded] \
+            -grade $grade
+
+      }
+      $table set __grade_dict $grade_dict
+      return $table
+    }
+
     #----------------------------------------------------------------------
     # Class:  Answer_manager
-    # Method: results_export
+    # Method: exam_results
     #----------------------------------------------------------------------
-    :public method results_export {
+    :public method exam_results {
       {-manual_gradings "" }
+      {-gradingScheme ""}
+      {-only_grades:boolean false}
       {-reply:switch false}
+      {-format csv}
+      {-orderby "participant,desc"}
       results_dict
     } {
       #
-      # Exports results as csv
+      # Return results either as HTML table, as HTML chart or as
+      # csv. When "reply" is set. the result is returned directly to
+      # the browser (for downloading).
       #
+      # When "gradingScheme" is empty, this method returns the
+      # following fields:
+      #
+      #    participant, question, achieved_points, achievable points, comment
+      #
+      # When the "gradingScheme" is specified the results are
+      # per-participant.  In this cases, when the "gradingScheme" is
+      # "....::none", the fields are
+      #
+      #    participant, achieved, percentage
+      #
+      # otherwise the grade and rounding of achieved points and
+      # percentage are exported based on the rules of the grading
+      # scheme.
+      #
+      #    participant, achieved, percentage, grade
+      #
+      # When additionally "only_grades" is specified, just participant
+      # and grad are returned/exported.
+      #
+      # @param gradingScheme needed for reporting grades, can be empty
       # @param reply when false, csv will be returned as text, when
       #              true, it will be returned as response to the
       #              browser.
@@ -4303,34 +4454,43 @@ namespace eval ::xowf::test_item {
       #
       # @return csv as value or as response to the client
       #
-      set t [::xo::Table new -volatile \
-                 -name results \
-                 -columns {
-                   Field create participant -label participant
-                   Field create query_name -label query_name
-                   Field create achieved -label achieved
-                   Field create achievable -label achievable
-                   Field create comment -label comment
-                 }]
-      foreach user_id [dict keys $results_dict] {
-        set manual_grading [:dict_value $manual_gradings $user_id]
-        foreach qn [dict keys [dict get $results_dict $user_id]] {
-          set l [::xo::Table::Line new]
-          $t add \
-              -participant [acs_user::get_element \
-                            -user_id $user_id \
-                            -element username] \
-              -query_name [string trimright $qn _] \
-              -achievable [dict get $results_dict $user_id $qn achievable] \
-              -achieved [dict get $results_dict $user_id $qn achieved] \
-              -comment [:dict_value [:dict_value $manual_grading $qn] comment]
+      set result ""
+      if {$gradingScheme eq ""} {
+        set t [:result_table per_question \
+                   -manual_gradings $manual_gradings \
+                   $results_dict]
+      } else {
+        set t [:result_table per_participant \
+                   -gradingScheme $gradingScheme \
+                   -only_grades $only_grades \
+                   -manual_gradings $manual_gradings \
+                   $results_dict]
+      }
+
+      lassign [split $orderby ,] att order
+
+      $t orderby \
+          -order [expr {$order eq "asc" ? "increasing" : "decreasing"}] \
+          -type [ad_decode $att achieved real achievable real grade integer dictionary] \
+          $att
+
+      if {$reply} {
+        switch $format {
+          html    {
+            ns_return 200 "text/html; charset=utf-8" [$t asHTML]
+            ad_script_abort
+          }
+          default {set result [$t write_csv]}
+        }
+      } else {
+        switch $format {
+          chart   {set result [:grading_table [$t set __grade_dict]]}
+          html    {set result [$t asHTML]}
+          default {set result [$t format_csv]}
         }
       }
-      if {$reply} {
-        $t write_csv
-      } else {
-        $t format_csv
-      }
+      $t destroy
+      return $result
     }
 
     #----------------------------------------------------------------------
@@ -4348,7 +4508,8 @@ namespace eval ::xowf::test_item {
           "<tbody>\n"
       set nrGrades 0
       foreach v [dict values $grade_dict] { incr nrGrades $v}
-      foreach k [lsort [dict keys $grade_dict]] {
+      set grades [lsort [dict keys $grade_dict]]
+      foreach k $grades {
         set count [dict get $grade_dict $k]
         set countPercentage [format %.2f [expr {$count *100.0 / $nrGrades}]]
         append gradingTable \
@@ -4358,7 +4519,35 @@ namespace eval ::xowf::test_item {
               style="width:$countPercentage%">$countPercentage%</div></td}] \
             </tr>\n
       }
-      append gradingTable "</tbody></table></div>\n<pre>$csv</pre></div>\n"
+      append gradingTable "</tbody></table></div>\n"
+      if {$csv ne "" } {
+        append gradingTable "<pre>$csv</pre></div>\n"
+      }
+
+      if {[template::head::can_resolve_urn urn:ad:js:highcharts]} {
+        #
+        # The highcharts package is available
+        #
+        template::add_body_script -src urn:ad:js:highcharts
+        set graphID pie-[incr ::__xotcl_highcharts_pie]
+        append gradingTable "<div id='$graphID'></div>\n"
+        set data ""
+        foreach k $grades {
+          set count [dict get $grade_dict $k]
+          set countPercentage [format %.2f [expr {$count *100.0 / $nrGrades}]]
+          lappend data [subst {{name:'$k', y: $countPercentage}}]
+        }
+        set gradeLabel [_ xowf.Grade]
+        template::add_body_script -script [subst [ns_trim {
+          Highcharts.chart('$graphID', {
+            chart: {type: 'pie'},
+            plotOptions: {pie: {size: 200}, series: {dataLabels: {enabled: true, format: '$gradeLabel {point.name}: {point.y:.1f}%'} }},
+            title: {text: ''},
+            credits: {enabled: true },
+            series: \[{name: 'Percentage', data: \[ [join $data ,] \]}\]
+          });
+        }]]
+      }
       return $gradingTable
     }
 
@@ -4377,7 +4566,8 @@ namespace eval ::xowf::test_item {
     } {
       #
       # Render the results in format of a table and return HTML.
-      # Currently deactivated.
+      # Currently mostly deactivated (but potentially called by
+      # online-exam.wf and topic-assignment.wf).
       #
 
       #set form_info [:combined_question_form -with_numbers $wf]
@@ -6873,7 +7063,8 @@ namespace eval ::xowf::test_item {
       #
       set results [:AM get_exam_results -obj $obj results]
       if {$results ne ""} {
-        set href [$obj pretty_link -query m=exam-results]
+        #https://localhost:8443/xowf/online-exam/inclass-exam1?per-question=1&m=print-statistics&format=csv&onlygrades=0
+        set href [$obj pretty_link -query m=exam-results&format=csv&per-question=1]
         set results_summary [subst {
           <p>#xowf.export_results#: <a title="#xowf.export_results_title#" href="$href">
           <adp:icon name="filetype-csv" title="CSV"></a>
@@ -7592,7 +7783,7 @@ namespace eval ::xowf::test_item {
   # activities.
   #
   #
-  # Policy for creating and publishing of exams.
+  # Policy for lecturers (creating and publishing of exams)
   #
   test-item-policy-publish contains {
     Class create FormPage -array set require_permission {

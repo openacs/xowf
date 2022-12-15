@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 <message_catalog package_key="xowf" locale="en_US" charset="ISO-8859-1">
 
+  <msg key="Achievable_points">Achievable Points</msg>
   <msg key="Achieved_points">Achieved Points</msg>
   <msg key="Allow_paste">Allow Cut and Paste</msg>
   <msg key="Allow_paste_help_text">Is the student allowed to use cut and paste in multiline text fields?</msg>
@@ -53,6 +54,8 @@
   <msg key="exam_review_not_possible">Automated exam review not possible</msg>
   <msg key="exam_review_possible">Automated exam review possible</msg>
   <msg key="exam_summary">Summary</msg>
+  <msg key="exam_statistics_participant">Exam Statistics per Participant</msg>
+  <msg key="exam_statistics_question">Exam Statistics per Question</msg>
   <msg key="Exam_time_window">Exam Time Window</msg>
   <msg key="Exam_time_window_help_text">Optional time window for automatically open/close exam. When these values are set, manual opening and closing of the exam is still possible.</msg>
   <msg key="Exercise">Exercise</msg>
@@ -61,7 +64,10 @@
   <msg key="exercise_ot">Open Text Exercise</msg>
   <msg key="exercise_sc">Single Choice Exercise</msg>
   <msg key="export_results">Export Results</msg>
-  <msg key="export_results_title">Export results and comments per question</msg>
+  <msg key="export_results_title">Export Results and Comments per Question</msg>
+  <msg key="export_points_title">Export Points</msg>
+  <msg key="export_grades_title">Export Grades</msg>
+  <msg key="export_points_and_grades_title">Export Points and Grades</msg>
   <msg key="feedback">Feedback</msg>
   <msg key="feedback_correct">Feedback Correct</msg>
   <msg key="feedback_incorrect">Feedback Incorrect</msg>
@@ -185,10 +191,12 @@
   <msg key="panel_GradingRoundPoints">%achievedPoints% (rounded %achievedPointsRounded%) of possible %totalPoints% points, %percentage%%, grade: %grade%</msg>
   <msg key="participant">Participant</msg>
   <msg key="Participants">Participants</msg>
+  <msg key="Percentage">Percentage</msg>
   <msg key="participants_answered_question">participants answered this question</msg>
   <msg key="please_answer">Please answer</msg>
   <msg key="Point">Point</msg>
   <msg key="Points">Points</msg>
+  <msg key="Points_and_grades">Points and Grades</msg>
   <msg key="pool_question">Pool Question</msg>
   <msg key="pool_question_folder">Pool Folder</msg>
   <msg key="pool_question_item_types">Item Types</msg>

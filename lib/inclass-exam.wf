@@ -43,17 +43,17 @@
 # The policy has to allow the following methods on FormPages:
 #
 #  - "answer" (for students),
-#  - "proctor" (for students),
-#  - "view-my-exam" (for students),
+#  - "delete" (for lecturers),
 #  - "edit" (for students),
+#  - "exam-results" (for lecturers),
 #  - "poll" (for lecturers),
 #  - "print-answers" (for lecturers),
-#  - "print-answer-table" (for lecturers),
 #  - "print-participants" (for lecturers),
-#  - "question-summary" (for lecturers),
-#  - "delete" (for lecturers),
-#  - "toggle-publish-status" (for lecturers),
+#  - "proctor" (for students),
 #  - "qrcode" (for lecturers)
+#  - "question-summary" (for lecturers),
+#  - "toggle-publish-status" (for lecturers),
+#  - "view-my-exam" (for students),
 #
 # Gustaf Neumann, Feb 2012-2021
 ########################################################################
@@ -264,8 +264,10 @@ Action instproc unpublish_link {obj} {
       #
     }
 
-    set answers [$obj AM get_answer_attributes $wf]
-
+    set answers [:AM get_answer_attributes $wf]
+    set results [:AM get_exam_results -obj $obj results]
+    set autograded [dict get $combined_form_info autograde]
+    set grading_scheme_name [$obj property grading]
     #
     # Per default, the entries are disabled. When there are answers,
     # these will be enabled.
@@ -275,15 +277,23 @@ Action instproc unpublish_link {obj} {
       listing      {obj $wf  m list label #xowf.online-exam-exam_instances# icon list}
       participants {obj $obj m print-participants label #xowf.Participants# icon user}
       protocol     {obj $obj m print-answers label #xowf.online-exam-protocol# icon list-alt}
-      results      {obj $obj m print-answer-table label #xowf.online-exam-results-table# icon th-list}
+      grades       {obj $obj m exam-results label #xowf.Points_and_grades# icon graph-up-arrow}
     }]
 
     if {![acs_user::site_wide_admin_p -user_id [::xo::cc user_id]]} {
       dict unset md listing
     }
-    dict unset md results ;# deactivate results for now
-    #ns_log notice ALL=$text
+    ns_log notice "ANSWERS grading_scheme_name $grading_scheme_name $answers resultsNr [llength $results], autograde [dict get $combined_form_info autograde]"
+    #
+    # We assume here that when we have results, we have also some points.
+    #
+    if {[llength $results] == 0} {
+      dict unset md grades
+    } elseif {$grading_scheme_name in {"" "none"}} {
+      dict set grades label "Points"
+    }
 
+    #ns_log notice ALL=$text
     set menu "<ul class='list-group list-group-flush'>\n"
     dict for {name d} $md {
       set href [[dict get $d obj] pretty_link -query m=[dict get $d m]]
@@ -455,45 +465,6 @@ Action instproc unpublish_link {obj} {
   }
 
   ########################################################################
-  # web-callable method "print-answer-table"
-  #
-  # Print the answers in a tabular form.
-  #
-  :proc www-print-answer-table {} {
-    set HTML ""
-    set withAnswerColumns [${:package_id} query_parameter with_answers:boolean 0]
-
-    set wf [:AM get_answer_wf [self]]
-    if {$wf ne ""} {
-      #set form_info [:QM combined_question_form -with_numbers [self]]
-
-      set items [:AM get_wf_instances $wf]
-      set items2 [$items deep_copy]
-      foreach i [$items2 children] {
-        $i set online-exam-userName [acs_user::get_element -user_id [$i creation_user] -element username]
-        $i set online-exam-fullName [::xo::get_user_name [$i creation_user]]
-      }
-      set HTML [:AM results_table \
-                    -package_id ${:package_id} \
-                    -items $items2 \
-                    -state * \
-                    -with_answers $withAnswerColumns \
-                    [self]]
-      $items2 destroy
-    }
-    if {$HTML eq ""} {
-      set HTML "#xowiki.no_data#"
-    } else {
-      set HTML "<h1>#xowf.online-exam-results-table#</h1>$HTML"
-    }
-    set return_url [[$wf package_id] query_parameter local_return_url:localurl [:pretty_link]]
-    append HTML "<hr><p><a class='[xowiki::CSS class action]' href='$return_url'>#xowiki.back#</a></p>\n"
-
-    xo::Page requireCSS /resources/xowf/test-item.css
-    :www-view $HTML
-  }
-
-  ########################################################################
   # web-callable method "print-participants"
   #
   # Print participants in a tabular form.
@@ -554,16 +525,142 @@ Action instproc unpublish_link {obj} {
   ########################################################################
   # web-callable method "exam-results"
   #
-  # export results as CSV table
+  # Print results (grades, statistics) for a lecturer.
   #
   :proc www-exam-results {} {
-    #set manual_gradings [:property manual_gradings]
-    set manual_gradings [:AM get_exam_results -obj [self] manual_gradings]
-    #set results [:property __results]
+    set form_info [:QM combined_question_form [self]]
+    set autograde [dict get $form_info autograde]
+    set orderby [:query_parameter orderby:token "participant,desc"]
+    set format [:query_parameter format:alpha ""]
+    set perQuestion [:query_parameter per-question:boolean 0]
+
+    set grading_scheme_name [:property grading]
+    if {$grading_scheme_name eq ""} {
+      set grading_scheme_name none
+    }
+    set gradingScheme [:AM grading_scheme -examWf [self] -grading $grading_scheme_name]
+    set withGrades [expr {$gradingScheme ne "::xowf::test_item::grading::none"}]
+
+    set return_url [:query_parameter local_return_url:localurl [:pretty_link]]
+    set backButtonHTML "<hr><p><a class='[xowiki::CSS class action]' href='$return_url'>#xowiki.back#</a></p>\n"
+
     set results [:AM get_exam_results -obj [self] results]
-    :AM results_export -reply -manual_gradings $manual_gradings $results
-    ad_script_abort
+    if {[llength $results] eq 0} {
+      #
+      # Actually, the link leading to this result should not be
+      # active. The message is just for cases of URL hacking.
+      #
+      return [:www-view "<p>No submission results available.$backButtonHTML"]
+    }
+    set manual_gradings [:AM get_exam_results -obj [self] manual_gradings]
+
+    if {$format eq "csv"} {
+      return [:AM exam_results \
+                  -format csv \
+                  -reply \
+                  -orderby $orderby \
+                  -only_grades [:query_parameter onlygrades:boolean true] \
+                  -gradingScheme [expr {$perQuestion ? "" : $gradingScheme}] \
+                  -manual_gradings $manual_gradings \
+                  $results]
+
+      #:AM exam_results -reply -manual_gradings $manual_gradings $results
+
+    }
+
+    set statistics [:AM get_exam_results -obj [self] statistics]
+
+    #
+    # We have to following options:
+    # - perParticipant with grades
+    # - perParticipant without grades
+    # - perQuestion (always without grades, since this includes as well the statistics per alternative)
+    #
+    set HTML ""
+    if {0} {
+      set HTML [subst {
+        <pre>
+        autograde $autograde
+        manual_gradings $manual_gradings
+        results $results
+        statistics $statistics
+      }]
+      append HTML \n\nper_question\n[:AM exam_results -manual_gradings $manual_gradings $results]
+      append HTML \nper_student\n[:AM exam_results -gradingScheme $gradingScheme \
+                                      -manual_gradings $manual_gradings $results]
+      append HTML </pre>
+    }
+    if {$perQuestion} {
+      append HTML \
+          "<h3>#xowf.exam_statistics_question#</h3>\n" \
+          [:AM exam_results -format html \
+               -manual_gradings $manual_gradings \
+               $results]
+      set exportQuestionResultsURL [ad_return_url {{format csv} {onlygrades 0}}]
+      set perParticipantURL [ns_conn url]?[::xo::update_query [ns_conn query] per-question 0]
+      set buttonsHTML [subst {<p>
+        <hr><p><a class='[xowiki::CSS class action]' href='$exportQuestionResultsURL'>
+        <adp:icon name="filetype-csv" title="CSV"> #xowf.export_results_title#</a>
+        <a class='[xowiki::CSS class action]' href='$perParticipantURL'>
+        <adp:icon name="graph-up-arrow" title="Per Participant Statistics"> #xowf.exam_statistics_participant#</a></p>
+      }]
+    } else {
+      append HTML \
+          "<h3>#xowf.exam_statistics_participant#</h3>" \
+          "<p>#xowf.Grading-Scheme#: [$gradingScheme cget -title]\n" \
+          [:AM exam_results -format html \
+               -orderby $orderby \
+               -gradingScheme $gradingScheme \
+               -manual_gradings $manual_gradings \
+               $results]
+      set exportPointGradesURL [ad_return_url {{format csv} {onlygrades 0}}]
+
+      if {$withGrades} {
+        #
+        # Only grades as table
+        #
+        #append HTML [:AM exam_results -format html \
+        #                 -orderby $orderby \
+        #                 -only_grades true \
+        #                 -gradingScheme $gradingScheme \
+        #                 -manual_gradings $manual_gradings \
+        #                 $results]
+        append HTML [:AM exam_results -format chart \
+                         -orderby $orderby \
+                         -only_grades true \
+                         -gradingScheme $gradingScheme \
+                         -manual_gradings $manual_gradings \
+                         $results]
+        set exportGradesURL [ad_return_url {{format csv}}]
+        set buttonsHTML [subst {
+          <hr><p><a class='[xowiki::CSS class action]' href='$exportGradesURL'>
+          <adp:icon name="filetype-csv" title="CSV"> #xowf.export_grades_title#</a>
+          <a class='[xowiki::CSS class action]' href='$exportPointGradesURL'>
+          <adp:icon name="filetype-csv" title="CSV"> #xowf.export_points_and_grades_title#</a>
+        }]
+      } else {
+        set buttonsHTML [subst {
+          <a class='[xowiki::CSS class action]' href='$exportPointGradesURL'>
+          <adp:icon name="filetype-csv" title="CSV"> #xowf.export_points_title#</a>
+        }]
+      }
+      set perQuestionURL [ns_conn url]?[::xo::update_query [ns_conn query] per-question 1]
+      append buttonsHTML [subst {
+        <a class='[xowiki::CSS class action]' href='$perQuestionURL'>
+        <adp:icon name="graph-up-arrow" title="Per Question Statistics"> #xowf.exam_statistics_question#</a></p>
+      }]
+    }
+
+    if {$HTML eq ""} {
+      set HTML "#xowiki.no_data#"
+    } else {
+      append HTML $buttonsHTML
+    }
+    append HTML $backButtonHTML
+
+    :www-view $HTML
   }
+
 
 
   ########################################################################
@@ -609,8 +706,6 @@ Action instproc unpublish_link {obj} {
       :www-view $HTML
     }
   }
-
-
 
   ########################################################################
   # web-callable method "answer"
@@ -776,7 +871,8 @@ Action instproc unpublish_link {obj} {
   :proc www-blank-inputs {} {
     #
     # Analyze the student submissions an find situations, where input
-    # is "cleared" between revisions.
+    # is "cleared" between revisions. This method is primarily for
+    # debugging purposes.
     #
     template::head::add_link -rel stylesheet -href /resources/xowf/test-item.css
     set HTML [:AM render_answers_with_edit_history [self]]
@@ -881,25 +977,25 @@ Action instproc unpublish_link {obj} {
     set last_instance_attributes ${:instance_attributes}
     set field_names_with_child_components [lmap f [::xowiki::formfield::child_components $form_fields] {$f name}]
     #ns_log notice "\nORIG $field_names \NEW $field_names_with_child_components"
-    
+
     lassign [:get_form_data -field_names $field_names_with_child_components $form_fields] validation_errors category_ids
     if {$validation_errors == 0} {
       if {$last_instance_attributes eq ${:instance_attributes}} {
         ns_log notice "UPDATE CONFIG ... nothing has changed"
       } else {
         ns_log notice "UPDATE CONFIG ... no validation_errors -> SAVE"
-        
+
         :update_attribute_from_slot [:find_slot instance_attributes] ${:instance_attributes}
-        
+
         if {[dict exists $last_instance_attributes time_window]} {
           set old_time_window [dict get $last_instance_attributes time_window]
-          set new_time_window [dict get ${:instance_attributes} time_window]          
+          set new_time_window [dict get ${:instance_attributes} time_window]
           if {$old_time_window ne $new_time_window} {
             ns_log notice "UPDATE CONFIG time_window $new_time_window"
             :AM time_window_setup [self] -time_window $new_time_window
             ns_log notice "UPDATE CONFIG time_window $new_time_window DONE"
           }
-        }        
+        }
       }
       ns_return 200 text/plain OK
     } else {
