@@ -6838,6 +6838,7 @@ namespace eval ::xowf::test_item {
       #
       # @result list of dicts describing the form fields.
       #
+      set describe_infos {}
 
       if {[$form_obj property item_type] eq "Composite"} {
         #
@@ -6851,10 +6852,15 @@ namespace eval ::xowf::test_item {
         set form_objs [[$form_obj package_id] instantiate_forms \
                            -forms [join [split $selection \n] |] \
                            -default_lang en]
-        return [join [lmap form_obj $form_objs {:describe_form -asHTML=$asHTML -field_name $field_name $form_obj}]]
-      }
 
-      set fc [$form_obj property form_constraints]
+        set describe_infos [join [lmap form_obj_tmp $form_objs {
+                                    set describe_info [join [:describe_form -field_name $field_name $form_obj_tmp]]
+                                    list [lappend describe_info is_composite_subquestion 1]
+                                }]]
+        set fc {selection:form_page}
+      } else {
+        set fc [$form_obj property form_constraints]
+      }
 
       #
       # We might be willing in the future to get the full set of all
@@ -6867,12 +6873,12 @@ namespace eval ::xowf::test_item {
 
       set form_fields [$form_obj create_form_fields_from_form_constraints \
                            -lookup $fc]
-      set describe_infos [lmap form_field $form_fields {
+      set ff_describe_infos [lmap form_field $form_fields {
         $form_field describe -field_name $field_name
       }]
 
       #ns_log notice "describe_form [$form_obj name]: $question_infos"
-      set describe_infos [:pretty_nr_alternatives $describe_infos]
+      set describe_infos [:pretty_nr_alternatives "$ff_describe_infos $describe_infos"]
       if {!$asHTML} {
         #ns_log notice "OOO [$form_obj name] early exit $describe_infos"
         return $describe_infos
@@ -7166,35 +7172,40 @@ namespace eval ::xowf::test_item {
 
       set chunks {}
       foreach form_obj $form_objs {
-        set chunk [lindex [:describe_form $form_obj] 0]
-        set structure ""
-        foreach att {
-          question_structure choice_options sub_questions
-        } {
-          if {[dict exists $chunk $att]} {
-            append structure [dict get $chunk $att]
-            break
-          }
-        }
-        if {[dict exists $chunk available_pool_items]} {
-          append structure \
-              " " [dict get $chunk available_pool_items] " " #xowf.questions# \
-              " " ([dict get $chunk available_pool_item_stats])
-        }
-        if {[dict exists $chunk nrcorrect]} {
-          append structure " " [:pretty_ncorrect [dict get $chunk nrcorrect]]
-        }
-        if {[$obj state] in {done submission_review}
-            && ![dict exists $chunk available_pool_items]
+        foreach chunk [:describe_form $form_obj] {
+          set structure ""
+          foreach att {
+            question_structure choice_options sub_questions
           } {
-          dict set chunk title_value [subst {
-            <a href='$href&fos=[$form_obj item_id]'>[ns_quotehtml [$form_obj title]]</a>
-          }]
-        } else {
-          dict set chunk title_value [ns_quotehtml [$form_obj title]]
+            if {[dict exists $chunk $att]} {
+              append structure [dict get $chunk $att]
+              break
+            }
+          }
+          if {[dict exists $chunk available_pool_items]} {
+            append structure \
+                " " [dict get $chunk available_pool_items] " " #xowf.questions# \
+                " " ([dict get $chunk available_pool_item_stats])
+          }
+          if {[dict exists $chunk nrcorrect]} {
+            append structure " " [:pretty_ncorrect [dict get $chunk nrcorrect]]
+          }
+          if {[dict exists $chunk is_composite_subquestion]} {
+            dict set chunk title_value "&emsp;&emsp;[ns_quotehtml [dict get $chunk question_title]]"
+          } else {
+            if {[$obj state] in {done submission_review}
+                && ![dict exists $chunk available_pool_items]
+              } {
+              dict set chunk title_value [subst {
+                <a href='$href&fos=[$form_obj item_id]'>[ns_quotehtml [$form_obj title]]</a>
+              }]
+            } else {
+              dict set chunk title_value [ns_quotehtml [$form_obj title]]
+            }
+          }
+          dict set chunk structure $structure
+          lappend chunks $chunk
         }
-        dict set chunk structure $structure
-        lappend chunks $chunk
       }
 
 
@@ -7633,6 +7644,9 @@ namespace eval ::xowiki::formfield {
       ::xowiki::formfield::file {
         set type Upload
       }
+      ::xowiki::formfield::form_page {
+        set type Composite
+      }
 
       default {
         set type [:info class]
@@ -7641,6 +7655,7 @@ namespace eval ::xowiki::formfield {
     }
     dict set d type $type
     #ns_log notice "describe [:info class] [${:object} name] -> $d"
+    dict set d question_title [${:object} title]
 
     return $d
   }
