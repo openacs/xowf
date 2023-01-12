@@ -3945,6 +3945,7 @@ namespace eval ::xowf::test_item {
       set withSignature [$examWf property signature 0]
       set examTitle [$examWf title]
       set ctx [::xowf::Context require $examWf]
+      set results ""
 
       set wf [:get_answer_wf $examWf]
       if {$wf eq ""} {
