@@ -290,7 +290,7 @@ Action instproc unpublish_link {obj} {
     if {[llength $results] == 0} {
       dict unset md grades
     } elseif {$grading_scheme_name in {"" "none"}} {
-      dict set grades label "Points"
+      dict set md grades label "#xowf.Points#"
     }
 
     #ns_log notice ALL=$text
