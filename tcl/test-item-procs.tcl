@@ -6484,6 +6484,7 @@ namespace eval ::xowf::test_item {
       {-no_position:switch false}
       {-question_number_label #xowf.question#}
       {-positions:int,0..n ""}
+      {-with_question_count_in_title:boolean false}
       form_objs
     } {
       #
@@ -6509,7 +6510,7 @@ namespace eval ::xowf::test_item {
       }
 
       set question_count_label ""
-      if {!$no_position} {
+      if {$with_question_count_in_title} {
         set question_count_label " / [:question_count $obj]"
       }
 
@@ -7522,6 +7523,7 @@ namespace eval ::xowf::test_item {
                   -with_title=$with_title \
                   -titleless_form=$titleless_form \
                   -with_minutes=$with_minutes \
+                  -with_question_count_in_title true \
                   {*}$extra_flags \
                   -obj $obj \
                   $form_objs]
