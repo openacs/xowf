@@ -7098,10 +7098,20 @@ namespace eval ::xowf::test_item {
       # Provide question info block.
       #
       set HTML [:question_overview_block $obj]
+      append HTML [:question_statistics_block $obj]
 
+      return $HTML
+    }
+
+    #----------------------------------------------------------------------
+    # Class:  Question_manager
+    # Method: question_statistics_block
+    #----------------------------------------------------------------------
+    :public method question_statistics_block {obj} {
       #
       # When we have results, we can provide statistics
       #
+      set HTML ""
       if {[$obj state] in {done submission_review}} {
 
         template::head::add_link -rel stylesheet -href /resources/xowf/test-item.css
