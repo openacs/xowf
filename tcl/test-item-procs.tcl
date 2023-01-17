@@ -5394,6 +5394,16 @@ namespace eval ::xowf::test_item {
       pool_question_obj
     } {
       #
+      # When fc_dict contains no item_types, return empty and signal
+      # in the logfile.
+      #
+      set item_types [dict get $fc_dict item_types]
+      if {[llength $item_types] == 0} {
+        ad_log warning "No item types for this pool question"
+        return
+      }
+
+      #
       # Obtain for the specs in the pool_question_obj potential
       # replacement items.
       #
@@ -5410,7 +5420,6 @@ namespace eval ::xowf::test_item {
       set form_object_item_ids [lmap f $form_objs {$f item_id}]
 
       set pattern [dict get $fc_dict pattern]
-      set item_types [dict get $fc_dict item_types]
       set folder [dict get $fc_dict folder]
 
       set item_ref_info [::$package_id item_ref \
