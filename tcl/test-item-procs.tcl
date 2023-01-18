@@ -7835,6 +7835,7 @@ namespace eval ::xowf::test_item {
       edit               admin
       exam-results       admin
       question-summary   admin
+      question-list      admin
       print-answers      admin
       proctoring-display admin
       print-answer-table admin
