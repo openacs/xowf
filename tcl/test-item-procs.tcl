@@ -5355,6 +5355,7 @@ namespace eval ::xowf::test_item {
     #   - describe_form
     #   - question_summary
     #   - question_info_block
+    #   - question_statistics_block
     #
 
     #----------------------------------------------------------------------
