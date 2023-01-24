@@ -167,7 +167,6 @@ Action create logout \
       if {$return_url ne ""} {
         next
         ad_returnredirect $return_url
-        ad_script_abort
       }
     }
 
