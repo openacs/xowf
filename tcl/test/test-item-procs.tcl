@@ -403,10 +403,49 @@ namespace eval ::xowf::test {
                         -path [dict get $url_info path]/[dict get $url_info tail] \
                         -next_page_must_contain "#xowf.question# 3" \
                         -update [list {*}$reply_fields __action_q.3 "" ] \
-                        ]
+                       ]
 
             acs::test::reply_has_status_code $d3 200
-            set d $d3
+
+            aa_section "... submit the exam (Action logout) with a return_url"
+
+            set d4 [::xowiki::test::edit_form_page \
+                        -last_request $d3 \
+                        -path [dict get $url_info path]/[dict get $url_info tail] \
+                        -update [list __action_logout "" return_url a-url] \
+                       ]
+
+            acs::test::reply_has_status_code $d4 200
+            set d $d4
+
+            set submission_id [[$package_id resolve_page \
+                                    [dict get $url_info path]/[dict get $url_info tail] _] item_id]
+
+            aa_equals "Submission '$submission_id' is in state 'done'" \
+                [::xo::dc get_value get_state {
+                    select state from xowiki_form_instance_item_index
+                    where item_id = :submission_id
+                }] \
+                done
+
+            aa_section "... submit the exam (Action logout) without return_url"
+
+            set d4 [::xowiki::test::edit_form_page \
+                        -last_request $d4 \
+                        -path [dict get $url_info path]/[dict get $url_info tail] \
+                        -update [list __action_logout ""] \
+                       ]
+
+            acs::test::reply_has_status_code $d4 200
+
+            aa_equals "Submission '$submission_id' is in state 'done'" \
+                [::xo::dc get_value get_state {
+                    select state from xowiki_form_instance_item_index
+                    where item_id = :submission_id
+                }] \
+                done
+
+            set d $d4
 
             ###########################################################
             aa_section "Check participants during exam"
