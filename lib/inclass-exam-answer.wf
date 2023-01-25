@@ -166,7 +166,7 @@ Action create logout \
       set return_url [$obj property return_url .]
       if {$return_url ne ""} {
         next
-        ad_returnredirect $return_url
+        ::xo::cc set_parameter return_url $return_url
       }
     }
 
