@@ -934,9 +934,15 @@ namespace eval ::xowiki::formfield {
       #ns_log notice ...fieldName=$fieldName->$value
       #set af answer[incr count]
       set text [dict get $value $fieldName.text]
-      # trim leading <p> since this causes a newline in the checkbox label
-      regexp {^\s*(<p>)(.*)$} $text . . text
-      regexp {^(.*)(</p>)\s*$} $text . text .
+
+      # Trim leading <p> and whitespace. Trimming leading <p> is
+      # necessary since this causes a newline in the checkbox label
+      regsub -all {^(\s|<p>)+} $text "" text
+      regsub -all {(\s|</p>)+$} $text "" text
+      # skip empty entries
+      if {$text eq ""} {
+        continue
+      }
       lappend options [list $text [incr count]]
       lappend correct [dict get $value $fieldName.correct]
       lappend solution [dict get $value $fieldName.solution]
