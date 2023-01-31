@@ -4323,7 +4323,7 @@ namespace eval ::xowf::test_item {
               -participant $participant \
               -question [string trimright $qn _] \
               -achievable $achievable \
-              -achieved [format %.2f $achieved] \
+              -achieved [expr {$achieved eq "" ? "" : [format %.2f $achieved]}] \
               -comment [:dict_value [:dict_value $manual_grading $qn] comment]
         }
       }
