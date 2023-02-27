@@ -1308,7 +1308,7 @@ namespace eval ::xowf {
     set cc [::xo::ConnectionContext new -user_id [$last_context user_id]]
     $package context $cc
     $cc array set form_parameter \
-        [list __object_name [$object name] \
+        [list __object_name [::security::parameter::signed [$object name]] \
              _name [$object name] \
              _nls_language [$last_context locale] \
              __form_action save-form-data \
