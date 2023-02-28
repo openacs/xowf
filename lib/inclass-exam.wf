@@ -47,6 +47,7 @@
 #  - "edit" (for students),
 #  - "exam-results" (for lecturers),
 #  - "poll" (for lecturers),
+#  - "poll-open" (for students),
 #  - "print-answers" (for lecturers),
 #  - "print-participants" (for lecturers),
 #  - "proctor" (for students),
@@ -718,8 +719,13 @@ Action instproc unpublish_link {obj} {
     # Make sure that no-one tries to start the answer workflow in a
     # state different to "published".
     #
-    if {[:property _state] ne "published"} {
-      return [:www-view "<p>Cannot start answer workflow in this state"]
+    if {${:state} ne "published"} {
+      switch ${:state} {
+        done    { set message "<p>#xowf.inclass-exam-closed#" }
+        created { set message [:AM waiting_room_message [self]] }
+        default { set message "<p>#The Exam has not been published#" }
+      }
+      return [:www-view $message]
     } elseif {![:AM allow_answering -examwf [self] -ip [ns_conn peeraddr]]} {
         return [:www-view "<p>[_ xowf.IPrange_not_allowed [list ip [ns_conn peeraddr]]]"]
     } else {
@@ -898,6 +904,17 @@ Action instproc unpublish_link {obj} {
     set answered [:AM get_answer_attributes -state done $wf]
     ns_return 200 text/plain [llength $answered]/[llength $answers]
     #ns_log notice "MASTER POLL [self] ${:name}, returned [llength $answered]/[llength $answers]"
+    ad_script_abort
+  }
+
+  :proc www-poll-open {} {
+    if {${:state} eq "created"} {
+      set time [lc_time_fmt [clock format [clock seconds] -format "%Y-%m-%d %H:%M:%S"] "%Q %T"]
+      ns_return 200 text/plain [subst {{"action": "msg", "msg": "$time"} }]
+    } else {
+      set URL [:pretty_link -query m=answer]
+      ns_return 200 text/plain [subst {{"action": "redirect", "url": "$URL"} }]
+    }
     ad_script_abort
   }
 

@@ -279,5 +279,8 @@
   <msg key="ul_question">File Upload Question</msg>
   <msg key="Value_max">Value must smaller or equal</msg>
   <msg key="Value_min">Value must larger or equal</msg>
+  <msg key="Waiting_Room">Waiting Room</msg>
+  <msg key="waiting_for_exam">Waiting for exam "%title%" to be opened.</msg>
+  <msg key="waiting_redirect">When the exam is opened, you will be automatically redirected.</msg>
   <msg key="without_minutes">without specified minutes</msg>
 </message_catalog>

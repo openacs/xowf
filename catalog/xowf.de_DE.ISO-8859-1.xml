@@ -258,5 +258,8 @@
   <msg key="ul_question">Dateiabgabefrage</msg>
   <msg key="Value_max">Wert muss kleiner oder gleich sein als</msg>
   <msg key="Value_min">Wert muss größer oder gleich sein als</msg>
+  <msg key="Waiting_Room">Warteraum</msg>
+  <msg key="waiting_for_exam">Die Prüfung "%title%" ist noch nicht freigegeben.</msg>
+  <msg key="waiting_redirect">Sobald die Prüfung freigegeben ist, werden sie automatisch weitergeleitet.</msg>  
   <msg key="without_minutes">ohne Bearbeitungszeit</msg>
 </message_catalog>

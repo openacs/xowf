@@ -1749,7 +1749,51 @@ namespace eval ::xowf::test_item {
     #  - last_time_switched_to_state
     #  - state_periods
     #  - time_window_setup
+    #  - waiting_room_message
     #
+
+    #----------------------------------------------------------------------
+    # Class:  Answer_manager
+    # Method: waiting_room_message
+    #----------------------------------------------------------------------
+    :public method waiting_room_message {obj:object} {
+      set message [::xowiki::bootstrap::card \
+                       -title #xowf.Waiting_Room# \
+                       -body [subst {
+                         <p>[_ xowf.waiting_for_exam [list title "[$obj title]"]]
+                         <p><adp:icon name='clock'>  <span id='waiting-msg'></span></p>
+                         #xowf.waiting_redirect#
+                       }]]
+
+      set url [$obj pretty_link -query m=poll-open]
+      template::add_body_script -script [subst -nocommands {
+        (function poll() {
+          setTimeout(function() {
+            var xhttp = new XMLHttpRequest();
+            xhttp.open("GET", '$url', true);
+            xhttp.onreadystatechange = function() {
+              if (this.readyState == 4 && this.status == 200) {
+                var data = JSON.parse(xhttp.response);
+                console.log(data);
+                console.log(data["action"]);
+                console.log(data["msg"]);
+                if (data["action"] == "msg") {
+                  var el = document.querySelector('#waiting-msg');
+                  el.innerHTML = data["msg"];
+                  poll();
+                } else if (data["action"] == "redirect") {
+                  window.location.href =  data["url"];
+                } else {
+                  console.log("something else");
+                }
+              }
+            };
+            xhttp.send();
+          }, 1000);
+        })();
+      }]
+      return $message
+    }
 
     #----------------------------------------------------------------------
     # Class:  Answer_manager
@@ -7835,6 +7879,7 @@ namespace eval ::xowf::test_item {
       view-my-exam   {{item_id read}}
       proctor-answer {{item_id read}}
       proctor        {{item_id read}}
+      poll-open      {{item_id read}}
       view           admin
       poll           admin
       send-participant-message admin
