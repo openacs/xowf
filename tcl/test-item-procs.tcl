@@ -1757,6 +1757,10 @@ namespace eval ::xowf::test_item {
     # Method: waiting_room_message
     #----------------------------------------------------------------------
     :public method waiting_room_message {obj:object} {
+      #
+      # Renders the waiting room message, including the javascript
+      # reacting to actions from the backend.
+      #
       set message [::xowiki::bootstrap::card \
                        -title #xowf.Waiting_Room# \
                        -body [subst {
