@@ -1758,7 +1758,7 @@ namespace eval ::xowf::test_item {
     #----------------------------------------------------------------------
     :public method waiting_room_message {obj:object} {
       #
-      # Renders the waiting room message, including the javascript
+      # Renders the waiting room message, including the JavaScript
       # reacting to actions from the backend.
       #
       set message [::xowiki::bootstrap::card \
@@ -4366,7 +4366,10 @@ namespace eval ::xowf::test_item {
         set participant [acs_user::get_element -user_id $user_id -element username]
         foreach qn [dict keys [dict get $results_dict $user_id]] {
           set achievable [dict get $results_dict $user_id $qn achievable]
-          set achieved [dict get $results_dict $user_id $qn achieved]
+          set achieved [:dict_value [:dict_value $manual_grading $qn] achieved]
+          if {$achieved eq ""} {
+            set achieved [dict get $results_dict $user_id $qn achieved]
+          }
           $table add \
               -participant $participant \
               -question [string trimright $qn _] \
