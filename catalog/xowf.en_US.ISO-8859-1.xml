@@ -7,6 +7,8 @@
   <msg key="Allow_paste_help_text">Is the student allowed to use cut and paste in multiline text fields?</msg>
   <msg key="Allow_spellcheck">Allow spellcheck</msg>
   <msg key="Allow_spellcheck_help_text">Is the built-in spellcheck activated in multiline text fields?</msg>
+  <msg key="Allow_translation">Allow translation of the page</msg>
+  <msg key="Allow_translation_help_text">Is the built-in translation of web pages by the browser allowed?</msg>
   <msg key="alternative">Alternative</msg>
   <msg key="answer">Answer</msg>
   <msg key="answer_columns">Answer Columns</msg>
@@ -259,6 +261,8 @@
   <msg key="Solution">Solution</msg>
   <msg key="Spellcheck_allowed">Spellcheck is activated in multi-line text fields</msg>
   <msg key="Spellcheck_not_allowed">Spellcheck is deactivated in multi-line text fields</msg>
+  <msg key="Translation_allowed">Page translation is allowed</msg>
+  <msg key="Translation_not_allowed">Page translation is not allowed</msg>
   <msg key="Status">State</msg>
   <msg key="sub_question">Sub-Question</msg>
   <msg key="sub_questions">Sub-Questions</msg>

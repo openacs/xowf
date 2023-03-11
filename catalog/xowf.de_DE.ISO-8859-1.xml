@@ -5,6 +5,8 @@
   <msg key="Achievable_points">Erreichbare Punkte</msg>
   <msg key="Allow_paste">Ausschneiden und Einfügen erlaubt</msg>
   <msg key="Allow_paste_help_text">Darf der Studierende in mehrzeiligen Textfeldern Ausschneiden und Einfügen verwenden?</msg>
+  <msg key="Allow_translation">Ist die automatische Übersetzung der Seite erlaubt?</msg>
+  <msg key="Allow_translation_help_text">Darf der Studierende die Seite automatisiert durch Browser-Einstellungen übersetzen?</msg>
   <msg key="alternative">Alternative</msg>
   <msg key="answer">Antwort</msg>
   <msg key="answer_columns">Antwortspalten</msg>
@@ -255,6 +257,8 @@
   <msg key="Time_management">Zeitablauf</msg>
   <msg key="Total-Score">Gesamtbewertung</msg>
   <msg key="Twocol_layout">2-Spaltig</msg>
+  <msg key="Translation_allowed">Automatische Seitenübersetzung ist erlaubt</msg>
+  <msg key="Translation_not_allowed">Automatische Seitenübersetzung ist nicht erlaubt</msg>
   <msg key="ul_question">Dateiabgabefrage</msg>
   <msg key="Value_max">Wert muss kleiner oder gleich sein als</msg>
   <msg key="Value_min">Wert muss größer oder gleich sein als</msg>

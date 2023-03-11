@@ -72,6 +72,7 @@ set :fc_repository {
   {max_items:number,min=1,label=#xowf.Max_items#,help_text=#xowf.Max_items_help_text#}
   {allow_paste:boolean,horizontal=true,default=t,label=#xowf.Allow_paste#,help_text=#xowf.Allow_paste_help_text#}
   {allow_spellcheck:boolean,horizontal=true,default=t,label=#xowf.Allow_spellcheck#,help_text=#xowf.Allow_spellcheck_help_text#}
+  {allow_translation:boolean,horizontal=true,default=f,label=#xowf.Allow_translation#,help_text=#xowf.Allow_translation_help_text#}
   {show_minutes:boolean,horizontal=true,default=t,label=#xowf.Show_minutes#,help_text=#xowf.Show_minutes_help_text#}
   {show_points:boolean,horizontal=true,default=t,label=#xowf.Show_points#,help_text=#xowf.Show_points_help_text#}
   {show_ip:boolean,horizontal=true,default=t,label=#xowf.Show_IP#,help_text=#xowf.Show_IP_help_text#}

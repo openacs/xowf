@@ -293,8 +293,8 @@ proc working_form_loader {ctx form_name} {
   #
   # Disallow spellcheck/paste if required
   #
-  foreach p {paste spellcheck} {
-    if {![$parent_obj property allow_$p true]} {
+  foreach {p default} {paste true spellcheck true translation false} {
+    if {![$parent_obj property allow_$p $default]} {
       :QM disallow_$p $form_obj
     }
   }

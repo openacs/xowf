@@ -6316,6 +6316,18 @@ namespace eval ::xowf::test_item {
 
     #----------------------------------------------------------------------
     # Class:  Question_manager
+    # Method: disallow_translation
+    #----------------------------------------------------------------------
+    :public method disallow_translation {form_obj:object} {
+      #
+      # This function disallows translation of the full page by
+      # seeting the HTML5 "translate" attribute of the body to "no".
+      #
+      ::xo::Page set_property body translate no
+    }
+
+    #----------------------------------------------------------------------
+    # Class:  Question_manager
     # Method: question_randomization_ok
     #----------------------------------------------------------------------
     :method question_randomization_ok {form_obj} {
@@ -7024,7 +7036,8 @@ namespace eval ::xowf::test_item {
       # already working on the exam.
       #
       set modifiable {
-        allow_paste allow_spellcheck show_minutes show_points show_ip
+        allow_paste allow_spellcheck allow_translation
+        show_minutes show_points show_ip
         countdown_audio_alarm grading
       }
       set wf [:AM get_answer_wf $obj]
@@ -7063,7 +7076,8 @@ namespace eval ::xowf::test_item {
                -id config-question \
                -form_constraints $fcrepo \
                -obj $obj {
-                 shuffle_items max_items allow_paste allow_spellcheck
+                 shuffle_items max_items
+                 allow_paste allow_spellcheck allow_translation
                  show_minutes show_points show_ip
                }] \
           [:exam_configuration_block \
@@ -7334,6 +7348,7 @@ namespace eval ::xowf::test_item {
       set max_items    [$obj property max_items ""]
       set time_window  [$obj property time_window ""]
       set allow_spellcheck [$obj property allow_spellcheck true]
+      set allow_translation [$obj property allow_translation false]
 
       append text [subst {<p>
         [expr {$synchronized ? "" : "Non-"}]Synchronized Exam
@@ -7391,6 +7406,7 @@ namespace eval ::xowf::test_item {
         [expr {$randomizationOk ? "#xowf.randomization_for_exam_ok#" : "#xowf.randomization_for_exam_not_ok#"}]<br>
         [expr {$allow_paste ? "#xowf.Cut_and_paste_allowed#" : "#xowf.Cut_and_paste_not_allowed#"}]<br>
         [expr {$allow_spellcheck ? "#xowf.Spellcheck_allowed#" : "#xowf.Spellcheck_not_allowed#"}]<br>
+        [expr {$allow_translation ? "#xowf.Translation_allowed#" : "#xowf.Translation_not_allowed#"}]<br>
         $time_window_msg
         [expr {[llength $published_periods] > 0 ? "<br>#xowf.inclass-exam-open#: [join $published_periods {, }]<br>" : ""}]
         [expr {[llength $review_periods] > 0 ? "#xowf.inclass-exam-review#: [join $review_periods {, }]<br>" : ""}]
