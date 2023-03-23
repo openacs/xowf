@@ -4179,7 +4179,7 @@ namespace eval ::xowf::test_item {
         $recutil destroy
       }
 
-      if {$with_grading_table && $autograde} {
+      if {$with_grading_table && $autograde && $grading ne "none"} {
         append HTML <p>[:grading_table -csv ${:grade_csv} ${:grade_dict}]</p>
         #
         # The following lines are convenient for debugging
