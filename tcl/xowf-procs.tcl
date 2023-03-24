@@ -1750,7 +1750,6 @@ namespace eval ::xowf {
 
     set message_id [mime::uniqueID]
     set message_date [acs_mail_lite::utils::build_date]
-    #set tokens [acs_mail_lite::utils::build_body -mime_type text/html $body]
     set tokens [mime::initialize \
                     -canonical $mime_type \
                     -encoding "quoted-printable" -string $body]
@@ -1778,7 +1777,6 @@ namespace eval ::xowf {
                           -canonical application/ics -param [list name "invite.ics"] \
                           -header [list "Content-Disposition" "attachment; filename=\"todo.ics\""] \
                           -encoding "quoted-printable" -string $ical]
-      #lappend tokens [acs_mail_lite::utils::build_body -mime_type {application/ics; name="invite.ics"} $ical]
     }
 
     if {[llength $tokens]>1} {
