@@ -435,6 +435,20 @@ namespace eval ::xowf::test {
             }
         }
 
+    aa_register_case -cats {
+        smoke production_safe
+    } -procs {
+        util::which
+    } xowf_exec_dependencies {
+        Test external command dependencies for this package.
+    } {
+        foreach cmd [list \
+                         [::util::which qrencode] \
+                    ] {
+            aa_true "'$cmd' is executable" [file executable $cmd]
+        }
+    }
+
 }
 
 #
