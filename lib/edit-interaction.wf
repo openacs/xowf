@@ -81,7 +81,16 @@ State created \
     set item_type [$obj property item_type]
     if {$item_type eq ""} {
       set item_type [ns_queryget p.item_type]
-      if {$item_type eq ""} {
+
+      # validate item_type
+      set item_types {}
+      foreach class [::xowiki::formfield::TestItemField info subclass -closure] {
+        if {[$class exists item_type]} {
+          lappend item_types {*}[$class set item_type]
+        }
+      }
+
+      if {$item_type eq "" || $item_type ni $item_types} {
         set item_type ShortText
       }
       $obj set_property -new 1 item_type $item_type
