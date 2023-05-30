@@ -110,7 +110,7 @@ namespace eval ::xowiki::formfield {
     } else {
       set correct_when "AND $correct_whens"
     }
-    #ns_log notice FINAL-correct_when='$correct_when'
+    ns_log notice FINAL-correct_when([self])='$correct_when'
     return $correct_when
   }
 
@@ -659,7 +659,9 @@ namespace eval ::xowiki::formfield {
     dict set fc_dict cols [:get_named_sub_component_value columns]
 
     if {${:auto_correct}} {
-      dict set fc_dict correct_when [:comp_correct_when_from_value [:get_named_sub_component_value correct_when]]
+      dict set fc_dict correct_when \
+          [:comp_correct_when_from_value \
+               [:get_named_sub_component_value correct_when]]
     }
 
     set form [:form_markup -interaction text -intro_text $intro_text -body @answer@]
@@ -6391,7 +6393,7 @@ namespace eval ::xowf::test_item {
               set op ""
               regexp {^(\S+)\s} $a . op
               if {$op ni {eq lt le gt ge btwn AND}} {
-                ns_log notice "question_info [$form_obj name]: not suited for autoGrade: '$a'"
+                ns_log notice "question_info [$form_obj name]: not suited for autoGrade: '$a' op <$op>"
                 set autoGrade 0
                 break
               }
@@ -6424,6 +6426,7 @@ namespace eval ::xowf::test_item {
       } else {
         set autoGrade 0
       }
+      ns_log notice "question_is_autograded -> $autoGrade"
       return $autoGrade
     }
 
