@@ -6323,7 +6323,7 @@ namespace eval ::xowf::test_item {
     :public method disallow_translation {form_obj:object} {
       #
       # This function disallows translation of the full page by
-      # seeting the HTML5 "translate" attribute of the body to "no".
+      # setting the HTML5 "translate" attribute of the body to "no".
       #
       ::xo::Page set_property body translate no
     }
