@@ -6435,18 +6435,17 @@ namespace eval ::xowf::test_item {
     # Class:  Question_manager
     # Method: hint_box
     #----------------------------------------------------------------------
-    :method hint_box {-title -body -CSSclass } {
+    :method hint_box {-title -body {-CSSclass ""}} {
       #
       #
       # @return HTML
       #
       set HTML ""
       if {$body ne ""} {
-        #ns_log notice "FFF adding $CSSclass '$body'"
-        append HTML "<div class='panel panel-default $CSSclass'>" \
-          "<div class='panel-heading'>$title</div>\n" \
-          "<div class='panel-body'>$body</div>" \
-            </div>\n
+        append HTML [::xowiki::bootstrap::card \
+                         -title $title \
+                         -body $body \
+                         -CSSclass $CSSclass]
       }
       return $HTML
     }
@@ -7304,33 +7303,33 @@ namespace eval ::xowf::test_item {
         }
       }
 
-
-      append HTML [subst {
-        <div class="panel panel-default">
-        <div class="panel-heading">#xowf.question_summary#</div>
-        <div class="panel-body">
-        <div class='table-responsive'><table class='question_summary table table-condensed'>
-        <tr><th></th><th>#xowf.question_structure#</th>
-        <th style='text-align: center;'>#xowf.Minutes#</th>
-        <th style='text-align: center;'>#xowf.Points#</th>
-        <th style='text-align: center;'>#xowf.Shuffle#</th>
-        <th style='text-align: center;'></th>
-        </tr>
+      set body [ns_trim -delimiter | {
+        |<div class='table-responsive'><table class='question_summary table table-condensed'>
+        | <tr>
+        |  <th></th><th>#xowf.question_structure#</th>
+        |  <th style='text-align: center;'>#xowf.Minutes#</th>
+        |  <th style='text-align: center;'>#xowf.Points#</th>
+        |  <th style='text-align: center;'>#xowf.Shuffle#</th>
+        |  <th style='text-align: center;'></th>
+        | </tr>
       }]
 
       foreach chunk $chunks {
-        append HTML [subst {
-          <tr>
-          <td>[:dict_value $chunk title_value]</td>
-          <td>[:dict_value $chunk type]: [:dict_value $chunk structure]</td>
-          <td style='text-align: center;'>[:dict_value $chunk Minutes]</td>
-          <td style='text-align: center;'>[:dict_value $chunk Points]</td>
-          <td style='text-align: center;'>[:pretty_shuffle [:dict_value $chunk shuffle]]</td>
-          <td style='text-align: center;'>[:dict_value $chunk grading]</td>
-          </tr>}]
+        append body [subst [ns_trim -delimiter | {
+          | <tr>
+          |  <td>[:dict_value $chunk title_value]</td>
+          |  <td>[:dict_value $chunk type]: [:dict_value $chunk structure]</td>
+          |  <td style='text-align: center;'>[:dict_value $chunk Minutes]</td>
+          |  <td style='text-align: center;'>[:dict_value $chunk Points]</td>
+          |  <td style='text-align: center;'>[:pretty_shuffle [:dict_value $chunk shuffle]]</td>
+          |  <td style='text-align: center;'>[:dict_value $chunk grading]</td>
+          | </tr>
+        }]]
       }
-      append HTML "</table></div></div></div>\n"
 
+      return [::xowiki::bootstrap::card \
+                  -title #xowf.question_summary# \
+                  -body $body]
       return $HTML
     }
 
