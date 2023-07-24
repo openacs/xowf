@@ -166,7 +166,7 @@ namespace eval ::xowiki::includelet {
   #
   # exam-top-includelet
   #
-  Class exam-top-includelet -superclass ::xowiki::Includelet \
+  Class create exam-top-includelet -superclass ::xowiki::Includelet \
       -parameter {
         {__decoration plain}
         {parameter_declaration {
