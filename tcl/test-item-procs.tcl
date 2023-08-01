@@ -7326,6 +7326,9 @@ namespace eval ::xowf::test_item {
           | </tr>
         }]]
       }
+      append body [ns_trim -delimiter | {
+        |</div>
+      }]
 
       return [::xowiki::bootstrap::card \
                   -title #xowf.question_summary# \
