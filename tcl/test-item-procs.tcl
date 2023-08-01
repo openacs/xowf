@@ -7327,7 +7327,7 @@ namespace eval ::xowf::test_item {
         }]]
       }
       append body [ns_trim -delimiter | {
-        |</div>
+        |</table></div>
       }]
 
       return [::xowiki::bootstrap::card \
