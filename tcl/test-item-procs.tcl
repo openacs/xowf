@@ -2625,7 +2625,7 @@ namespace eval ::xowf::test_item {
 
             if (points != "") {
               //
-              // Number valdation
+              // Number validation
               //
               if (parseFloat(points) > parseFloat(pointsInput.max) || parseFloat(points) < parseFloat(pointsInput.min)){
                 if (parseFloat(points) > parseFloat(pointsInput.max)) {
@@ -2807,7 +2807,7 @@ namespace eval ::xowf::test_item {
       # @return HTML block
       #
       set revision_sets [$answerObj get_revision_sets]
-      set parent_revsion_sets [[$answerObj parent_id] get_revision_sets]
+      set parent_revision_sets [[$answerObj parent_id] get_revision_sets]
       set item_id [$answerObj item_id]
       set live_revision_id [xo::dc get_value -prepare integer live_revision_id {
         select live_revision from cr_items where item_id = :item_id
@@ -2873,7 +2873,7 @@ namespace eval ::xowf::test_item {
         set revision_sets [:revisions_up_to $revision_sets $live_revision_id]
       }
       set toClock [clock scan [::xo::db::tcl_date [ns_set get [lindex $revision_sets end] last_modified] tz]]
-      set last_published [:last_time_switched_to_state $parent_revsion_sets -state published -before $toClock]
+      set last_published [:last_time_switched_to_state $parent_revision_sets -state published -before $toClock]
       #ns_log notice "LAST PUBLISHED $last_published"
       set duration [:get_duration -exam_published_time $last_published $revision_sets]
 
@@ -7330,7 +7330,6 @@ namespace eval ::xowf::test_item {
       return [::xowiki::bootstrap::card \
                   -title #xowf.question_summary# \
                   -body $body]
-      return $HTML
     }
 
     #----------------------------------------------------------------------
