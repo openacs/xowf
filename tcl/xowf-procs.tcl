@@ -509,14 +509,15 @@ namespace eval ::xowf {
     #        V=[$object info vars] auto [:autoname]"
 
     set package_id [$object package_id]
-    return [::xowiki::Form new -destroy_on_cleanup \
+    return [::xowiki::Form new \
                 -package_id $package_id \
                 -parent_id [::$package_id folder_id] \
                 -name "Auto-Form" \
                 -anon_instances [:autoname] \
                 -form {} \
                 -text [list $template text/html] \
-                -form_constraints [:auto_form_constraints]]
+                -form_constraints [:auto_form_constraints] \
+                -destroy_on_cleanup ]
   }
 
   Context instproc force_named_form {form_name} {
@@ -628,14 +629,15 @@ namespace eval ::xowf {
       # The $form_object is in reality an xowiki Page, make it look
       # like a form (with form buttons).
       #
-      set form_object [::xowiki::Form new -destroy_on_cleanup \
+      set form_object [::xowiki::Form new \
                            -package_id $package_id \
                            -parent_id [::$package_id folder_id] \
                            -name "Auto-Form" \
                            -anon_instances [:autoname] \
                            -form "<form>[$form_object get_html_from_content [::$form_id text]]</form>" \
                            -text "" \
-                           -form_constraints ""]
+                           -form_constraints "" \
+                           -destroy_on_cleanup ]
     }
 
     set :form_obj $form_object
@@ -829,8 +831,8 @@ namespace eval ::xowf {
       regsub -all \r\n [$obj wf_property workflow_definition] \n workflow_definition
       $wfContextClass create $ctx \
           -object $obj \
-          -destroy_on_cleanup \
-          -workflow_definition $workflow_definition
+          -workflow_definition $workflow_definition \
+          -destroy_on_cleanup
       $ctx initialize_context $obj
     }
 
@@ -1542,11 +1544,12 @@ namespace eval ::xowf {
           if {$success} break
         }
         if {$success} {
-          set f [$formfieldButtonClass new -destroy_on_cleanup \
+          set f [$formfieldButtonClass new \
                      -name __action_[namespace tail $action] \
                      -form_button_wrapper_CSSclass [$action wrapper_CSSclass] \
                      -label_noquote [$action label_noquote] \
                      -CSSclass $CSSclass \
+                     -destroy_on_cleanup \
                     ]
           if {[$action extra_css_class] ne ""} {
             #$f append form_button_CSSclass " " [$action extra_css_class]

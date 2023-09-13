@@ -78,7 +78,7 @@ namespace eval ::xowf {
       set name [::xowiki::autoname new \
                     -name [::$form_id name] \
                     -parent_id $owner_id]
-      set f [::xowiki::FormPage new -destroy_on_cleanup \
+      set f [::xowiki::FormPage new \
                  -package_id $package_id \
                  -parent_id $owner_id \
                  -name $name \
@@ -87,7 +87,8 @@ namespace eval ::xowf {
                  -publish_status "production" \
                  -publish_date $ansi_time \
                  -instance_attributes $instance_attributes \
-                 -page_template $form_id]
+                 -page_template $form_id \
+                 -destroy_on_cleanup ]
       $f save_new -use_given_publish_date true -creation_user ${:party_id}
       #:log "--at formpage saved"
     }

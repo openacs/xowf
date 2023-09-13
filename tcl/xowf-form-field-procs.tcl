@@ -21,18 +21,20 @@ namespace eval ::xowiki::formfield {
   } -extend_slot_default validator workflow
 
   workflow_definition instproc as_graph {} {
-    set ctx [::xowf::Context new -destroy_on_cleanup -object ${:object} \
+    set ctx [::xowf::Context new -object ${:object} \
                  -all_roles true -in_role none \
-                 -workflow_definition [:value] ]
+                 -workflow_definition [:value] \
+                 -destroy_on_cleanup ]
     return [$ctx as_graph -dpi ${:dpi} -style "max-width: 20%;"]
   }
 
   workflow_definition instproc check=workflow {value} {
     # Do we have a syntax error in the workflow definition?
     if {![catch {set ctx [::xowf::Context new \
-                              -destroy_on_cleanup -object ${:object} \
+                              -object ${:object} \
                               -all_roles true \
-                              -workflow_definition [:value]]} errorMsg]} {
+                              -workflow_definition [:value] \
+                              -destroy_on_cleanup ]} errorMsg]} {
       $ctx initialize_context ${:object}
       ${:object} wf_context $ctx
       unset errorMsg
@@ -71,9 +73,10 @@ namespace eval ::xowiki::formfield {
   current_state instproc render_input {} {
     next
     if {[:as_graph]} {
-      set ctx [::xowf::Context new -destroy_on_cleanup -object ${:object} \
+      set ctx [::xowf::Context new -object ${:object} \
                    -all_roles true -in_role none \
-                   -workflow_definition [${:object} wf_property workflow_definition] ]
+                   -workflow_definition [${:object} wf_property workflow_definition] \
+                   -destroy_on_cleanup ]
       #set ctx   [::xowf::Context require ${:object}]
       set graph [$ctx as_graph -current_state [:value] -visited [${:object} visited_states]  -style "max-height: 250px;"]
       ::html::div -style "width: 35%; float: right;" {
