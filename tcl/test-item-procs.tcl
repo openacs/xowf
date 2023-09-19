@@ -2622,6 +2622,7 @@ namespace eval ::xowf::test_item {
             var points      = pointsInput.value;
             var pointsFormGroup = pointsInput.parentElement.parentElement;
             var percentage  = "";
+            let hiddenCSSclass = '[::xowiki::CSS class d-none]';
 
             if (points != "") {
               //
@@ -2634,12 +2635,12 @@ namespace eval ::xowf::test_item {
                   helpBlock.textContent = '[_ xowf.Value_min] ' + pointsInput.min;
                 }
                 pointsFormGroup.classList.add('has-error');
-                helpBlock.classList.remove('hidden');
+                helpBlock.classList.remove(hiddenCSSclass);
                 ev.preventDefault();
                 return false;
               } else {
                 pointsFormGroup.classList.remove('has-error');
-                helpBlock.classList.add('hidden');
+                helpBlock.classList.add(hiddenCSSclass);
               }
               var achievable = gradingBox.dataset.achievable;
               if (achievable != "") {
@@ -2648,7 +2649,7 @@ namespace eval ::xowf::test_item {
 
             } else {
               pointsFormGroup.classList.remove('has-error');
-              helpBlock.classList.add('hidden');
+              helpBlock.classList.add(hiddenCSSclass);
             }
 
             document.querySelector('#' + id + ' .points').textContent = points;
@@ -2657,9 +2658,9 @@ namespace eval ::xowf::test_item {
             gradingBox.dataset.achieved = points;
             gradingBox.dataset.comment = comment;
             if (comment == "") {
-              document.querySelector('#' + id + ' .feedback-label').classList.add('hidden');
+              document.querySelector('#' + id + ' .feedback-label').classList.add(hiddenCSSclass);
             } else {
-              document.querySelector('#' + id + ' .feedback-label').classList.remove('hidden');
+              document.querySelector('#' + id + ' .feedback-label').classList.remove(hiddenCSSclass);
             }
 
             // Copy the content of the thumbnail files wrapper from the dialog
@@ -6516,13 +6517,13 @@ namespace eval ::xowf::test_item {
             }
             if {$with_grading_box ne ""} {
               set question_name [:FL form_name_based_attribute_stem [$question_obj name]]
-              set visible [expr {$with_grading_box eq "hidden" ? "hidden" : ""}]
+              set hiddenCSSclass [expr {$with_grading_box eq "hidden" ? [::xowiki::CSS class d-none] : ""}]
               if {$with_grading_box eq "hidden"} {
                 set question_name answer_$question_name
               }
               set data_attribute [expr {[::xowiki::CSS toolkit] eq "bootstrap5" ? "data-bs" : "data"}]
               append full_form [subst [ns_trim -delimiter | {
-                |<div id='grading-box-[incr count]' class='grading-box $visible'
+                |<div id='grading-box-[incr count]' class='grading-box $hiddenCSSclass'
                 |     data-question_name='$question_name' data-title='[$question_obj title]'
                 |     data-question_id='[$question_obj item_id]'>
                 |  #xowf.Points#: <span class='points'></span>
