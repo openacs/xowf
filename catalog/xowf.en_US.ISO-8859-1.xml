@@ -39,7 +39,7 @@
   <msg key="Countdown_audio_alarm">Audio alarm for countdown timer</msg>
   <msg key="Countdown_audio_alarm_help_text">Include acoustic audio signal to alert students about the approaching time expiration (maybe not wanted for class-room exams)</msg>
   <msg key="Countdown_timer_expired">The time is up!</msg>
-  <msg key="Countdown_timer_is_not_displayed">Countdown timer is not displayed</msg>  
+  <msg key="Countdown_timer_is_not_displayed">Countdown timer is not displayed</msg>
   <msg key="Created_Assessments">Created Assessments</msg>
   <msg key="Created_Questions">Created Questions</msg>
   <msg key="Cut_and_paste_allowed">Cut and Paste is allowed in multi-line text fields</msg>
@@ -55,9 +55,9 @@
   <msg key="Exam_published">Exam Published</msg>
   <msg key="exam_review_not_possible">Automated exam review not possible</msg>
   <msg key="exam_review_possible">Automated exam review possible</msg>
-  <msg key="exam_summary">Summary</msg>
   <msg key="exam_statistics_participant">Exam Statistics per Participant</msg>
   <msg key="exam_statistics_question">Exam Statistics per Question</msg>
+  <msg key="exam_summary">Summary</msg>
   <msg key="Exam_time_window">Exam Time Window</msg>
   <msg key="Exam_time_window_help_text">Optional time window for automatically open/close exam. When these values are set, manual opening and closing of the exam is still possible.</msg>
   <msg key="Exercise">Exercise</msg>
@@ -65,13 +65,15 @@
   <msg key="exercise_mc">Multiple Choice Exercise</msg>
   <msg key="exercise_ot">Open Text Exercise</msg>
   <msg key="exercise_sc">Single Choice Exercise</msg>
-  <msg key="export_results">Export Results</msg>
-  <msg key="export_results_title">Export Results and Comments per Question</msg>
-  <msg key="export_points_title">Export Points</msg>
   <msg key="export_grades_title">Export Grades</msg>
   <msg key="export_points_and_grades_title">Export Points and Grades</msg>
+  <msg key="export_points_title">Export Points</msg>
+  <msg key="export_results">Export Results</msg>
+  <msg key="export_results_title">Export Results and Comments per Question</msg>
   <msg key="feedback">Feedback</msg>
   <msg key="feedback_correct">Feedback Correct</msg>
+  <msg key="Feedback_files">Feedback Files</msg>
+  <msg key="Feedback_files_dnd">Drag &amp; Drop Feedback files here</msg>
   <msg key="feedback_incorrect">Feedback Incorrect</msg>
   <msg key="first_question">First Question</msg>
   <msg key="first_question_title">Save and go to first question</msg>
@@ -79,8 +81,6 @@
   <msg key="flag_delete_title">Remove flag for this question</msg>
   <msg key="flag_set">Flag this Question</msg>
   <msg key="flag_set_title">Flag this question for later</msg>
-  <msg key="Feedback_files">Feedback Files</msg>    
-  <msg key="Feedback_files_dnd">Drag &amp; Drop Feedback files here</msg>  
   <msg key="Fresh_item_type_interaction_name">Fresh &#39;%item_type%&#39; interaction (%name%)</msg>
   <msg key="General_feedback">General Feedback</msg>
   <msg key="Goto_this_revision">Go to this revision</msg>
@@ -193,8 +193,8 @@
   <msg key="panel_GradingRoundPoints">%achievedPoints% (rounded %achievedPointsRounded%) of possible %totalPoints% points, %percentage%%, grade: %grade%</msg>
   <msg key="participant">Participant</msg>
   <msg key="Participants">Participants</msg>
-  <msg key="Percentage">Percentage</msg>
   <msg key="participants_answered_question">participants answered this question</msg>
+  <msg key="Percentage">Percentage</msg>
   <msg key="please_answer">Please answer</msg>
   <msg key="Point">Point</msg>
   <msg key="Points">Points</msg>
@@ -261,8 +261,6 @@
   <msg key="Solution">Solution</msg>
   <msg key="Spellcheck_allowed">Spellcheck is activated in multi-line text fields</msg>
   <msg key="Spellcheck_not_allowed">Spellcheck is deactivated in multi-line text fields</msg>
-  <msg key="Translation_allowed">Page translation is allowed</msg>
-  <msg key="Translation_not_allowed">Page translation is not allowed</msg>
   <msg key="Status">State</msg>
   <msg key="sub_question">Sub-Question</msg>
   <msg key="sub_questions">Sub-Questions</msg>
@@ -279,12 +277,14 @@
   <msg key="Time_budget_help_text">Increase time budget for handicapped students</msg>
   <msg key="Time_management">Time Management</msg>
   <msg key="Total-Score">Total Score</msg>
+  <msg key="Translation_allowed">Page translation is allowed</msg>
+  <msg key="Translation_not_allowed">Page translation is not allowed</msg>
   <msg key="Twocol_layout">2 columns</msg>
   <msg key="ul_question">File Upload Question</msg>
   <msg key="Value_max">Value must smaller or equal</msg>
   <msg key="Value_min">Value must larger or equal</msg>
-  <msg key="Waiting_Room">Waiting Room</msg>
-  <msg key="waiting_for_exam">Waiting for exam "%title%" to be opened.</msg>
+  <msg key="waiting_for_exam">Waiting for exam &#34;%title%&#34; to be opened.</msg>
   <msg key="waiting_redirect">When the exam is opened, you will be automatically redirected.</msg>
+  <msg key="Waiting_Room">Waiting Room</msg>
   <msg key="without_minutes">without specified minutes</msg>
 </message_catalog>

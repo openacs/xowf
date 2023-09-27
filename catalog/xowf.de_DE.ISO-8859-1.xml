@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 <message_catalog package_key="xowf" locale="de_DE" charset="ISO-8859-1">
 
-  <msg key="Achieved_points">Erreichte Punkte</msg>
   <msg key="Achievable_points">Erreichbare Punkte</msg>
+  <msg key="Achieved_points">Erreichte Punkte</msg>
   <msg key="Allow_paste">Ausschneiden und Einfügen erlaubt</msg>
   <msg key="Allow_paste_help_text">Darf der Studierende in mehrzeiligen Textfeldern Ausschneiden und Einfügen verwenden?</msg>
   <msg key="Allow_translation">Ist die automatische Übersetzung der Seite erlaubt?</msg>
@@ -32,7 +32,7 @@
   <msg key="Countdown_audio_alarm">Audioalarm für den Countdown-Timer</msg>
   <msg key="Countdown_audio_alarm_help_text">Inkludiere akustisches Signal, das Studierende vor Ablauf der Bearbeitungsfrist alarmiert (ungeeignet für Prüfungen in Schulungsräumen)</msg>
   <msg key="Countdown_timer_expired">Die Zeit ist abgelaufen!</msg>
-  <msg key="Countdown_timer_is_not_displayed">Countdown-Timer wird nicht angezeigt</msg>  
+  <msg key="Countdown_timer_is_not_displayed">Countdown-Timer wird nicht angezeigt</msg>
   <msg key="Created_Assessments">Verfügbare Assessments</msg>
   <msg key="Created_Questions">Verfügbare Fragen</msg>
   <msg key="Cut_and_paste_allowed">Ausschneiden und Einfügen in mehrzeiligen Textfeldern ist erlaubt.</msg>
@@ -47,9 +47,9 @@
   <msg key="Exam_published">Veröffentlichung der Prüfung</msg>
   <msg key="exam_review_not_possible">Automatische Einsicht nicht möglich.</msg>
   <msg key="exam_review_possible">Automatische Einsicht möglich.</msg>
-  <msg key="exam_summary">Zusammenfassung</msg>
   <msg key="exam_statistics_participant">Prüfungsstatistik nach Teilnehmern</msg>
-  <msg key="exam_statistics_question">Prüfungsstatistik nach Beispielen</msg>  
+  <msg key="exam_statistics_question">Prüfungsstatistik nach Beispielen</msg>
+  <msg key="exam_summary">Zusammenfassung</msg>
   <msg key="Exam_time_window">Zeitfenster für Prüfung</msg>
   <msg key="Exam_time_window_help_text">Optionales automatisches Freischalten/Schließen der Prüfung. Auch wenn das Zeitfenster aktiviert ist, kann die Prüfung manuell freigeschaltet/geschlossen werden.</msg>
   <msg key="Exercise">Beispiel</msg>
@@ -57,13 +57,15 @@
   <msg key="exercise_mc">Multiple-Choice-Übung</msg>
   <msg key="exercise_ot">Übung mit offenem Text</msg>
   <msg key="exercise_sc">Single-Choice-Übung</msg>
+  <msg key="export_grades_title">Exportiere Noten</msg>
+  <msg key="export_points_and_grades_title">Exportiere Punkte und Noten</msg>
+  <msg key="export_points_title">Exportiere Punkte</msg>
   <msg key="export_results">Exportiere Ergebnisse</msg>
   <msg key="export_results_title">Exportiere Ergebnisse und Kommentare pro Frage</msg>
-  <msg key="export_points_title">Exportiere Punkte</msg>
-  <msg key="export_grades_title">Exportiere Noten</msg>
-  <msg key="export_points_and_grades_title">Exportiere Punkte und Noten</msg>  
   <msg key="feedback">Feedback</msg>
   <msg key="feedback_correct">Feedback richtig</msg>
+  <msg key="Feedback_files">Feedback-Dateien</msg>
+  <msg key="Feedback_files_dnd">Ziehen Sie Feedback-Dateien mit Drag &amp; Drop hierher</msg>
   <msg key="feedback_incorrect">Feedback falsch</msg>
   <msg key="first_question">Erste Frage</msg>
   <msg key="first_question_title">Speichern und zur ersten Frage gehen</msg>
@@ -71,8 +73,6 @@
   <msg key="flag_delete_title">Markierung dieser Frage löschen</msg>
   <msg key="flag_set">Frage markieren</msg>
   <msg key="flag_set_title">Frage für eine spätere Bearbeitung markieren</msg>
-  <msg key="Feedback_files">Feedback-Dateien</msg>    
-  <msg key="Feedback_files_dnd">Ziehen Sie Feedback-Dateien mit Drag &amp; Drop hierher</msg>  
   <msg key="Fresh_item_type_interaction_name">Frische &#39;%item_type%&#39; Interaktion (%name%)</msg>
   <msg key="General_feedback">Generelles Feedback</msg>
   <msg key="Goto_this_revision">Gehe zu dieser Version</msg>
@@ -174,10 +174,11 @@
   <msg key="participant">Teilnehmer</msg>
   <msg key="Participants">Teilnehmer</msg>
   <msg key="participants_answered_question">Teilnehmer haben diese Frage beantwortet</msg>
+  <msg key="Percentage">Prozent</msg>
   <msg key="please_answer">Bitte beantworten Sie</msg>
   <msg key="Point">Punkt</msg>
   <msg key="Points">Punkte</msg>
-  <msg key="Points_and_grades">Punkte und Noten</msg>  
+  <msg key="Points_and_grades">Punkte und Noten</msg>
   <msg key="pool_question">Pool-Frage</msg>
   <msg key="pool_question_folder">Fragenpool</msg>
   <msg key="pool_question_item_types">Fragentypen</msg>
@@ -192,7 +193,6 @@
   <msg key="Proctoring_options_help_text">Detailangaben, welche Funktionen der Online-Beaufsichtigung genutzt werden sollen</msg>
   <msg key="Proctoring_record">Aufnahmen speichern</msg>
   <msg key="Proctoring_record_help_text">Speichere die Aufnahmen der Teilnehmer</msg>
-  <msg key="Percentage">Prozent</msg>
   <msg key="question">Frage</msg>
   <msg key="Question_management">Fragenenstellungen</msg>
   <msg key="question_selection">Fragenauswahl</msg>
@@ -256,14 +256,14 @@
   <msg key="Time_budget_help_text">Erhöhe die Bearbeitungsdauer auf den angeführten relativen Wert</msg>
   <msg key="Time_management">Zeitablauf</msg>
   <msg key="Total-Score">Gesamtbewertung</msg>
-  <msg key="Twocol_layout">2-Spaltig</msg>
   <msg key="Translation_allowed">Automatische Seitenübersetzung ist erlaubt</msg>
   <msg key="Translation_not_allowed">Automatische Seitenübersetzung ist nicht erlaubt</msg>
+  <msg key="Twocol_layout">2-Spaltig</msg>
   <msg key="ul_question">Dateiabgabefrage</msg>
   <msg key="Value_max">Wert muss kleiner oder gleich sein als</msg>
   <msg key="Value_min">Wert muss größer oder gleich sein als</msg>
+  <msg key="waiting_for_exam">Die Prüfung &#34;%title%&#34; ist noch nicht freigegeben.</msg>
+  <msg key="waiting_redirect">Sobald die Prüfung freigegeben ist, werden sie automatisch weitergeleitet.</msg>
   <msg key="Waiting_Room">Warteraum</msg>
-  <msg key="waiting_for_exam">Die Prüfung "%title%" ist noch nicht freigegeben.</msg>
-  <msg key="waiting_redirect">Sobald die Prüfung freigegeben ist, werden sie automatisch weitergeleitet.</msg>  
   <msg key="without_minutes">ohne Bearbeitungszeit</msg>
 </message_catalog>
