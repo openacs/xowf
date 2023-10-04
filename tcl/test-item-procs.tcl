@@ -2818,7 +2818,7 @@ namespace eval ::xowf::test_item {
 
       if {$view eq "default"} {
         set url [ad_return_url]&id=$item_id
-        set revisionDetails "#xowf.nr_changes#: <a href='$url'>[llength $revision_sets]</a><br>"
+        set revisionDetails "#xowf.nr_changes#: <a href='[ns_quotehtml $url]'>[llength $revision_sets]</a><br>"
       } elseif {$view eq "student"} {
         set revisionDetails ""
       } elseif {$view eq "revision_overview"} {
@@ -2850,7 +2850,7 @@ namespace eval ::xowf::test_item {
               set query [::xo::update_query $query local_return_url [ad_return_url]]
               set live_revision_link $baseUrl?$query
               set make_live_info [subst {
-                <a class="button" href="$live_revision_link">#xowf.Make_live_revision#</a>
+                <a class="button" href="[ns_quotehtml $live_revision_link]">#xowf.Make_live_revision#</a>
               }]
               lappend revision_list "<span class='current'>$c</span>"
             } else {
@@ -2858,7 +2858,7 @@ namespace eval ::xowf::test_item {
             }
           } else {
             lappend revision_list [subst {
-              <a class="$liveCSSclass" title="#xowf.Goto_this_revision#" href="$revision_url">$c</a>
+              <a class="$liveCSSclass" title="#xowf.Goto_this_revision#" href="[ns_quotehtml $revision_url]">$c</a>
             }]
           }
         }
@@ -3011,7 +3011,7 @@ namespace eval ::xowf::test_item {
           }
         }
         append report [subst {
-          <a href='$student_href&rid=[ns_set get $s revision_id]'>[format %02d $rev_nr]</a>:
+          <a href='[ns_quotehtml $student_href&rid=[ns_set get $s revision_id]]'>[format %02d $rev_nr]</a>:
           [join $msgs {; }]<br>
         }]
         incr rev_nr
@@ -3019,7 +3019,7 @@ namespace eval ::xowf::test_item {
 
       append HTML [subst {
         <tr>
-        <td><a href='$student_href'>[$submission set online-exam-userName]</td>
+        <td><a href='[ns_quotehtml $student_href]'>[$submission set online-exam-userName]</td>
         <td>[$submission set online-exam-fullName]</td>
         <td>$report</td>
         </tr>
@@ -4220,7 +4220,7 @@ namespace eval ::xowf::test_item {
           fos rid id
         }]]
         append HTML [ns_trim -delimiter | [subst {
-          |<a href='$href'>
+          |<a href='[ns_quotehtml $href]'>
           |[::xowiki::bootstrap::icon -name download -CSSclass download-submissions]
           |#xowf.Download_file_submissions#</a>
         }]]
@@ -7158,7 +7158,7 @@ namespace eval ::xowf::test_item {
         #https://localhost:8443/xowf/online-exam/inclass-exam1?per-question=1&m=print-statistics&format=csv&onlygrades=0
         set href [$obj pretty_link -query m=exam-results&format=csv&per-question=1]
         set results_summary [subst {
-          <p>#xowf.export_results#: <a title="#xowf.export_results_title#" href="$href">
+          <p>#xowf.export_results#: <a title="#xowf.export_results_title#" href="[ns_quotehtml $href]">
           <adp:icon name="filetype-csv" title="CSV"></a>
         }]
       } else {
@@ -7169,7 +7169,7 @@ namespace eval ::xowf::test_item {
       return [ns_trim -delimiter | [subst {
         | [:question_info_block $obj]
         | $results_summary
-        | <hr><p><a class="[::xowiki::CSS class action]" href="$return_url">#xowiki.back#</a></p>
+        | <hr><p><a class="[::xowiki::CSS class action]" href="[ns_quotehtml $return_url]">#xowiki.back#</a></p>
       }]]
     }
 
@@ -7293,7 +7293,7 @@ namespace eval ::xowf::test_item {
                 && ![dict exists $chunk available_pool_items]
               } {
               dict set chunk title_value [subst {
-                <a href='$href&fos=[$form_obj item_id]'>[ns_quotehtml [$form_obj title]]</a>
+                <a href='[ns_quotehtml $href&fos=[$form_obj item_id]]'>[ns_quotehtml [$form_obj title]]</a>
               }]
             } else {
               dict set chunk title_value [ns_quotehtml [$form_obj title]]
