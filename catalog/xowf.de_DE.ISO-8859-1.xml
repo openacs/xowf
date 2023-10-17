@@ -5,6 +5,8 @@
   <msg key="Achieved_points">Erreichte Punkte</msg>
   <msg key="Allow_paste">Ausschneiden und Einfügen erlaubt</msg>
   <msg key="Allow_paste_help_text">Darf der Studierende in mehrzeiligen Textfeldern Ausschneiden und Einfügen verwenden?</msg>
+  <msg key="Allow_spellcheck">Rechtschreibprüfung erlaubt</msg>
+  <msg key="Allow_spellcheck_help_text">Dürfen Studierende in mehrzeiligen Textfeldern die Rechtschreibprüfung verwenden?</msg>
   <msg key="Allow_translation">Ist die automatische Übersetzung der Seite erlaubt?</msg>
   <msg key="Allow_translation_help_text">Darf der Studierende die Seite automatisiert durch Browser-Einstellungen übersetzen?</msg>
   <msg key="alternative">Alternative</msg>
@@ -22,7 +24,12 @@
   <msg key="choice_options">Antwortmöglichkeiten</msg>
   <msg key="close_submission_review">Schließe Einsicht</msg>
   <msg key="close_submission_review_title">Schließe Einsicht für Studierende</msg>
+  <msg key="code_question">Code-Frage</msg>
   <msg key="columns">Spalten</msg>
+  <msg key="composite_question">Zusammengesetzte Frage</msg>
+  <msg key="Composite_Show_minutes">Teilfragen mit Minuten</msg>
+  <msg key="Composite_Show_points">Teilfragen mit Punkten</msg>
+  <msg key="Composite_Show_title">Teilfragen mit Titel</msg>
   <msg key="Configuration">Einstellungen</msg>
   <msg key="Configuration_button_title">Einstellungsoptionen für diese Prüfung</msg>
   <msg key="Correct">Korrekt</msg>
@@ -42,6 +49,7 @@
   <msg key="Detail_configuration">Detaileinstellungen</msg>
   <msg key="detailed_summary">Detailübersicht</msg>
   <msg key="Displayed_revision">Angezeigte Version</msg>
+  <msg key="Download_file_submissions">Alle angezeigten Dateiuploads herunterladen</msg>
   <msg key="Duration">Bearbeitungsdauer</msg>
   <msg key="Exam-review-not-open">Die Einsicht für diese Prüfung ist nicht geöffnet.</msg>
   <msg key="Exam_published">Veröffentlichung der Prüfung</msg>
@@ -78,6 +86,7 @@
   <msg key="Goto_this_revision">Gehe zu dieser Version</msg>
   <msg key="Grade">Note</msg>
   <msg key="Grade_boundaries">Notengrenzen</msg>
+  <msg key="Grading">Beurteilung</msg>
   <msg key="Grading-Scheme">Bewertungsschema</msg>
   <msg key="Grading-Score">Bewertung</msg>
   <msg key="Grading_scheme">Benotungsschema</msg>
@@ -121,6 +130,7 @@
   <msg key="mc_question">Multiple-Choice-Frage</msg>
   <msg key="menu-New-Extra-Workflow">Neuer Workflow</msg>
   <msg key="menu-New-Grading-Scheme">Benotungsschema</msg>
+  <msg key="menu-New-Item-CodeInteraction">Code-Frage</msg>
   <msg key="menu-New-Item-CompositeInteraction">Zusammengesetzte Frage</msg>
   <msg key="menu-New-Item-ExamFolder">Neuer Exam-Ordner</msg>
   <msg key="menu-New-Item-MCInteraction">MC-Frage</msg>
@@ -162,6 +172,10 @@
   <msg key="online-exam-submit">Finale Abgabe</msg>
   <msg key="online-exam-submitted_exams_heading">Abgegebene Prüfungen</msg>
   <msg key="online-exam-submitted_exams_msg">Teilnehmer haben eine Prüfung abgegeben</msg>
+  <msg key="online-exam-title-publish">Schalte die Prüfung frei (lösche die Testlaufdaten bei der ersten Veröffentlichungs-Operation)</msg>
+  <msg key="online-exam-title-republish">Schalte Prüfung nochmals frei, existierende Fragen werden NICHT gelöscht.</msg>
+  <msg key="online-exam-title-restart">Zurück zum Start wo die Fragen ausgewählt werden können (existierende Antworten werden gelöscht).</msg>
+  <msg key="online-exam-title-select">Erzeuge eine neue Prüfung (alle bestehenden Exam-Antworten werden gelöscht).</msg>
   <msg key="online-exam-try_out">Wollen Sie einen Probelauf durchführen?</msg>
   <msg key="online-exam-unpublish">Schließe Prüfung</msg>
   <msg key="open_submission_review">Einsicht öffnen</msg>
@@ -239,6 +253,8 @@
   <msg key="Signature_help_text">Erzeuge einen digitalen Fingerabdruck bei Prüfungsabgabe als Beleg der unveränderten Abgabe</msg>
   <msg key="since_published">seit der Veröffentlichung</msg>
   <msg key="Solution">Lösung</msg>
+  <msg key="Spellcheck_allowed">Die Rechtschreibprüfung in mehrzeiligen Textfeldern ist erlaubt</msg>
+  <msg key="Spellcheck_not_allowed">Die Rechtschreibprüfung in mehrzeiligen Textfeldern ist nicht erlaubt</msg>
   <msg key="Status">Status</msg>
   <msg key="sub_question">Teilfrage</msg>
   <msg key="sub_questions">Teilfragen</msg>
