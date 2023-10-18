@@ -1,11 +1,14 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 <message_catalog package_key="xowf" locale="it_IT" charset="ISO-8859-1">
 
+  <msg key="Achievable_points">Punti Realizzabili</msg>
   <msg key="Achieved_points">Punteggio Raggiunto</msg>
   <msg key="Allow_paste">Permetti Copia/Incolla</msg>
   <msg key="Allow_paste_help_text">Consentire agli studenti di usare copia/incolla nei campi di testo multilinea?</msg>
   <msg key="Allow_spellcheck">Permetti il controllo ortografico</msg>
   <msg key="Allow_spellcheck_help_text">Attivare il controllo ortografico integrato nei campi di testo multiriga?</msg>
+  <msg key="Allow_translation">Permetti la traduzione della pagina</msg>
+  <msg key="Allow_translation_help_text">Si consente la traduzione integrata delle pagine web da parte del browser?</msg>
   <msg key="alternative">Alternativa</msg>
   <msg key="answer">Risposta</msg>
   <msg key="answer_columns">Colonne risposta</msg>
@@ -35,6 +38,8 @@
   <msg key="Correction_notes">Note Correzione</msg>
   <msg key="Countdown_audio_alarm">Allarme audio per il timer del conto alla rovescia</msg>
   <msg key="Countdown_audio_alarm_help_text">Includere un segnale audio per avvisare gli studenti dell&#39;avvicinarsi della scadenza (probabilmente non desiderato per esami svolti in aula)</msg>
+  <msg key="Countdown_timer_expired">Tempo scaduto!</msg>
+  <msg key="Countdown_timer_is_not_displayed">Il conto alla rovescia non viene visualizzato</msg>
   <msg key="Created_Assessments">Valutazioni create</msg>
   <msg key="Created_Questions">Domande create</msg>
   <msg key="Cut_and_paste_allowed">Copia/Incolla è consentito nei campi di testo multi-linea</msg>
@@ -50,6 +55,8 @@
   <msg key="Exam_published">Esame Pubblicato</msg>
   <msg key="exam_review_not_possible">correzione automatica dell&#39;esame impossibile</msg>
   <msg key="exam_review_possible">correzione automatica dell&#39;esame possibile</msg>
+  <msg key="exam_statistics_participant">Statistiche Esame per Partecipante</msg>
+  <msg key="exam_statistics_question">Statistiche Esame per Domanda</msg>
   <msg key="exam_summary">Riepilogo</msg>
   <msg key="Exam_time_window">Finestra Temporale D&#39;Esame</msg>
   <msg key="Exam_time_window_help_text">Finestra temporale opzionale per aprire/chiudere automaticamente l&#39;esame. Quando questi valori sono impostati, l&#39;apertura e la chiusura manuale dell&#39;esame è ancora possibile.</msg>
@@ -58,6 +65,9 @@
   <msg key="exercise_mc">Esercizio a scelta multipla</msg>
   <msg key="exercise_ot">Esercizio a risposta aperta</msg>
   <msg key="exercise_sc">Esercizio a scelta singola</msg>
+  <msg key="export_grades_title">Esporta Voti</msg>
+  <msg key="export_points_and_grades_title">Esporta Punti e Voti</msg>
+  <msg key="export_points_title">Esporta Punti</msg>
   <msg key="export_results">Esporta Risultati</msg>
   <msg key="export_results_title">Esporta i risultati e i commenti per domanda</msg>
   <msg key="feedback">Feedback</msg>
@@ -185,9 +195,11 @@
   <msg key="participant">Partecipante</msg>
   <msg key="Participants">Partecipanti</msg>
   <msg key="participants_answered_question">i partecipanti hanno risposto a questa domanda</msg>
+  <msg key="Percentage">Percentuale</msg>
   <msg key="please_answer">Prego rispondere</msg>
   <msg key="Point">Punto</msg>
   <msg key="Points">Punti</msg>
+  <msg key="Points_and_grades">Punti e Voti</msg>
   <msg key="pool_question">Pool Question</msg>
   <msg key="pool_question_folder">Pool Folder</msg>
   <msg key="pool_question_item_types">Tipi Domanda</msg>
@@ -266,8 +278,14 @@
   <msg key="Time_budget_help_text">Aumenta il tempo a disposizione per studenti con disabilità</msg>
   <msg key="Time_management">Gestione del Tempo</msg>
   <msg key="Total-Score">Punteggio Totale</msg>
+  <msg key="Translation_allowed">La traduzione della pagina è consentita</msg>
+  <msg key="Translation_not_allowed">La traduzione della pagina non è consentita</msg>
   <msg key="Twocol_layout">2 colonne</msg>
   <msg key="ul_question">Domanda caricamento file</msg>
   <msg key="Value_max">Il valore deve essere minore o uguale</msg>
   <msg key="Value_min">Il valore deve essere maggiore o uguale</msg>
+  <msg key="waiting_for_exam">In attesa che l&#39;esame &#34;%title%&#34; cominci.</msg>
+  <msg key="waiting_redirect">All&#39;apertura dell&#39;esame, sarai automaticamente rediretto.</msg>
+  <msg key="Waiting_Room">Sala d&#39;Attesa</msg>
+  <msg key="without_minutes">senza minuti specificati</msg>
 </message_catalog>
