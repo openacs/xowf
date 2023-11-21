@@ -26,10 +26,10 @@ Action save -next_state created -label #xowiki.Form-submit_button#
 Action preview -next_state created -label #xowf.Preview# -proc activate {obj} {
   #
   # The action preview renders the current test-item (question,
-  # exercise, ...) the same was as it is shown in an quiz/exam. The
-  # preview action uses the workflow "en:answer-single-question.wf" for
-  # rendering it. The instance for filling out the question is created
-  # as a child object of the test-item.
+  # exercise, ...) the same as if it was shown in an quiz/exam. The
+  # preview action uses the workflow "en:answer-single-question.wf"
+  # for rendering it. The instance for filling out the question is
+  # created as a child object of the test-item.
   #
   set package_id [$obj package_id]
   set wf [$package_id instantiate_forms \
