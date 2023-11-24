@@ -3706,11 +3706,14 @@ namespace eval ::xowf::test_item {
         #
         # Get manual gradings, if these were already provided.
         #
-        if {[dict exists $manual_grading $qn]} {
+        if {[dict exists $manual_grading $qn achieved]} {
           set achieved [dict get $manual_grading $qn achieved]
-          set comment [dict get $manual_grading $qn comment]
         } else {
           set achieved ""
+        }
+        if {[dict exists $manual_grading $qn comment]} {
+          set comment [dict get $manual_grading $qn comment]
+        } else {
           set comment ""
         }
 
