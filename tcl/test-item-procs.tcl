@@ -1535,6 +1535,80 @@ namespace eval ::xowf::test_item {
       }
       return 1
     }
+
+    #----------------------------------------------------------------------
+    # Class:  AssessmentInterface
+    # Method: render_export_links
+    #----------------------------------------------------------------------
+    :method export_links {
+      {-examWf:object}
+      {-filter_form_ids:integer,0..n ""}
+      {-b_aggregate:boolean false}
+    } {
+      #
+      # Creates export links and markup
+      #
+      # @return HTML
+      #
+
+      set export_formats {
+        cvs
+      }
+      if {[::namespace which ::ooxml::xl_write] ne ""} {
+        lappend export_formats xls
+      }
+
+      #case: specific question
+      if {$filter_form_ids ne "" && [string is integer $filter_form_ids]} {
+        #check if this id has entries
+        set results [::xowf::test_item::answer_manager get_exam_results -obj $examWf results]
+        set fos_exists 0
+        foreach {user answers} $results {
+          foreach {qn attributes} $answers {
+            if {[dict exists $attributes question_id] &&
+                [dict get $attributes question_id] eq $filter_form_ids} {
+              set fos_exists 1
+            }
+          }
+        }
+        if {!$fos_exists} {return}
+        foreach format $export_formats {
+          set href [$examWf pretty_link -query [export_vars {
+            {m exam-results} {onlygrades 0} {format $format} {per-question 1} {fos $filter_form_ids}
+          }]]
+          append HTML [subst {
+            <p>#xowf.export_results_title#: <a title="#xowf.export_results_title#" href="[ns_quotehtml $href]">
+            [string toupper $format] <adp:icon name="download"></a>
+          }]
+        }
+        return [template::adp_parse_tags $HTML]
+      }
+      #case: aggregated view
+      if {$b_aggregate} {
+        foreach format $export_formats {
+          set href [$examWf pretty_link -query [export_vars {
+            {m exam-results} {onlygrades 0} {format $format} {per-question 0}
+          }]]
+          append HTML [subst {
+            <p>#xowf.export_results#: <a title="#xowf.export_results#" href="[ns_quotehtml $href]">
+            [string toupper $format] <adp:icon name="download"></a>
+          }]
+        }
+        return [template::adp_parse_tags $HTML]
+      }
+      #default case: all questions
+      foreach format $export_formats {
+        set href_export [$examWf pretty_link -query [export_vars {
+          {m exam-results} {onlygrades 0} {format $format} {per-question 1}
+        }]]
+        append HTML [subst {
+          <p>#xowf.export_results_title#: <a title="#xowf.export_results_title#" href="[ns_quotehtml $href_export]">
+          [string toupper $format] <adp:icon name="download"></a>
+          </p>}]
+      }
+      return [template::adp_parse_tags $HTML]
+    }
+
   }
 }
 
@@ -3260,6 +3334,65 @@ namespace eval ::xowf::test_item {
 
     #----------------------------------------------------------------------
     # Class:  Answer_manager
+    # Method: render_filter_bar
+    #----------------------------------------------------------------------
+    :method render_filter_bar {
+      {-examWf:object}
+      {-filter_form_ids:integer,0..n ""}
+      {-revision_id:integer,0..1 ""}
+      {-filter_submission_id:integer,0..1 ""}
+      {-orderby:token "online-exam-userName"}
+    } {
+      #
+      # Render a bar to filter, sort and export exam submissions.
+      #
+      # @return HTML
+      #
+      template::add_event_listener \
+          -id search-question \
+          -event submit \
+          -preventdefault=true \
+          -script "handleSearch();"
+
+      template::add_event_listener \
+          -id search-content \
+          -event change \
+          -preventdefault=true \
+          -script "handleSearch();"
+
+      template::head::add_javascript -order 100 -src "/resources/xowf/inclass-exam.js"
+
+      set HTML [subst {
+        <form id="search-question">
+            Filter: <input class="form-control" style="display:inline;width:70%;" type="text" id="search-question-string" name="search" placeholder="#xowf.Insert_Filter_keywords#">
+            <input type="checkbox" id="search-content"> #xowf.Search_in_content#
+        </form>
+
+        [template::collect_body_scripts]
+      }]
+
+      set sort_baseurl [$examWf pretty_link]?m=print-answers&fos=$filter_form_ids&rid=$revision_id&id=$filter_submission_id
+
+      append HTML [subst {
+        <div class='dimensional dimensional-list'>
+          <ul class='list-unstyled'>
+            <li>
+              <span>#xowf.Order_by#: </span>
+              <span><a href='[ns_quotehtml $sort_baseurl&orderby=online-exam-userName]'
+                       class=' btn-sm [expr {$orderby eq "online-exam-userName" ? "btn btn-primary" : "btn btn-default"}]'>#xowf.Student_Username#</a></span>
+              <span><a href='[ns_quotehtml $sort_baseurl&orderby=online-exam-fullName]'
+                       class='btn-sm [expr {$orderby eq "online-exam-fullName" ? "btn btn-primary" : "btn btn-default"}]'>#xowiki.name#</a></span>
+            </li>
+          </ul>
+        </div>
+      }]
+      append HTML [:export_links -examWf $examWf -filter_form_ids $filter_form_ids -b_aggregate true]
+
+      return $HTML
+    }
+
+    #----------------------------------------------------------------------
+    # Class:  Answer_manager
     # Method: render_full_submission_form
     #----------------------------------------------------------------------
     :method render_full_submission_form {
@@ -4033,6 +4166,20 @@ namespace eval ::xowf::test_item {
       set do_stream [expr {[llength [$items children]] > 100}]
 
       set HTML [:render_print_button]
+
+      if {!$as_student} {
+        #
+        # When rendering for teachers, we offer the possibility for to
+        # sort, filter and export submissions.
+        #
+        append HTML [:render_filter_bar \
+                         -examWf $examWf \
+                         -filter_form_ids $filter_form_ids \
+                         -revision_id $revision_id \
+                         -filter_submission_id $filter_submission_id \
+                         -orderby $orderby]
+      }
+
       ::xo::cc set_parameter template_file view-plain-master
       ::xo::cc set_parameter MenuBar 0
 
@@ -4535,10 +4682,64 @@ namespace eval ::xowf::test_item {
           -type [ad_decode $att achieved real achievable real grade integer dictionary] \
           $att
 
+      #
+      # XLS export requires OOXML
+      #
+      # See https://fossil.sowaswie.de/ooxml/index
+      #
+      if {$format eq "xls" &&
+          [::namespace which ::ooxml::xl_write] eq ""} {
+        set format csv
+      }
+
       if {$reply} {
         switch $format {
           html    {
             ns_return 200 "text/html; charset=utf-8" [$t asHTML]
+            ad_script_abort
+          }
+          xls {
+            set s [::ooxml::xl_write new]
+            set sheet [$s worksheet {1}]
+            set decimal [lc_get "decimal_point"]
+            set doublestyle [$s style -numfmt [$s numberformat -decimal -format "#${decimal}##"]]
+            set stringstyle [$s style -numfmt [$s numberformat -string]]
+            set datestyle [$s style -numfmt [$s numberformat -date]]
+            set cellformat {}
+
+            #iterate cols of table
+            $s row $sheet
+            set displayColumns [lmap column [${t}::__columns children] {
+              if {[$column exists no_csv]} continue
+              if {[$column istype ::xo::Table::BulkAction]} continue
+              if {[$column istype ::xo::Table::HiddenField]} continue
+              set column
+            }]
+            foreach column $displayColumns {
+              if {[$column name] in {"achieved" "achievable" "percentage"}} {
+                lappend cellformat double
+              } else {
+                lappend cellformat string
+              }
+              set label [$column label]
+              if {[regexp {^#([a-zA-Z0-9_:-]+\.[a-zA-Z0-9_:-]+)#$} $label _ message_key]} {
+                set label [_ $message_key]
+              }
+              set value [string map {\" \\\" \n \r} $label]
+              $s cell $sheet $value
+            }
+            #iterate row content
+            foreach row [$t children] {
+              $s row $sheet
+              set i 0
+              foreach column $displayColumns {
+                set value [string map {\" \\\" \n \r} [$row set [$column set name]]]
+                set format [lindex $cellformat $i]
+                $s cell $sheet $value -style [set [set format]style]
+                incr i
+              }
+            }
+            $s write results.xlsx
             ad_script_abort
           }
           default {set result [$t write_csv]}

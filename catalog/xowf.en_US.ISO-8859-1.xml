@@ -118,6 +118,7 @@
   <msg key="inclass-quiz-submit">Submit</msg>
   <msg key="inclass-quiz-unpublish">Close quiz</msg>
   <msg key="inclass-quiz-waiting_for_next">Waiting for next question ...</msg>
+  <msg key="Insert_Filter_keywords">Insert keywords for filtering (eg. text1 text2 ...)</msg>
   <msg key="IPrange">Allow Access for the following IP Addresses</msg>
   <msg key="IPrange_help_text">Allow access to this exam only for certain IP addresses. Only those users who are on approved IP addresses can fill out the exam.</msg>
   <msg key="IPrange_not_allowed">Restricted access: You are not allowed to work on this exam from your IP address: %ip%</msg>
@@ -186,6 +187,7 @@
   <msg key="online-exam-unpublish">Close Exam</msg>
   <msg key="open_submission_review">Open student submission review</msg>
   <msg key="open_submission_review_title">Open submission review for students</msg>
+  <msg key="Order_by">Order by</msg>
   <msg key="out_of">of</msg>
   <msg key="panel_GradingNone">%achievedPoints% of possible %totalPoints% points, %percentage%%</msg>
   <msg key="panel_GradingRoundNone">%achievedPoints% of possible %totalPoints% points, %percentage%%, grade: %grade%</msg>
@@ -236,6 +238,7 @@
   <msg key="Rounding_scheme-GradingRoundPercentage">by percentage</msg>
   <msg key="Rounding_scheme-GradingRoundPoints">by points</msg>
   <msg key="sc_question">Single Choice Question</msg>
+  <msg key="Search_in_content">Search in content</msg>
   <msg key="Second">Second</msg>
   <msg key="Seconds">Seconds</msg>
   <msg key="Security">Security Configuration</msg>
@@ -262,6 +265,7 @@
   <msg key="Spellcheck_allowed">Spellcheck is activated in multi-line text fields</msg>
   <msg key="Spellcheck_not_allowed">Spellcheck is deactivated in multi-line text fields</msg>
   <msg key="Status">State</msg>
+  <msg key="Student_Username">Username</msg>
   <msg key="sub_question">Sub-Question</msg>
   <msg key="sub_questions">Sub-Questions</msg>
   <msg key="submit_confirmation">Are you sure you want to submit? This step cannot be undone.</msg>
