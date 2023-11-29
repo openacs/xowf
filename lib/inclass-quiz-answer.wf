@@ -30,10 +30,10 @@ Action allocate -proc activate {obj} {
   # via a workflow definition ($obj is a workflow definition)
   set parent_id [$obj parent_id]
   #
-  # Use requestor instead of user_id to allow also participants, which
+  # Use requester instead of user_id to allow also participants, which
   # are not authroized.
   #
-  set name [ns_md5 $parent_id-[::xo::cc requestor]]
+  set name [ns_md5 $parent_id-[::xo::cc requester]]
   set parent_obj [::xo::db::CrClass get_instance_from_db -item_id $parent_id]
   :payload [list title [$parent_obj title] name $name]
 }
@@ -145,7 +145,7 @@ State initial \
 
   if {${:live_updates} && $quiz_available} {
     #
-    # auto referesh: when in $parent_obj 'state' or 'position' changes,
+    # auto refresh: when in $parent_obj 'state' or 'position' changes,
     # do automatically a reload of the current page.
     #
     set payload [$parent_obj state]-[$parent_obj property position]
