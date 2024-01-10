@@ -314,6 +314,13 @@ proc done_form_loader {ctx form_name} {
   #ns_log notice "==================================== done_form_loader called"
 
   #
+  # Current question and time information are not relevant for a
+  # submitted exam. We clear them from the title.
+  #
+  :set_title $obj \
+      -prevent_multiple_tabs false
+
+  #
   #
   #
   set container [$ctx wf_container]
