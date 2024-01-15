@@ -412,6 +412,7 @@ namespace eval ::xowf::test {
             set d4 [::xowiki::test::edit_form_page \
                         -last_request $d3 \
                         -path [dict get $url_info path]/[dict get $url_info tail] \
+                        -next_page_must_contain "Sample Inclass Exam" \
                         -update [list __action_logout "" return_url a-url] \
                        ]
 
