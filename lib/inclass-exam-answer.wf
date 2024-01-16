@@ -313,17 +313,15 @@ proc done_form_loader {ctx form_name} {
   set obj [$ctx object]
   #ns_log notice "==================================== done_form_loader called"
 
+  set container [$ctx wf_container]
+
   #
   # Current question and time information are not relevant for a
   # submitted exam. We clear them from the title.
   #
-  :set_title $obj \
+  $container set_title $obj \
       -prevent_multiple_tabs false
 
-  #
-  #
-  #
-  set container [$ctx wf_container]
   if {[$obj exists __feedback_mode] && [$obj set __feedback_mode] > 0} {
     set form_objs [expr {[$obj exists __form_objs] ? [$obj set __form_objs] : ""}]
     set result [$container summary_form $ctx $form_name $form_objs]
