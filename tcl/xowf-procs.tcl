@@ -35,7 +35,7 @@ namespace eval ::xowf {
       index_page table-of-contents
       MenuBar t
       top_includelet none
-      production_mode t
+      production_mode f
       with_user_tracking t with_general_comments f with_digg f with_tags f
       with_delicious f with_notifications f
       security_policy ::xowiki::policy1
@@ -82,7 +82,7 @@ namespace eval ::xowf {
     name en:xowf-default-parameter
     title "Xowf Default Parameter"
     instance_attributes {
-      MenuBar t top_includelet none production_mode t with_user_tracking t with_general_comments f
+      MenuBar t top_includelet none production_mode f with_user_tracking t with_general_comments f
       with_digg f with_tags f
       ExtraMenuEntries {{config -use xowf}}
       with_delicious f with_notifications f security_policy ::xowiki::policy1
@@ -2760,7 +2760,8 @@ namespace eval ::xowiki {
         -return_url $return_url
 
     return {
-      {entry -name New.Extra.Workflow -form en:Workflow.form}
+      {entry -name New.Extra.Workflow   -form en:Workflow.form}
+      {entry -name New.Extra.ExamFolder -form en:folder.form -query p.source=ExamFolder}
     }
   }
 }

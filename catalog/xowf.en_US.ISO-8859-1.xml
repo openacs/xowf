@@ -135,6 +135,7 @@
   <msg key="menu-New-App-InclassQuiz">Inclass Quiz</msg>
   <msg key="menu-New-App-OnlineExam">Online Exam</msg>
   <msg key="menu-New-Assignment-TopicAssignment">Topic Assignment</msg>
+  <msg key="menu-New-Extra-ExamFolder">New Exam Folder</msg>
   <msg key="menu-New-Extra-Workflow">New Workflow</msg>
   <msg key="menu-New-Grading-Scheme">Grading Scheme</msg>
   <msg key="menu-New-Item-CodeInteraction">Code Interaction</msg>
