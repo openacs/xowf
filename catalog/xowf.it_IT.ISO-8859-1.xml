@@ -119,6 +119,7 @@
   <msg key="inclass-quiz-submit">Invia</msg>
   <msg key="inclass-quiz-unpublish">Chiudi quiz</msg>
   <msg key="inclass-quiz-waiting_for_next">In attesa della prossima domanda...</msg>
+  <msg key="Insert_Filter_keywords">Inserisci le parole chiave per la ricerca (es. testo1 testo2...)</msg>
   <msg key="IPrange">Permetti l&#39;accesso ai seguenti indirizzi IP</msg>
   <msg key="IPrange_help_text">Permette l&#39;accesso all&#39;esame solo per alcuni indirizzi IP. Solo gli utenti provenienti da un indirizzo IP approvato possono partecipare all&#39;esame.</msg>
   <msg key="IPrange_not_allowed">Accesso non consentito: non ti è permesso partecipare a questo esame dal tuo indirizzo IP: %ip%</msg>
@@ -135,6 +136,7 @@
   <msg key="menu-New-App-InclassQuiz">Quiz in classe</msg>
   <msg key="menu-New-App-OnlineExam">Esame online</msg>
   <msg key="menu-New-Assignment-TopicAssignment">Compito a Tema</msg>
+  <msg key="menu-New-Extra-ExamFolder">Nuova Cartella Esame</msg>
   <msg key="menu-New-Extra-Workflow">Nuovo Workflow</msg>
   <msg key="menu-New-Grading-Scheme">Criterio di Valutazione</msg>
   <msg key="menu-New-Item-CodeInteraction">Voto</msg>
@@ -187,6 +189,7 @@
   <msg key="online-exam-unpublish">Chiudi esame</msg>
   <msg key="open_submission_review">Apri correzione consegna studente</msg>
   <msg key="open_submission_review_title">Apri la correzione consegna degli studenti</msg>
+  <msg key="Order_by">Ordina per</msg>
   <msg key="out_of">di</msg>
   <msg key="panel_GradingNone">%achievedPoints% di %totalPoints% punti, %percentage%%</msg>
   <msg key="panel_GradingRoundNone">%achievedPoints% di %totalPoints% punti totali, %percentage%%, voto: %grade%</msg>
@@ -237,6 +240,7 @@
   <msg key="Rounding_scheme-GradingRoundPercentage">a percentuale</msg>
   <msg key="Rounding_scheme-GradingRoundPoints">a punti</msg>
   <msg key="sc_question">Domanda a risposta singola</msg>
+  <msg key="Search_in_content">Cerca nel contenuto</msg>
   <msg key="Second">Secondo</msg>
   <msg key="Seconds">Secondi</msg>
   <msg key="Security">Sicurezza</msg>
@@ -263,6 +267,7 @@
   <msg key="Spellcheck_allowed">Il controllo ortografico è attivato nei campi di testo multi-riga</msg>
   <msg key="Spellcheck_not_allowed">Il controllo ortografico è disattivato nei campi di testo multi-riga</msg>
   <msg key="Status">Stato</msg>
+  <msg key="Student_Username">Nome utente</msg>
   <msg key="sub_question">Sotto-domanda</msg>
   <msg key="sub_questions">Sotto-Domande</msg>
   <msg key="submit_confirmation">Vuoi davvero consegnare? Questa operazione non può essere annullata.</msg>
