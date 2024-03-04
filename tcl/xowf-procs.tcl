@@ -2013,7 +2013,7 @@ namespace eval ::xowf {
       set hkey [::xowiki::hstore::dict_as_hkey [:hstore_attributes]]
       set revision_id ${:revision_id}
       xo::dc dml update_hstore "update xowiki_page_instance \
-                set hkey = '$hkey' \
+                set hkey = :hkey \
                 where page_instance_id = :revision_id"
     }
   }
