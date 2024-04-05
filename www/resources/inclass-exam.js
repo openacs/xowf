@@ -3,7 +3,7 @@ function handleSearch () {
     var searchTerm = searchTerm_orig;
 
     // search for quoted text and add it to the token array
-    // remove the qouted string from the searchTerm
+    // remove the quoted string from the searchTerm
     var pattern = /".*?"/g;
     var current;
     var tokens_quoted = [];

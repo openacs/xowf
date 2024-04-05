@@ -31,7 +31,7 @@ Action allocate -proc activate {obj} {
   set parent_id [$obj parent_id]
   #
   # Use requester instead of user_id to allow also participants, which
-  # are not authroized.
+  # are not authorized.
   #
   set name [ns_md5 $parent_id-[::xo::cc requester]]
   set parent_obj [::xo::db::CrClass get_instance_from_db -item_id $parent_id]
