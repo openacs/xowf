@@ -240,6 +240,7 @@
   <msg key="Rounding_scheme-GradingRoundPoints">by points</msg>
   <msg key="sc_question">Single Choice Question</msg>
   <msg key="Search_in_content">Search in content</msg>
+  <msg key="Search_not_graded">Only not graded</msg>
   <msg key="Second">Second</msg>
   <msg key="Seconds">Seconds</msg>
   <msg key="Security">Security Configuration</msg>

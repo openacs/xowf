@@ -233,6 +233,7 @@
   <msg key="Rounding_scheme-GradingRoundPoints">nach Punkten</msg>
   <msg key="sc_question">Single-Choice-Frage</msg>
   <msg key="Search_in_content">Inhalte durchsuchen</msg>
+  <msg key="Search_not_graded">Nur ohne Bewertung</msg>
   <msg key="Second">Sekunde</msg>
   <msg key="Seconds">Sekunden</msg>
   <msg key="Security">Sicherheitseinstellungen</msg>

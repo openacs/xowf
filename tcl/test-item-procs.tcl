@@ -3360,12 +3360,19 @@ namespace eval ::xowf::test_item {
           -preventdefault=true \
           -script "handleSearch();"
 
+      template::add_event_listener \
+          -id search-not-graded \
+          -event change \
+          -preventdefault=true \
+          -script "filterNotGraded();"
+
       template::head::add_javascript -order 100 -src "/resources/xowf/inclass-exam.js"
 
       set HTML [subst {
         <form id="search-question">
             Filter: <input class="form-control" style="display:inline;width:70%;" type="text" id="search-question-string" name="search" placeholder="#xowf.Insert_Filter_keywords#">
             <input type="checkbox" id="search-content"> #xowf.Search_in_content#
+            <input type="checkbox" id="search-not-graded"> #xowf.Search_not_graded#
         </form>
 
         [template::collect_body_scripts]

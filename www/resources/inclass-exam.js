@@ -1,3 +1,18 @@
+function traverseQuestions (callback) {
+    for (const question of document.querySelectorAll('.test-item')) {
+        callback(question);
+    }
+}
+
+function filterNotGraded () {
+    const checked = document.querySelector('#search-not-graded').checked;
+    traverseQuestions(function (question) {
+        const grade = question.querySelector('.grading-box > .points');
+        const isGraded = grade && grade.textContent !== '';
+        question.style.display = checked && isGraded ? 'none' : 'block';
+    });
+}
+
 function handleSearch () {
     var searchTerm_orig = document.getElementById("search-question-string").value;
     var searchTerm = searchTerm_orig;
@@ -29,23 +44,21 @@ function handleSearch () {
     }
     var searchContentChecked = document.getElementById("search-content").checked;
 
-    var questions = document.getElementsByClassName('test-item');
-    for (var i = 0; i < questions.length; i++) {
-        question_info = questions.item(i).getAttribute('data-item_type');
-        if (questions.item(i).querySelector('.grading-box') != null) {
-            var text = questions.item(i).querySelector('.grading-box').dataset.title;
+    traverseQuestions(function (question) {
+        // question_info = question.getAttribute('data-item_type');
+        if (question.querySelector('.grading-box') != null) {
+            var text = question.querySelector('.grading-box').dataset.title;
         } else {
             //fallback if no grading-box is rendered
-            var text = questions.item(i).textContent;
+            var text = question.textContent;
         }
         if (searchContentChecked) {
-            text = questions.item(i).textContent;
+            text = question.textContent;
         }
         if (searchTermRegex == '' || text.match(searchTermRegex)) {
-            questions.item(i).style.display = 'block';
+            question.style.display = 'block';
         } else {
-            questions.item(i).style.display = 'none';
+            question.style.display = 'none';
         }
-    }
-    return;
+    });
 }
