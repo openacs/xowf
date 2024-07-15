@@ -1330,7 +1330,7 @@ namespace eval ::xowiki::formfield {
 
 
 ############################################################################
-# Generic Assement interface
+# Generic Assessment interface
 ############################################################################
 
 namespace eval ::xowf::test_item {
@@ -4448,7 +4448,7 @@ namespace eval ::xowf::test_item {
 
           #
           # Leave the form-field in statistics mode in a state with
-          # correct anwers.
+          # correct answers.
           #
           $f make_correct
           #ns_log notice "FIELD $f [$f name] [$f info class] -> VALUE [$f set value]"
