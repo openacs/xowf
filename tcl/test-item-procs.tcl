@@ -195,7 +195,7 @@ namespace eval ::xowiki::formfield {
   #
   # Provide a default setting for the rich-text widgets.
   #
-  test_item set richtextWidget {richtext,editor=ckeditor4,ck_package=basic,displayMode=inline,extraPlugins=}
+  test_item set richtextWidget {richtext}
 
   test_item instproc feedback_definition {} {
     #
