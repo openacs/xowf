@@ -1,16 +1,21 @@
-function traverseQuestions (callback) {
-    for (const question of document.querySelectorAll('.test-item')) {
+function traverseQuestions (callback, root = document) {
+    for (const question of root.querySelectorAll('.test-item')) {
         callback(question);
     }
 }
 
 function filterNotGraded () {
     const checked = document.querySelector('#search-not-graded').checked;
-    traverseQuestions(function (question) {
-        const grade = question.querySelector('.grading-box > .points');
-        const isGraded = grade && grade.textContent !== '';
-        question.style.display = checked && isGraded ? 'none' : 'block';
-    });
+    for (const exam of document.querySelectorAll('.single_exam')) {
+        let examGraded = true;
+        traverseQuestions(function (question) {
+            const grade = question.querySelector('.grading-box > .points');
+            const isGraded = grade && grade.textContent !== '';
+            examGraded &= isGraded;
+            question.style.display = checked && isGraded ? 'none' : 'block';
+        });
+        exam.style.display = checked && examGraded ? 'none' : 'block';
+    }
 }
 
 function handleSearch () {
