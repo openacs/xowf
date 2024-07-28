@@ -3597,7 +3597,7 @@ namespace eval ::xowf::test_item {
       # @return HTML block
 
       #ns_log notice "QF=$question_form"
-      dom parse -html -simple -- $question_form doc
+      dom parse -html -- $question_form doc
       $doc documentElement root
       if {$root eq ""} {
         error "form '$form' is not valid"
