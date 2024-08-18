@@ -407,6 +407,7 @@ namespace eval ::xowf::test {
                                 a b
                                 c d
                             }]
+                $wf volatile
 
                 aa_equals "$wf: name is correct" $name [$wf name]
                 aa_equals "$wf: title is correct" $title [$wf title]
