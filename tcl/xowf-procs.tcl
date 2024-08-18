@@ -2071,7 +2071,7 @@ namespace eval ::xowf {
       # not touch the instance variables.
       #
       set payload [${wfc}::allocate payload]
-      ns_log notice "AFTER ALLOCATE www-create-or-use <$payload>"
+      #ns_log notice "AFTER ALLOCATE www-create-or-use <$payload>"
       set m ""
       set title ""
       foreach p {name title parent_id m} {
