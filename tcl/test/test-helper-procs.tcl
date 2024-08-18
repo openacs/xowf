@@ -20,6 +20,16 @@ namespace eval ::xowf::test {
             string range $name 0 end-1
         }]
     }
+
+    ad_proc -private require_test_instance {} {
+        Make sure the test instance is there and create it if necessary.
+    } {
+        aa_export_vars {_xowf_test_instance_name}
+        set _xowf_test_instance_name /xowf-test
+        ::acs::test::require_package_instance \
+            -package_key xowf \
+            -instance_name $_xowf_test_instance_name
+    }
 }
 #
 # Local variables:

@@ -1,21 +1,21 @@
 namespace eval ::xowf::test {
 
-    aa_register_init_class \
-        xowf_require_test_instance {
-            Make sure the test instance is there and create it if necessary.
-        } {
-            aa_export_vars {_xowf_test_instance_name}
-            set _xowf_test_instance_name /xowf-test
-            ::acs::test::require_package_instance \
-                -package_key xowf \
-                -instance_name $_xowf_test_instance_name
-        } {
-            # Here one might unmount the package afterwards. Right now
-            # we decide to keep it so it is possible to e.g. inspect
-            # the results or test further in the mounted instance.
-        }
+    # aa_register_init_class \
+    #     xowf_require_test_instance {
+    #         Make sure the test instance is there and create it if necessary.
+    #     } {
+    #         aa_export_vars {_xowf_test_instance_name}
+    #         set _xowf_test_instance_name /xowf-test
+    #         ::acs::test::require_package_instance \
+    #             -package_key xowf \
+    #             -instance_name $_xowf_test_instance_name
+    #     } {
+    #         # Here one might unmount the package afterwards. Right now
+    #         # we decide to keep it so it is possible to e.g. inspect
+    #         # the results or test further in the mounted instance.
+    #     }
 
-    aa_register_case -init_classes {xowf_require_test_instance} -cats {web} -procs {
+    aa_register_case -cats {web} -procs {
         "::lang::system::locale"
         "::xowiki::test::create_form_page"
         "::xowiki::test::edit_form_page"
@@ -56,6 +56,8 @@ namespace eval ::xowf::test {
         Create a folder in an xowf instance with a form page and edit this
 
     } {
+        ::xowf::test::require_test_instance
+        
         set instance $_xowf_test_instance_name
         set testfolder .testfolder
         set locale [lang::system::locale]
@@ -125,7 +127,7 @@ namespace eval ::xowf::test {
         }
     }
 
-    aa_register_case -init_classes {xowf_require_test_instance} -cats {web} -procs {
+    aa_register_case -cats {web} -procs {
         "::lang::system::locale"
         "::xowiki::test::create_form"
         "::xowiki::test::create_form_page"
@@ -189,6 +191,8 @@ namespace eval ::xowf::test {
         The procs list contains the public methods called via the web
         interface.
     } {
+        ::xowf::test::require_test_instance
+        
         set instance $_xowf_test_instance_name
         set testfolder .testfolder
         set locale [lang::system::locale]
@@ -366,7 +370,6 @@ namespace eval ::xowf::test {
 
     aa_register_case \
         -cats {api} \
-        -init_classes {xowf_require_test_instance} \
         -procs {
             "::xowf::Package proc create_new_workflow_page"
         } create_new_workflow_page {
@@ -374,6 +377,8 @@ namespace eval ::xowf::test {
             Test ::xowf::Package create_new_workflow_page
 
         } {
+            ::xowf::test::require_test_instance
+            
             aa_run_with_teardown -rollback -test_code {
                 set instance $_xowf_test_instance_name
                 set testfolder .testfolder
