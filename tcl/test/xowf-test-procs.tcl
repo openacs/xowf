@@ -57,7 +57,7 @@ namespace eval ::xowf::test {
 
     } {
         ::xowf::test::require_test_instance
-        
+
         set instance $_xowf_test_instance_name
         set testfolder .testfolder
         set locale [lang::system::locale]
@@ -192,7 +192,7 @@ namespace eval ::xowf::test {
         interface.
     } {
         ::xowf::test::require_test_instance
-        
+
         set instance $_xowf_test_instance_name
         set testfolder .testfolder
         set locale [lang::system::locale]
@@ -353,7 +353,12 @@ namespace eval ::xowf::test {
         ::xowf::WorkflowConstruct instforward true set "" 1
         ::xowf::WorkflowConstruct instforward false set "" 0
 
-        ::xowf::WorkflowConstruct x
+        #
+        # Silence message "cannot determine wf_context from call-stack"
+        #
+        aa_silence_log_entries -severities warning {
+            ::xowf::WorkflowConstruct x
+        }
 
         aa_equals "non-conditional test with empty" [x get_value ""] ""
         aa_equals "non-conditional test with nonempty scalar" [x get_value "a"] "a"
@@ -378,7 +383,7 @@ namespace eval ::xowf::test {
 
         } {
             ::xowf::test::require_test_instance
-            
+
             aa_run_with_teardown -rollback -test_code {
                 set instance $_xowf_test_instance_name
                 set testfolder .testfolder

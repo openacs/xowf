@@ -277,8 +277,7 @@ namespace eval ::xowf::test {
             aa_section "Create exam with the selected question"
             ###########################################################
 
-            ns_log warning $d
-            #set page_name [dict get $d page_info stripped_name]
+            #ns_log warning $d
             set page_name [dict get $d page_info link]
             set d [::xowiki::test::edit_form_page \
                        -last_request $d \
