@@ -170,7 +170,7 @@ namespace eval ::xowiki::includelet {
       -parameter {
         {__decoration plain}
         {parameter_declaration {
-          {-countdown_audio_alarm "true"}          
+          {-countdown_audio_alarm "true"}
           {-target_time ""}
           {-url_poll ""}
           {-url_dismiss ""}
