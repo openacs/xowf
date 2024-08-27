@@ -150,7 +150,7 @@ namespace eval ::xowiki::includelet {
       } -ad_doc {
         Countdown timer
 
-        @param target_time
+        @query_param target_time
       }
 
   countdown-timer instproc render {} {
@@ -181,10 +181,10 @@ namespace eval ::xowiki::includelet {
         This is the top includelet for the in-class exam, containing a
         countdown timer and the personal notifications includelet
 
-        @param target_time
-        @param url_poll
-        @param url_dismiss
-        @param poll_interval
+        @query_param target_time
+        @query_param url_poll
+        @query_param url_dismiss
+        @query_param poll_interval
       }
 
   exam-top-includelet instproc render {} {
