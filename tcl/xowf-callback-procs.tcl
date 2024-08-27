@@ -16,6 +16,7 @@ namespace eval ::xowf {
     #
     # Create a parameter page for convenience
     #
+    ::xowiki::Package initialize -package_id $package_id
     ::xowf::Package configure_fresh_instance \
         -package_id $package_id \
         -parameters [::xowf::Package default_package_parameters] \
