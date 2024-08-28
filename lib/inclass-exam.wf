@@ -970,6 +970,14 @@ Action instproc unpublish_link {obj} {
     }
     dict set achieved_points details $newDetails
     dict set achieved_points achievedPoints ""
+
+    #
+    # Ensure grading scheme is loaded before used
+    #
+    ::xowf::test_item::grading::load_grading_schemes \
+        -package_id [:package_id] \
+        -parent_id [:parent_id]
+
     set gradingInfo [::xowf::test_item::grading::$grading_scheme print -achieved_points $achieved_points]
 
     #
