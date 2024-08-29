@@ -17,7 +17,7 @@ namespace eval ::xowf {
     # Create a parameter page for convenience
     #
     # The parameter page needs a creation user. Since we are running
-    # in a callback, the user_id is 0, which is not defined in the
+    # in a callback, the user_id is -1, which is not defined in the
     # users table. Therefore, we fetch the first site-wide admin user.
     #
     set user_id [::xo::dc list get_admin {
