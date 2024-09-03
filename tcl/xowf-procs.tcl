@@ -14,21 +14,118 @@
 # - workflow-assignment includelet (over multiple workflows and
 #   package instances)
 
-::xo::db::require package xowiki
 ::xo::library require -package xowiki xowiki-procs
+::xo::library require -package xotcl-core 06-package-procs
+::xo::library require -package xowiki menu-procs
 
 namespace eval ::xowf {
   #
   # Should we use a shared or a per-context workflow definition.
   #
-  set ::xowf::sharedWorkflowDefinition 0
+  set ::xowf::sharedWorkflowDefinition 1
 
   ::xo::PackageMgr create ::xowf::Package \
       -package_key "xowf" -pretty_name "XoWiki Workflow" \
       -superclass ::xowiki::Package
 
+  Package site_wide_package_parameter_page_info {
+    name en:xowf-site-wide-parameter
+    title "Xowf Site-wide Parameter"
+    instance_attributes {
+      index_page table-of-contents
+      MenuBar t
+      top_includelet none
+      production_mode f
+      with_user_tracking t with_general_comments f with_digg f with_tags f
+      with_delicious f with_notifications f
+      security_policy ::xowiki::policy1
+    }}
+
+  Package site_wide_package_parameters {
+    parameter_page en:xowf-site-wide-parameter
+  }
+
+  Package site_wide_pages {
+    Workflow.form
+    atjob-form
+
+    TestItemText.form
+    TestItemShortText.form
+    TestItemMC.form
+    TestItemSC.form
+    TestItemReorder.form
+    TestItemUpload.form
+    TestItemComposite.form
+    TestItemPoolQuestion.form
+
+    ExamFolder
+
+    online-exam.wf
+    inclass-quiz.wf
+    inclass-exam.wf
+    inclass-exam-statistics.wf
+    edit-interaction.wf
+    edit-grading-scheme.wf
+    answer-single-question.wf
+
+    quiz-select_question.form
+    select_question.form
+    select-topics.form
+    select-group-members.form
+  }
+
+  Package default_package_parameters {
+    parameter_page en:xowf-default-parameter
+  }
+
+  Package default_package_parameter_page_info {
+    name en:xowf-default-parameter
+    title "Xowf Default Parameter"
+    instance_attributes {
+      MenuBar t top_includelet none production_mode f with_user_tracking t with_general_comments f
+      with_digg f with_tags f
+      ExtraMenuEntries {{config -use xowf}}
+      with_delicious f with_notifications f security_policy ::xowiki::policy1
+    }
+  }
+
+  Package ad_proc create_new_workflow_page {
+    -package_id:required
+    -parent_id:required
+    -name:required
+    -title:required
+    {-instance_attributes ""}
+  } {
+    Helper proc for loading workflow prototype page with less effort.
+  } {
+    #
+    # Load Workflow.form
+    #
+    xo::Package require $package_id
+    set item_ref_info [$package_id item_ref -use_site_wide_pages true -default_lang en \
+                           -parent_id $parent_id \
+                           en:Workflow.form]
+    set page_template [dict get $item_ref_info item_id]
+    if {$page_template != 0} {
+      #
+      # Create FormPage
+      #
+      set p [::xowiki::FormPage new \
+                 -name $name \
+                 -title $title \
+                 -set text {} \
+                 -instance_attributes $instance_attributes \
+                 -page_template $page_template]
+    } else {
+      ns_log error "could not load Workflow form, therefore, creation of workflow $name failed as well"
+      set p ""
+    }
+    return $p
+  }
+
+
   Package ad_instproc initialize {} {
-    mixin ::xowf::WorkflowPage to every FormPage
+    Add mixin ::xowf::WorkflowPage to every FormPage.
   } {
     #
     # This method is called, whenever an xowf package is initialized.
@@ -67,11 +164,13 @@ namespace eval ::xowf {
     next
   }
 
+
+
   #   Package instproc delete {-item_id -name} {
   #     # Provide a method to delete the foreign key references, when
   #     # an item for an atjob is deleted. We do here the same magic
   #     # as in ::xowiki::Package to obtain the item_id
-  #     if {![info exists item_id]} {set item_id [:query_parameter item_id]}
+  #     if {![info exists item_id]} {set item_id [:query_parameter item_id:int32]}
   #     if {$item_id ne ""} {
   #       db_dml dbqd..xowf_delete "delete from xowf_atjob where owner_id = :item_id"
   #     }
@@ -104,7 +203,7 @@ namespace eval ::xowf {
     }
     #
     # If everything fails, fall back to the old-style method, which is
-    # incorrect for shared workflow definitions. This fallback ist
+    # incorrect for shared workflow definitions. This fallback is
     # just for transitional code.
     #
     ad_log warning "cannot determine wf_context from call-stack"
@@ -134,7 +233,7 @@ namespace eval ::xowf {
       }
       #
       # If called without args, return the current value, otherwise
-      # aggregated the values.
+      # aggregate the values.
       #
       set l [llength $args]
       switch $l {
@@ -150,13 +249,78 @@ namespace eval ::xowf {
           # separate these by an empty line for safety)
           #
           append :object-specific \n [lindex $args 0]
-          ns_log notice "=== object-specific [self] ${:object-specific}"
+          #ns_log notice "=== object-specific [self] ${:object-specific}"
         }
         default {
           error "wrong number of arguments"
         }
       }
     }
+
+    #
+    # The methods "object-specific" and "wf-specific" are pretty
+    # similar but these define different instance
+    # variables. "object-specific" is for instances of a workflow,
+    # "wf-specific" is for the workflow object itself.
+    #
+    WorkflowContainer instproc object-specific args {
+      :specific object {*}$args
+    }
+    WorkflowContainer instproc wf-specific args {
+      :specific wf {*}$args
+    }
+
+    WorkflowContainer instproc specific {type args} {
+      #
+      # Make sure, we have always a value.
+      #
+      if {![info exists :$type-specific]} {
+        set :$type-specific ""
+      }
+      #
+      # If called without args, return the current value, otherwise
+      # aggregate the values.
+      #
+      set l [llength $args]
+      switch $l {
+        0 {
+          #
+          # Called without args, return the current value
+          #
+          return [set :$type-specific]
+        }
+        1 {
+          #
+          # Called with a single value, aggregate partial values (and
+          # separate these by an empty line for safety)
+          #
+          append :$type-specific \n [lindex $args 0]
+          #ns_log notice "=== $type-specific [self] [set :$type-specific]"
+        }
+        default {
+          error "wrong number of arguments"
+        }
+      }
+    }
+
+
+    WorkflowContainer instproc init {} {
+      set :creation_time [clock seconds]
+      ::xo::add_cleanup [self] [list [self] cleanup]
+      next
+    }
+
+    WorkflowContainer instproc cleanup {} {
+      #
+      #  Keep workflow container 10 minutes in the per-thread cache.
+      #
+      if {[clock seconds] - ${:creation_time} > 600} {
+        #ns_log notice "======================== WorkflowContainer [self] self destroys"
+        ::xo::remove_cleanup [self]
+        :destroy
+      }
+    }
+
 
     WorkflowContainer instproc object {} {
       #
@@ -206,7 +370,6 @@ namespace eval ::xowf {
   Context instforward form                 {%set :current_state} form
   Context instforward form_loader          {%set :current_state} form_loader
 
-
   #
   # The following methods autoname, auto_form_constraints,
   # auto_form_template, and debug contain legacy access methods for
@@ -252,6 +415,13 @@ namespace eval ::xowf {
     return 0
   }
 
+  Context instproc wf-specific args {
+    if {[llength $args] > 0} {
+      ns_log warning "wf-specific NOT SUPPORTED for non shared workflow " \
+          "${:object} [${:object} name]: $args"
+    }
+  }
+
   Context instproc object-specific {code} {
     #:log "=== legacy call <$code>"
     :uplevel [list ${:object} eval $code]
@@ -291,20 +461,27 @@ namespace eval ::xowf {
   Context instproc resolve_form_name {-object:required name} {
     set package_id [$object package_id]
     set parent_id [$object parent_id]
-    array set "" [$package_id item_ref -normalize_name false \
-                      -use_package_path 1 \
-                      -default_lang [$object lang] \
-                      -parent_id $parent_id \
-                      $name]
-    return [list form_id $(item_id) name $(prefix):$(stripped_name)]
+    set item_info [::$package_id item_ref -normalize_name false \
+                       -use_package_path 1 \
+                       -use_site_wide_pages true \
+                       -default_lang [$object lang] \
+                       -parent_id $parent_id \
+                       $name]
+    #ns_log notice "*** resolve_form_name <$name> in $parent_id [$parent_id name] => $item_info"
+    set item_id [dict get $item_info item_id]
+    set form_name [dict get $item_info prefix]:[dict get $item_info stripped_name]
+    return [list form_id $item_id name $form_name]
   }
 
   Context instproc default_load_form_id {form_name} {
     #:msg "resolving $form_name in state [:current_state] via default form loader"
     set form_id 0
     if {$form_name ne ""} {
-      array set "" [:resolve_form_name -object ${:object} $form_name]
-      set form_id $(form_id)
+      set resolved [:resolve_form_name -object ${:object} $form_name]
+      set form_id [dict get $resolved form_id]
+      if {$form_id == 0} {
+        ns_log warning "could not resolve '$form_name' for ${:object}: $resolved"
+      }
       #:msg ".... object ${:object} ==> id = $form_id"
     }
     return $form_id
@@ -332,16 +509,35 @@ namespace eval ::xowf {
     #        V=[$object info vars] auto [:autoname]"
 
     set package_id [$object package_id]
-    return [::xowiki::Form new -destroy_on_cleanup \
+    return [::xowiki::Form new \
                 -package_id $package_id \
-                -parent_id [$package_id folder_id] \
+                -parent_id [::$package_id folder_id] \
                 -name "Auto-Form" \
                 -anon_instances [:autoname] \
                 -form {} \
                 -text [list $template text/html] \
-                -form_constraints [:auto_form_constraints]]
+                -form_constraints [:auto_form_constraints] \
+                -destroy_on_cleanup ]
   }
 
+  Context instproc force_named_form {form_name} {
+    #
+    # By using this method in the "initialize" action, one can bypass
+    # the state specific forms and force a form to the certain name
+    #
+    set form_id [:default_load_form_id $form_name]
+    if {$form_id == 0} {
+      ns_log warning "use_named_form: could not locate form $form_name"
+    } else {
+      if {![nsf::is object ::${form_id}]} {
+        ::xo::db::CrClass get_instance_from_db -item_id ${form_id}
+      }
+      set :form_id $form_id
+    }
+  }
+  Context instproc flush_form_object {} {
+    unset -nocomplain :form_obj
+  }
   Context instproc form_object {object} {
     set parent_id [$object parent_id]
     # After this method is activated, the form object of the form of
@@ -351,16 +547,19 @@ namespace eval ::xowf {
     # Load the actual form only once for this context.  We cache the
     # object name of the form in the context.
     #
-    if {[info exists form_id]} {return ${:form_id}}
+    if {[info exists :form_obj]} {
+      return ${:form_obj}
+    }
 
     set package_id [$object package_id]
     #
     # We have to load the form, maybe via a form loader.  If the
-    # form_loader is set non-empty and the method exists, then use the
+    # form_loader is set nonempty and the method exists, then use the
     # form loader instead of the plain lookup. In case the form_loader
     # fails, it is supposed to return 0.
     #
     set loader [:form_loader]
+    #:msg form_loader=$loader
 
     # TODO why no procsearch instead of "info methods"?
     if {$loader eq "" || [:info methods $loader] eq ""} {
@@ -390,10 +589,11 @@ namespace eval ::xowf {
         && $form_id > 0
       } {
       # just load the object conditionally
-      if {[info commands ::$form_id] eq ""} {
+      if {![nsf::is object ::$form_id]} {
         ::xo::db::CrClass get_instance_from_db -item_id $form_id
       }
       set form_object ::$form_id
+      #:msg form_object=$form_object
     }
 
     if {[$form_object istype "::xowiki::Form"]} {
@@ -401,12 +601,15 @@ namespace eval ::xowf {
       # The item returned from the form loader was a form,
       # everything is fine.
       #
+      #:msg form_object=$form_object-isForm
+
     } elseif {[$form_object istype "::xowiki::FormPage"]} {
       #
       # We got a FormPage. This FormPage might be a pseudo form (a
       # FormPage containing the property "form"). If not, add a "form"
       # property from the rendered content.
       #
+      #:msg form_object=$form_object-pseudoForm-with-form=[$form_object property form]
       if {[$form_object property form] eq ""} {
         #
         # The FormPage contains no form, so try to provide one.  We
@@ -421,22 +624,27 @@ namespace eval ::xowf {
         #:msg "_text=[$form_object property _text]"
       }
     } elseif {[$form_object info class] eq "::xowiki::Page"} {
+
       #
       # The $form_object is in reality an xowiki Page, make it look
       # like a form (with form buttons).
       #
-      set form_object [::xowiki::Form new -destroy_on_cleanup \
+      set form_object [::xowiki::Form new \
                            -package_id $package_id \
-                           -parent_id [$package_id folder_id] \
+                           -parent_id [::$package_id folder_id] \
                            -name "Auto-Form" \
                            -anon_instances [:autoname] \
-                           -form "<form>[$form_object get_html_from_content [$form_id text]]</form>" \
+                           -form "<form>[$form_object get_html_from_content [::$form_id text]]</form>" \
                            -text "" \
-                           -form_constraints ""]
+                           -form_constraints "" \
+                           -destroy_on_cleanup ]
     }
 
-    set :form_id $form_object
+    set :form_obj $form_object
+    return $form_object
   }
+  ::nsf::method::property Context form_object returns object
+
 
   #Context instproc destroy {} {
   #  :log "DESTROY vars <[:info vars]>"
@@ -444,6 +652,15 @@ namespace eval ::xowf {
   #}
 
   Context instproc create_workflow_definition {workflow_definition} {
+    #
+    # Validation: since for shared workflow definitions, the workflow
+    # container is named after the revision, we need only a validation
+    # of "xowf::include" content (external source content). So the,
+    # container-specific workflow_definition is revision specific, and
+    # it will never change.
+    #
+    # set :__workflow_definition [list $workflow_definition]
+    #
     if {[catch {${:wf_container} contains "
        Class create Action   -superclass  ::xowf::Action
        Class create State    -superclass  ::xowf::State
@@ -451,16 +668,27 @@ namespace eval ::xowf {
        Class create Property -superclass  ::xowf::Property -set abstract 1
        [:default_definition]
        $workflow_definition"} errorMsg]} {
-      ns_log error "Error in workflow definition: $errorMsg\n$::errorInfo\n\
+      ns_log error "Error in workflow definition ([${:object} name]): $errorMsg\n$::errorInfo\n\
          ===== default_definition: [:default_definition] \n\
          ===== workflow_definition: $workflow_definition"
-      :msg "Error in workflow definition: $errorMsg"
+      :msg -html t "Error in workflow definition of [${:object} name]: [ns_quotehtml $errorMsg]"
     }
+
+    #
+    # Store state of xowf-depends in the container for later
+    # comparison.
+    #
+    if {[info exists ::__xowf_depends]} {
+      ${:wf_container} set __xowf_depends [set ::__xowf_depends]
+    }
+
     if {${:all_roles}} {
       #:msg want.to.create=[array names :handled_roles]
       foreach role [array names :handled_roles] {
-        Context create ${:wf_container}-$role -workflow_definition $workflow_definition \
-            -in_role $role -object ${:object}
+        Context create ${:wf_container}-$role \
+            -workflow_definition $workflow_definition \
+            -in_role $role \
+            -object ${:object}
       }
     }
   }
@@ -477,14 +705,54 @@ namespace eval ::xowf {
     # multiple workflow instances are created for a single workflow
     # definition in a request.
     #
-    #:log START-CREATES
+    #:log START-CREATES-sharedWorkflowDefinition=$::xowf::sharedWorkflowDefinition
     if {$::xowf::sharedWorkflowDefinition} {
       if {[${:object} is_wf]} {
-        set :wf_container ::xowf::[${:object} revision_id]
+        set source_obj ${:object}
       } else {
-        set :wf_container ::xowf::[[${:object} page_template] revision_id]
+        set source_obj [${:object} page_template]
       }
-      if {[info commands ${:wf_container}] eq ""} {
+
+      set revision_id [$source_obj revision_id]
+      if {$revision_id == 0} {
+        #
+        # We have no "revision_id", but we have to have an
+        # "item_id". Therefore, get then "item_id" from the
+        # "revision_id" via SQL function
+        # content_item.get_live_revision.
+        #
+        set revision_id [::acs::dc call content_item get_live_revision \
+                             -item_id [$source_obj item_id]]
+        ns_log warning "xowf: tried to create a wf_container with revision_id 0 -> fixed to $revision_id"
+      }
+
+      set :wf_container ::xowf::$revision_id
+
+      #
+      # Validate workflow container: We cannot trust the shared
+      # definition in case some xowf-include files were changed. When
+      # we detect such situations, we delete the shared worklow
+      # container, which will be recreated later.
+      #
+      if {[nsf::is object ${:wf_container}]} {
+        set ok 1
+        #set ok [expr {$workflow_definition eq [${:wf_container} set __workflow_definition]}]
+        if {[${:wf_container} exists __xowf_depends]} {
+          set depends [${:wf_container} set __xowf_depends]
+          foreach {fn mtime} $depends {
+            if {[ad_file mtime $fn] ne $mtime} {
+              set ok 0
+              break
+            }
+          }
+        }
+        if {!$ok} {
+          ${:wf_container} destroy
+          ns_log notice "xowf: invalidate container ${:wf_container}"
+        }
+      }
+
+      if {![nsf::is object ${:wf_container}]} {
         #
         # We require an xotcl::Object, since the container needs the
         # method "contains"
@@ -516,10 +784,12 @@ namespace eval ::xowf {
       # Evaluate once per request the object-specific code of the
       # workflow.
       #
-      set os_code [${:wf_container} object-specific]
-      if {$os_code ne ""} {
-        :log "=== object-specific ${:object} eval <$os_code>"
-        ${:object} eval $os_code
+      if {[${:object} is_wf_instance]} {
+        set os_code [${:wf_container} object-specific]
+        if {$os_code ne ""} {
+          #:log "=== object-specific ${:object} eval <$os_code>"
+          ${:object} eval $os_code
+        }
       }
     }
 
@@ -543,23 +813,26 @@ namespace eval ::xowf {
 
   # -debug
   Context proc require {{-new:switch false} obj} {
+    #
+    # Make sure, the context object for workflow '$obj exists. The
+    # flag "-new" can be used to make sure, a new and fresh context is
+    # available.
+    #
     #:log "START-require"
     #
     set ctx $obj-wfctx
-    #:log "... ctx <$ctx> exists [:isobject $ctx]"
-
-    if {$new && [llength [info commands $ctx]] == 1} {
+    if {$new && [nsf::is object $ctx]} {
       $ctx destroy
     }
 
-    if {[llength [info commands $ctx]] == 0} {
+    if {![nsf::is object $ctx]} {
       set wfContextClass [$obj wf_property workflow_context_class [self]]
 
       regsub -all \r\n [$obj wf_property workflow_definition] \n workflow_definition
       $wfContextClass create $ctx \
           -object $obj \
-          -destroy_on_cleanup \
-          -workflow_definition $workflow_definition
+          -workflow_definition $workflow_definition \
+          -destroy_on_cleanup
       $ctx initialize_context $obj
     }
 
@@ -567,11 +840,10 @@ namespace eval ::xowf {
     return $ctx
   }
 
-  # -debug
   Context instproc initialize_context {obj} {
     #:log "START-initialize_context <$obj>"
     #
-    # Keep the object in instance variable
+    # Keep the object in an instance variable.
     #
     set :object $obj
 
@@ -583,18 +855,36 @@ namespace eval ::xowf {
     }
     :set_current_state $state
 
-    if {[info commands ${:current_state}] eq ""} {
-      # The state was probably deleted from the workflow definition,
-      # but the workflow instance does still need it. We complain an
-      # reset the state to initial, which should be always present.
-      :log "===== Workflow instance [$obj name] is in an undefined state '$state', reset to initial"
-      $obj msg "Workflow instance [$obj name] is in an undefined state '$state', reset to initial"
-      :set_current_state initial
+    if {![nsf::is object ${:current_state}]} {
+      if {$state eq "initial"} {
+        ns_log warning "no state object ${:current_state}"
+      } else {
+        #
+        # The state was probably deleted from the workflow definition,
+        # but the workflow instance does still need it. We complain an
+        # reset the state to "initial", which should be always present.
+        #
+        :log "===== Workflow instance [$obj name] is in an undefined state '$state', reset to initial"
+        $obj msg "Workflow instance [$obj name] is in an undefined state '$state', reset to initial"
+        :set_current_state initial
+      }
     }
 
+    #
+    # In most cases, the package_id is initialized here already
+    #
+    set package_id [$obj package_id]
+    #:log "... OBJECT $obj HAS $package_id /[info commands ::$package_id/]"
+    if {[info commands ::$package_id] eq ""}  {
+      :log "... OBJECT $obj HAS $package_id, which is not initialized yet"
+      xo::Package require $package_id
+    }
+
+    #
     # Set the embedded_context to the workflow context,
-    # used e.g. by "behavior" of form-fields
-    [[$obj package_id] context] set embedded_context [self]
+    # used e.g. by "behavior" of form-fields.
+    #
+    [::$package_id context] set embedded_context [self]
 
     set stateObj ${:current_state}
     catch {$stateObj eval [$stateObj eval_when_active]}
@@ -615,7 +905,7 @@ namespace eval ::xowf {
 
       if {[${:wf_container} exists policy]} {
         set policy [${:wf_container} set policy]
-        if {![:isobject $policy]} {
+        if {![nsf::is object $policy]} {
           :msg "ignore non-existent policy '$policy'"
         } else {
           [$obj package_id] set policy $policy
@@ -685,14 +975,10 @@ namespace eval ::xowf {
     return $result
   }
 
-  Context instproc as_graph {{-current_state ""} {-visited ""} {-dpi 96} {-style "width:100%"}} {
-    set dot ""
-    catch {set dot [::util::which dot]}
-    # final ressort for cases, where ::util::which is not available
-    if {$dot eq "" && [file executable /usr/bin/dot]} {set dot /usr/bin/dot}
-    if {$dot eq ""} {return "<font color='red'>Program 'dot' is not available! No graph displayed.</font>"}
+
+  Context instproc dotcode {{-current_state ""} {-visited ""} {-dpi 96}} {
     set obj_id [namespace tail ${:object}]
-    set result [subst {digraph workflow_$obj_id \{
+    set dotcode [subst {digraph workflow_$obj_id \{
       dpi = $dpi;
       node \[shape=doublecircle, margin=0.001, fontsize=8, fixedsize=1, width=0.4, style=filled\]; start;
       node \[shape=ellipse, fontname="Courier", color=lightblue2, style=filled,
@@ -707,28 +993,28 @@ namespace eval ::xowf {
       } else {
         set color ""
       }
-      append result "  state_[$s name] \[label=\"[$s label]\"$color\];\n"
+      append dotcode "  state_[$s name] \[label=\"[$s label]\"$color\];\n"
     }
     set initializeObj [:wf_definition_object initialize]
-    if {[llength [info commands $initializeObj]] > 0} {
-      append result "start->state_initial \[label=\"[$initializeObj label]\"\];\n"
+    if {[nsf::is object $initializeObj]} {
+      append dotcode "start->state_initial \[label=\"[$initializeObj label]\"\];\n"
     } else {
-      append result "start->state_initial;\n"
+      append dotcode "start->state_initial;\n"
     }
 
     set :condition_count 0
     foreach s [:defined State] {
       foreach a [$s get_actions -set true] {
         set actionObj [:wf_definition_object $a]
-        append result [:draw_transition $s $actionObj ""]
+        append dotcode [:draw_transition $s $actionObj ""]
         set drawn($actionObj) 1
       }
       foreach role [$s set handled_roles] {
         set role_ctx [self]-$role
-        #:msg exists?role=$role->[self]-$role->[info commands [self]-$role]
-        if {[info commands ${role_ctx}::[$s name]] ne ""} {
+        #:msg exists?role=$role->[self]-$role->[nsf::is object ${role_ctx}]
+        if {[nsf::is object ${role_ctx}::[$s name]]} {
           foreach a [${role_ctx}::[$s name] get_actions] {
-            append result [:draw_transition $s ${role_ctx}::$a "$role:"]
+            append dotcode [:draw_transition $s ${role_ctx}::$a "$role:"]
           }
         }
       }
@@ -741,28 +1027,36 @@ namespace eval ::xowf {
       if {[info exists drawn($action)]} {continue}
       if {[$action state_safe]} {
         foreach s [:defined State] {
-          append result [:draw_transition $s $action ""]
+          append dotcode [:draw_transition $s $action ""]
         }
       }
     }
 
-    append result "\}\n"
-    set package_id [${:object} package_id]
-    set path [acs_package_root_dir [$package_id package_key]]/www/
-    set fn $path/g.dot
-    set ofn dot-$obj_id.png
-    set f [open $fn w]; fconfigure $f -encoding utf-8; puts $f $result; close $f
-    if {[catch {exec $dot -Tpng $fn -o $path/$ofn} errorMsg]} {
-      :msg "Error during execution of $dot: $errorMsg"
+    append dotcode "\}\n"
+    return $dotcode
+  }
+
+
+  Context instproc as_graph {{-current_state ""} {-visited ""} {-dpi 72} {-style "width:20%"}} {
+    set dot ""
+    set dot [::util::which dot]
+    if {$dot eq ""} {
+      return "<font color='red'>Program 'dot' is not available! No graph displayed.</font>"
     }
-    file delete -- $fn
-    return "<img style='$style' src='[$package_id package_url]/$ofn'>\n"
+    set dotcode [:dotcode -current_state $current_state -visited $visited -dpi $dpi]
+
+    set svg [util::inline_svg_from_dot -css [subst {
+      svg g a:link {text-decoration: none;}
+      div.inner svg {height:100%; overflow: visible; $style; margin: 0 auto;}
+    }] $dotcode]
+    return $svg
   }
 
   Context instproc check {} {
+    ns_log notice "--- check context"
     # Check minimal contents
     set o [:wf_definition_object initial]
-    if {[info commands $o] eq "" || ![$o istype State]} {
+    if {![nsf::is object $o] || ![$o istype State]} {
       return [list rc 1 errorMsg "No State 'initial' defined"]
     }
     # ease access to workflow constructs
@@ -807,9 +1101,11 @@ namespace eval ::xowf {
     if {![info exists :in_role]} {
       foreach role [array names :handled_roles] {
         set role_ctx [self]-$role
-        if {[llength [info commands $role_ctx]] > 0} {
-          array set "" [$role_ctx check]
-          if {$(rc) == 1} {return [array get ""]}
+        if {[nsf::is object $role_ctx]} {
+          set info [$role_ctx check]
+          if {[dict get $info rc] == 1} {
+            return $info
+          }
           array set :forms [$role_ctx array get forms]
           array set :parampage [$role_ctx array get parampage]
         }
@@ -820,8 +1116,13 @@ namespace eval ::xowf {
       $page set __unresolved_object_type ::xowiki::Form
       foreach {type pages} [list wf_form [array names :forms] wf_parampage [array names :parampages]] {
         foreach p $pages {
-          array set "" [:resolve_form_name -object $page $p]
-          set l [::xowiki::Link new -volatile -lang en -page $page -type $type -name $(name) -item_id $(form_id)]
+          set form_info [:resolve_form_name -object $page $p]
+          set l [::xowiki::Link new -volatile \
+                     -lang en \
+                     -page $page \
+                     -type $type \
+                     -name [dict get $form_info name] \
+                     -item_id [dict get $form_info form_id]]
           #
           # The "render" method of the link does the optional fetch of
           # the names, and maintains the variable references of the
@@ -862,13 +1163,36 @@ namespace eval ::xowf {
   }
 
   #
-  # One should probably deactivate the following convenance calls,
+  # One should probably deactivate the following convenience calls,
   # which are potentially costly and seldom used.
   #
   WorkflowConstruct instforward property         {%[:wf_context] object} %proc
   WorkflowConstruct instforward set_property     {%[:wf_context] object} %proc
   WorkflowConstruct instforward set_new_property {%[:wf_context] object} set_property -new 1
   WorkflowConstruct instforward object           {%:wf_context} object
+
+  WorkflowConstruct instproc init {args} {
+    #
+    # Warn about potentially dangerous names, shadowing global
+    # commands.  Not sure, this is the best place (or whether this
+    # should be always executed), since this method might be executed
+    # several hundreds of times for a view instantiating a high number
+    # of workflow instances. Maybe we should define a developer-mode
+    # defining this and more other calls via mxin classes.
+    #
+    if {[nsf::is object ::${:name}]} {
+      set ctx [:wf_context]
+      if {[nsf::is object $ctx]} {
+        set obj [$ctx object]
+        set wfName [[$obj page_template] name]
+        if {$wfName ne "en:Workflow.form"} {
+          ns_log warning "Workflow $wfName defines [namespace tail [:info class]]\
+               with name '${:name}' potentially shadowing global commands"
+        }
+      }
+    }
+    next
+  }
 
   WorkflowConstruct instproc in_role {role configuration} {
     set ctx [:wf_context]
@@ -965,6 +1289,9 @@ namespace eval ::xowf {
     {payload ""}
     {roles all}
     {state_safe false}
+    {extra_css_class ""}
+    {wrapper_CSSclass ""}
+    {label_noquote false}
     {title}
   }
   Action instproc activate {obj} {;}
@@ -975,15 +1302,17 @@ namespace eval ::xowf {
     set action_name [namespace tail [self]]
     set object [[:wf_context] object]
     set package_id [$object package_id]
+    set package ::$package_id
     :log  "--xowf invoke action [self]"
     # We fake a work request with the given instance attributes
-    set last_context [expr {[$package_id exists context] ? [$package_id context] : "::xo::cc"}]
-    set last_object [$package_id set object]
+    set last_context [expr {[$package exists context] ? [$package context] : "::xo::cc"}]
+    set last_object [$package set object]
     set cc [::xo::ConnectionContext new -user_id [$last_context user_id]]
-    $package_id context $cc
+    $package context $cc
     $cc array set form_parameter \
-        [list __object_name [$object name] \
+        [list __object_name [::security::parameter::signed [$object name]] \
              _name [$object name] \
+             _nls_language [$last_context locale] \
              __form_action save-form-data \
              __form_redirect_method __none \
              __action_$action_name $action_name]
@@ -991,24 +1320,26 @@ namespace eval ::xowf {
 
     $cc load_form_parameter_from_values $attributes
 
-    $package_id set object "[$package_id folder_path -parent_id [$object parent_id]][$object name]"
+    $package set object "[$package folder_path -parent_id [$object parent_id]][$object name]"
 
-    #:log "call_action calls:   ::$package_id invoke -method edit -batch_mode 1 // obj=[$package_id set object]"
-    if {[catch {::$package_id invoke -method edit -batch_mode 1} errorMsg]} {
-      :msg "---call_action returns error $errorMsg"
+    #:log "call_action calls:   $package invoke -method edit -batch_mode 1 // obj=[$package set object]"
+    ad_try {
+      $package invoke -method edit -batch_mode 1
+    } on error {errorMsg} {
       ns_log error "$errorMsg\n$::errorInfo"
       error $errorMsg
     }
+
     #:log  "RESETTING package_id object"
-    $package_id set object $last_object
-    $package_id context $last_context
+    $package set object $last_object
+    $package context $last_context
     $cc destroy
 
-    #:log "CHECK batch mode: [$package_id  exists __batch_mode]"
-    if {[$package_id  exists __batch_mode]} {
-      :msg "RESETTING BATCH MODE"
+    #:log "CHECK batch mode: [$package  exists __batch_mode]"
+    if {[$package  exists __batch_mode]} {
+      #:msg "RESETTING BATCH MODE"
       :log "RESETTING BATCH MODE"
-      $package_id unset __batch_mode
+      $package unset __batch_mode
     }
     return "OK"
   }
@@ -1030,7 +1361,6 @@ namespace eval ::xowf {
       }
     }
 
-    #xo::show_stack
     return [:info parent]
   }
 
@@ -1101,10 +1431,13 @@ namespace eval ::xowf {
     # We cannot call get_template_object here, because this will lead
     # to a recursive loop.
     #
-    if {[info commands ::${:page_template}] eq ""} {
+    if {![nsf::is object ::${:page_template}]} {
       ::xo::db::CrClass get_instance_from_db -item_id ${:page_template}
     }
-    if {${:state} ne "" && [${:page_template} istype ::xowiki::FormPage]} {
+    if {${:state} ne ""
+        && [${:page_template} hasclass ::xowf::WorkflowPage]
+        && [${:page_template} is_wf]
+      } {
       array set :__wfi [${:page_template} instance_attributes]
       return 1
     }
@@ -1117,7 +1450,10 @@ namespace eval ::xowf {
       return 0
     }
     if {$role eq "creator"} {
-      # hmm, requires additional attribute
+      #
+      # Meaning: "creator of the object", requires the object as
+      # additional attribute.
+      #
       return [::xo::cc role=$role \
                   -object [self] \
                   -user_id [::xo::cc user_id] \
@@ -1125,16 +1461,38 @@ namespace eval ::xowf {
     } else {
       return [::xo::cc role=$role \
                   -user_id [::xo::cc user_id] \
-                  -package_id [:package_id]]
+                  -package_id ${:package_id}]
     }
   }
 
   WorkflowPage instproc evaluate_form_field_condition {cond} {
     set ctx [::xowf::Context require [self]]
-    if {[info commands ${ctx}::$cond] ne ""} {
+    if {[nsf::is object ${ctx}::$cond]} {
       return [${ctx}::$cond]
     }
     return 0
+  }
+
+  WorkflowPage ad_instproc render_icon {} {
+    Provide an icon or text for describing the kind of application.
+  } {
+    if {[:info procs render_icon] ne ""} {
+      #
+      # In case, we have a per-object method (i.e., defined via the
+      # workflow), use this with highest precedence.
+      #
+      next
+
+    } elseif {[:is_wf_instance]} {
+      set page_template ${:page_template}
+      set title [::$page_template title]
+      regsub {[.]wf$} $title "" title
+      return [list text $title is_richtext false]
+    } elseif {[:is_wf]} {
+      return [list text "Workflow" is_richtext false]
+    } else {
+      next
+    }
   }
 
   WorkflowPage ad_instproc render_form_action_buttons_widgets {{-CSSclass ""} buttons} {
@@ -1142,10 +1500,28 @@ namespace eval ::xowf {
     container and the included inputs.
   } {
     if {[llength $buttons] > 0} {
-      # take the form_button_wrapper_CSSclass from the first form field
-      ::html::div -class [[lindex $buttons 0] form_button_wrapper_CSSclass] {
-        foreach f $buttons {
-          $f render_input
+      #
+      # Build button groups based on "form_button_wrapper_CSSclass".
+      #
+      set previous_wrapper_class "NONE"
+      set wrapper_groups {}
+      set group_num 0
+      foreach f $buttons {
+        set wrapper_class [$f form_button_wrapper_CSSclass]
+        if {$wrapper_class eq $previous_wrapper_class} {
+          dict lappend wrapper_groups [list $wrapper_class $group_num] $f
+          continue
+        }
+        incr group_num
+        dict lappend wrapper_groups [list $wrapper_class $group_num] $f
+        set previous_wrapper_class $wrapper_class
+      }
+
+      foreach wrapper_group [dict keys $wrapper_groups] {
+        ::html::div -class [lindex $wrapper_group 0] {
+          foreach f [dict get $wrapper_groups $wrapper_group] {
+            $f render_input
+          }
         }
       }
     }
@@ -1168,15 +1544,28 @@ namespace eval ::xowf {
           if {$success} break
         }
         if {$success} {
-          set f [$formfieldButtonClass new -destroy_on_cleanup \
-                     -name __action_[namespace tail $action] -CSSclass $CSSclass]
-          if {[$action exists title]} {$f title [$action title]}
+          set f [$formfieldButtonClass new \
+                     -name __action_[namespace tail $action] \
+                     -form_button_wrapper_CSSclass [$action wrapper_CSSclass] \
+                     -label_noquote [$action label_noquote] \
+                     -CSSclass $CSSclass \
+                     -destroy_on_cleanup \
+                    ]
+          if {[$action extra_css_class] ne ""} {
+            #$f append form_button_CSSclass " " [$action extra_css_class]
+            $f CSSclass_list_add form_button_CSSclass [$action extra_css_class]
+          }
+          $f CSSclass_list_add form_button_CSSclass prevent-double-click
+          #ns_log notice "RENDER BUTTON has CSSclass [$f CSSclass] // [$f form_button_CSSclass]"
+          if {[$action exists title]} {
+            $f title [$action title]
+          }
           $f value [$action label]
           lappend buttons $f
         }
       }
       #
-      # render the widgets
+      # Render the button widgets.
       #
       :render_form_action_buttons_widgets -CSSclass $CSSclass $buttons
     } else {
@@ -1185,36 +1574,26 @@ namespace eval ::xowf {
   }
 
   WorkflowPage ad_instproc post_process_form_fields {form_fields} {
+    Propagate the feedback mode setting of this workflow page to the
+    supplied formfields.
   } {
+    #:log ------------------post_process_form_fields-feedback_mode=[info exists :__feedback_mode]
     if {[info exists :__feedback_mode]} {
       #
       # Provide feedback for every alternative
       #
       foreach f $form_fields {
-        #:msg "[$f name]: correct? [$f answer_is_correct]"
-        switch -- [$f answer_is_correct] {
-          0 { continue }
-          -1 { set result "incorrect"}
-          1 { set result "correct"  }
-        }
-        $f form_widget_CSSclass $result
-        $f set evaluated_answer_result $result
-
-        set feedback ""
-        if {[$f exists feedback_answer_$result]} {
-          set feedback [$f feedback_answer_$result]
-        } else {
-          set feedback [_ xowf.answer_$result]
-        }
-        $f help_text $feedback
+        $f set_feedback ${:__feedback_mode}
       }
     }
+    #:log ------------------post_process_form_fields-feedback_mode=[info exists :__feedback_mode]-DONE
   }
 
   WorkflowPage ad_instproc post_process_dom_tree {dom_doc dom_root form_fields} {
     post-process form in edit mode to provide feedback in feedback mode
   } {
     # In feedback mode, we set the CSS class to correct or incorrect
+
     if {[info exists :__feedback_mode]} {
       unset :__feedback_mode
       ::xo::Page requireCSS /resources/xowf/feedback.css
@@ -1276,6 +1655,15 @@ namespace eval ::xowf {
     }
   }
 
+  WorkflowPage instproc util_user_message {-html:switch -message} {
+    if {[ns_conn isconnected]} {
+      ::util_user_message -message $message -html=$html
+    } else {
+      ns_log notice "util_user_message suppressed (no connection): $message"
+    }
+  }
+
+
   WorkflowPage instproc debug_msg {msg} {
     #util_user_message -message $msg
     ns_log notice "--WF $msg"
@@ -1313,23 +1701,20 @@ namespace eval ::xowf {
       :include_header_info -css [$s extra_css] -js [$s extra_js]
 
       if {$method ne "" && $method ne "view"} {
-        set package_id [:package_id]
         #:msg "view redirects to $method in state [$ctx get_current_state]"
         switch -- $method {
           view_user_input {
             #:msg "calling edit with disable_input_fields=1"
             return [:www-edit -disable_input_fields 1]
-            #return [$package_id call [self] edit [list -disable_input_fields 1]]
           }
           view_user_input_with_feedback {
             set :__feedback_mode 1
             #:msg "calling edit with disable_input_fields=1"
             return [:www-edit -disable_input_fields 1]
-            #return [$package_id call [self] edit [list -disable_input_fields 1]]
           }
           default {
             #:msg "calling $method"
-            return [$package_id invoke -method $method]
+            return [::${:package_id} invoke -method $method]
           }
         }
       }
@@ -1339,6 +1724,15 @@ namespace eval ::xowf {
 
   WorkflowPage instproc get_assignee {assigned_to} {
     return [:assignee]
+  }
+
+  WorkflowPage instproc get_fc_repository {} {
+    set container [[:wf_context] wf_container]
+    if {[$container exists fc_repository]} {
+      return [$container set fc_repository]
+    }
+    #ns_log warning "get_fc_repository returns empty"
+    return ""
   }
 
   WorkflowPage instproc send_to_assignee {
@@ -1359,7 +1753,6 @@ namespace eval ::xowf {
 
     set message_id [mime::uniqueID]
     set message_date [acs_mail_lite::utils::build_date]
-    #set tokens [acs_mail_lite::utils::build_body -mime_type text/html $body]
     set tokens [mime::initialize \
                     -canonical $mime_type \
                     -encoding "quoted-printable" -string $body]
@@ -1371,7 +1764,7 @@ namespace eval ::xowf {
                       -creation_date ${:creation_date} \
                       -last_modified ${:last_modified} \
                       -dtstart "now" \
-                      -uid $package_id-${:revision_id} \
+                      -uid ${:package_id}-${:revision_id} \
                       -url [:pretty_link -absolute true] \
                       -summary $subject \
                       -description "Workflow instance of workflow $wf_name ${:description}"]
@@ -1387,7 +1780,6 @@ namespace eval ::xowf {
                           -canonical application/ics -param [list name "invite.ics"] \
                           -header [list "Content-Disposition" "attachment; filename=\"todo.ics\""] \
                           -encoding "quoted-printable" -string $ical]
-      #lappend tokens [acs_mail_lite::utils::build_body -mime_type {application/ics; name="invite.ics"} $ical]
     }
 
     if {[llength $tokens]>1} {
@@ -1414,50 +1806,52 @@ namespace eval ::xowf {
     # Execute action and compute next state of the action.
     #
     set actionObj [$ctx wf_definition_object $action]
-    # Check, if action is defined
-    if {[llength [info commands $actionObj]] == 0} {
-      # no such action the current context
+    #
+    # Check, if action is defined.
+    #
+    if {![nsf::is object $actionObj]} {
+      #
+      # There is no such action the current context.
+      #
       if {$verbose} {ns_log notice "Warning: ${:name} No action $action in workflow context"}
       return ""
     }
-    #set next_state [$actionObj get_next_state]
+    #
     # Activate action
-    set err [catch {$actionObj activate [self]} errorMsg]
-    if {$err} {
-      #
-      # Save error code in variable errorCode, since the
-      # tcl-maintained value is volatile
-      set errorCode $::errorCode
+    #
+    ad_try {
+      $actionObj activate [self]
 
-      ns_log notice "ACTIVATE ${:name} error => $errorMsg // $errorCode"
+    } on error {errorMsg errorDict} {
       #
-      # Check, if we were called from "ad_script_abort" (intentional abortion)
+      # Something went wrong in the application specific
+      # code. Depending on batch_mode, report the error to the user or
+      # to the variable __evaluation_error in the package object.
       #
-      if {[ad_exception $errorCode] eq "ad_script_abort"} {
-        #
-        # This was an intentional abortion, no need to complain to the
-        # error.log or other reporting paths.
-        #
+      #:log "--WF: error in action $action ERRORDICT <$errorDict>"
+
+      set errorInfo [dict get $errorDict -errorinfo]
+      set error "error in action '$action' of workflow instance ${:name}\
+               of workflow [${:page_template} name]:"
+      if {[::${:package_id} exists __batch_mode]} {
+        ::${:package_id} set __evaluation_error "$error\n\n$errorInfo"
+        incr validation_errors
       } else {
-        set error "error in action '$action' of workflow instance ${:name}\
-           of workflow [${:page_template} name]:"
-        if {[[:package_id] exists __batch_mode]} {
-          [:package_id] set __evaluation_error "$error\n\n$::errorInfo"
-          incr validation_errors
-        } else {
-          :msg -html 1 "$error <PRE>$::errorInfo</PRE>"
-        }
-        ad_log error "--WF: evaluation $error\n$::errorInfo"
+        :msg -html 1 "$error <pre>[ns_quotehtml $errorInfo]</pre>"
       }
-      return ""
+      ad_log error "--WF: evaluation $error\n$errorInfo"
+      set next_state ""
 
-    } else {
-      # We moved get_next_state here to allow an action to influence the
-      # conditions in the activation method.
+    } on ok {result} {
+      #
+      # The action went ok. The call to "get_next_state" is here to
+      # allow the developer to influence the outcome of
+      # "get_next_state" by the activated method.
+      #
       set next_state [$actionObj get_next_state]
-      ns_log notice "ACTIVATE ${:name} no error next-state <$next_state>"
-      return $next_state
+      #:log "ACTIVATE ${:name} no error next-state <$next_state>"
     }
+    return $next_state
   }
 
   WorkflowPage instproc get_form_data args {
@@ -1466,13 +1860,13 @@ namespace eval ::xowf {
       if {$validation_errors == 0} {
         #:msg "validation ok"
         set ctx [::xowf::Context require [self]]
-        set cc [[:package_id] context]
+        set cc [${:package_id} context]
         foreach {name value} [$cc get_all_form_parameter] {
           if {[regexp {^__action_(.+)$} $name _ action]} {
+            set actionObj [:get_action_obj -action $action]
             set next_state [:activate $ctx $action]
             #:log "after activate next_state=$next_state, current_state=[$ctx get_current_state], ${:instance_attributes}"
             if {$next_state ne ""} {
-              set actionObj [$ctx wf_definition_object $action]
               if {[$actionObj exists assigned_to]} {
                 :assignee [:get_assignee [$actionObj assigned_to]]
               }
@@ -1482,6 +1876,7 @@ namespace eval ::xowf {
           }
         }
       }
+      #ns_log notice "===== get_form_data returns [list $validation_errors $category_ids]"
       return [list $validation_errors $category_ids]
     } else {
       next
@@ -1498,6 +1893,7 @@ namespace eval ::xowf {
     :load_values_into_form_fields $form_fields
     return $form_fields
   }
+
   WorkflowPage ad_instproc solution_set {} {
     Compute solution set in form of attribute=value pairs
     based on "answer" attribute of form fields.
@@ -1509,17 +1905,27 @@ namespace eval ::xowf {
     }
     return [join [lsort $solutions] ", "]
   }
+
+
   WorkflowPage ad_instproc answer_is_correct {} {
-    Check, if answer is correct based on "answer" attribute of form fields
-    and provided user input.
+
+    Check, if answer is correct based on "answer" and "correct_when"
+    attributes of form fields and provided user input.
+
   } {
     set correct 0
-    if {[:get_from_template auto_correct] == true} {
+    :log "WorkflowPage(${:name}).answer_is_correct autocorrect '[:get_from_template auto_correct]' -- [string is true -strict [:get_from_template auto_correct]]"
+    if {[string is true -strict [:get_from_template auto_correct]]} {
+      :log "==== answer_is_correct '[:instantiated_form_fields]'"
       foreach f [:instantiated_form_fields] {
-        #:msg "checking correctness [$f name] [$f info class] answer?[$f exists answer] -- [:get_from_template auto_correct]"
-        if {[$f exists answer]} {
-          if {[$f answer_is_correct] != 1} {
-            #:msg "checking correctness [$f name] failed ([$f answer_is_correct])"
+        #:log [$f serialize]
+        #:log "checking correctness [$f name] [$f info class] answer?[$f exists value] correct_when ?[$f exists correct_when]"
+        if {[$f exists value]} {
+          set r [$f answer_is_correct]
+          #:log [$f serialize]
+          if {$r != 1} {
+            #:log [$f serialize]
+            #:log "checking correctness [$f name] failed ([$f answer_is_correct])"
             set correct -1
             break
           }
@@ -1529,6 +1935,33 @@ namespace eval ::xowf {
     }
     return $correct
   }
+
+  WorkflowPage ad_instproc stats_record_count {name} {
+
+    Record that the specified question was used.
+
+  } {
+    dict incr :__stats_count $name
+  }
+
+  WorkflowPage ad_instproc stats_record_detail {
+    -label
+    -value
+    -name
+    -correctly_answered:boolean
+  } {
+    Record the stat detail of the question.
+  } {
+    dict set :__stats_label $name label $value $label
+    if {[info exists :__stats_success] && [dict exists ${:__stats_success} $name $value]} {
+      set details [dict get ${:__stats_success} $name $value]
+    } else {
+      set details ""
+    }
+    dict incr details $correctly_answered
+    dict set :__stats_success $name $value $details
+  }
+
   WorkflowPage instproc unset_temporary_instance_variables {} {
     # never save/cache the following variables
     array unset :__wfi
@@ -1542,7 +1975,14 @@ namespace eval ::xowf {
       # update the state in the workflow instance
       #
       set ctx [::xowf::Context require [self]]
+      set prev_state ${:state}
       set :state [$ctx get_current_state]
+
+      if {$prev_state ne ${:state}} {
+        # The form object in the cache is still that from the previous
+        # state, make sure we flush it.
+        $ctx flush_form_object
+      }
     }
     next
   }
@@ -1569,11 +2009,11 @@ namespace eval ::xowf {
 
   WorkflowPage instproc save_in_hstore {} {
     #
-    if {[::xo::dc has_hstore] && [[:package_id] get_parameter use_hstore 0]} {
+    if {[::xo::dc has_hstore] && [${:package_id} get_parameter use_hstore 0]} {
       set hkey [::xowiki::hstore::dict_as_hkey [:hstore_attributes]]
       set revision_id ${:revision_id}
       xo::dc dml update_hstore "update xowiki_page_instance \
-                set hkey = '$hkey' \
+                set hkey = :hkey \
                 where page_instance_id = :revision_id"
     }
   }
@@ -1590,9 +2030,10 @@ namespace eval ::xowf {
         set $key [$ctx form_object [self]]
       }
       set form_obj [set $key]
-      if {[info commands $form_obj] eq ""} {
+      if {![nsf::is object $form_obj]} {
+        ad_log error "deprecated usage: method 'form_object' did NOT return an object. Will raise an error in the future"
         set form_id [string trimleft $form_obj :]
-        ::xo::db::CrClass get_instance_from_db -item_id $form_id
+        set form_obj [::xo::db::CrClass get_instance_from_db -item_id $form_id]
       }
       return $form_obj
     } else {
@@ -1602,12 +2043,12 @@ namespace eval ::xowf {
 
   WorkflowPage instproc create-or-use_view {-package_id:required -parent_id:required name } {
     # the link should be able to view return_url and template_file
-    return [$package_id returnredirect [$package_id pretty_link -parent_id $parent_id $lang:$stripped_name]]
+    return [::$package_id returnredirect [::$package_id pretty_link -parent_id $parent_id $lang:$stripped_name]]
   }
 
   WorkflowPage instproc www-create-or-use {
-    {-parent_id 0}
-    {-view_method edit}
+    {-parent_id:integer 0}
+    {-view_method:wordchar edit}
     {-name ""}
     {-nls_language ""}
   } {
@@ -1630,18 +2071,24 @@ namespace eval ::xowf {
       # not touch the instance variables.
       #
       set payload [${wfc}::allocate payload]
+      #ns_log notice "AFTER ALLOCATE www-create-or-use <$payload>"
       set m ""
-      foreach p {name parent_id m} {
+      set title ""
+      foreach p {name title parent_id m} {
         if {[dict exists $payload $p]} {
           set $p [dict get $payload $p]
         }
+      }
+      set package ::${:package_id}
+      if {$title ne ""} {
+        ::xo::cc set_query_parameter title $title
       }
 
       #
       # If these values are not set, try to obtain it the old-fashioned way.
       #
       if {$parent_id == 0} {
-        set parent_id [:query_parameter "parent_id" [${:package_id} folder_id]]
+        set parent_id [:query_parameter parent_id:cr_item_of_package,arg=${:package_id} [$package folder_id]]
       }
       if {$name eq ""} {
         set name [:property name ""]
@@ -1654,22 +2101,23 @@ namespace eval ::xowf {
         # Ok, a name was provided. Check if an instance with this name
         # exists in the current folder.
         set default_lang [:lang]
-        ${:package_id} get_lang_and_name -default_lang $default_lang -name $name lang stripped_name
+        $package get_lang_and_name -default_lang $default_lang -name $name lang stripped_name
         set id [::xo::db::CrClass lookup -name $lang:$stripped_name -parent_id $parent_id]
         #:log "after allocate lookup of $lang:$stripped_name returned $id, default-lang(${:name})=$default_lang [:nls_language]"
         if {$id != 0} {
           #
-          # The instance exists already. Either use method "m" (if
-          # provided) or redirect to the item.
+          # The instance exists already. Either call method "m"
+          # directly (if provided) or redirect to the item.
           #
           if {$m eq ""} {
-            return [${:package_id} returnredirect \
-                        [export_vars -no_base_encode -base [${:package_id} pretty_link -parent_id $parent_id $lang:$stripped_name] \
-                             [list return_url template_file]]]
+            return [$package returnredirect \
+                        [export_vars -no_base_encode \
+                             -base [$package pretty_link -parent_id $parent_id $lang:$stripped_name] \
+                             {return_url template_file}]]
           } else {
             set item [::xo::db::CrClass get_instance_from_db -item_id $id]
             # missing: policy check.
-            return [$item $m]
+            return [$item www-$m]
           }
         } else {
           if {$lang ne $default_lang} {
@@ -1688,15 +2136,17 @@ namespace eval ::xowf {
 
   WorkflowPage instproc initialize_loaded_object {} {
     next
-    if {[:is_wf_instance]} {
+    #
+    # Call "initialize" for workflows and workflow instances.  Before,
+    # we called "initialize" only, when [:is_wf_instance] was true.
+    #
+    if {[:is_wf_instance] || [:is_wf]} {
       :initialize
     }
   }
 
-  # -debug
   WorkflowPage instproc initialize {} {
-    #:log START-initialize
-    #:log "is_wf_instance [:is_wf_instance]"
+    #:log "START-initialize is_wf_instance [:is_wf_instance]"
     #
     # A fresh workflow page was created (called only once per
     # workflow page at initial creation)
@@ -1714,6 +2164,23 @@ namespace eval ::xowf {
       # Ignore the returned next_state, since the initial state is
       # always set to the same value from the ctx (initial)
       #:msg "[self] is=${:instance_attributes}"
+
+    } elseif {[:is_wf] && [info exists :item_id]} {
+      #
+      # We are initializing a fully created workflow object.
+      #
+      # The test for "exists :item_id" is important, since when a
+      # workflow is created via "create_form_page_instance", the
+      # workflow object is create via "new", it has not been saved yet
+      # and has therefore no "item_id" yet.
+      #
+
+      set ctx [::xowf::Context require -new [self]]
+      set code [[$ctx wf_container] wf-specific]
+      #ns_log notice "...initialize wf, wf-specific code: $code"
+      if {$code ne ""} {
+        eval $code
+      }
     }
     next
     #:log END-initialize
@@ -1733,14 +2200,21 @@ namespace eval ::xowf {
         set name [$p name]
         set value [$p default]
         if {[::xo::cc exists_query_parameter $name]} {
-          # never clobber instance attributes from query parameters blindly
+          #
+          # Never clobber instance attributes from query parameters
+          # blindly.
+          #
           #:msg "ignore $name"
           continue
         }
         if {[::xo::cc exists_query_parameter p.$name]
             && [$p exists allow_query_parameter]} {
-          # we allow the value to be taken from the query parameter
+          #
+          # We allow the value to be taken from the query parameter.
+          #
           set value [::xo::cc query_parameter p.$name]
+          $p value $value
+          $p validate $p
         }
         dict set instance_attributes $name $value
         set f($name) $p
@@ -1759,27 +2233,39 @@ namespace eval ::xowf {
       next
     }
   }
-  WorkflowPage instproc constraints_as_array {c} {
-    array set __c ""
+  WorkflowPage instproc constraints_as_dict {{-fc_repository ""} c} {
+    set result ""
     foreach name_and_spec $c {
-      regexp {^([^:]+):(.*)$} $name_and_spec _ spec_name short_spec
-      set __c($spec_name) $short_spec
+      set p [string first : $name_and_spec]
+      if {$p > -1} {
+        set spec_name [string range $name_and_spec 0 $p-1]
+        set short_spec [string range $name_and_spec $p+1 end]
+        if {$short_spec eq "" && [dict exists $fc_repository $spec_name]} {
+          set short_spec [dict get $fc_repository $spec_name]
+          #:log "======= use fc_repository for <$spec_name> <$short_spec>"
+        }
+        dict set result $spec_name $short_spec
+      } else {
+        ns_log warning "ignore invalid fc: <$name_and_spec>"
+      }
     }
-    return [array get __c]
+    return $result
   }
   WorkflowPage instproc merge_constraints {c1 args} {
     # Load into the base_constraints c1 the constraints from the argument list.
     # The first constraints have the lowest priority
-    array set __c1 [:constraints_as_array $c1]
+    set fcrepo [:constraints_as_dict [:get_fc_repository]]
+    set merged [:constraints_as_dict -fc_repository $fcrepo $c1]
     foreach c2 $args {
-      foreach {att value} [:constraints_as_array $c2] {
-        set key __c1($att)
-        if {[info exists $key]} {append $key ",$value"} else {set $key $value}
+      foreach {att value} [:constraints_as_dict -fc_repository $fcrepo $c2] {
+        if {[dict exists $merged $att]} {
+          dict append merged $att ",$value"
+        } else {
+          dict set merged $att "$value"
+        }
       }
     }
-    set result [list]
-    foreach {att value} [array get __c1] {lappend result $att:$value}
-    return $result
+    return [lmap {att value} $merged {string cat $att:$value}]
   }
   WorkflowPage instproc wfi_merged_form_constraints {constraints_from_form} {
     set ctx [::xowf::Context require [self]]
@@ -1809,6 +2295,7 @@ namespace eval ::xowf {
   }
 
   WorkflowPage instproc get_form_constraints {{-trylocal false}} {
+    #:log ""
     if {[:istype ::xowiki::FormPage] && [:is_wf]} {
       #:msg "get_form_constraints is_wf"
       return [::xo::cc cache [list [self] wf_merged_form_constraints [next]]]
@@ -1831,6 +2318,39 @@ namespace eval ::xowf {
     return [array names visited]
   }
 
+  WorkflowPage ad_instproc get_revision_sets {-with_instance_attributes:switch} {
+
+    Return a list of ns_sets containing revision_id, creation_date,
+    creation_user, creation_ip, and state for the current workflow
+    instance.
+
+  } {
+    set item_id ${:item_id}
+    if {$with_instance_attributes} {
+      set revision_sets [::xo::dc sets -prepare integer wf_revisions {
+        SELECT revision_id, creation_date, last_modified, creation_user,
+               creation_ip, state, assignee, instance_attributes
+        FROM cr_revisions cr, acs_objects o, xowiki_form_page x, xowiki_page_instance pi
+        WHERE cr.item_id = :item_id
+        AND   o.object_id = cr.revision_id
+        AND   x.xowiki_form_page_id = cr.revision_id
+        AND   pi.page_instance_id = cr.revision_id
+        ORDER BY cr.revision_id ASC
+      }]
+    } else {
+      set revision_sets [::xo::dc sets -prepare integer wf_revisions {
+        SELECT revision_id, creation_date, last_modified, creation_user, creation_ip, state, assignee
+        FROM cr_revisions cr, acs_objects o, xowiki_form_page x
+        WHERE cr.item_id = :item_id
+        AND   o.object_id = cr.revision_id
+        AND   x.xowiki_form_page_id = cr.revision_id
+        ORDER BY cr.revision_id ASC
+      }]
+    }
+    return $revision_sets
+  }
+
+
   WorkflowPage ad_instproc footer {} {
     Provide a tailored footer for workflow definition pages and
     workflow instance pages containing controls for instantiating
@@ -1839,7 +2359,6 @@ namespace eval ::xowf {
     if {[info exists :__no_form_page_footer]} {
       next
     } else {
-      set package_id [:package_id]
       set parent_id [:parent_id]
       set form_item_id ${:page_template}
       #:msg "is wf page [:is_wf], is wf instance page [:is_wf_instance]"
@@ -1856,17 +2375,17 @@ namespace eval ::xowf {
         set button_objs [list]
 
         # create new workflow instance button with start form
-        #if {[:parent_id] != [$package_id folder_id]} {
+        #if {[:parent_id] != [::${:package_id} folder_id]} {
         #  set parent_id [:parent_id]
         #}
-        set link [$package_id make_link -link $wf_base $wf create-new parent_id return_url]
+        set link [::${:package_id} make_link -link $wf_base $wf create-new parent_id return_url]
         lappend button_objs [::xowiki::includelet::form-menu-button-new new -volatile \
                                  -parent_id $parent_id \
                                  -form $wf -link $link]
 
         # list workflow instances button
         set obj [::xowiki::includelet::form-menu-button-wf-instances new -volatile \
-                     -package_id $package_id -parent_id $parent_id \
+                     -package_id ${:package_id} -parent_id $parent_id \
                      -base $wf_base -form $wf]
         if {[info exists return_url]} {
           $obj return_url $return_url
@@ -1875,7 +2394,7 @@ namespace eval ::xowf {
 
         # work flow definition button
         set obj [::xowiki::includelet::form-menu-button-form new -volatile \
-                     -package_id $package_id -parent_id $parent_id \
+                     -package_id ${:package_id} -parent_id $parent_id \
                      -base $work_flow_base -form $work_flow_form]
         if {[info exists return_url]} {$obj return_url $return_url}
         lappend button_objs $obj
@@ -1892,10 +2411,10 @@ namespace eval ::xowf {
         set work_flow_base [$work_flow_form pretty_link]
         set button_objs [list]
 
-        #:msg entry_form_item_id=$entry_form_item_id-exists?=[:isobject $entry_form_item_id]
+        #:msg entry_form_item_id=$entry_form_item_id-exists?=[nsf::is object $entry_form_item_id]
 
         # form definition button
-        if {![:isobject $entry_form_item_id]} {
+        if {![nsf::is object $entry_form_item_id]} {
           # In case, the id is a form object, it is a dynamic form,
           # that we can't edit; therefore, we provide no link.
           #
@@ -1904,32 +2423,24 @@ namespace eval ::xowf {
           set form [::xo::db::CrClass get_instance_from_db -item_id $entry_form_item_id]
           set base [$form pretty_link]
           set obj [::xowiki::includelet::form-menu-button-form new -volatile \
-                       -package_id $package_id -parent_id $parent_id \
+                       -package_id ${:package_id} -parent_id $parent_id \
                        -base $base -form $form]
-          if {[info exists return_url]} {$obj return_url $return_url}
+          if {[info exists return_url]} {
+            $obj return_url $return_url
+          }
           lappend button_objs $obj
         }
-
-        #         if {[:exists_property form]} {
-        #           lappend button_objs \
-            #               [::xowiki::includelet::form-menu-button-new new -volatile \
-            #                    -package_id $package_id -parent_id $parent_id \
-            #                    -base [:pretty_link] -form [self]]
-        #           lappend button_objs \
-            #               [::xowiki::includelet::form-menu-button-answers new -volatile \
-            #                    -package_id $package_id -parent_id $parent_id \
-            #                    -base [:pretty_link] -form [self]]
-        #         }
+        #
         # work flow definition button
+        #
         set obj [::xowiki::includelet::form-menu-button-wf new -volatile \
-                     -package_id $package_id -parent_id $parent_id \
+                     -package_id ${:package_id} -parent_id $parent_id \
                      -base $work_flow_base -form $work_flow_form]
         if {[info exists return_url]} {$obj return_url $return_url}
         lappend button_objs $obj
         # make menu
         return [:include [list form-menu -form_item_id ${:page_template} -button_objs $button_objs]]
       } else {
-        #return [:include [list form-menu -form_item_id $form_item_id -buttons form]]
         next
       }
     }
@@ -1940,7 +2451,7 @@ namespace eval ::xowf {
     by the list of page names
   } {
     foreach page_name $page_names {
-      set page [[:package_id] get_page_from_name -parent_id [:parent_id] -name $page_name]
+      set page [${:package_id} get_page_from_name -parent_id [:parent_id] -name $page_name]
       if {$page ne ""} {
         $page call_action -action $action -attributes $attributes
       } else {
@@ -1949,6 +2460,36 @@ namespace eval ::xowf {
     }
   }
 
+  WorkflowPage ad_instproc get_action_obj {-action:required} {
+
+    Check if the action can be executed in the current state,
+    and if so, return the action_obj.
+
+  } {
+    set ctx [::xowf::Context require [self]]
+    #
+    # First try to call the action in the current state
+    #
+    foreach a [$ctx get_actions] {
+      if {[namespace tail $a] eq "$action"} {
+        # In the current state, the specified action is allowed
+        :log  "--xowf action $action allowed -- name='${:name}'"
+        return $a
+      }
+    }
+    #
+    # Some actions are state-safe, these can be called in every state
+    #
+    set actionObj [$ctx wf_definition_object $action]
+    if {[nsf::is object $actionObj] && [$actionObj state_safe]} {
+      # The action is defined as state-safe, so if can be called in every state
+      :log  "--xowf action $action state_safe -- name='${:name}'"
+      return $actionObj
+    }
+    error "No state-safe action '$action' available in workflow instance [self] of \
+    [${:page_template} name] in state [$ctx get_current_state]\n\
+    Available actions: [[$ctx current_state] get_actions]"
+  }
 
   WorkflowPage ad_instproc call_action {-action {-attributes {}}} {
     Call the specified action in the current workflow instance.
@@ -1958,53 +2499,93 @@ namespace eval ::xowf {
     if {![:is_wf_instance]} {
       error "Page [self] is not a Workflow Instance"
     }
-    set ctx [::xowf::Context require [self]]
-    #
-    # First try to call the action in the current state
-    #
-    foreach a [$ctx get_actions] {
-      if {[namespace tail $a] eq "$action"} {
-        # In the current state, the specified action is allowed
-        :log  "--xowf action $action allowed -- name='${:name}'"
-        return [$a invoke -attributes $attributes]
-      }
-    }
-    #
-    # Some actions are state-safe, these can be called in every state
-    #
-    set actionObj [$ctx wf_definition_object $action]
-    if {[info commands $actionObj] ne "" && [$actionObj state_safe]} {
-      # The action is defined as state-safe, so if can be called in every state
-      :log  "--xowf action $action state_safe -- name='${:name}'"
-      return [$actionObj invoke -attributes $attributes]
-    }
-    error "\tNo state-safe action '$action' available in workflow instance [self] of \
-    [${:page_template} name] in state [$ctx get_current_state]
-    Available actions: [[$ctx current_state] get_actions]"
+
+    set actionObj [:get_action_obj -action $action]
+    return [$actionObj invoke -attributes $attributes]
   }
+
+
+  WorkflowPage ad_instproc childpage {-name:required -form} {
+
+    Return the child page of the current object with the provided
+    name. In case the child object does not exist, create it as an
+    instance of the provided form.
+
+    @return page object
+  } {
+    if {[info exists form]} {
+      set child_page_id [::${:package_id} lookup \
+                             -use_package_path false \
+                             -default_lang en \
+                             -name $name \
+                             -parent_id ${:item_id}]
+      if {$child_page_id == 0} {
+        ns_log notice "child page '$name' does not exist"
+        set form_obj [::${:package_id} instantiate_forms \
+                          -default_lang "en" \
+                          -forms $form]
+        if {[llength $form_obj] == 0} {
+          error "childpage: cannot instantiate $form"
+        }
+        set p [$form_obj create_form_page_instance \
+                   -name $name \
+                   -nls_language en_US \
+                   -parent_id ${:item_id} \
+                   -package_id ${:package_id} \
+                   -instance_attributes {}]
+        $p save_new
+      } else {
+        #ns_log notice "child page '$name' exists already (item_id $child_page_id)"
+        set p [::xo::db::CrClass get_instance_from_db -item_id $child_page_id]
+      }
+      return $p
+    } else {
+      error "cannot create '$name': API supports so far only form pages"
+    }
+ }
 
   #
   # Interface to atjobs
   #
-  WorkflowPage ad_instproc schedule_action {-time -party_id -action {-attributes {}}} {
-    Schedule the specified action for the current workflow instance at the given
-    time. The specified attributes are provided like form_parameters to
-    the action of the workflow.
+  WorkflowPage ad_instproc schedule_action {
+    -time:required
+    -party_id
+    -action:required
+    {-attributes {}}
+  } {
+    Schedule the specified action for the current workflow instance at
+    the given time. The specified attributes are provided like
+    form_parameters to the action of the workflow.
+
+    @param time       time when the atjob should be executed
+    @param party_id   party_id for the user executing the atjob
+    @param action     workflow action to be executed
+    @param attributes arguments provided to the workflow action
+                      (attribute value pairs)
   } {
     if {![:is_wf_instance]} {
       error "Page [self] is not a Workflow Instance"
     }
-    if {![info exists party_id]} {set party_id [::xo::cc user_id]}
+    if {![info exists party_id]} {
+      set party_id [::xo::cc user_id]
+    }
     :schedule_job -time $time -party_id $party_id \
         [list call_action -action $action -attributes $attributes]
   }
 
   WorkflowPage ad_instproc schedule_job {-time:required -party_id cmd} {
+
     Schedule the specified Tcl command for the current package
     instance at the given time.
+
   } {
-    :log "-at"
-    set j [::xowf::atjob new -time $time -party_id $party_id -cmd $cmd -object [self]]
+    :log "-at $time"
+    set j [::xowf::atjob new \
+               -time $time \
+               -party_id $party_id \
+               -cmd $cmd \
+               -url [:pretty_link] \
+               -object [self]]
     $j persist
   }
 
@@ -2024,6 +2605,7 @@ namespace eval ::xowf {
       lassign $atts state assignee instance_attributes xowiki_form_page_id
       if {[dict exists $instance_attributes wf_current_state]
           && [dict get $instance_attributes wf_current_state] ne $state} {
+
         #Object msg "must update state $state for $xowiki_form_page_id to [dict get $instance_attributes wf_current_state]"
 
         xo::db dml update_state "update xowiki_form_page \
@@ -2031,7 +2613,9 @@ namespace eval ::xowf {
                 where xowiki_form_page_id  = :xowiki_form_page_id"
         incr count
       }
-      if {[dict exists $instance_attributes wf_assignee] && [dict get $instance_attributes wf_assignee] ne $assignee} {
+      if {[dict exists $instance_attributes wf_assignee]
+          && [dict get $instance_attributes wf_assignee] ne $assignee
+        } {
         #Object msg "must update assignee $assignee for $xowiki_form_page_id to [dict get $instance_attributes wf_assignee]"
         set wf_assignee [dict get $instance_attributes wf_assignee]
         xo::dc dml update_state "update xowiki_form_page set assignee = :wf_assignee \
@@ -2042,72 +2626,26 @@ namespace eval ::xowf {
     return $count
   }
 
-  ad_proc update_hstore {package_id} {
-    update all instance attributes in hstore
-  } {
-    if {![::xo::dc has_hstore] && [$package_id get_parameter use_hstore 0] } {
-      return 0
-    }
-    #
-    # This proc can be used from ds/shell as follows
-    #
-    #    ::xowf::Package initialize -url /xowf
-    #    ::xowf::update_hstore $package_id
-    #
-    # Check the result
-    #
-    #    select hkey from xowiki_page_instance where hkey is not null;
-    #
-    ::xowf::Package initialize -package_id $package_id
-    #
-    # we get all revisions, so use the lower level interface
-    #
-    set items [::xowiki::FormPage instantiate_objects \
-                   -sql "select * from xowiki_form_pagei bt,cr_items i \
-                where bt.object_package_id = $package_id and bt.item_id = i.item_id" \
-                   -object_class ::xowiki::FormPage]
-    set count 0
-    foreach i [$items children] {
-      #$i msg "working on [$i set xowiki_form_page_id]"
-      $i save_in_hstore
-      incr count
-    }
-    $items msg "fetched $count objects from parent_id [$package_id folder_id]"
-    return 1
-  }
-
-  # Some example hstore queries (over all revisions)
-  #    select hkey from xowiki_page_instance where hkey is not null;
-  #    select hkey from xowiki_page_instance where defined(hkey, 'team_email');
-  #    select hkey from xowiki_page_instance where exist(hkey, 'team_email');
-  #    select hkey from xowiki_page_instance where  'team_email=>neumann@wu-wien.ac.at' <@ hkey;
-  #    select (each(hkey)).key, (each(hkey)).value from xowiki_page_instance;
-  #    select page_instance_id, (each(hkey)).key, (each(hkey)).value from xowiki_page_instance
-  #        where 'assignee=>539,priority=>1' <@ hkey;
-  #    select key, count(*) from (select (each(hkey)).key from xowiki_page_instance) as stat
-  #        group by key order by count desc, key;
-  #
-
 }
 
 
 
 #
 # In order to provide either a REST or a DAV interface, we have to
-# switch to basic authentication, since non-OpenACS packages
-# have problems to handle OpenACS cookies. The basic authentication
+# switch to basic authentication, since non-OpenACS software packages
+# don't know how to handle OpenACS cookies. The basic authentication
 # interface can be established in three steps:
 #
 #  1) Create a basic authentication handler, Choose a URL and
 #     define optionally the package to be initialized:
 #     Example:
-#            ::xowf::dav create ::xowf::ba -url /ba -package ::xowf::Package
+#            ::xowf::dav create ::xowf::baHandler -url /handler -package ::xowf::Package
 #
 #  2) Make sure, the basic authentication handler is initialized during
-#     startup. Write an -init.tcl file containing a call to the
+#     startup. Write a *-init.tcl file containing a call to the
 #     created handler.
 #     Example:
-#            ::xowf::ba register
+#            ::xowf::baHandler register
 #
 #  3) Write procs with names such as GET, PUT, POST to handle
 #     the requests. These procs overload the predefined behavior.
@@ -2119,8 +2657,10 @@ namespace eval ::xowf {
 
   ::xowf::dav instproc get_package_id {} {
     if {${:uri} eq "/"} {
-      # Take the first package instance
       set :wf ""
+      #
+      # Take the first package instance
+      #
       set {:package_id} [lindex [$package instances] 0]
       ${:package} initialize -package_id ${:package_id}
     } else {
@@ -2133,10 +2673,10 @@ namespace eval ::xowf {
 
   ::xowf::dav instproc call_action {-uri -action -attributes} {
     ${:package} initialize -url $uri
-    set object_name [$package_id set object]
-    set page [$package_id resolve_request -path $object_name method]
+    set object_name [::$package_id set object]
+    set page [::$package_id resolve_request -path $object_name method]
     if {$page eq ""} {
-      set errorMsg cannot resolve '$object_name' in package [$package_id package_url]
+      set errorMsg cannot resolve '$object_name' in package [::$package_id package_url]
       ad_log error $errorMsg
       ns_return 406 text/plain "Error: $errorMsg"
     } elseif {[catch {set msg [$page call_action \
@@ -2171,17 +2711,25 @@ namespace eval ::xowf {
 
   ad_proc -private include_get {{-level 1} wfName {vars ""}} {
 
-    Implement inclusion of worflow definitions.
-    
+    Implement inclusion of workflow definitions.
+
   } {
     if {![string match "/packages/*/lib/*" $wfName]} {
       error "path leading to workflow name must look like /packages/*/lib/*"
     }
-    set fname [acs_root_dir]$wfName
+    set fname $::acs::rootdir/$wfName
 
-    if {![file readable $fname]} {
+    if {![ad_file readable $fname]} {
       error "file '$fname' not found"
     }
+
+    #
+    # Tell the caller, what files were included in the thread
+    # invocation. It would be nicer to have this more OO, such we can
+    # avoid the global variable ::__xowf_depends.
+    #
+    lappend ::__xowf_depends $fname [ad_file mtime $fname]
+
     set f [open $fname]; set wfDefinition [read $f]; close $f
     #::xotcl::Object log "INCLUDE $wfName [list $vars]"
     if {[llength $vars] > 0} {
@@ -2194,6 +2742,28 @@ namespace eval ::xowf {
     return [list eval $wfDefinition]
   }
 
+}
+
+namespace eval ::xowiki {
+  ::xowiki::MenuBar instproc config=xowf {
+    {-bind_vars {}}
+    -current_page:required
+    -package_id:required
+    -folder_link:required
+    -return_url
+  } {
+    :config=default \
+        -bind_vars $bind_vars \
+        -current_page $current_page \
+        -package_id $package_id \
+        -folder_link $folder_link \
+        -return_url $return_url
+
+    return {
+      {entry -name New.Extra.Workflow   -form en:Workflow.form}
+      {entry -name New.Extra.ExamFolder -form en:folder.form -query p.source=ExamFolder}
+    }
+  }
 }
 
 ::xo::library source_dependent

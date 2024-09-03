@@ -1,8 +1,11 @@
+::xo::library doc {
+
+  Routines for AT handler (performing operations on cr objects at certain times)
+
+  @author Gustaf Neumann (neumann@wu-wien.ac.at)
+}
+
 namespace eval ::xowf {
-  #
-  # simple at-handler
-  #
-  
   #
   # Define a simple Class for atjobs. In future versions, this is a
   # good candidate to be turned into a nx class.
@@ -16,6 +19,7 @@ namespace eval ::xowf {
     ::xo::Attribute create cmd
     ::xo::Attribute create time
     ::xo::Attribute create object
+    ::xo::Attribute create url
     ::xo::Attribute create priority -default 5
   }
 
@@ -33,7 +37,7 @@ namespace eval ::xowf {
   }
 
   #
-  # 
+  #
   # temporary cleanup
   #
   # delete from acs_objects where object_type  = '::xowf::atjob';
@@ -43,9 +47,23 @@ namespace eval ::xowf {
 
   atjob instproc persist {} {
     set class [self class]
+    #
+    # When "object" is specified, the atjob is automatically removed,
+    # when the "object" is deleted.
+    #
+    if {![info exists :object]} {
+      #
+      # When there is no :object, use the global en:atjob-form object
+      # as :object.
+      #
+      set info [xowf::Package require_site_wide_info]
+      set item_id [::xo::db::CrClass lookup -name en:atjob-form -parent_id [dict get $info folder_id]]
+      set :object [::xo::db::CrClass get_instance_from_db -item_id $item_id]
+      ::xo::Package require [dict get $info instance_id]
+    }
     set owner_id [${:object} item_id]
     set package_id [${:object} package_id]
-    set ansi_time [$class ansi_time [clock scan [:time]]]
+    set ansi_time [$class ansi_time [clock scan ${:time}]]
     if {![info exists :party_id]} {
       set :party_id [::xo::cc set untrusted_user_id]
     }
@@ -53,21 +71,26 @@ namespace eval ::xowf {
     set form_id [$class form_id -package_id $package_id -parent_id [${:object} parent_id]]
     if {$form_id != 0} {
       ::xo::db::CrClass get_instance_from_db -item_id $form_id
-      set instance_attributes [dict merge [$form_id default_instance_attributes] [list cmd ${:cmd}]]
-      set name [::xowiki::autoname new -name [$form_id name] -parent_id $owner_id] 
-      set f [::xowiki::FormPage new -destroy_on_cleanup \
+      set instance_attributes [dict merge [::$form_id default_instance_attributes] [list cmd ${:cmd}]]
+      if {[info exists :url]} {
+        dict set instance_attributes url ${:url}
+      }
+      set name [::xowiki::autoname new \
+                    -name [::$form_id name] \
+                    -parent_id $owner_id]
+      set f [::xowiki::FormPage new \
                  -package_id $package_id \
                  -parent_id $owner_id \
                  -name $name \
                  -title ${:priority} \
-                 -nls_language [$form_id nls_language] \
+                 -nls_language [::$form_id nls_language] \
                  -publish_status "production" \
                  -publish_date $ansi_time \
-                 -creation_user ${:party_id} \
                  -instance_attributes $instance_attributes \
-                 -page_template $form_id]
-      $f save_new -use_given_publish_date true
-      :log "--at formpage saved"
+                 -page_template $form_id \
+                 -destroy_on_cleanup ]
+      $f save_new -use_given_publish_date true -creation_user ${:party_id}
+      #:log "--at formpage saved"
     }
   }
 
@@ -75,36 +98,41 @@ namespace eval ::xowf {
     set form_name en:atjob-form
     set form_id [::xo::db::CrClass lookup -name $form_name -parent_id $parent_id]
     if {$form_id == 0} {
-      set page [$package_id resolve_page $form_name __m]
-      if {$page ne ""} {set form_id [$page item_id]}
+      set page [::$package_id resolve_page -lang en $form_name __m]
+      if {$page ne ""} {
+        set form_id [$page item_id]
+      }
       if {$form_id == 0} {
         ns_log error "Cannot lookup form $form_name; ignore request"
       }
     }
     return $form_id
   }
-  
+
   atjob proc run_jobs {item_ids} {
-    #my log "---run xowf jobs START"
+    :log "--at run jobs START"
 
     set sql "select package_id, item_id, name, parent_id, publish_status, creation_user,
                     revision_id, page_template, instance_attributes
              from xowiki_form_instance_item_view
-             where item_id in ([join $item_ids ,])"
-    
+             where item_id in ([ns_dbquotelist $item_ids])"
+
     set items [::xowiki::FormPage instantiate_objects \
                    -object_class ::xowiki::FormPage \
-                   -sql $sql]
+                   -sql $sql \
+                   -initialize false]
 
     if {[llength [$items children]] > 0} {
-      
+
       :log "--at we got [llength [$items children]] scheduled items"
 
       foreach item [$items children] {
-        #my log "--at *** job=[$item serialize] ***\n"
+        #:log "--at *** job=[$item serialize] ***\n"
         set owner_id [$item parent_id]
         set party_id [$item creation_user]
+        set package_id [$item package_id]
         set __ia [$item instance_attributes]
+
         if {![dict exists $__ia cmd]} {
           #ns_log notice "--at ignore strange entry [$item serialize]"
           ns_log notice "--at ignore strange entry, no cmd in [$item instance_attributes]"
@@ -112,21 +140,41 @@ namespace eval ::xowf {
         }
         set cmd [dict get $__ia cmd]
 
-        # We assume, the owner object is a cr-item
-        ::xo::db::CrClass get_instance_from_db -item_id $owner_id
+        set url [expr {[dict exists $__ia url] ? [dict get $__ia url] : ""}]
+        if {$url eq ""} {
+          set url [lindex [site_node::get_url_from_object_id -object_id $package_id] 0]
+          ns_log warning "--at providing best effort url, since no valid URL was provided by caller (cmd $cmd)"
+        }
 
-        # We assume, the package is from the xowiki family; make sure, the url looks like real
+        #
+        # Initialize the package with the provided url and user_id.
+        #
         ::xo::Package initialize \
-            -package_id [$owner_id package_id] \
-            -user_id $party_id \
-            -init_url 0 -actual_query ""
-        $package_id set_url -url [$package_id package_url][$owner_id name]
+            -package_id $package_id \
+            -url $url \
+            -user_id $party_id
+        #
+        # We require that the owner object is at least a cr-item
+        #
+        ::xo::db::CrClass get_instance_from_db -item_id $owner_id
+        #
+        # We require that the package is from the xowiki family; make
+        # sure, the url looks like real
+        #
+        #::xo::Package initialize \
+        #    -package_id [::$owner_id package_id] \
+        #    -user_id $party_id \
+        #    -init_url 0 -actual_query ""
+        #::$package_id set_url -url [::$package_id package_url][::$owner_id name]
 
         :log "--at executing atjob $cmd"
-        if {[catch {eval $owner_id $cmd} errorMsg]} {
+        ad_try {
+          $owner_id {*}$cmd
+          if {[::xo::db::Class exists_in_db -id [$item revision_id]]} {
+            $item set_live_revision -revision_id [$item revision_id] -publish_status "expired"
+          }
+        } on error {errorMsg} {
           ns_log error "\n*** atjob $owner_id $cmd lead to error ***\n$errorMsg\n$::errorInfo"
-        } else {
-          $item set_live_revision -revision_id [$item revision_id] -publish_status "expired"
         }
         ns_set cleanup
       }
@@ -136,9 +184,9 @@ namespace eval ::xowf {
   }
 
   atjob proc check {{-with_older false}} {
-    #my log "--at START"
+    #:log "--at START"
     #
-    # check, if there are jobs scheduled for execution
+    # Check, if there are jobs scheduled for execution.
     #
     set op [expr {$with_older ? "<=" : "=" }]
     set ansi_time [:ansi_time [clock seconds]]
@@ -162,19 +210,21 @@ namespace eval ::xowf {
     #
     set sql "select xi.item_id
               from xowiki_form_instance_item_index xi, cr_items i2, cr_items i1, cr_revisions cr
-              where i2.item_id = xi.page_template and i2.content_type = '::xowiki::Form' and i2.name = 'en:atjob-form'
+              where i2.item_id = xi.page_template
+                and i2.content_type = '::xowiki::Form'
+                and i2.name = 'en:atjob-form'
                 and cr.publish_date $op to_timestamp(:ansi_time,'YYYY-MM-DD HH24:MI')
                 and i1.item_id = xi.item_id
                 and cr.revision_id = i1.live_revision
                 and xi.publish_status = 'production'
                 and xi.package_id is not null
                 order by cr.title desc, xi.item_id asc "
-    
+
     set item_ids [::xo::dc list get_due_atjobs $sql]
-    
+
     if {[llength $item_ids] > 0} {
       :log "--at we got [llength $item_ids] scheduled items"
-    
+
       #
       # Running the jobs here in this proc could lead to a problem with
       # the exact match for the time, when e.g. the jobs take longer

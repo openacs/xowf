@@ -1,0 +1,16 @@
+::xowiki::Page new -title "Assessment Index" -text {
+<h3>#xowf.Created_Questions#:</h3>
+
+<p>{{form-usages -title "Questions" -with_form_link 0 -form en:edit-interaction.wf -buttons "edit duplicate slim_publish_status delete" -field_names "_title,_last_modified" -date_format "pretty-age" -csv false -hidden_field_names "" -extra_form_constraints "_title:label=#xowiki.title#" }}</p>
+
+<h3>#xowf.Created_Assessments#:</h3>
+
+<p>{{form-usages -title "Online Exams" -with_form_link 0 -form en:online-exam.wf|en:inclass-quiz.wf|en:inclass-exam.wf|en:topic-assignment.wf -buttons "edit archive" -field_names "_title,_state,_last_modified,_creation_user" -date_format "pretty-age" -csv false -extra_form_constraints "_title:label=#xowiki.title#"}}<br />
+<br />
+{{set-parameter __no_footer 1}}</p>
+
+}
+
+
+
+

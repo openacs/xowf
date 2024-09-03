@@ -1,7 +1,19 @@
 /* .xowiki-content .correct:after {content: " -- ok";}*/
-form.feedback .correct {border: 1px dotted green; background-color: #aaffaa;}
+form.feedback .correct {
+    border: 1px dotted green; background-color: #aaffaa;
+}
 
 /* .xowiki-content .incorrect:after {content: "-- wrong";}*/
-form.feedback .incorrect {border: 1px dotted red; background-color: #ffaaaa;}
+form.feedback .incorrect {
+    border: 1px dotted red; background-color: #ffaaaa;
+}
 
-form.feedback div.form-required-mark {display:none;}
+form.feedback div.form-required-mark {
+    display:none;
+}
+
+/*
+ * Just a temporary hack for LEARN. Should be removed in the future.
+ */
+div.single_exam form.feedback .incorrect { background-color: #fff; }
+div.single_exam form.feedback .correct { background-color: #fff; }

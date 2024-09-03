@@ -5,7 +5,7 @@
   @creation-date 2008-03-05
 }
 
-::xo::db::require package xowiki
+::xo::library require -package xowiki form-field-procs
 
 namespace eval ::xowiki::formfield {
   ###########################################################
@@ -21,23 +21,27 @@ namespace eval ::xowiki::formfield {
   } -extend_slot_default validator workflow
 
   workflow_definition instproc as_graph {} {
-    set ctx [::xowf::Context new -destroy_on_cleanup -object ${:object} \
+    set ctx [::xowf::Context new -object ${:object} \
                  -all_roles true -in_role none \
-                 -workflow_definition [:value] ]
-    return [$ctx as_graph -dpi [:dpi] -style "max-width: 35%;"]
+                 -workflow_definition [:value] \
+                 -destroy_on_cleanup ]
+    return [$ctx as_graph -dpi ${:dpi} -style "max-width: 20%;"]
   }
 
   workflow_definition instproc check=workflow {value} {
     # Do we have a syntax error in the workflow definition?
     if {![catch {set ctx [::xowf::Context new \
-                              -destroy_on_cleanup -object ${:object} \
+                              -object ${:object} \
                               -all_roles true \
-                              -workflow_definition [:value]]} errorMsg]} {
+                              -workflow_definition [:value] \
+                              -destroy_on_cleanup ]} errorMsg]} {
       $ctx initialize_context ${:object}
       ${:object} wf_context $ctx
       unset errorMsg
-      array set "" [$ctx check]
-      if {$(rc) == 1} {set errorMsg $(errorMsg)}
+      set info [$ctx check]
+      if {[dict get $info rc] == 1} {
+        set errorMsg [dict get $info errorMsg]
+      }
     }
 
     if {[info exists errorMsg]} {
@@ -69,9 +73,10 @@ namespace eval ::xowiki::formfield {
   current_state instproc render_input {} {
     next
     if {[:as_graph]} {
-      set ctx [::xowf::Context new -destroy_on_cleanup -object ${:object} \
+      set ctx [::xowf::Context new -object ${:object} \
                    -all_roles true -in_role none \
-                   -workflow_definition [${:object} wf_property workflow_definition] ]
+                   -workflow_definition [${:object} wf_property workflow_definition] \
+                   -destroy_on_cleanup ]
       #set ctx   [::xowf::Context require ${:object}]
       set graph [$ctx as_graph -current_state [:value] -visited [${:object} visited_states]  -style "max-height: 250px;"]
       ::html::div -style "width: 35%; float: right;" {
@@ -104,7 +109,13 @@ namespace eval ::xo::role {
   Role instproc get_object_id {object} {
     return [$object package_id]
   }
-
+  Role instproc except_clause {{-lhs} except} {
+    if {[llength $except] == 0} {
+      return true
+    } else {
+      return [subst {$lhs NOT IN ([ns_dbquotelist $except])}]
+    }
+  }
   Role create all
   all proc is_member {-user_id:required -package_id} {
     return 1
@@ -119,10 +130,14 @@ namespace eval ::xo::role {
   registered_user proc is_member {-user_id:required -package_id} {
     return [expr {$user_id != 0}]
   }
-  registered_user proc get_members {-object_id:required} {
+  registered_user proc get_members {-object_id:required {-except ""}} {
     # return just the users with an @ sign, to avoid the users created by automated testing
-    set members [::xo::dc list_of_lists get_users \
-                     "select distinct username, user_id from registered_users where username like '%@%'"]
+    set members [::xo::dc list_of_lists get_users [subst {
+      select distinct username, user_id
+      from registered_users
+      where username like '%@%'
+      and   [:except_clause -lhs user_id $except]
+    }]]
     return $members
   }
 
@@ -135,12 +150,11 @@ namespace eval ::xo::role {
   admin proc is_member {-user_id:required -package_id:required} {
     return [::xo::cc permission -object_id $package_id -privilege admin -party_id $user_id]
   }
-  admin proc get_members {-object_id:required} {
+  admin proc get_members {-object_id:required {-except ""}} {
     set members [permission::get_parties_with_permission \
                      -privilege admin \
                      -object_id $object_id]
-    #:msg members=$members
-    return $members
+    return [::xowiki::filter_option_list $members $except]
   }
 
   Role create creator
@@ -149,13 +163,16 @@ namespace eval ::xo::role {
     return [expr {$creation_user == $user_id}]
   }
   creator proc get_object_id {object} {return [$object item_id]}
-  creator proc get_members {-object_id:required} {
-    set creator_id [xo::dc get_value get_owner {
-      select o.creation_user from acs_objects o where object_id = :object_id
-    }]
+  creator proc get_members {-object_id:required  {-except ""}} {
+    set creator_id [xo::dc get_value get_owner [subst {
+      select o.creation_user from acs_objects o
+      where object_id = :object_id
+      and   [:except_clause -lhs o.creation_user $except]
+    }]]
     return [list [list [::xo::get_user_name $creator_id] $creator_id]]
   }
-
+}
+namespace eval ::xo::role {
   Role create app_group_member
   app_group_member proc is_member {-user_id:required -package_id} {
     return [::xo::cc cache [list application_group::contains_party_p \
@@ -176,6 +193,79 @@ namespace eval ::xo::role {
     return 0
   }
 
+  #
+  # RelTypeRole (role definitions based on rel types)
+  #
+  Class create RelTypeRole -superclass Role -parameter {{rel_type ""}}
+  RelTypeRole instproc rel_type_clause {} {
+    if {${:rel_type} ne ""} {
+      return {r.rel_type = :rel_type}
+    } else {
+      return {r.rel_type <> 'composition_rel'}
+    }
+  }
+  RelTypeRole instproc filtered_member_list {-group_id:required {-except ""}} {
+    set rel_type ${:rel_type}
+    set query [subst {
+      select r.object_id_two as user_id from acs_rels r, membership_rels mr
+      where r.object_id_one = :group_id
+      and   [:rel_type_clause]
+      and   r.rel_id = mr.rel_id
+      and   mr.member_state = 'approved'
+      and   [:except_clause -lhs r.object_id_two $except]
+    }]
+    set member_list [xo::dc list get_group_members $query]
+    #ns_log notice "FILTERED member list $member_list"
+    return [lmap p $member_list {list [person::name -person_id $p] $p}]
+  }
+  RelTypeRole instproc filtered_member_p {-group_id:required -user_id:required -rel_type} {
+    set rel_type ${:rel_type}
+    set query [subst {
+      select r.object_id_two as user_id from acs_rels r, membership_rels mr
+      where r.object_id_one = :group_id
+      and   r.object_id_two = :user_id
+      and   [:rel_type_clause]
+      and   r.rel_id = mr.rel_id
+      and   mr.member_state = 'approved'
+    }]
+    return [xo::dc 0or1row check_membership $query]
+  }
+  RelTypeRole instproc get_group_from_package_id {package_id} {
+    #
+    # Designed to work as well without connection. If we have dotlrn
+    # installed, return the community group. Otherwise, return the
+    # subsite application group.
+    #
+    if {[info commands ::dotlrn_community::get_community_id] ne ""} {
+      set group_id [search::dotlrn::get_community_id -package_id $package_id]
+    } else {
+      set subsite_node_id [site_node::closest_ancestor_package \
+                               -node_id [site_node_object_map::get_node_id -object_id $package_id] \
+                               -package_key [subsite::package_keys] \
+                               -include_self \
+                               -element "node_id"]
+      set subsite_id [site_node::get_object_id  -node_id $subsite_node_id]
+      set group_id [application_group::group_id_from_package_id -package_id $subsite_id]
+    }
+    return $group_id
+  }
+  RelTypeRole instproc get_object_id {object} {
+    return [:get_group_from_package_id [$object package_id]]
+  }
+
+  RelTypeRole instproc get_members {-object_id:required {-except ""}} {
+    return [:filtered_member_list -group_id $object_id -except $except]
+  }
+  RelTypeRole instproc is_member {-user_id:required -package_id} {
+    set group_id [:get_group_from_package_id $package_id]
+    #ns_log notice "IS MEMBER user_id $user_id -package_id $package_id group_id $group_id"
+    return [:filtered_member_p -group_id $object_id -user_id $user_id]
+  }
+
+  RelTypeRole create member
+  RelTypeRole create student -rel_type dotlrn_student_rel
+  RelTypeRole create instructor -rel_type dotlrn_instructor_rel
+  RelTypeRole create ta -rel_type dotlrn_ta_rel
 }
 
 
@@ -191,21 +281,29 @@ namespace eval ::xowiki::formfield {
 
   Class create role_member -superclass candidate_box_select -parameter {
     role
+    {except ""}
     {online_state off}
   }
   role_member instproc initialize {} {
     next
     set :is_party_id 1
   }
+  role_member instproc check=options {value} {
+    return 1
+  }
+
   role_member instproc render_input {} {
     #:msg role=${:role},obj=${:object}
-    if {[info commands ::xo::role::${:role}] ne ""} {
-      set object_id [::xo::role::${:role} get_object_id ${:object}]
-      set :options [::xo::role::${:role} get_members -object_id $object_id]
+    if {[nsf::is object ::xo::role::${:role}]} {
+      set arguments [list -object_id [::xo::role::${:role} get_object_id ${:object}]]
+      if {${:except} eq "current_user_id"} {
+        lappend arguments -except [::xo::cc user_id]
+      }
+      set :options [lsort -index 0 [::xo::role::${:role} get_members {*}$arguments]]
     } elseif {[set gid [group::get_id -group_name ${:role}]] ne ""} {
-      set :options [list]
-      foreach m [group::get_members -group_id $gid] {
-        :lappend options [list [::xo::get_user_name $m] $m] }
+      set :options [lsort -index 0 [lmap m [group::get_members -group_id $gid] {
+        list [::xo::get_user_name $m] $m
+      }]]
     } else {
       error "no such role or group '${:role}'"
     }
@@ -265,7 +363,7 @@ namespace eval ::xowiki::formfield {
   mc_exercise instproc convert_to_internal {} {
     #
     # Build a form from the components of the exercise on the fly.
-    # Actually, this methods computes the properties "form" and
+    # Actually, this method computes the properties "form" and
     # "form_constraints" based on the components of this form field.
     #
     set form "<FORM>\n<table class='mchoice'>\n<tbody>"
@@ -285,9 +383,11 @@ namespace eval ::xowiki::formfield {
         lappend alt_fc "feedback_answer_correct=[::xowiki::formfield::FormField fc_encode $value(feedback_correct)]"
       }
       if {$value(feedback_incorrect) ne ""} {
-        lappend alt_fc "feedback_answer_incorrect=[::xowiki::formfield:::FormField fc_encode $value(feedback_incorrect)]"
+        lappend alt_fc "feedback_answer_incorrect=[::xowiki::formfield::FormField fc_encode $value(feedback_incorrect)]"
       }
-      if {[llength $alt_fc] > 0} {append fc [list $input_field_name:checkbox,[join $alt_fc ,]]\n}
+      if {[llength $alt_fc] > 0} {
+        append fc [list $input_field_name:checkbox,[join $alt_fc ,]] \n
+      }
       #:msg "$input_field_name .correct = $value(correct)"
     }
     append form "</tbody></table></FORM>\n"
@@ -337,6 +437,97 @@ namespace eval ::xowiki::formfield {
     set :__initialized 1
   }
 
+  ###########################################################
+  #
+  # ::xowiki::formfield::grading_scheme
+  #
+  ###########################################################
+
+  Class create grading_scheme -superclass select -parameter {
+  }
+
+  grading_scheme instproc initialize {} {
+    if {${:__state} ne "after_specs"} return
+
+    set t1 [clock clicks -milliseconds]
+    ::xowf::test_item::grading::load_grading_schemes \
+        -package_id [${:object} package_id] \
+        -parent_id [${:object} parent_id]
+
+    set :options [lsort [lmap gso [::xowf::test_item::grading::Grading info instances -closure] {
+      set grading [namespace tail $gso]
+      list [$gso cget -title] $grading
+    }]]
+    #ns_log notice "#### available grading_scheme_objs (took [expr {[clock clicks -milliseconds]-$t1}]ms)\n[join [lsort ${:options}] \n]"
+    next
+
+    set :__initialized 1
+  }
+
+  ###########################################################
+  #
+  # ::xowiki::formfield::iprange
+  #
+  ###########################################################
+
+  Class create iprange -superclass select -parameter {
+  }
+
+  iprange instproc initialize {} {
+    if {${:__state} ne "after_specs"} return
+
+    set :options [lsort [lmap rangeObject [::xowf::IpRange info instances -closure] {
+      set intrep [namespace tail $rangeObject]
+      list [$rangeObject cget -title] $intrep
+    }]]
+    next
+
+    set :__initialized 1
+  }
+
+
+  ###########################################################
+  #
+  # ::xowiki::formfield::grade_boundary
+  #
+  ###########################################################
+  Class create grade_boundary -superclass number -parameter {
+  }
+  grade_boundary instproc render_input {} {
+    #
+    # The definition of this validator assumes 4 grade boundaries with
+    # exactly these naming conventions. The corresponding form is
+    # defined in edit-grading-scheme.wf.
+    #
+    next
+    template::add_event_listener -event input -id ${:id} -script {
+      const inputField = event.target;
+      const form = inputField.parentNode.parentNode;
+      //console.log('check descending values');
+      const grade1 = form.elements["grade1"];
+      const grade2 = form.elements["grade2"];
+      const grade3 = form.elements["grade3"];
+      const grade4 = form.elements["grade4"];
+      if (grade1.value < grade2.value) {
+        console.log('error grade 1');
+        grade2.setCustomValidity('percentage for grade 1 must by larger than grade 2');
+      } else {
+        grade2.setCustomValidity('');
+      }
+      if (grade2.value < grade3.value) {
+        console.log('error grade 2');
+        grade3.setCustomValidity('percentage for grade 2 must by larger than grade 3');
+      } else {
+        grade3.setCustomValidity('');
+      }
+      if (grade3.value < grade4.value) {
+        console.log('error grade 3');
+        grade4.setCustomValidity('percentage for grade 3 must by larger than grade 4');
+      } else {
+        grade4.setCustomValidity('');
+      }
+    }
+  }
 }
 
 ::xo::library source_dependent

@@ -1,0 +1,168 @@
+# -*- Tcl -*-
+########################################################################
+# Workflow for editing grading scheme instances
+# =============================================
+#
+# This workflow manages definition of grading schemes. It implements a
+# trivial state management and creates instances of the GradingScheme
+# class when instantiated. To create new grading schemes, e.g. add the
+# following line to the menu entries.
+#
+# {entry -name New.Grading.Scheme -form en:edit-grading-scheme.wf}
+#
+
+set :policy ::xowf::test_item::test-item-policy-edit
+set :autoname 1
+
+Action initialize -proc activate {obj} {
+  set name [$obj name]
+  if {[$obj is_new_entry $name]} {
+    #set container [[$obj wf_context] wf_container]
+    #set item_type [$container item_type $obj]
+    $obj title "New Grading Scheme ($name)"
+  } else {
+    $obj title $name
+  }
+}
+
+Action save \
+    -next_state created \
+    -label #xowiki.Form-submit_button# \
+    -proc activate {obj} {
+      ::xowf::test_item::grading::flush_grading_schemes \
+          -package_id [$obj package_id] \
+          -parent_id [$obj parent_id]
+    }
+
+Action view -label #xowiki.view# -proc activate {obj} {
+  set url [export_vars -base [$obj pretty_link] {
+    {m view} {p.return_url "[::xo::cc url]"}
+  }]
+  ad_returnredirect $url
+  ad_script_abort
+}
+
+State parameter {
+  {extra_css {/resources/xowf/test-item.css}}
+}
+State initial \
+    -actions {save} \
+    -form_loader load_form -form foo
+State created \
+    -actions {save view} \
+    -form_loader load_form -form foo
+
+
+#
+# Form loader for grading scheme
+#
+:proc load_form {ctx args} {
+  #ns_log notice "============ grading scheme load_form <$args>"
+  dict set roundingDict _type radio
+  dict set roundingDict label #xowf.Rounding_scheme#
+  dict set roundingDict value None
+  dict set roundingDict horizontal true
+  dict set roundingDict options {
+    {\#xowf.Rounding_scheme-GradingRoundNone# None}
+    {\#xowf.Rounding_scheme-GradingRoundPoints# Points}
+    {\#xowf.Rounding_scheme-GradingRoundPercentage# Percentage}
+  }
+  
+  set precisionDict {
+    _type number
+    label #xowf.Rounding_precision#
+    min 0
+    max 4
+    value 2
+    js_validate true
+  }
+
+  set gradeDict {
+    _type grade_boundary
+    js_validate true
+    inline true
+    CSSclass "form-control inline"
+    value 80
+    min 0
+    max 100
+    step .1
+  }
+  set form_obj [::xowiki::Form new \
+                    -destroy_on_cleanup \
+                    -set name en:grading_form \
+                    -form {{<form><br>
+                      @rounding@ @precision@
+                      <div class="form-label"><label>#xowf.Grade_boundaries#</label></div>
+                      #xowf.Grade# 1: @grade1@%<br>
+                      #xowf.Grade# 2: @grade2@%<br>
+                      #xowf.Grade# 3: @grade3@%<br>
+                      #xowf.Grade# 4: @grade4@%<br><br>
+                      </form>} text/html
+                    } \
+                    -form_constraints [subst {
+                      {[::xowiki::formfield::dict_to_spec -name rounding $roundingDict]}
+                      {[::xowiki::formfield::dict_to_spec -name precision $precisionDict]}
+                      {[::xowiki::formfield::dict_to_spec -name grade1 $gradeDict]}
+                      {[::xowiki::formfield::dict_to_spec -name grade2 $gradeDict]}
+                      {[::xowiki::formfield::dict_to_spec -name grade3 $gradeDict]}
+                      {[::xowiki::formfield::dict_to_spec -name grade4 $gradeDict]}
+                      _description:omit _page_order:omit _creator:omit _title:omit _nls_language:hidden
+                    }] \
+                    -text {} \
+                    -anon_instances t \
+                   ]
+  #ns_log notice "============ grading scheme load_form <$args> return $form_obj\n[$form_obj form_constraints]"
+  return $form_obj
+}
+
+:object-specific {
+  set ctx [:wf_context]
+  set container [$ctx wf_container]
+  if {$ctx ne $container} {
+    $ctx forward load_form $container %proc $ctx
+  }
+
+  :proc render_icon {} {
+    return {text "Grading Scheme" is_richtext false}
+  }
+  
+  #
+  # Build instance attributes of grading scheme from properties
+  # "grade1..4", "precision" and "rounding".
+  #
+  set percentage_boundaries [lmap p {grade4 grade3 grade2 grade1} {
+    if {[:property $p] eq ""} {continue}
+    :property $p
+  }]
+  set precision [:property precision]
+  set rounding [:property rounding]
+  
+  if {[llength $percentage_boundaries] == 4 && $precision ne "" && $rounding ne ""} {
+    set roundingClass ::xowf::test_item::grading::GradingRound$rounding
+    if {[nsf::is class $roundingClass]} {
+      set gradingSchemeName [dict get [::${:package_id} split_name ${:name}] suffix]
+      $roundingClass create ::xowf::test_item::grading::$gradingSchemeName \
+          -percentage_boundaries $percentage_boundaries \
+          -precision $precision
+      ::xowf::test_item::grading::$gradingSchemeName destroy_on_cleanup
+      #ns_log notice "### loaded grading scheme '$gradingSchemeName'"
+    } else {
+      ns_log warning "invalid grading scheme ${:name}: unknown rounding '$rounding';" \
+          "defined: [lmap c [lsort [::xowf::test_item::grading::Grading info subclasses] {namespace tail $c}]]"
+    }
+  } else {
+    ns_log warning "invalid grading scheme ${:name}: missing values in ${:instance_attributes}"
+  }
+  unset -nocomplain percentage_boundaries precision rounding roundingClass
+
+  # ::xowf::test_item::grading::GradingRoundNone
+  # ::xowf::test_item::grading::GradingRoundNone
+  #ns_log notice "edit-grading-scheme state ${:state} name ${:name} IA ${:instance_attributes}"
+}
+
+#
+# Local variables:
+#    mode: tcl
+#    tcl-indent-level: 2
+#    indent-tabs-mode: nil
+# End:

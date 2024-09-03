@@ -1,0 +1,53 @@
+.xowiki-content fieldset {
+    border: 1px solid #ccc;
+}
+.xowiki-content .margin-form fieldset .form-item-wrapper .form-label {
+    width: 10em;
+}
+.xowiki-content .margin-form  fieldset .form-item-wrapper .form-widget, 
+.xowiki-content .margin-form  fieldset .form-button, 
+.xowiki-content .margin-form  fieldset div.form-help-text {
+    margin-left: 11em;
+}
+
+.xowiki-content fieldset div.form-label {
+    padding: 0px 0px 0px 6px;
+}
+/*
+ * Styling of form-inline (e.g. shuffle)
+ */
+.xowiki-content fieldset div.form-inline {
+    display: inline-block;
+    padding: 0px 20px 0px 6px;
+}
+
+.xowiki-content fieldset div.form-inline div {
+    display: inline-block;
+}
+
+.xowiki-content fieldset div.form-inline div.form-label {
+    width: auto;
+    padding: 0px 15px 0px 0px;
+}
+.xowiki-content fieldset div.form-inline div input[type=number] {
+    width: 64px;
+}
+
+.xowiki-content fieldset div.form-inline div input[type=checkbox] {
+    position: relative;    
+}
+
+.xowiki-content fieldset div.repeatable div.file-control div {
+    display: inline;
+    margin-right: 6px;
+}
+
+.xowiki-content fieldset fieldset.comp_correct_when div.form-inline {
+    padding: 0 0 0 0;
+}
+.xowiki-content fieldset fieldset.comp_correct_when div.form-inline div.form-label {
+    padding: 0 0 0 0;
+}
+.xowiki-content fieldset fieldset.comp_correct_when div.form-inline label.nocase {
+    margin: 0 2px 0 6px;
+}

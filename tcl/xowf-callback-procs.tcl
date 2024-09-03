@@ -12,40 +12,29 @@ namespace eval ::xowf {
     Callback when this an xowf instance is created
   } {
     ns_log notice "++++ BEGIN ::xowf::after-instantiate -package_id $package_id"
-    # General setup
-    ::xo::Package initialize -package_id $package_id
-    set folder_id [::$package_id folder_id]
-    
+
     #
     # Create a parameter page for convenience
     #
-    set pform_id [::xowiki::Weblog instantiate_forms -forms en:Parameter.form \
-                      -package_id $package_id]
-
-    ::xo::db::sql::content_item set_live_revision \
-        -revision_id [$pform_id revision_id] \
-        -publish_status production
-
-    set ia {
-      MenuBar t top_includelet none production_mode t with_user_tracking t with_general_comments f
-      with_digg f with_tags f
-      ExtraMenuEntries {{entry -name New.Extra.Workflow -label "#xowf.menu-New-Extra-Workflow#" -form /en:Workflow.form}}
-      with_delicious f with_notifications f security_policy ::xowiki::policy1
-    }
-    
-    set parameter_page_name en:xowf-default-parameter
-    set p [$pform_id create_form_page_instance \
-               -name $parameter_page_name \
-               -nls_language en_US \
-               -default_variables [list title "XoWf Default Parameter" parent_id $folder_id \
-                                       package_id $package_id instance_attributes $ia]]
-    $p save_new
-
+    # The parameter page needs a creation user. Since we are running
+    # in a callback, the user_id is -1, which is not defined in the
+    # users table. Therefore, we fetch the first site-wide admin user.
     #
-    # Make the parameter page the default
+    set user_id [::xo::dc list get_admin {
+      select user_id,p.object_id from acs_permissions p, users u, acs_magic_objects m
+      where user_id = p.grantee_id and p.object_id = m.object_id and m.name = 'security_context_root'
+      FETCH FIRST 1 ROWS ONLY
+    }]
     #
-    parameter::set_value -package_id $package_id -parameter parameter_page -value $parameter_page_name
-    callback subsite::parameter_changed -package_id $package_id -parameter parameter_page -value $parameter_page_name
+    # Initialize the package
+    #
+    ns_log notice ".... ::xowf::after-instantiate initialize package with -package_id $package_id -user_id $user_id"
+    ::xowf::Package initialize -package_id $package_id -user_id $user_id
+
+    ::xowf::Package configure_fresh_instance \
+        -package_id $package_id \
+        -parameters [::xowf::Package default_package_parameters] \
+        -parameter_page_info [::xowf::Package default_package_parameter_page_info]
 
     ns_log notice "++++ END ::xowf::after-instantiate -package_id $package_id"
   }

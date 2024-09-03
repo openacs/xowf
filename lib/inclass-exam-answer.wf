@@ -1,0 +1,728 @@
+# -*- Tcl -*-
+#
+# Workflow template for answering inclass exams. The workflow is
+# typically controlled from a parent workflow that a teacher can use
+# to create the exam, to try it out and to publish it
+# (online-exam.wf).
+#
+# This workflow is based on the test-item infrastructure using
+# the "renaming_form_loader" and "question_manager".
+#
+
+set :autoname 1   ;# to avoid editable name field
+set :policy ::xowf::test_item::test-item-policy-answer
+set :debug 0
+set :prevent_multiple_tabs 1
+
+#
+# Most of the generic functionality of this workflow is based on the
+# question manager. Use a different delegation instance in case of
+# strong customization.
+#
+:forward QM ::xowf::test_item::question_manager
+
+
+########################################################################
+#
+# Properties
+#
+# position: the current page in the exam
+# return_url: when the exam is finished, the user proceeds to this url
+# try_out_mode: a teacher can try the exam in this mode
+# ip: IP address of the user, kept in the instance attribute for auditing
+#
+########################################################################
+
+Property position -default 0
+Property return_url -default "" -allow_query_parameter true
+Property try_out_mode -default 0 -allow_query_parameter true
+Property proctor -default 0 -allow_query_parameter true
+
+########################################################################
+#
+# Action definitions
+#
+########################################################################
+
+Action allocate -proc activate {obj} {
+  # Called, when we try to create or use a workflow instance
+  # via a workflow definition ($obj is a workflow definition)
+  set parent_id [$obj parent_id]
+  set name [ns_md5 $parent_id-[::xo::cc set untrusted_user_id]]
+  set parent_obj [::xo::db::CrClass get_instance_from_db -item_id $parent_id]
+  :payload [list title [$parent_obj title] name $name parent_id [$parent_obj item_id]]
+}
+
+Action initialize -proc activate {obj} {
+  # called, after workflow instance was created
+
+  #
+  # When the exam is not open, keep the user from providing more input.
+  #
+  set ctx [:wf_context]
+  set exam_info [[$ctx wf_container] exam_info $obj]
+
+  if {![dict get $exam_info open]} {
+    #
+    # Let the user appear to be in the locking state, but don't set
+    # the true state of the user. This means, that when the exam is
+    # e.g. reopened, the use can continue wherever he was.
+    #
+    $ctx set_current_state [dict get $exam_info locking_state]
+  }
+}
+
+Action instproc activate {obj} {
+  #ns_log notice "... activate [self] $obj"
+
+  set ctx [:wf_context]
+  set exam_info [[$ctx wf_container] exam_info $obj]
+
+  if {![dict get $exam_info open]} {
+    #
+    # If the exam is not open, provide a user message
+    #
+    set locking_msg(initial) "#xowf.online-exam-not-published#"
+    set locking_msg(done) "#xowf.online-exam-finished#"
+    set locking_state [dict get $exam_info locking_state]
+    if {$locking_state ne [:get_next_state]} {
+      util_user_message -message "$locking_msg($locking_state)"
+      return 0
+    }
+  }
+  return 1
+}
+
+Action instproc goto_page {position} {
+  :set_property position $position
+}
+Action instproc set_page {obj increment} {
+  set parent_obj [::xo::db::CrClass get_instance_from_db -item_id [$obj parent_id]]
+  set pages [$obj QM question_names $parent_obj]
+  set position [:property position 0]
+  incr position $increment
+  if {$position < 0} {
+    set position 0
+  } elseif {$position >= [llength $pages]} {
+    set position [expr {[llength $pages] - 1}]
+  }
+  :goto_page $position
+}
+
+Action create previousQuestion \
+    -state_safe true \
+    -next_state working \
+    -label #xowf.previous_question# \
+    -title #xowf.previous_question_title# \
+    -proc activate {obj} {if {[next]} {:set_page $obj -1}}
+
+Action create nextQuestion \
+    -state_safe true \
+    -next_state working \
+    -label #xowf.next_question# \
+    -title #xowf.next_question_title# \
+    -proc activate {obj} {if {[next]} {:set_page $obj 1}}
+
+Action create review \
+    -next_state done \
+    -label #xowf.online-exam-review# \
+    -proc activate {obj} {
+      [[$obj wf_context ] wf_container] addSignature $obj
+    }
+
+Action create save \
+    -state_safe true \
+    -label #xowf.online-exam-save#
+
+Action create flag \
+    -state_safe true \
+    -proc activate {obj} {
+      #
+      # In case, the current question is flagged, remove flag,
+      # otherwise add flag.
+      #
+      set flagged [:property flagged {}]
+      set position [:property position 0]
+      set i [lsearch $flagged $position]
+      if {$i > -1} {
+        set flagged [lreplace $flagged $i $i]
+      } else {
+        lappend flagged $position
+      }
+      $obj set_property -new 1 flagged $flagged
+    }
+
+Action create logout \
+    -state_safe true \
+    -next_state done \
+    -label #xowf.inclass-exam-submit# \
+    -title #xowf.inclass-exam-submit_title# \
+    -extra_css_class "logout" \
+    -proc activate {obj} {
+      [[$obj wf_context ] wf_container] addSignature $obj
+      #
+      # When "return_url" is provided, redirect to it.
+      #
+      set return_url [$obj property return_url .]
+      if {$return_url ne ""} {
+        next
+        ::xo::cc set_parameter return_url $return_url
+      }
+    }
+
+# Action start \
+#     -next_state working \
+#     -label #xowf.online-exam-start# \
+#     -proc activate {obj} {
+#       $obj set_property position 0
+#     }
+
+# Action start_again \
+#     -label #xowf.first_question# \
+#     -title #xowf.first_question_title# \
+#     -next_state working -proc activate {obj} {
+#       $obj set_property position 0
+#     }
+
+########################################################################
+#
+# State definitions
+#
+########################################################################
+
+State parameter {
+  {view_method edit}
+  {extra_js {
+    urn:ad:js:jquery
+    ../file:seal.js?m=download
+  }}
+  {extra_css {
+    /resources/xowf/test-item.css
+  }}
+}
+
+State working \
+    -form_loader working_form_loader
+
+State initial \
+    -form_loader working_form_loader
+
+State done \
+    -form_loader done_form_loader
+
+#-form_loader summary_form
+
+
+########################################################################
+#
+# Helper methods for the workflow container
+#
+########################################################################
+
+#
+# Field-renaming form loader
+#
+proc working_form_loader {ctx form_name} {
+  #ns_log notice "============ working_form_loader"
+  set obj [$ctx object]
+
+  #
+  # When we are in the reporting modes return the results from the
+  # "done_form_loader". We could check as well the state oft the
+  # parent workflow, but maybe we want this in more situations.
+  #
+  if {[$obj exists online-exam-userName]} {
+    return [done_form_loader $ctx $form_name]
+  }
+
+  set item_nr [:current_position $obj]
+  #ns_log notice "[self] current position => $item_nr"
+
+  set parent_id [$obj parent_id]
+  set parent_obj [::xo::db::CrClass get_instance_from_db -item_id $parent_id]
+
+  #
+  # In case shuffling is required, fetch via the shuffled position.
+  #
+  set shuffle_id [expr {[$parent_obj property shuffle_items 0] ? [$obj creation_user] : -1}]
+  set position [:QM shuffled_index -shuffle_id $shuffle_id $parent_obj $item_nr]
+
+  #
+  # Load the form.
+  #
+  set form_obj [:QM nth_question_obj $parent_obj $position]
+
+  #
+  # Substitute markup in the constant part of the form in the context
+  # of the original form object, setting the resolve context in the
+  # background to be able to refer to links relative to the from, when
+  # it was created.
+  #
+  set d [:QM item_substitute_markup \
+             -obj $obj \
+             -position $item_nr \
+             -form_obj $form_obj]
+  $form_obj set_property form [dict get $d form]
+
+  #
+  # Add __current_item_nr as hidden form field to detect and handle
+  # cases, where actual form-data divergates from data in the
+  # database.
+  #
+  $obj proc extra_html_fields {} [list ::html::input -type hidden -name __current_item_nr -value $item_nr]
+
+  #
+  # Update IP address each time the form is loaded.
+  #
+  if {[$obj state] in {"initial" "working"}} {
+    $obj set_property ip [expr {[ns_conn isconnected] ? [ad_conn peeraddr] : "nowhere"}]
+  }
+
+  #
+  # Update the title of the page
+  #
+  :set_title $obj \
+      -prevent_multiple_tabs [expr {[$obj property try_out_mode 0] == 0}] \
+      -position $position \
+      -item_nr $item_nr \
+      -for_question \
+      -with_minutes
+
+  #ns_log notice "============ working_form_loader: set title -position $position -item_nr $item_nr "
+
+  #
+  # Disallow spellcheck/paste if required
+  #
+  foreach {p default} {paste true spellcheck true translation false} {
+    if {![$parent_obj property allow_$p $default]} {
+      :QM disallow_$p $form_obj
+    }
+  }
+  #$form_obj lappend form_constraints {__item_nr:hidden}
+
+  #ns_log notice "============ working_form_loader: [$form_obj serialize] "
+  ns_log notice "============ working_form_loader returns [$form_obj name] "
+
+  return $form_obj
+}
+
+#
+# Done form loader
+#
+proc done_form_loader {ctx form_name} {
+  set obj [$ctx object]
+  #ns_log notice "==================================== done_form_loader called"
+
+  set container [$ctx wf_container]
+
+  #
+  # Current question and time information are not relevant for a
+  # submitted exam. We clear them from the title.
+  #
+  $container set_title $obj \
+      -prevent_multiple_tabs false
+
+  if {[$obj exists __feedback_mode] && [$obj set __feedback_mode] > 0} {
+    set form_objs [expr {[$obj exists __form_objs] ? [$obj set __form_objs] : ""}]
+    set result [$container summary_form $ctx $form_name $form_objs]
+  } else {
+    $container plain_template $obj
+    set result [::xowiki::Form new \
+                    -destroy_on_cleanup \
+                    -set name en:finished \
+                    -form {{<form>
+                      <div class='container-fluid'><div class='row'>
+                      <div class="col-sm-6"><p><p>#xowf.inclass-exam-already_answered#</div>
+                      </div></div>
+                      </form>} text/html} \
+                    -text {} \
+                    -anon_instances t \
+                   ]
+  }
+  #ns_log notice "==================================== done_form_loader DONE"
+  return $result
+}
+
+#
+# Set "title" with question/user/IP information.  Note that the
+# "set_title" method is as well responsible for calling the rename
+# function via question_manager.
+#
+:proc set_title {
+  obj
+  -position:integer
+  -item_nr:integer
+  {-for_question:switch false}
+  {-with_minutes:switch false}
+  {-form_info ""}
+  {-prevent_multiple_tabs:boolean true}
+} {
+  set parent_obj [::xo::db::CrClass get_instance_from_db -item_id [$obj parent_id]]
+  if {$for_question && [$obj state] in {initial working}} {
+    if {$form_info eq ""} {
+      set form_info [:QM nth_question_form \
+                         -with_numbers \
+                         -with_title=false \
+                         -with_minutes=$with_minutes \
+                         -position $position \
+                         -item_nr $item_nr \
+                         $parent_obj]
+    }
+    set title_info [lindex [dict get $form_info title_infos] 0]
+    set titleString [dict get $title_info full_title]
+    set title [list [string trim $titleString]]
+  }
+  #
+  # Add the exam name to the title
+  #
+  lappend title [$parent_obj title]
+  if {[$parent_obj property show_ip t]} {
+    #
+    # Add the IP address to the title
+    #
+    lappend title "IP: [$obj property ip]"
+  }
+  $obj title [join $title "; "]
+  #ns_log notice "TITLE [binary encode hex $title]"
+
+  #:msg set_title-set_parameter-MenuBar-[$obj state]
+  :plain_template -prevent_multiple_tabs $prevent_multiple_tabs $obj
+
+  if {[$parent_obj state] eq "published" && [$obj state] ne "done"} {
+    set total_minutes [:QM total_minutes_for_exam -manager $parent_obj]
+    if {$total_minutes > 1} {
+      set base_time [:QM exam_base_time -manager $parent_obj -answer_obj $obj]
+      set target_time [:QM exam_target_time \
+                           -manager $parent_obj \
+                           -base_time $base_time \
+                          ]
+      set url_poll [$obj pretty_link -query m=message-poll]
+      set url_dismiss [$obj pretty_link -query m=message-dismiss]
+      ::xo::cc set_parameter top_includelet \
+          [list exam-top-includelet \
+               -countdown_audio_alarm [$parent_obj property countdown_audio_alarm t] \
+               -target_time $target_time \
+               -url_poll $url_poll \
+               -url_dismiss $url_dismiss \
+               -poll_interval 5000 \
+              ]
+    }
+  }
+}
+
+:proc plain_template {{-prevent_multiple_tabs true} obj} {
+  ::xo::cc set_parameter MenuBar 0
+  ::xo::cc set_parameter template_file view-plain-master
+  set parent_obj [$obj set parent_obj]
+  if {[$obj property proctor 0] || [$parent_obj property proctoring 0]} {
+    template::set_css_property -class header -property display -value none
+    template::set_css_property -class footer -property display -value none
+    template::set_css_property -class community_title -property display -value none
+  }
+  #template::set_css_property -querySelector ".context a" -property pointerEvents -value none
+  template::set_css_property -class pagetitle -property display -value none
+  template::set_css_property -class sidebar -property display -value none
+
+  #
+  # Is the per-call flag for dectivating multiple_tabs prevention
+  # active, and is the feature set in the workflow parameters?
+  #
+  if {$prevent_multiple_tabs && [info exists :prevent_multiple_tabs] && ${:prevent_multiple_tabs}} {
+    #ns_log notice "!!! prevent multiple tabs"
+    xowf::test_item::answer_manager prevent_multiple_tabs -cookie_name "tab_counter_[$obj item_id]"
+  }
+}
+
+#
+# Form loader for summary (shows all submission data of a user)
+#
+# The summary_form loader is e.g. called indirectly by www-print-answers of
+# oneline-exam.wf
+#
+:proc summary_form {ctx form_title {form_objs ""}} {
+  set obj [$ctx object]
+  set parent_obj [::xo::db::CrClass get_instance_from_db -item_id [$obj parent_id]]
+  #:msg "summary_form_loader $form_title /$form_objs/ [$obj instance_attributes]"
+
+  set shuffle_id [expr {[$parent_obj property shuffle_items 0] ? [$obj creation_user] : -1}]
+  set form_info [:QM combined_question_form \
+                     -with_numbers \
+                     -with_title \
+                     -with_points \
+                     -user_specific \
+                     -shuffle_id $shuffle_id \
+                     -user_answers $obj \
+                     -form_objs $form_objs \
+                     $parent_obj]
+  #ns_log notice "SUMMARY FORM shuffle_id $shuffle_id $form_info"
+  set aggregated_form_options [expr {[$obj exists __aggregated_form_options]
+                                     ? [$obj set __aggregated_form_options]
+                                     : ""}]
+  set summary_form [:QM aggregated_form -with_grading_box true {*}$aggregated_form_options $form_info]
+  set summary_fc [dict get $form_info disabled_form_constraints]
+
+  #
+  # For the exam-protocol, we never want prevent_multiple_tabs to be
+  # fired.
+  #
+  :set_title $obj -prevent_multiple_tabs false
+
+  #ns_log notice summary_form=$summary_form
+  #ns_log notice fc=$summary_fc
+  return [::xowiki::Form new \
+              -destroy_on_cleanup \
+              -name en:summary \
+              -title $form_title \
+              -form [list <form><div>$summary_form</div></form> text/html] \
+              -text {} \
+              -anon_instances t \
+              -form_constraints $summary_fc]
+}
+
+:proc current_position {obj} {
+  if {[$obj form_parameter __form_action ""] eq "save-form-data"} {
+    #
+    # In case there was an mutual overwrite, the position as provided
+    # by the instance attributes might deviate from the position,
+    # based on which the actual form data was generated. So, for
+    # validating and updating one has to change the position to the
+    # one from the form data (when this differs). Note that the
+    # randomizer depends on property "position" as well.
+    #
+    set current_item_nr [$obj form_parameter __current_item_nr]
+    set position [$obj property position]
+    if {$current_item_nr ne "" && $current_item_nr ne $position} {
+      ns_log warning "working_form_loader: position provided by form differs from stored data." \
+          "Use position from form data $current_item_nr instead of $position"
+      $obj set_property position $current_item_nr
+    }
+  }
+  return [$obj property position]
+}
+
+:proc addSignature {obj} {
+  set answerAttributes [xowf::test_item::renaming_form_loader \
+                            answer_attributes [$obj instance_attributes]]
+  set sha256 [ns_md string -digest sha256 $answerAttributes]
+  $obj set_property -new true signature $sha256
+  return $sha256
+}
+
+:proc exam_info {obj} {
+  #
+  # Don't allow a student to enter values when the state of the parent
+  # workflow is not published (the teacher has not published the exam,
+  # or closed it already). But allow always usage in try-out-mode.
+  #
+  set parent_obj [::xo::db::CrClass get_instance_from_db -item_id [$obj parent_id]]
+  set parent_state [$parent_obj state]
+  set open [expr {$parent_state eq "published" || [$obj property try_out_mode 0] == 1}]
+  set locking_state [expr {$parent_state eq "initial" ? "initial" : "done"}]
+  return [list state $parent_state open $open locking_state $locking_state]
+}
+
+########################################################################
+#
+# Object specific operations
+#
+########################################################################
+
+:object-specific {
+  set isAnswerInstance [expr {[:is_wf_instance] == 1 && [:is_wf] == 0}]
+  #ns_log notice "==== object-specific inclass-exam-answer [self] isAnswerInstance $isAnswerInstance"
+
+  if {!$isAnswerInstance} {
+    #
+    # This happens during create-new.
+    #
+    #ns_log notice "==== object-specific inclass-exam-answer [self] not called on answerInstance"
+    return
+  }
+
+  #
+  # Ensure default value is updated for each instance individually.
+  #
+  set ctx [:wf_context]
+  set container [$ctx wf_container]
+  ${container}::Property ip -default [expr {[ns_conn isconnected] ? [ad_conn peeraddr] : "nowhere"}]
+
+  :forward QM ::xowf::test_item::question_manager
+  :QM initialize -wfi [self]
+  #ns_log notice "==== object-specific inclass-exam-answer [self] QM initialized with [self]"
+
+  set parent_obj [::xo::db::CrClass get_instance_from_db -item_id ${:parent_id}]
+
+  #:log "inclass-exam-answer state ${:state}"
+  set ctx [:wf_context]
+  set container [$ctx wf_container]
+  if {$ctx ne $container} {
+    $ctx forward working_form_loader $container %proc $ctx
+    $ctx forward done_form_loader $container %proc $ctx
+    $ctx forward summary_form $container %proc $ctx
+  }
+  set :policy ::xowf::test_item::test-item-policy1
+
+  if {${:state} in {initial working done}} {
+    set parent_obj [::xo::db::CrClass  get_instance_from_db -item_id [:parent_id]]
+    set question_count [:QM question_count $parent_obj]
+    if {${:state} eq "initial" && [:property seeds] eq ""} {
+      :QM add_seeds \
+          -obj [self] \
+          -seed ${:creation_user} \
+          -number $question_count
+      #
+      # After creating the seeds, replace pool questions in case these
+      # are contained. The list of pool questions will be kept per
+      # fill-out instance.
+      #
+
+      #ns_log notice "==== object-specific inclass-exam-answer [self] replace_pool_questions"
+      :QM replace_pool_questions \
+          -answer_obj [self] \
+          -exam_obj $parent_obj
+      #ns_log notice "==== object-specific inclass-exam-answer [self] replace_pool_questions DONE"
+
+    }
+
+    #
+    # Use the current_position in the sense of the nth question of the
+    # user, which is not necessarily the nth question in the list of
+    # questions due to shuffling.
+    #
+    set current_position0 [:property position]
+    set current_position [$container current_position [self]]
+    #ns_log notice "============ object-specific old " \
+        "current_position $current_position0 new current_position $current_position"
+    set actions {}
+
+    if {${:state} ne "done"} {
+      set revision_sets [expr {[info exists :item_id] ? [:get_revision_sets -with_instance_attributes] : ""}]
+      set positions {}
+      foreach revision_set $revision_sets {
+        dict set positions [dict get [ns_set get $revision_set instance_attributes] position] 1
+      }
+      set pagination [:QM pagination_actions \
+                          -container $container \
+                          -visited [dict keys $positions] \
+                          -flagged [:property flagged {}] \
+                          -question_count $question_count \
+                          -current_position $current_position \
+                         ]
+
+      set actions $pagination
+      if {${:state} in {initial working} } {
+        if {$question_count > 1 && [$parent_obj property show_pagination_actions t]} {
+          lappend actions flag
+        }
+        lappend actions save
+      }
+      lappend actions logout
+    }
+
+    ${container}::${:state} actions $actions
+  }
+  template::add_confirm_handler \
+      -CSSclass logout \
+      -message #xowf.submit_confirmation#
+
+  :proc www-autosave-attribute {} {
+    #
+    # In try-out-mode (testrun), autosave is always allowed.
+    #
+    if {[:property try_out_mode 0]} {
+      set autosaveAllowed 1
+    } else {
+      #
+      # Reject autosave in case the exam was closed already.
+      #
+      set exam_info [[[:wf_context] wf_container] exam_info [self]]
+      set autosaveAllowed [dict get $exam_info open]
+      if {$autosaveAllowed} {
+        #
+        # Don't allow the autosave operations, when
+        # submission is overdue.
+        #
+        set parent_obj [::xo::db::CrClass get_instance_from_db -item_id ${:parent_id}]
+        set base_time [:QM exam_base_time -manager $parent_obj -answer_obj [self]]
+        set base_clock [clock scan [::xo::db::tcl_date $base_time tz secfrac]]
+
+        set seconds_working [expr {[clock seconds] - $base_clock}]
+        set total_minutes [:QM total_minutes_for_exam -manager $parent_obj]
+        set timeLeft [expr {$total_minutes*60 - $seconds_working}]
+
+        #
+        # The autosave operation has a 10 secs delay. To allow save operations
+        # up to the last second, we accept an 10
+        # secs overdue on autosave.
+        #
+        if {$timeLeft < -10} {
+          set autosaveAllowed 0
+          set reason "time used up (time left $timeLeft seconds)"
+        }
+      } else {
+        set reason "exam closed"
+      }
+    }
+    if {$autosaveAllowed} {
+      next
+    } else {
+      set reply [subst {{"feedback": "[_ xowf.autosave_rejected_overdue]"}}]
+      ns_log notice "inclass-exam autosave rejected: $reason - $reply"
+      ns_return 200 application/json $reply
+      ad_script_abort
+    }
+  }
+
+  ########################################################################
+  # AJAX call "message-poll"
+  #
+  :proc www-message-poll {} {
+    #
+    # Query messages for this exam and user
+    #
+    set response [::xowiki::includelet::personal-notification-messages get_messages_response \
+                      -notification_id ${:parent_id} \
+                      -user_id [xo::cc user_id]]
+    ns_return 200 text/json $response
+    #ns_log notice "AJAX-message-poll -> $response"
+    ad_script_abort
+  }
+
+  #
+  # AJAX call "message-dismiss"
+  #
+  :proc www-message-dismiss {} {
+    #
+    # Handle message dismiss
+    #
+    #ns_log notice "AJAX-message-dismiss (${:parent_id} [xo::cc user_id] [ns_queryget ts])"
+    ::xowiki::includelet::personal-notification-messages message_dismiss \
+        -notification_id ${:parent_id} \
+        -user_id [xo::cc user_id] \
+        -ts [ns_queryget ts]
+    ns_return 200 text/plain OK
+    ad_script_abort
+  }
+
+  #
+  # Do NOT allow edits from multiple browser instances or tabs.
+  #
+  :proc mutual_overwrite_occurred {} {
+    next
+    ns_log warning "mutual_overwrite_occurred [self] ${:name}: user [::xo::cc user_id] => auto-close window"
+    template::add_body_script -script [subst {
+      alert('Not allowed to have two browser instances or tabs open!');
+      window.open("about:blank", "_self").close();
+    }]
+  }
+  #ns_log notice "==== object-specific inclass-exam-answer [self] isAnswerInstance $isAnswerInstance DONE"
+
+}
+
+
+#
+# Local variables:
+#    mode: tcl
+#    tcl-indent-level: 2
+#    indent-tabs-mode: nil
+# End:

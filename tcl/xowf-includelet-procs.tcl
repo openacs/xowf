@@ -5,8 +5,8 @@
   @creation-date 2008-03-05
 }
 
-::xo::db::require package xowiki
-
+::xo::library require -package xotcl-core 06-package-procs
+::xo::library require -package xowiki includelet-procs
 
 namespace eval ::xowiki::includelet {
   #
@@ -18,8 +18,8 @@ namespace eval ::xowiki::includelet {
   }
 
   #
-  # Create an includelet called wf-todo, which lists the todo items 
-  # for a user_id from a single or multiple worflows)
+  # Create an includelet called wf-todo, which lists the todo items
+  # for a user_id from a single or multiple workflows)
   #
   ::xowiki::IncludeletClass create wf-todo \
       -superclass ::xowiki::Includelet \
@@ -41,10 +41,10 @@ namespace eval ::xowiki::includelet {
       select assignee,xowiki_form_page_id,state,i.publish_status,page_template,
       p.creation_date, p.last_modified, p,description,
       i2.name as wf_name,p.title,i.name,i.parent_id,o.package_id as pid
-      from xowiki_form_pagei p,cr_items i, cr_items i2, acs_objects o 
+      from xowiki_form_pagei p,cr_items i, cr_items i2, acs_objects o
       where (assignee = :user_id or acs_group__member_p(:user_id,assignee, 'f'))
-      and i.live_revision = xowiki_form_page_id 
-      and p.page_template = i2.item_id 
+      and i.live_revision = xowiki_form_page_id
+      and p.page_template = i2.item_id
       and o.object_id = xowiki_form_page_id
     }
     if {$workflow ne ""} {
@@ -71,7 +71,7 @@ namespace eval ::xowiki::includelet {
           set path $workflow
         }
         set parent_id [${:__including_page} parent_id]
-        set wf_page [$package_id get_page_from_item_ref -parent_id $parent_id $path]
+        set wf_page [::$package_id get_page_from_item_ref -parent_id $parent_id $path]
         if {$wf_page eq ""} {
           :msg "cannot resolve page $workflow"
           set package_id -1; set page_template -1
@@ -101,7 +101,7 @@ namespace eval ::xowiki::includelet {
           -description "Workflow instance of workflow $wf_name $description"
     }
     ${:items} mixin ::xo::ical::VCALENDAR
-    ${:items} configure -prodid "-//WU Wien//NONSGML XoWiki Content Flow//EN" 
+    ${:items} configure -prodid "-//WU Wien//NONSGML XoWiki Content Flow//EN"
     set text [${:items} as_ical]
     #:log "--ical sending $text"
     #ns_return 200 text/calendar $text
@@ -136,6 +136,81 @@ namespace eval ::xowiki::includelet {
 
 }
 
+namespace eval ::xowiki::includelet {
+  #
+  # countdown-timer based on answer_manager.countdown_timer
+  #
+  Class create countdown-timer -superclass ::xowiki::Includelet \
+      -parameter {
+        {__decoration plain}
+        {parameter_declaration {
+          {-target_time ""}
+          {-audio_alarm "true"}
+        }}
+      } -ad_doc {
+        Countdown timer
+
+        @query_param target_time
+      }
+
+  countdown-timer instproc render {} {
+    :get_parameters
+    return [xowf::test_item::answer_manager countdown_timer \
+                -target_time $target_time \
+                -audio_alarm $audio_alarm \
+                -id [::xowiki::Includelet html_id [self]]]
+  }
+}
+
+namespace eval ::xowiki::includelet {
+  #
+  # exam-top-includelet
+  #
+  Class create exam-top-includelet -superclass ::xowiki::Includelet \
+      -parameter {
+        {__decoration plain}
+        {parameter_declaration {
+          {-countdown_audio_alarm "true"}
+          {-target_time ""}
+          {-url_poll ""}
+          {-url_dismiss ""}
+          {-poll_interval 5000}
+        }}
+      } -ad_doc {
+
+        This is the top includelet for the in-class exam, containing a
+        countdown timer and the personal notifications includelet
+
+        @query_param target_time
+        @query_param url_poll
+        @query_param url_dismiss
+        @query_param poll_interval
+      }
+
+  exam-top-includelet instproc render {} {
+    :get_parameters
+
+    if {$url_poll ne ""} {
+      set pn [${:__including_page} include \
+                  [list personal-notification-messages \
+                       -url_poll $url_poll \
+                       -url_dismiss $url_dismiss \
+                       -poll_interval $poll_interval \
+                      ]]
+    } else {
+      set pn ""
+    }
+    return [subst {
+      [${:__including_page} include \
+           [list countdown-timer -audio_alarm $countdown_audio_alarm -target_time $target_time]]
+      $pn
+    }]
+  }
+
+}
+
+
+::xo::library source_dependent
 #
 # Local variables:
 #    mode: tcl

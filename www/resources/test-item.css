@@ -1,0 +1,455 @@
+/*
+ * Single_exam styling
+ */
+div.single_exam {
+    border-style: solid;
+    border-width: 1px;
+    border-color: #aaaaaa;
+    padding: 0px 0px 5px 0px;
+}
+div.single_exam div.correct input\[type="text"\]:disabled {
+    background: #ddFFdd;
+    color: black;
+}
+div.single_exam div.incorrect input\[type="text"\]:disabled {
+    background: #FFdddd;
+    color: black;
+}
+div.single_exam div.runtime-panel {
+    background: #efefef;
+    color: black;
+    padding: 2px 10px 4px 10px;
+}
+div.xowiki-content div.single_exam div.runtime-panel h3 {
+    font-weight: normal;
+    font-size: 20px;
+}
+div.single_exam div.grading-box .thumbnail-files-wrapper {
+    margin-top: 4px;
+}
+div.xowiki-content div.single_exam h4 {
+    font-size: 16px;
+    margin-bottom: 4px;
+}
+div.single_exam div.runtime-panel .data {
+    color: #888;
+}
+div.single_exam div.runtime-panel a.other,
+div.single_exam div.runtime-panel a.live {
+    color: #66f;
+}
+div.single_exam div.runtime-panel .right {
+    float: right;
+}
+div.single_exam div.runtime-panel .revision-details {
+    text-align: right;
+}
+div.single_exam > form {
+    padding: 15px;
+}
+
+div.panel a.link-disabled {
+    pointer-events: none;
+    text-decoration: none;
+    cursor: default;
+    opacity: 0.6;
+}
+
+@media print{
+    div {
+        font-size: 11px;
+    }
+    div.single_exam {
+        page-break-after: always;
+    }
+    div.single_exam h2 {
+        font-size: 12px;
+    }
+    div.single_exam h3 {
+        font-size: 12px;
+    }
+    div.single_exam div.form-label {
+        display: none;
+    }
+    div.xowiki-content a.btn {
+        display: none;
+    }
+    div.header {
+        display: none;
+    }
+    #print-button {
+        display: none;
+    }
+}
+
+#print-button {
+    float: right;
+}
+
+/*
+ * Exam preview
+ */
+div.exam-preview {
+    background: #fafafa;
+    padding: 10px;
+    margin:10px;
+    background-size: 40px 40px;
+    background-image: linear-gradient(to right, #eee 1px, transparent 1px), linear-gradient(to bottom, #eee 1px, transparent 1px);
+}
+div.exam-preview div.question_text {
+    background-color: inherit;
+}
+
+
+/*
+ * item-styling
+ */
+div.question_text {
+    /*background-color: #fafafa;*/
+    overflow: auto;
+    max-height: 80vh;
+}
+
+/* keep display for div.upload_interaction div.form-label */
+
+/* Definition for Bootstrap 3 */
+div.mc_interaction div.form-label,
+div.sc_interaction div.form-label,
+div.text_interaction div.form-label
+{
+    display: none;
+}
+/* Definition for Bootstrap 5 */
+div.mc_interaction label.form-label,
+div.sc_interaction label.form-label,
+div.text_interaction label.form-label
+{
+    display: none;
+}
+
+div.mc_interaction,
+div.sc_interaction,
+div.short_text_interaction,
+div.composite_interaction,
+div.text_interaction,
+div.reorder_interaction {
+    margin: 0 3em 0 3em;
+    padding: 15px 0px 15px 0px;
+}
+div.mc_interaction label,
+div.sc_interaction label {
+    font-weight: normal;
+    /*margin: 0px 0px 10px 0px;*/
+    padding: 0px 0px 4px 0px;
+}
+label div.richtext-label {
+    display: inline-block;
+    /*   width: 450px;*/
+    padding: 0px 0px 0px 35px;
+    margin: 0px 0px 6px 0px;
+}
+div.short_text_interaction div.progress,
+div.mc_interaction div.progress,
+div.sc_interaction div.progress {
+    margin: 0px;
+}
+div.short_text_interaction div.progress div.progress-bar,
+div.mc_interaction div.progress div.progress-bar,
+div.sc_interaction div.progress div.progress-bar {
+    background-color: #ccc;
+    color: #444;
+}
+div.mc_interaction label input[type="checkbox"],
+div.sc_interaction label input[type="radio"] {
+    position: absolute;
+    vertical-align: top;
+    margin: 2px 0px 0px 10px;
+}
+
+div.short_text_interaction li {
+    padding: 0px 0px 10px 0px;
+}
+
+/*
+ * Feedback styling
+ */
+div.text_interaction div.incorrect {
+    background: #ffcccc;
+}
+div.short_text_interaction div.incorrect input:disabled {
+    background: #ffdddd;
+}
+div.text_interaction div.textarea,
+div.short_text_interaction div.textarea,
+div.short_text_interaction div.text {
+    background: #eee;
+    white-space: pre-wrap;
+    padding: 10px 10px 10px 10px;
+    border-width: 1px 1px 1px 1px;
+    border-style: solid;
+    border-color: #ddd;
+    border-radius: 4px;
+}
+
+div.text_interaction div.correct,
+div.short_text_interaction div.correct,
+div.mc_interaction label.correct,
+div.sc_interaction label.correct,
+div.reorder_interaction li.correct
+{
+    border-width: 0px 0px 0px 4px;
+    border-style: solid;
+    border-color: green;
+}
+
+div.text_interaction div.incorrect,
+div.short_text_interaction div.incorrect,
+div.mc_interaction label.incorrect,
+div.sc_interaction label.incorrect,
+div.reorder_interaction li.incorrect
+{
+    border-width: 0px 0px 0px 4px;
+    border-style: solid;
+    border-color: red;
+}
+div.text_interaction div.textarea span.match-contains,
+div.short_text_interaction div.textarea span.match-contains,
+div.short_text_interaction div.text span.match-contains {
+    background: #DDFF99 !important; /* Needed for printing, bootstrap.css clears background otherwise */
+    margin: 0px 2px;                /* Otherwise two spans separated by space merge visually */
+}
+
+div.text_interaction div.textarea span.match-contains-not,
+div.short_text_interaction div.textarea span.match-contains-not,
+div.short_text_interaction div.text span.match-contains-not {
+    background: #FFDDA0 !important; /* Needed for printing, bootstrap.css clears background otherwise */
+    margin: 0px 2px;                /* Otherwise two spans separated by space merge visually */
+}
+
+div.short_text_interaction div.description {
+    white-space: pre-wrap;
+}
+
+/*
+ * At least, when bootstrap forms are in use (vertical mode), there is
+ * no need to limit the width of a form label.
+ */
+div.xowiki-content .content-with-folders form div.form-label {
+    /* width: 200px;*/
+}
+
+/*
+ * Selection form styling
+ */
+div.xowiki-content .content-with-folders form  {
+    margin: 0px 0px 0px 16px;
+}
+div.workarea h3 {
+    font-weight: normal;
+    font-style: normal;
+    font-size: 14px;
+    background-color: #fafafa;
+}
+
+.xowiki-content div.form-inline div {
+    display: inline-block;
+    padding-right: 10px;
+}
+.xowiki-content div.form-inline {
+    display: inline-block;
+}
+
+
+/*
+ * Action button styling
+ */
+form button.current {
+    background-color: #ddd;
+    border-top: 2px solid #999;
+    border-bottom: 2px solid #999;
+    border-style: groove;
+}
+form div.pagination button.visited {
+    background-color: #E6F4D6;
+    color: #555;
+}
+form div.pagination button span.text-danger {
+    color: #a94442;
+    background-color: transparent;
+}
+
+/*form div.pagination button.bookmark::after {
+    font-family: 'Glyphicons Halflings';
+    content: "\e034";
+}*/
+
+
+/*
+ * Attachments styling
+ */
+div.question_text div.question_attachments div.attachment {
+    margin-left: 20px;
+}
+
+/*
+ * Modal + jquery tag cloud
+ */
+div.short_text_interaction .modal,
+div.text_interaction .modal
+{
+    display: block;     /* undo display:none          */
+    height: 0;          /* height:0 is also invisible */
+    overflow-y: hidden; /* no-overflow                */
+}
+
+div.short_text_interaction .modal.fade.in,
+div.text_interaction .modal.fade.in
+{
+  height: auto;         /* let the content decide it  */
+}
+
+
+div.xowiki-content h1 {
+    font-size: 24px;
+}
+
+/*
+ * user countdown-timer styling
+ */
+div.xowiki-content div.countdown-timer {
+    float: right;
+    margin-top: 10px;
+    margin-bottom: 10px;
+    vertical-align: text-bottom;
+}
+div.xowiki-content div.countdown-timer span.glyphicon-volume-off {
+    color: red;
+    font-size: large;
+    vertical-align: text-bottom;
+}
+div.xowiki-content div.countdown-timer span.glyphicon-volume-up {
+    color: green;
+    font-size: large;
+    vertical-align: text-bottom;
+}
+
+
+/*
+ * This is more or less a standard setup for bootstrap 3,
+ * just used here for over-eager downstream styling.
+ */
+table.grading .progress-bar {
+    background-color: #337ab7;
+    height: 100%;
+}
+
+/*
+ * Indent collapsed content a little. (can/should be improved)
+ */
+form.Form-inclass-exam div.collapse {
+    margin-left: 2em;
+}
+
+
+/*
+ * Download file submission from potentially multiple exams
+ */
+
+div.xowiki-content .download-submissions {
+    margin-top: 2em;
+}
+
+/*
+ * Grading box and grading modal dialog
+ */
+div.grading-box span.comment,
+div.grading-box span.points {
+    padding-right: .5ex;
+}
+div.grading-box a.manual-grade {
+    color: #dd1e1e;
+}
+div.grading-box span.comment,
+div.grading-box span.percentage,
+div.grading-box span.points {
+    color: #888888;
+}
+div.grading-box span.feedback-label {
+    padding-left: 4px;
+}
+
+div.xowiki-content div.modal-dialog h5,
+div.xowiki-content div.modal-dialog h4 {
+    clear: inherit;
+}
+div.grading-box span.text-warn {
+    color: #ed920ac9;
+}
+
+/*
+ * Grading modal dialog
+ */
+
+#grading-modal div.modal-dialog .control-label {
+    margin-top: 0.5rem;
+    margin-bottom: 0.5rem;
+    font-weight: bold;
+}
+
+
+/*
+ * Configuration modal dialog
+ */
+#configuration-modal {
+    font-size: smaller;
+}
+/*
+ * Editing grading schemes
+ */
+form.Form-edit-grading-scheme input.form-control.inline {
+    display: inline;
+    width: inherit;
+}
+form.Form-edit-grading-scheme div.form-group div input[type="number"].form-control {
+    text-align: right;
+    width: 5em;
+    direction: rtl;
+}
+form.Form-edit-grading-scheme div input[type="number"].form-control.inline {
+    text-align: right;
+    width: 6em;
+    direction: rtl;
+}
+
+/*
+form.Form-edit-grading-scheme input::-webkit-outer-spin-button,
+form.Form-edit-grading-scheme input::-webkit-inner-spin-button { margin-left: 2px; }
+*/
+
+#grading-modal ul.dropZone {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+}
+.thumbnail-file {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    border: 1px solid #CAD0D2;
+    border-radius: 4px;
+    background-color: #FCFCFC;
+    padding: 2px;
+}
+.thumbnail-file-icon {
+    font-size: larger;
+}
+.thumbnail-file-text {
+    gap: 3px;
+    font-family: sans-serif;
+    font-size: 0.8em;
+}
+.thumbnail-files {
+    display: flex;
+    gap: 10px;
+}

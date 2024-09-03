@@ -1,0 +1,1041 @@
+# -*- Tcl -*-
+########################################################################
+# Inclass-Exam workflow, designed similar to online-exam
+# ======================================================
+#
+# Defining exams: This workflow lets a lecturer choose from a
+# predefined set of exam questions, which are typically open text,
+# short text, single or multiple choice questions.  The lecturer
+# selects test questions via drag and drop. The lecturer can perform a
+# test run of the created exam, and can get the results via a result
+# table.
+#
+# Publishing and closing exams: When a lecturer is satisfied with the
+# exam, the exam can be published. In this step, all answers of the
+# testing phase are deleted. In the process of publishing, the link to
+# start the exam is offered to the user.  When the exam is published,
+# the lecturer can see the incoming answers in the report by refreshing
+# the page. When the exam is done, it is unpublished. The workflow
+# offers the lecturer to see a summary of the results in form of a
+# table (an to download the results via csv), or the lecturer can
+# produce a printer friendly version of the answers.
+#
+# An admin might wish to add the following entries to the folder to ease
+# creation of exercises and exams
+#
+#   {clear_menu -menu New}
+#
+#   {entry -name New.Item.TextInteraction -form en:edit-interaction.wf -query p.item_type=Text}
+#   {entry -name New.Item.ShortTextInteraction -form en:edit-interaction.wf -query p.item_type=ShortText}
+#   {entry -name New.Item.SCInteraction -form en:edit-interaction.wf -query p.item_type=SC}
+#   {entry -name New.Item.MCInteraction -form en:edit-interaction.wf -query p.item_type=MC}
+#   {entry -name New.Item.ReorderInteraction -form en:edit-interaction.wf -query p.item_type=Reorder}
+#   {entry -name New.Item.UploadInteraction -form en:edit-interaction.wf -query p.item_type=Upload}
+#
+#   {entry -name New.App.Exam -label "Inclass Exam" -form en:inclass-exam.wf}
+#
+# Alternatively, one can use the programmatic setup for the menubar
+# via config=test-items in case a site wants to change all setups in
+# all instances for menubars by updating a single file.
+#
+#   {config -use test-items}
+#
+# The policy has to allow the following methods on FormPages:
+#
+#  - "answer" (for students),
+#  - "delete" (for lecturers),
+#  - "edit" (for students),
+#  - "exam-results" (for lecturers),
+#  - "poll" (for lecturers),
+#  - "poll-open" (for students),
+#  - "print-answers" (for lecturers),
+#  - "print-participants" (for lecturers),
+#  - "proctor" (for students),
+#  - "qrcode" (for lecturers)
+#  - "question-summary" (for lecturers),
+#  - "toggle-publish-status" (for lecturers),
+#  - "view-my-exam" (for students),
+#
+# Gustaf Neumann, Feb 2012-2021
+########################################################################
+set :autoname 1   ;# to avoid editable name field
+set :policy ::xowf::test_item::test-item-policy-publish
+set :debug 0
+set :live_updates 1
+
+:forward QM ::xowf::test_item::question_manager
+:forward AM ::xowf::test_item::answer_manager
+
+set :fc_repository {
+  {countdown_audio_alarm:boolean,horizontal=true,default=t,label=#xowf.Countdown_audio_alarm#,help_text=#xowf.Countdown_audio_alarm_help_text#}
+  {shuffle_items:boolean,horizontal=true,label=#xowf.randomized_items#,help_text=#xowf.randomized_items_help_text#}
+  {max_items:number,min=1,label=#xowf.Max_items#,help_text=#xowf.Max_items_help_text#}
+  {allow_paste:boolean,horizontal=true,default=t,label=#xowf.Allow_paste#,help_text=#xowf.Allow_paste_help_text#}
+  {allow_spellcheck:boolean,horizontal=true,default=t,label=#xowf.Allow_spellcheck#,help_text=#xowf.Allow_spellcheck_help_text#}
+  {allow_translation:boolean,horizontal=true,default=f,label=#xowf.Allow_translation#,help_text=#xowf.Allow_translation_help_text#}
+  {show_minutes:boolean,horizontal=true,default=t,label=#xowf.Show_minutes#,help_text=#xowf.Show_minutes_help_text#}
+  {show_points:boolean,horizontal=true,default=t,label=#xowf.Show_points#,help_text=#xowf.Show_points_help_text#}
+  {show_ip:boolean,horizontal=true,default=t,label=#xowf.Show_IP#,help_text=#xowf.Show_IP_help_text#}
+  {time_budget:range,default=100,min=100,max=300,step=5,with_output=t,form_item_wrapper_CSSclass=form-inline,output_suffix=%,label=#xowf.Time_budget#,help_text=#xowf.Time_budget_help_text#}
+  {synchronized:boolean,horizontal=true,default=f,label=#xowf.Synchronized#,help_text=#xowf.Synchronized_help_text#}
+  {time_window:time_span,label=#xowf.Exam_time_window#,help_text=#xowf.Exam_time_window_help_text#}
+  {proctoring:boolean,horizontal=true,default=f,label=#xowf.Proctoring#,help_text=#xowf.Proctoring_help_text#}
+  {proctoring_options:checkbox,horizontal=true,options={Desktop d} {Camera c} {Audio a} {Statement s},default=d c a s,label=#xowf.Proctoring_options#,help_text=#xowf.Proctoring_options_help_text#,swa?:disabled=1}
+  {proctoring_record:boolean,horizontal=true,default=t,label=#xowf.Proctoring_record#,help_text=#xowf.Proctoring_record_help_text#}
+  {signature:boolean,horizontal=true,default=f,label=#xowf.Signature#,help_text=#xowf.Signature_help_text#}
+  {show_pagination_actions:boolean,horizontal=true,default=t,label=#xowf.Show_pagination_actions#,help_text=#xowf.Show_pagination_actions_help_text#}
+  {grading:grading_scheme,required,default=none,label=#xowf.Grading_scheme#,help_text=#xowf.Grading_scheme_help_text#}
+  {iprange:iprange,required,default=all,label=#xowf.IPrange#,help_text=#xowf.IPrange_help_text#}
+}
+
+Property realexam -default 1 -allow_query_parameter true
+
+########################################################################
+# Define actions:
+#
+Action select -next_state created -label #xowf.online-exam-select# \
+    -title #xowf.online-exam-title-select#
+Action publish -next_state published -state_safe true -label #xowf.online-exam-publish# \
+    -title #xowf.online-exam-title-publish#
+Action unpublish -next_state done -state_safe true -label #xowf.online-exam-unpublish#
+Action republish -next_state published -label #xowf.online-exam-republish# \
+    -title #xowf.online-exam-title-republish#
+Action restart -next_state initial -label #xowf.restart# \
+    -title #xowf.online-exam-title-restart#
+Action open_submission_review -next_state submission_review -label #xowf.open_submission_review# \
+    -title #xowf.open_submission_review_title#
+Action close_submission_review -next_state done -label #xowf.close_submission_review# \
+    -title #xowf.close_submission_review_title#
+
+########################################################################
+# Define states:
+#
+State parameter {
+  {extra_css {/resources/xowf/test-item.css}}
+}
+
+State initial -actions {select} -form en:select_question.form -view_method edit
+State created -actions {publish restart} -form_loader load_form -view_method edit \
+    -form "#xowf.inclass-exam-draft_exam#"
+State published -actions {unpublish} -form_loader load_form -view_method edit \
+    -form "#xowf.inclass-exam-open#"
+State done -actions {republish open_submission_review} \
+    -in_role swa {
+      -actions {republish open_submission_review restart}
+    } \
+    -form_loader load_form -view_method edit \
+    -form "#xowf.inclass-exam-closed#"
+State submission_review -actions {close_submission_review} -form_loader load_form -view_method edit \
+    -form "#xowf.inclass-exam-review#"
+
+########################################################################
+# Activate action select: After the lecturer has selected the
+# exercises, the answer workflow is created.
+#
+select proc activate {obj} {
+  $obj AM create_workflow -answer_workflow /packages/xowf/lib/inclass-exam-answer.wf \
+      $obj
+}
+
+########################################################################
+# Activate action publish: delete all responses for the workflow and
+# publish user participation link.
+#
+publish proc activate {obj} {
+  #
+  # On the first activation of "publish", older data (e.g. from
+  # testruns) is removed. When the exam was already published before -
+  # e.g. a manual publish operation before an automatic one - NO
+  # cleanup is performed to avoid potential loss of submission data.
+  #
+  set revision_sets     [$obj get_revision_sets]
+  set published_periods [$obj AM state_periods $revision_sets -state published]
+  if {[llength $published_periods] == 0} {
+    $obj AM delete_all_answer_data $obj
+  }
+  :publish_link $obj
+}
+
+########################################################################
+# Activate action republish: publish user participation link.
+#
+republish proc activate {obj} {
+  :publish_link $obj
+}
+
+########################################################################
+# When the user un-publishes an exam, just the user participation
+# link should be removed for the users
+#
+unpublish proc activate {obj} {
+  :unpublish_link $obj
+}
+
+########################################################################
+# When the user restarts an exam, make sure that already scheduled
+# atjobs are removed.
+#
+restart proc activate {obj} {
+  $obj AM delete_scheduled_atjobs $obj
+}
+
+########################################################################
+# When the user opens the submission review, offer a link.
+#
+open_submission_review proc activate {obj} {
+  set aLink [$obj pretty_link -query m=view-my-exam]
+  $obj util_user_message -html -message \
+      "[$obj name] exam review is available as <a target='_blank' href='[ns_quotehtml $aLink]'>[ns_quotehtml $aLink]</a>"
+}
+
+########################################################################
+# publish_link: make the user participation link available for the
+# target group
+#
+Action instproc publish_link {obj} {
+  set aLink [$obj pretty_link -query m=answer]
+  $obj util_user_message -html \
+      -message "[ns_quotehtml [$obj name]] is available as <a target='_blank' href='[ns_quotehtml $aLink]'>[ns_quotehtml $aLink]</a>"
+  # TODO: make it happen in the LMS
+}
+########################################################################
+# unpublish_link: remove the user participation link for the target
+# group
+#
+Action instproc unpublish_link {obj} {
+  $obj util_user_message -html -message "[$obj name] is closed</a>"
+  # TODO: make it happen in the LMS
+}
+
+########################################################################
+# form loader: create dynamically a form containing the overview exam
+# page, containing the state of the exam and information about
+# students in submission or working state.
+#
+:proc load_form {ctx title} {
+  set obj [$ctx object]
+  set state [$obj property _state]
+  set proctoring [$obj property proctoring 0]
+
+  set combined_form_info [:QM combined_question_form -with_numbers $obj]
+
+  set text "<h3>[ns_quotehtml $title]</h3>"
+  set menu ""
+
+  #<a href=''><span class='glyphicon glyphicon-cog' style="float: right"></span></a>
+
+  append text \
+      "<p><div class='row'><div class='col-sm-9'>" \
+      [::xowiki::bootstrap::card \
+           -title "#xowf.exam_summary# [:QM exam_configuration_popup $obj]" \
+           -body [:QM exam_info_block -combined_form_info $combined_form_info $obj]] \
+      "</div></div>"
+
+  set detail_link [$obj pretty_link -query m=question-summary]
+  append text [subst {<div class="col-sm-12">
+    <p><a class='[xowiki::CSS class action]' href='$detail_link'>#xowf.question_summary#</a>
+    </div>
+  }]
+
+  set wf [$obj AM get_answer_wf $obj]
+  if {$wf eq ""} {
+    :msg "cannot get current workflow for [$obj name]"
+    set tLink "."
+    set aLink "."
+  } else {
+    #
+    # Always compute the test-run and answer link.
+    #
+    set wf_pretty_link [$wf pretty_link]
+    set tLink [export_vars -base $wf_pretty_link {
+      {m create-new} {p.return_url "[::xo::cc url]"} {p.try_out_mode 1} {title "[$obj title]"}
+    }]
+    set aLink [$obj pretty_link -query m=answer]
+
+    if {$proctoring} {
+      #
+      # send link via "m=proctor"
+      #
+      set tLink [export_vars -base [$obj pretty_link] {
+        {m proctor} {link "$tLink&p.proctor=1"}
+      }]
+      #
+      # We could send answer link ("aLink") as well this way, but we
+      # want to keep the link short, therefore, we handle the proctor
+      # link inside the www-answer method.
+      #
+    }
+
+    set answers [:AM get_answer_attributes $wf]
+    set results [:AM get_exam_results -obj $obj results]
+    set autograded [dict get $combined_form_info autograde]
+    set grading_scheme_name [$obj property grading]
+    #
+    # Per default, the entries are disabled. When there are answers,
+    # these will be enabled.
+    #
+    set link_disabled [expr {[llength $answers] == 0 ? "link-disabled" : ""}]
+    set md [subst {
+      listing      {obj $wf  m list label #xowf.online-exam-exam_instances# icon list}
+      participants {obj $obj m print-participants label #xowf.Participants# icon user}
+      protocol     {obj $obj m print-answers label #xowf.online-exam-protocol# icon list-alt}
+      grades       {obj $obj m exam-results label #xowf.Points_and_grades# icon graph-up-arrow}
+    }]
+
+    if {![acs_user::site_wide_admin_p -user_id [::xo::cc user_id]]} {
+      dict unset md listing
+    }
+    ns_log notice "ANSWERS grading_scheme_name $grading_scheme_name $answers resultsNr [llength $results], autograde [dict get $combined_form_info autograde]"
+    #
+    # We assume here that when we have results, we have also some points.
+    #
+    if {[llength $results] == 0} {
+      dict unset md grades
+    } elseif {$grading_scheme_name in {"" "none"}} {
+      dict set md grades label "#xowf.Points#"
+    }
+
+    #ns_log notice ALL=$text
+    set menu "<ul class='list-group list-group-flush'>\n"
+    dict for {name d} $md {
+      set href [[dict get $d obj] pretty_link -query m=[dict get $d m]]
+      append menu "<li class='list-group-item $link_disabled'>" \
+          "<a href='[ns_quotehtml $href]'>" \
+          "<adp:icon name='[dict get $d icon]'> " \
+          "[ns_quotehtml [dict get $d label]]</a></li>\n"
+    }
+    append menu "</ul>\n"
+  }
+  set extraAction ""
+  switch $state {
+    "created"   {
+      append extraAction "<br>" \
+          "#xowf.online-exam-try_out# " \
+          "<a class='[xowiki::CSS class action]' href='[ns_quotehtml $tLink]' target=”_blank”>#xowf.testrun#</a>"
+    }
+    "published" {
+      append extraAction "<br>" \
+          "#xowf.online-exam-can_answer# " \
+          "<a class='answer' href='[ns_quotehtml $aLink]'>[ns_quotehtml $aLink]</a>"
+    }
+  }
+
+  set www_method [xo::cc query_parameter m:token]
+  if {$www_method ni {edit view}} {
+    set marked ""
+  } else {
+    set answerStatus ""
+    set marked ""
+
+    if {$state in {published done submission_review} || [llength $answers] > 0 } {
+      if {$state eq "done"} {
+        set marked [$obj AM marked_results -obj $obj -wf $wf $combined_form_info]
+        set marked ""  ;# not needed right now
+      }
+      set answerStatus [$obj AM answers_panel  \
+                            -heading "#xowf.online-exam-submitted_exams_heading#" \
+                            -submission_msg "#xowf.online-exam-submitted_exams_msg#" \
+                            -polling=[expr {${:live_updates} && $state ni {initial created done}}] \
+                            -manager_obj $obj \
+                            -target_state done \
+                            -extra_text $menu \
+                            -wf $wf]
+    }
+
+    set qrCode ""
+    set countdownHTML ""
+    if {$state eq "published"} {
+      set src [$obj pretty_link -query m=qrcode]
+      set qrCode [subst {<div><img class="img-thumbnail qrcode" src="[ns_quotehtml $src]" ></div>}]
+      set total_minutes [:QM total_minutes_for_exam -manager $obj]
+      if {$total_minutes > 1} {
+        set target_time [:QM exam_target_time \
+                             -manager $obj -base_time [$obj last_modified]]
+        set countdownHTML [$obj AM countdown_timer -target_time $target_time -id "countdown"]
+      }
+    }
+
+    append text [subst {
+      <div class="row">
+      <div class="col-sm-9">$answerStatus</div>
+      <div class="col-sm-3">$qrCode</div>
+      <div class="col-sm-6">$countdownHTML</div>
+      </div>
+    }]
+    #ns_log notice ALL=$text
+  }
+
+  set f [::xowiki::Form new \
+             -destroy_on_cleanup \
+             -set name en:question \
+             -form [subst {{<form>$text$marked $extraAction</form>} text/html}] \
+             -text {} \
+             -anon_instances t \
+             -form_constraints {@categories:off @cr_fields:hidden} \
+            ]
+}
+
+########################################################################
+#
+# Object specific operations
+#
+########################################################################
+
+:object-specific {
+  set t0 [clock clicks -milliseconds]
+  #ns_log notice "==== object-specific inclass-exam [self] state ${:state}"
+  set ctx [:wf_context]
+  set container [$ctx wf_container]
+  if {$ctx ne $container} {
+    $ctx forward load_form $container %proc $ctx
+  }
+  :forward QM ::xowf::test_item::question_manager
+  :forward AM ::xowf::test_item::answer_manager
+
+  ${container}::Property return_url -default "" -allow_query_parameter true
+
+  if {${:state} eq "done"} {
+    set done_actions republish
+    set combined_form_info [:QM combined_question_form [self]]
+
+    #
+    # We could allow open_submission_review only when autograde is
+    # possible, but apparently, it makes as well sense for other
+    # open text answers
+    #
+    lappend done_actions open_submission_review
+    #if {[dict get $combined_form_info autograde]} {
+    #  lappend done_actions open_submission_review
+    #}
+    set swa_done_actions [concat $done_actions restart]
+
+    ${container}::done actions $done_actions
+    ${container}::done in_role swa [subst {
+      -actions {$swa_done_actions}
+    }]
+
+  } elseif {${:state} eq "created" && [:property realexam 0]} {
+    #
+    # Check, if randomization is OK. If not, remove the "publish"
+    # button from the workflow.
+    #
+    # Note: this initialization code is always called when the
+    # workflow is initialized, which might not be wanted, when this
+    # happen during e.g. a test-run of an instance. so, maybe put this
+    # to some "render" method?
+    #
+    #ns_log notice "==== check for randomization"
+    set combined_form_info [:QM combined_question_form [self]]
+    set randomizationOk [dict get $combined_form_info randomization_for_exam]
+    #ns_log notice "==== check for randomization DONE"
+    ${container}::${:state} actions \
+        [expr {$randomizationOk ? {publish restart} : {restart}}]
+  }
+
+  #
+  # Unset the actual query return_url, since we want to use it via
+  # property.  In some cases, we have to set it explicitly from the
+  # property (like in www-delete), or we have to use the actual
+  # passed-in values (like in toggle_publish_status)
+  #
+  set ::__passed_in_return_url [:query_parameter return_url:localurl ""]
+  ::xo::cc unset_query_parameter return_url
+
+  ########################################################################
+  # web-callable method "delete"
+  #
+  # Delete the workflow instance and all its associated data.
+  #
+  :proc www-delete {} {
+    ::xo::cc set_query_parameter return_url [:property return_url]
+    :AM delete_all_answer_data [self]
+    next
+  }
+
+  ########################################################################
+  # web-callable method "toggle-publish-status"
+  #
+  # Toggle the status of the workflow. This is needed to avoid a bad
+  # interaction with [ad_return_url] as it is used in
+  # www-toggle-publish-status in xowiki, since the workflow definition
+  # unsets the actual return_url, which causes ad_return_url to use
+  # the URL leading to this call (m=toggle-publish-status), causing a
+  # redirection loop.
+  #
+  :proc www-toggle-publish-status {} {
+    next -return_url $::__passed_in_return_url
+  }
+
+  ########################################################################
+  # web-callable method "print-participants"
+  #
+  # Print participants in a tabular form.
+  #
+  :proc www-print-participants {} {
+    set HTML ""
+    set wf [:AM get_answer_wf [self]]
+    if {$wf ne ""} {
+      set items [:AM get_wf_instances $wf]
+      set items2 [$items deep_copy]
+      foreach i [$items2 children] {
+        $i set online-exam-userName [acs_user::get_element -user_id [$i creation_user] -element username]
+        $i set online-exam-fullName [::xo::get_user_name [$i creation_user]]
+      }
+      set HTML [:AM participants_table \
+                    -package_id ${:package_id} \
+                    -items $items2 \
+                    -state * \
+                    [self]]
+      $items2 destroy
+    }
+    if {$HTML eq ""} {
+      set HTML "#xowiki.no_data#"
+    } else {
+      set HTML "<h3>#xowf.Participants#</h3>$HTML"
+    }
+    set return_url [[$wf package_id] query_parameter local_return_url:localurl [:pretty_link]]
+    append HTML "<hr><p><a class='[xowiki::CSS class action]' href='[ns_quotehtml $return_url]'>#xowiki.back#</a></p>\n"
+
+    :www-view $HTML
+
+  }
+
+  ########################################################################
+  # web-callable method "view-my-exam "
+  #
+  # Provide feedback to the student about the results.
+  #
+  :proc www-view-my-exam {} {
+    if {${:state} eq "submission_review"} {
+      ::xo::cc set_query_parameter creation_user [ad_conn user_id]
+      ::xo::cc set_query_parameter as_student 1
+      :www-print-answers
+    } else {
+      :www-view "#xowf.Exam-review-not-open#"
+    }
+  }
+
+  ########################################################################
+  # web-callable method "question-summary"
+  #
+  # Print a summary of the exam-questions.
+  #
+  :proc www-question-summary {} {
+    :www-view [:QM question_summary [self]]
+  }
+
+  ########################################################################
+  # web-callable method "exam-results"
+  #
+  # Print results (grades, statistics) for a lecturer.
+  #
+  :proc www-exam-results {} {
+    set form_info [:QM combined_question_form [self]]
+    set autograde [dict get $form_info autograde]
+    set orderby [:query_parameter orderby:token "participant,desc"]
+    set format [:query_parameter format:alpha ""]
+    set perQuestion [:query_parameter per-question:boolean 0]
+
+    set grading_scheme_name [:property grading]
+    if {$grading_scheme_name eq ""} {
+      set grading_scheme_name none
+    }
+    set gradingScheme [:AM grading_scheme -examWf [self] -grading $grading_scheme_name]
+    set withGrades [expr {$gradingScheme ne "::xowf::test_item::grading::none"}]
+
+    set return_url [:query_parameter local_return_url:localurl [:pretty_link]]
+    set backButtonHTML "<hr><p><a class='[xowiki::CSS class action]' href='[ns_quotehtml $return_url]'>#xowiki.back#</a></p>\n"
+
+    set results [:AM get_exam_results -obj [self] results]
+    if {[llength $results] eq 0} {
+      #
+      # Actually, the link leading to this result should not be
+      # active. The message is just for cases of URL hacking.
+      #
+      return [:www-view "<p>No submission results available.$backButtonHTML"]
+    }
+    set manual_gradings [:AM get_exam_results -obj [self] manual_gradings]
+
+    if {$format eq "csv"} {
+      return [:AM exam_results \
+                  -format csv \
+                  -reply \
+                  -orderby $orderby \
+                  -only_grades [:query_parameter onlygrades:boolean true] \
+                  -gradingScheme [expr {$perQuestion ? "" : $gradingScheme}] \
+                  -manual_gradings $manual_gradings \
+                  $results]
+
+      #:AM exam_results -reply -manual_gradings $manual_gradings $results
+
+    }
+
+    set statistics [:AM get_exam_results -obj [self] statistics]
+
+    #
+    # We have to following options:
+    # - perParticipant with grades
+    # - perParticipant without grades
+    # - perQuestion (always without grades, since this includes as well the statistics per alternative)
+    #
+    set HTML ""
+    if {0} {
+      set HTML [subst {
+        <pre>
+        autograde $autograde
+        manual_gradings $manual_gradings
+        results $results
+        statistics $statistics
+      }]
+      append HTML \n\nper_question\n[:AM exam_results -manual_gradings $manual_gradings $results]
+      append HTML \nper_student\n[:AM exam_results -gradingScheme $gradingScheme \
+                                      -manual_gradings $manual_gradings $results]
+      append HTML </pre>
+    }
+    if {$perQuestion} {
+      append HTML \
+          "<h3>#xowf.exam_statistics_question#</h3>\n" \
+          [:AM exam_results -format html \
+               -manual_gradings $manual_gradings \
+               $results]
+      set exportQuestionResultsURL [ad_return_url {{format csv} {onlygrades 0}}]
+      set perParticipantURL [ns_conn url]?[::xo::update_query [ns_conn query] per-question 0]
+      set buttonsHTML [subst {<p>
+        <hr><p><a class='[xowiki::CSS class action]' href='[ns_quotehtml $exportQuestionResultsURL]'>
+        <adp:icon name="filetype-csv" title="CSV"> #xowf.export_results_title#</a>
+        <a class='[xowiki::CSS class action]' href='[ns_quotehtml $perParticipantURL]'>
+        <adp:icon name="graph-up-arrow" title="Per Participant Statistics"> #xowf.exam_statistics_participant#</a></p>
+      }]
+    } else {
+      append HTML \
+          "<h3>#xowf.exam_statistics_participant#</h3>" \
+          "<p>#xowf.Grading-Scheme#: [$gradingScheme cget -title]\n" \
+          [:AM exam_results -format html \
+               -orderby $orderby \
+               -gradingScheme $gradingScheme \
+               -manual_gradings $manual_gradings \
+               $results]
+      set exportPointGradesURL [ad_return_url {{format csv} {onlygrades 0}}]
+
+      if {$withGrades} {
+        #
+        # Only grades as table
+        #
+        #append HTML [:AM exam_results -format html \
+        #                 -orderby $orderby \
+        #                 -only_grades true \
+        #                 -gradingScheme $gradingScheme \
+        #                 -manual_gradings $manual_gradings \
+        #                 $results]
+        append HTML [:AM exam_results -format chart \
+                         -orderby $orderby \
+                         -only_grades true \
+                         -gradingScheme $gradingScheme \
+                         -manual_gradings $manual_gradings \
+                         $results]
+        set exportGradesURL [ad_return_url {{format csv}}]
+        set buttonsHTML [subst {
+          <hr><p><a class='[xowiki::CSS class action]' href='[ns_quotehtml $exportGradesURL]'>
+          <adp:icon name="filetype-csv" title="CSV"> #xowf.export_grades_title#</a>
+          <a class='[xowiki::CSS class action]' href='[ns_quotehtml $exportPointGradesURL]'>
+          <adp:icon name="filetype-csv" title="CSV"> #xowf.export_points_and_grades_title#</a>
+        }]
+      } else {
+        set buttonsHTML [subst {
+          <a class='[xowiki::CSS class action]' href='[ns_quotehtml $exportPointGradesURL]'>
+          <adp:icon name="filetype-csv" title="CSV"> #xowf.export_points_title#</a>
+        }]
+      }
+      set perQuestionURL [ns_conn url]?[::xo::update_query [ns_conn query] per-question 1]
+      append buttonsHTML [subst {
+        <a class='[xowiki::CSS class action]' href='[ns_quotehtml $perQuestionURL]'>
+        <adp:icon name="graph-up-arrow" title="Per Question Statistics"> #xowf.exam_statistics_question#</a></p>
+      }]
+    }
+
+    if {$HTML eq ""} {
+      set HTML "#xowiki.no_data#"
+    } else {
+      append HTML $buttonsHTML
+    }
+    append HTML $backButtonHTML
+
+    :www-view $HTML
+  }
+
+
+
+  ########################################################################
+  # web-callable method "print-answers"
+  #
+  # Print the answers in a somewhat printer friendly way.
+  #
+  :proc www-print-answers {} {
+    template::head::add_link -rel stylesheet -href /resources/xowf/test-item.css
+
+    set as_student [:query_parameter as_student:boolean false]
+    set fos [:query_parameter fos:int32 ""]
+    set d [:AM render_answers \
+               -as_student    $as_student \
+               -creation_user [:query_parameter creation_user:int32 ""] \
+               -revision_id   [:query_parameter rid:int32 ""] \
+               -filter_submission_id  [:query_parameter id:int32 ""] \
+               -filter_form_ids $fos \
+               -export        [:query_parameter export:boolean 0] \
+               -orderby       [:query_parameter orderby:token "online-exam-userName"] \
+               -grading       [:query_parameter grading:token [:property grading]] \
+               -with_grading_table [expr {!$as_student && $fos eq ""}] \
+               [self]]
+
+    set do_stream [dict get $d do_stream]
+    set HTML [dict get $d HTML]
+
+    if {$do_stream == 0 && $HTML eq ""} {
+      set HTML "#xowiki.no_data#"
+    }
+
+    if {!$as_student} {
+      set return_url [:query_parameter local_return_url:localurl [:pretty_link]]
+      append HTML "<hr><p><a class='[xowiki::CSS class action]' href='[ns_quotehtml $return_url]'>#xowiki.back#</a></p>\n"
+    }
+
+    if {$do_stream} {
+      ns_write [lang::util::localize $HTML]
+      set HTML ""
+      ${:package_id} set __continuation ad_progress_bar_end
+      return ""
+    } else {
+      :www-view $HTML
+    }
+  }
+
+  ########################################################################
+  # web-callable method "answer"
+  #
+  :proc www-answer {} {
+    #
+    # Create or use an answering workflow for the current exam. This
+    # is a convenience routine to shorten the published URL.
+    #
+    # Make sure that no-one tries to start the answer workflow in a
+    # state different to "published".
+    #
+    if {${:state} ne "published"} {
+      switch ${:state} {
+        done    { set message "<p>#xowf.inclass-exam-closed#" }
+        created { set message [:AM waiting_room_message [self]] }
+        default { set message "<p>#The Exam has not been published#" }
+      }
+      return [:www-view $message]
+    } elseif {![:AM allow_answering -examwf [self] -ip [ns_conn peeraddr]]} {
+        return [:www-view "<p>[_ xowf.IPrange_not_allowed [list ip [ns_conn peeraddr]]]"]
+    } else {
+      set wf [:AM get_answer_wf [self]]
+      set proctoring [:property proctoring]
+      if {$proctoring ne "" && $proctoring} {
+        set po [:property proctoring_options]
+        set record_p [:property proctoring_record true]
+        set cLink [export_vars -base [:pretty_link] {
+          {m proctor}
+          {link "[:pretty_link -query m=proctor-answer&proctoring_options=$po&record_p=$record_p]"}
+        }]
+        ::${:package_id} returnredirect $cLink
+      } else {
+        $wf www-create-or-use -parent_id [:item_id]
+      }
+    }
+  }
+
+
+  ########################################################################
+  # web-callable function "qrcode", acts as responder
+  #
+  :proc www-qrcode {} {
+    #
+    # Produce a QR code with an answer link
+    #
+    set aLink [:pretty_link -absolute true -query m=answer]
+    set fn /tmp/qr-${:item_id}.png
+    exec qrencode -o $fn -l h $aLink
+    ns_returnfile 200 image/png $fn
+    ad_script_abort
+  }
+
+  ########################################################################
+  # web-callable method "proctoring-display"
+  #
+  :proc www-proctoring-display {} {
+    #
+    # Display the proctoring files collected for this exam using the
+    # UI by the proctoring-support package.
+    #
+    # By this is also possible to delete the proctoring files, either
+    # for the whole exam or for the single participant.
+    #
+
+    ${:package_id} return_page -adp /packages/proctoring-support/lib/proctoring-display -variables {
+        {object_id ${:item_id}}
+    }
+  }
+
+  ########################################################################
+  # web-callable function "proctor-answer"
+  #
+  :proc www-proctor-answer {} {
+    #
+    # Start answering an exam in proctored mode
+    #
+    if {[:property _state] ne "published"} {
+      :util_user_message -html -message "Cannot start answer workflow in this state"
+    } else {
+      set wf [:AM get_answer_wf [self]]
+      $wf www-create-or-use -parent_id [:item_id]
+    }
+  }
+
+  ########################################################################
+  # web-callable function "proctor"
+  #
+  :proc www-proctor {} {
+    #
+    # Redirect the exam to an iframe for implementing proctoring.  The
+    # basic idea is that the web application turns on the camera and
+    # keeps the iframe while the user is iterating through the exam.
+    # The line "<h1>You are being proctored!</h1>" is just a
+    # placeholder and has to be replaced with real code.
+    #
+    set link [:query_parameter link:localurl ""]
+
+    ::xo::cc set_parameter template_file view-plain-master
+    ::xo::cc set_parameter MenuBar 0
+
+    set proctoring_template /packages/proctoring-support/lib/proctored-page
+    if {[file exists [acs_root_dir]${proctoring_template}.adp]} {
+      set object_id ${:item_id}
+      set object_url $link
+      set examination_statement_p [expr {![string match *p.try_out_mode=1* $link]}]
+      set record_p [:property proctoring_record true]
+      set proctoring_options [:property proctoring_options "d c a s"]
+      foreach \
+          proctoring_parm {d c a s} \
+          flag {desktop_p camera_p audio_p examination_statement_p} {
+        set $flag [expr {$proctoring_parm in $proctoring_options}]
+      }
+      set preview_p [expr {$desktop_p || $camera_p || $audio_p}]
+
+      #
+      # Set the max interval between screen captures to 30s (default is 60s)
+      #
+      set max_ms_interval 30000
+
+      ${:package_id} return_page -adp $proctoring_template -variables {
+        object_id
+        object_url
+        preview_p
+        desktop_p
+        camera_p
+        audio_p
+        record_p
+        max_ms_interval
+        examination_statement_p
+        {check_active_p false}
+      }
+    } else {
+      #
+      # Minimal fallback in case the proctoring-support is not installed
+      #
+      return [:www-view [subst {
+        <!-- ... proctor::start_dialog... -->
+        <h1>You ([xo::cc user_id]) are being proctored in exam ${:object_id}!</h1>
+        <iframe src="$link" width="100%" height="600"></iframe>
+      }]]
+    }
+  }
+
+  ########################################################################
+  # web-callable function "proctor-image", acts as responder
+  #
+  :proc www-proctor-image {} {
+    #
+    # View a proctored image
+    #
+    set type [${:package_id} query_parameter type:ascii ""]
+    set ts   [${:package_id} query_parameter ts:integer ""]
+    set ext  [${:package_id} query_parameter e:wordchar ""]
+    set user_id [${:package_id} query_parameter user_id:int32 ""]
+    set proctoring_dir [proctoring::folder \
+                            -object_id ${:item_id} \
+                            -user_id $user_id]
+    set png_path $proctoring_dir/$type-$ts.$ext
+    #ns_log notice "image: $png_path ... [ad_file exists $$png_path]"
+    ns_returnfile 200 [ns_guesstype $ts.$ext] $png_path
+    ad_script_abort
+  }
+
+  ########################################################################
+  # web-callable function "blank-inputs"
+  #
+  :proc www-blank-inputs {} {
+    #
+    # Analyze the student submissions an find situations, where input
+    # is "cleared" between revisions. This method is primarily for
+    # debugging purposes.
+    #
+    template::head::add_link -rel stylesheet -href /resources/xowf/test-item.css
+    set HTML [:AM render_answers_with_edit_history [self]]
+
+    if {$HTML eq ""} {
+      set HTML "#xowiki.no_data#"
+    }
+    set return_url [:query_parameter local_return_url:localurl [:pretty_link]]
+    append HTML "<hr><p><a class='[xowiki::CSS class action]' href='[ns_quotehtml $return_url]'>#xowiki.back#</a></p>\n"
+
+    :www-view $HTML
+  }
+
+  ########################################################################
+  # AJAX call "poll", acts as responder
+  #
+  :proc www-poll {} {
+    #
+    # Return statistics about working and finished exams.
+    #
+    set wf [:AM get_answer_wf [self]]
+    set answers [:AM get_answer_attributes $wf]
+    set answered [:AM get_answer_attributes -state done $wf]
+    ns_return 200 text/plain [llength $answered]/[llength $answers]
+    #ns_log notice "MASTER POLL [self] ${:name}, returned [llength $answered]/[llength $answers]"
+    ad_script_abort
+  }
+
+  :proc www-poll-open {} {
+    if {${:state} eq "created"} {
+      set time [lc_time_fmt [clock format [clock seconds] -format "%Y-%m-%d %H:%M:%S"] "%Q %T"]
+      ns_return 200 text/plain [subst {{"action": "msg", "msg": "$time"} }]
+    } else {
+      set URL [:pretty_link -query m=answer]
+      ns_return 200 text/plain [subst {{"action": "redirect", "url": "$URL"} }]
+    }
+    ad_script_abort
+  }
+
+  ########################################################################
+  # AJAX call "send-participant-message", acts as responder
+  #
+  :proc www-send-participant-message {} {
+    #
+    # Send a message to a participant
+    #
+    ::xowiki::includelet::personal-notification-messages message_add \
+        -notification_id ${:item_id} \
+        -to_user_id [${:package_id} form_parameter to_user_id ""] \
+        -payload [list msg [${:package_id} form_parameter msg] \
+                      from [xo::cc user_id] \
+                      urgency [${:package_id} form_parameter urgency]]
+
+    ns_return 200 text/plain ok
+    ad_script_abort
+  }
+
+  ########################################################################
+  # AJAX call "grade-single-item", acts as responder
+  #
+  :proc www-grade-single-item {} {
+    set formDict [ns_set array [ns_getform]]
+
+    #
+    # Update property "manual_gradings" of the exam in the results page
+    #
+    set manual_gradings [:AM get_exam_results -obj [self] manual_gradings]
+    set user_id [dict get $formDict user_id]
+    set qn [dict get $formDict question_name]
+    dict set manual_gradings $user_id $qn achieved [dict get $formDict achieved]
+    dict set manual_gradings $user_id $qn comment [dict get $formDict comment]
+    :AM set_exam_results -obj [self] manual_gradings $manual_gradings
+
+    #
+    # Recompute the achieved points percentage for the full exam
+    # submission of the student... based on the grading scheme and
+    # manual grading info.
+    #
+    set grading_scheme [dict get $formDict grading_scheme]
+    set achieved_points [dict get $formDict achieved_points]
+    set details [dict get $achieved_points details]
+    set newDetails {}
+    foreach detail $details {
+      if {[dict get $detail attributeName] eq $qn} {
+        dict set detail achieved [dict get $formDict achieved]
+      }
+      lappend newDetails $detail
+    }
+    dict set achieved_points details $newDetails
+    dict set achieved_points achievedPoints ""
+
+    #
+    # Ensure grading scheme is loaded before used
+    #
+    ::xowf::test_item::grading::load_grading_schemes \
+        -package_id [:package_id] \
+        -parent_id [:parent_id]
+
+    set gradingInfo [::xowf::test_item::grading::$grading_scheme print -achieved_points $achieved_points]
+
+    #
+    # Return the line for the panel as result of the AJAX call
+    #
+    ns_return 200 text/plain [dict get $gradingInfo panel]
+    ad_script_abort
+  }
+
+  ########################################################################
+  # AJAX call "update-config", acts as responder
+  #
+  :proc www-update-config {} {
+    #
+    # Received updates for form
+    #
+    set field_names [:QM exam_configuration_modifiable_field_names [self]]
+    set form_fields [:create_form_fields_from_names -lookup \
+                         -form_constraints [:get_fc_repository] \
+                         $field_names]
+    #ns_log notice "UPDATE CONFIG <[::xo::cc array names form_parameter]> [ns_set array [ns_conn form]] // $form_fields"
+
+    set last_instance_attributes ${:instance_attributes}
+    set field_names_with_child_components [lmap f [::xowiki::formfield::child_components $form_fields] {$f name}]
+    #ns_log notice "\nORIG $field_names \NEW $field_names_with_child_components"
+
+    lassign [:get_form_data -field_names $field_names_with_child_components $form_fields] validation_errors category_ids
+    if {$validation_errors == 0} {
+      if {$last_instance_attributes eq ${:instance_attributes}} {
+        ns_log notice "UPDATE CONFIG ... nothing has changed"
+      } else {
+        ns_log notice "UPDATE CONFIG ... no validation_errors -> SAVE"
+
+        :update_attribute_from_slot [:find_slot instance_attributes] ${:instance_attributes}
+
+        if {[dict exists $last_instance_attributes time_window]} {
+          set old_time_window [dict get $last_instance_attributes time_window]
+          set new_time_window [dict get ${:instance_attributes} time_window]
+          if {$old_time_window ne $new_time_window} {
+            ns_log notice "UPDATE CONFIG time_window $new_time_window"
+            :AM time_window_setup [self] -time_window $new_time_window
+            ns_log notice "UPDATE CONFIG time_window $new_time_window DONE"
+          }
+        }
+      }
+      ns_return 200 text/plain OK
+    } else {
+      ns_return 200 text/plain validation_errors
+    }
+    ad_script_abort
+  }
+
+  #ns_log notice "==== object-specific inclass-exam [self] state ${:state} DONE (took [expr {[clock clicks -milliseconds]-$t0}]ms)"
+}
+
+#
+# Local variables:
+#    mode: tcl
+#    tcl-indent-level: 2
+#    indent-tabs-mode: nil
+# End:
