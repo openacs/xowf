@@ -1,0 +1,15 @@
+# -*- tcl -*-
+::xowiki::Package require_site_wide_pages -pages folder.form
+set page_template [::xowiki::Package lookup_side_wide_page -name en:folder.form]
+::xo::db::CrClass get_instance_from_db -item_id $page_template
+
+set p [::xowiki::FormPage new \
+    -set name en:ExamFolder \
+    -page_template $page_template \
+    -title "ExamFolder" \
+    -text "" \
+    -set instance_attributes {extra_menu_entries {{config -use test-items}} index en:assessment-index} \
+    -set description {{{child-resources}}}]
+
+ns_log notice [$p serialize]
+set p

@@ -1,0 +1,51 @@
+# -*- tcl-*-
+::xowiki::Form new \
+    -name select_question.form \
+    -title "Select Question" \
+    -anon_instances f \
+    -text {} \
+    -form {{<form>
+        @question@
+        <h4>#xowf.Detail_configuration#</h4>
+        <p><adp:toggle_button type="button" class="btn btn-secondary" toggle="collapse" target="#question_management"><adp:icon name='chevron-down'> #xowf.Question_management#</adp:toggle_button><div id="question_management" class="collapse">        
+        @shuffle_items@ @max_items@ @allow_paste@ @allow_spellcheck@ @show_minutes@ @show_points@ @show_ip@
+        </div>
+        <p><adp:toggle_button type="button" class="btn btn-secondary" toggle="collapse" target="#time_management"><adp:icon name='chevron-down'> #xowf.Time_management#</adp:toggle_button><div id="time_management" class="collapse">
+        @synchronized@ @time_window@ @time_budget@ @countdown_audio_alarm@
+        </div><p>
+        <p><adp:toggle_button class="btn btn-secondary" toggle="collapse" target="#proctoring"><adp:icon name='chevron-down'> #xowf.Security#</adp:toggle_button><div id="proctoring" class="collapse">
+        @proctoring@
+        @proctoring_options@
+        @proctoring_record@
+        @signature@
+        @iprange@
+        @show_pagination_actions@
+        </div>
+        @grading@
+        </form>
+    } text/html} \
+    -form_constraints {
+	@cr_fields:hidden
+	{_title:text,label=#xowf.online-exam-name#,default=#xowf.online-exam-default_name#}
+	{question:form_page,multiple=true,keep_order=true,parent_id=.,form=en:edit-interaction.wf,required,help_text=#xowf.select_question_help_text#,label=#xowiki.questions#}
+        {countdown_audio_alarm:}
+	{shuffle_items:}
+	{max_items:}
+	{allow_paste:}
+	{allow_spellcheck:}
+        {show_minutes:}
+        {show_points:}
+        {show_ip:}
+        {iprange:}
+        {show_pagination_actions:}
+        {time_budget:}
+	{synchronized:}
+	{time_window:}
+	{signature:}
+	{proctoring:}
+        {proctoring_options:}
+	{proctoring_record:}
+	{grading:}
+	_description:omit _page_order:omit
+    }
+

@@ -1,0 +1,14 @@
+# -*- tcl-*-
+::xowiki::Form new \
+    -name en:TestItemComposite.form \
+    -title "CompositeItem" \
+    -anon_instances f \
+    -text {} \
+    -form {{<form>@question@ @_nls_language@</form>} text/html} \
+    -form_constraints {
+	question:test_item,question_type=section,grading=none,feedback_level=single,label=#xowf.composite_question#
+	_name:test_item_name _description:omit _page_order:omit
+    }
+
+
+

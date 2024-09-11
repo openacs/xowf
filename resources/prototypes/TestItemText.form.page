@@ -1,0 +1,14 @@
+# -*- tcl-*-
+::xowiki::Form new \
+    -name en:TestItemText.form \
+    -title "TextItem" \
+    -anon_instances f \
+    -text "" \
+    -form {{<form>@question@ @_nls_language@</form>} text/html} \
+    -form_constraints {
+	question:test_item,question_type=ot,grading=none,feedback_level=single,auto_correct=1,label=#xowf.text_question#
+	_name:test_item_name _description:omit _page_order:omit
+    }
+
+
+
