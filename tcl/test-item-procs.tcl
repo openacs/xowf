@@ -1552,7 +1552,7 @@ namespace eval ::xowf::test_item {
       #
 
       set export_formats {
-        cvs
+        csv
       }
       if {[::namespace which ::ooxml::xl_write] ne ""} {
         lappend export_formats xls
