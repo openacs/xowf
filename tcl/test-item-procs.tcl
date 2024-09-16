@@ -2125,6 +2125,14 @@ namespace eval ::xowf::test_item {
       set dtstart [dict get $time_window time_window.dtstart]
       set dtend [dict get $time_window time_window.dtend]
 
+      #
+      # Delete previously scheduled atjobs. This needs to happen in
+      # any case, because people may have removed the time window
+      # altogether.
+      #
+      ns_log notice "#### deleting old scheduled atjob"
+      :delete_scheduled_atjobs $parentObj
+
       if {$dtstart ne ""} {
         set total_minutes [question_manager total_minutes_for_exam -manager $parentObj]
         ns_log notice "#### create_workflows: atjobs for time_window <$time_window> total-mins $total_minutes"
@@ -2167,13 +2175,9 @@ namespace eval ::xowf::test_item {
         }
 
         #
-        # Delete previously scheduled atjobs
-        #
-        :delete_scheduled_atjobs $parentObj
-
-        #
         # Schedule new atjobs
         #
+        ns_log notice "#### scheduling atjobs"
         $parentObj schedule_action \
             -time [clock format $start_clock -format "%Y-%m-%d %H:%M:%S"] \
             -action publish
