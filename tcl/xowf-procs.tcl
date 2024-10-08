@@ -1964,8 +1964,8 @@ namespace eval ::xowf {
 
   WorkflowPage instproc unset_temporary_instance_variables {} {
     # never save/cache the following variables
-    array unset :__wfi
-    array unset :__wf
+    unset -nocomplain :__wfi
+    unset -nocomplain :__wf
     next
   }
 
