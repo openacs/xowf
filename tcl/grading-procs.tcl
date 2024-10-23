@@ -254,17 +254,41 @@ namespace eval ::xowf::test_item::grading {
   #----------------------------------------------------------------------
   GradingRoundPoints create ::xowf::test_item::grading::round-points \
       -precision 2 \
-      -percentage_boundaries {50 60 70 80}
+      -percentage_boundaries {50 60 70 80} {
+        #
+        # Grading scheme based on rounded points.
+        #
+        # @see Class ::xowf::test_item::grading::GradingRoundPoints
+        #
+      }
 
   GradingRoundPercentage create ::xowf::test_item::grading::round-percentage \
       -precision 2 \
-      -percentage_boundaries {50 60 70 80}
+      -percentage_boundaries {50 60 70 80} {
+        #
+        # Grading scheme based on rounded percentages.
+        #
+        # @see Class ::xowf::test_item::grading::GradingRoundPercentage
+        #
+      }
 
   GradingRoundNone create ::xowf::test_item::grading::round-none \
-      -percentage_boundaries {50 60 70 80}
+      -percentage_boundaries {50 60 70 80} {
+        #
+        # Grading scheme without any rounding
+        #
+        # @see Class ::xowf::test_item::grading::GradingRoundNone
+        #
+      }
 
   GradingNone create ::xowf::test_item::grading::none -percentage_boundaries {} \
-      -title #xowf.Grading_scheme-None#
+      -title #xowf.Grading_scheme-None# {
+        #
+        # Deactivating grading scheme (no grades are computed)
+        #
+        # @see Class ::xowf::test_item::grading::GradingNone
+        #
+      }
 
 
   #----------------------------------------------------------------------

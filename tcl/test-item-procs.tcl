@@ -1772,7 +1772,12 @@ namespace eval ::xowf::test_item {
   }
 
   AssessmentInterface {*}$register_command FL \
-      [Renaming_form_loader create renaming_form_loader]
+      [Renaming_form_loader create renaming_form_loader {
+        #
+        # Interface object to the renaming form loader
+        #
+        # @see Class ::xowf::test_item::Renaming_form_loader
+      }]
 }
 
 
@@ -5585,7 +5590,17 @@ namespace eval ::xowf::test_item {
   }
 
   AssessmentInterface {*}$register_command AM \
-      [Answer_manager create answer_manager]
+      [Answer_manager create answer_manager {
+        #
+        # Interface object to Answer manager for the test items as
+        # used in inclass exam and similar learning workflows. It is
+        # used for general answer management of the submitted test
+        # items, including answer workflow creation and deletion of
+        # submissions.
+        #
+        # @see: Class ::xowf::test_item::Answer_manager
+        #
+      }]
 }
 
 
@@ -7868,7 +7883,19 @@ namespace eval ::xowf::test_item {
       }
     }
   }
-  set qm [Question_manager create question_manager]
+  set qm [Question_manager create question_manager {
+    #
+    # Interface object to Question manager for the test items as
+    # used in inclass exam and similar learning workflows. It is
+    # used for general question (test item) management of quizzes and exams.
+    #
+    # It is used, e.g., for navigation between test-items, obtaining
+    # information about test items, including achievable and achieved
+    # points, and for providing statistics across test items.
+    #
+    # @see: Class ::xowf::test_item::Question_manager
+    #
+  }]
   AssessmentInterface {*}$register_command QM $qm
   ::xowiki::formfield::TestItemField instforward QM  $qm
 }
