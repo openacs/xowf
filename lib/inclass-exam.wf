@@ -233,7 +233,7 @@ Action instproc unpublish_link {obj} {
 
   set detail_link [$obj pretty_link -query m=question-summary]
   append text [subst {<div class="col-sm-12">
-    <p><a class='[xowiki::CSS class action]' href='$detail_link'>#xowf.question_summary#</a>
+    <p><a class='[template::CSS class action]' href='$detail_link'>#xowf.question_summary#</a>
     </div>
   }]
 
@@ -311,7 +311,7 @@ Action instproc unpublish_link {obj} {
     "created"   {
       append extraAction "<br>" \
           "#xowf.online-exam-try_out# " \
-          "<a class='[xowiki::CSS class action]' href='[ns_quotehtml $tLink]' target=”_blank”>#xowf.testrun#</a>"
+          "<a class='[template::CSS class action]' href='[ns_quotehtml $tLink]' target=”_blank”>#xowf.testrun#</a>"
     }
     "published" {
       append extraAction "<br>" \
@@ -494,7 +494,7 @@ Action instproc unpublish_link {obj} {
       set HTML "<h3>#xowf.Participants#</h3>$HTML"
     }
     set return_url [[$wf package_id] query_parameter local_return_url:localurl [:pretty_link]]
-    append HTML "<hr><p><a class='[xowiki::CSS class action]' href='[ns_quotehtml $return_url]'>#xowiki.back#</a></p>\n"
+    append HTML "<hr><p><a class='[template::CSS class action]' href='[ns_quotehtml $return_url]'>#xowiki.back#</a></p>\n"
 
     :www-view $HTML
 
@@ -544,7 +544,7 @@ Action instproc unpublish_link {obj} {
     set withGrades [expr {$gradingScheme ne "::xowf::test_item::grading::none"}]
 
     set return_url [:query_parameter local_return_url:localurl [:pretty_link]]
-    set backButtonHTML "<hr><p><a class='[xowiki::CSS class action]' href='[ns_quotehtml $return_url]'>#xowiki.back#</a></p>\n"
+    set backButtonHTML "<hr><p><a class='[template::CSS class action]' href='[ns_quotehtml $return_url]'>#xowiki.back#</a></p>\n"
 
     set results [:AM get_exam_results -obj [self] results]
     if {[llength $results] eq 0} {
@@ -601,9 +601,9 @@ Action instproc unpublish_link {obj} {
       set exportQuestionResultsURL [ad_return_url {{format csv} {onlygrades 0}}]
       set perParticipantURL [ns_conn url]?[::xo::update_query [ns_conn query] per-question 0]
       set buttonsHTML [subst {<p>
-        <hr><p><a class='[xowiki::CSS class action]' href='[ns_quotehtml $exportQuestionResultsURL]'>
+        <hr><p><a class='[template::CSS class action]' href='[ns_quotehtml $exportQuestionResultsURL]'>
         <adp:icon name="filetype-csv" title="CSV"> #xowf.export_results_title#</a>
-        <a class='[xowiki::CSS class action]' href='[ns_quotehtml $perParticipantURL]'>
+        <a class='[template::CSS class action]' href='[ns_quotehtml $perParticipantURL]'>
         <adp:icon name="graph-up-arrow" title="Per Participant Statistics"> #xowf.exam_statistics_participant#</a></p>
       }]
     } else {
@@ -635,20 +635,20 @@ Action instproc unpublish_link {obj} {
                          $results]
         set exportGradesURL [ad_return_url {{format csv}}]
         set buttonsHTML [subst {
-          <hr><p><a class='[xowiki::CSS class action]' href='[ns_quotehtml $exportGradesURL]'>
+          <hr><p><a class='[template::CSS class action]' href='[ns_quotehtml $exportGradesURL]'>
           <adp:icon name="filetype-csv" title="CSV"> #xowf.export_grades_title#</a>
-          <a class='[xowiki::CSS class action]' href='[ns_quotehtml $exportPointGradesURL]'>
+          <a class='[template::CSS class action]' href='[ns_quotehtml $exportPointGradesURL]'>
           <adp:icon name="filetype-csv" title="CSV"> #xowf.export_points_and_grades_title#</a>
         }]
       } else {
         set buttonsHTML [subst {
-          <a class='[xowiki::CSS class action]' href='[ns_quotehtml $exportPointGradesURL]'>
+          <a class='[template::CSS class action]' href='[ns_quotehtml $exportPointGradesURL]'>
           <adp:icon name="filetype-csv" title="CSV"> #xowf.export_points_title#</a>
         }]
       }
       set perQuestionURL [ns_conn url]?[::xo::update_query [ns_conn query] per-question 1]
       append buttonsHTML [subst {
-        <a class='[xowiki::CSS class action]' href='[ns_quotehtml $perQuestionURL]'>
+        <a class='[template::CSS class action]' href='[ns_quotehtml $perQuestionURL]'>
         <adp:icon name="graph-up-arrow" title="Per Question Statistics"> #xowf.exam_statistics_question#</a></p>
       }]
     }
@@ -696,7 +696,7 @@ Action instproc unpublish_link {obj} {
 
     if {!$as_student} {
       set return_url [:query_parameter local_return_url:localurl [:pretty_link]]
-      append HTML "<hr><p><a class='[xowiki::CSS class action]' href='[ns_quotehtml $return_url]'>#xowiki.back#</a></p>\n"
+      append HTML "<hr><p><a class='[template::CSS class action]' href='[ns_quotehtml $return_url]'>#xowiki.back#</a></p>\n"
     }
 
     if {$do_stream} {
@@ -888,7 +888,7 @@ Action instproc unpublish_link {obj} {
       set HTML "#xowiki.no_data#"
     }
     set return_url [:query_parameter local_return_url:localurl [:pretty_link]]
-    append HTML "<hr><p><a class='[xowiki::CSS class action]' href='[ns_quotehtml $return_url]'>#xowiki.back#</a></p>\n"
+    append HTML "<hr><p><a class='[template::CSS class action]' href='[ns_quotehtml $return_url]'>#xowiki.back#</a></p>\n"
 
     :www-view $HTML
   }

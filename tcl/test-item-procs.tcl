@@ -1444,7 +1444,7 @@ namespace eval ::xowf::test_item {
           set viewHref ""
           set viewTitle ""
         }
-        set iconName [::xowiki::CSS icon_name $fileName]
+        set iconName [::template::CSS icon_name $fileName]
         subst [ns_trim -delimiter | {
           |<div class="thumbnail-file">
           |  <a class="thumbnail-file-icon" $viewHref><adp:icon name="$iconName" $viewTitle></a>
@@ -2705,7 +2705,7 @@ namespace eval ::xowf::test_item {
             var points      = pointsInput.value;
             var pointsFormGroup = pointsInput.parentElement.parentElement;
             var percentage  = "";
-            let hiddenCSSclass = '[::xowiki::CSS class d-none]';
+            let hiddenCSSclass = '[::template::CSS class d-none]';
 
             if (points != "") {
               //
@@ -3334,7 +3334,7 @@ namespace eval ::xowf::test_item {
           -script "window.print();"
 
       return [ns_trim -delimiter | [subst {
-        |<button class="btn [::xowiki::CSS class btn-default]" id="print-button">
+        |<button class="btn [::template::CSS class btn-default]" id="print-button">
         |[::xowiki::bootstrap::icon -name print] print
         |</button>
         |[template::collect_body_scripts]
@@ -3646,14 +3646,14 @@ namespace eval ::xowf::test_item {
       foreach composite_grading_box $composite_grading_boxes {
         set composite_qn [$composite_grading_box getAttribute "data-question_name"]
         set parentNode [$composite_grading_box parentNode]
-        :dom class add $composite_grading_box {.} [::xowiki::CSS class d-none]
+        :dom class add $composite_grading_box {.} [::template::CSS class d-none]
         foreach grading_box [$parentNode selectNodes {div//div[contains(@class,'grading-box')]}] {
           set qn [$grading_box getAttribute data-question_name]
           regsub {^answer_} $qn ${composite_qn}_ new_qn
           #ns_log notice "CHILD of Composite: rename QN from $qn to $new_qn"
           $grading_box setAttribute data-question_name $new_qn
           $grading_box setAttribute id ${composite_qn}_[$grading_box getAttribute id]
-          :dom class remove $grading_box {.} [::xowiki::CSS class d-none]
+          :dom class remove $grading_box {.} [::template::CSS class d-none]
           #
           # The composite questions are prerendered and do not have
           # hint boxes, since we do not want to have even hidden in
@@ -3716,7 +3716,7 @@ namespace eval ::xowf::test_item {
 
         if {$noManualGrading} {
           :dom class add $grading_box {a[contains(@class,'manual-grade')]} \
-              [::xowiki::CSS class d-none]
+              [::template::CSS class d-none]
         }
 
         #
@@ -3750,7 +3750,7 @@ namespace eval ::xowf::test_item {
         set percentage ""
         if {$achieved eq ""} {
           set warning [::template::icon \
-                           -class [xowiki::CSS class text-warning] \
+                           -class [template::CSS class text-warning] \
                            -name warn ]
           set pencil [::template::icon -name pencil]
           :dom node replaceXML $grading_box \
@@ -3779,7 +3779,7 @@ namespace eval ::xowf::test_item {
         #
         # handling of legacy items
         #
-        set changes [expr {[::xowiki::CSS toolkit] eq "bootstrap"
+        set changes [expr {[::template::CSS toolkit] eq "bootstrap"
                            ? {bs-toggle toggle bs-target target}
                            : {toggle bs-toggle target bs-target}}]
         foreach node [$grading_box selectNodes {a[@class='manual-grade']}] {
@@ -3811,10 +3811,10 @@ namespace eval ::xowf::test_item {
         :dom node replace $grading_box {span[@class='comment']} {::html::t $comment}
         if {$comment eq ""} {
           :dom class add $grading_box {span[@class='feedback-label']} \
-              [::xowiki::CSS class d-none]
+              [::template::CSS class d-none]
         } else {
           :dom class remove $grading_box {span[@class='feedback-label']} \
-              [::xowiki::CSS class d-none]
+              [::template::CSS class d-none]
         }
 
         $grading_box setAttribute data-user_id [$submission creation_user]
@@ -6747,11 +6747,11 @@ namespace eval ::xowf::test_item {
             }
             if {$with_grading_box ne ""} {
               set question_name [:FL form_name_based_attribute_stem [$question_obj name]]
-              set hiddenCSSclass [expr {$with_grading_box eq "hidden" ? [::xowiki::CSS class d-none] : ""}]
+              set hiddenCSSclass [expr {$with_grading_box eq "hidden" ? [::template::CSS class d-none] : ""}]
               if {$with_grading_box eq "hidden"} {
                 set question_name answer_$question_name
               }
-              set data_attribute [expr {[::xowiki::CSS toolkit] eq "bootstrap5" ? "data-bs" : "data"}]
+              set data_attribute [expr {[::template::CSS toolkit] eq "bootstrap5" ? "data-bs" : "data"}]
               append full_form [subst [ns_trim -delimiter | {
                 |<div id='grading-box-[incr count]' class='grading-box $hiddenCSSclass'
                 |     data-question_name='$question_name' data-title='[$question_obj title]'
@@ -7245,9 +7245,9 @@ namespace eval ::xowf::test_item {
       set fields [$obj create_form_fields_from_names -lookup -set_values \
                       -form_constraints $form_constraints \
                       $field_names]
-      set data_attribute [expr {[::xowiki::CSS toolkit] eq "bootstrap5" ? "data-bs" : "data"}]
+      set data_attribute [expr {[::template::CSS toolkit] eq "bootstrap5" ? "data-bs" : "data"}]
       return [subst {
-        <p><button type="button" class="btn [::xowiki::CSS class btn-default]"
+        <p><button type="button" class="btn [::template::CSS class btn-default]"
         $data_attribute-toggle="collapse" $data_attribute-target="#$id">
         [::xowiki::bootstrap::icon -name chevron-down] $label</button>
         <div id="$id" class="collapse">
@@ -7399,7 +7399,7 @@ namespace eval ::xowf::test_item {
       return [ns_trim -delimiter | [subst {
         | [:question_info_block $obj]
         | $results_summary
-        | <hr><p><a class="[::xowiki::CSS class action]" href="[ns_quotehtml $return_url]">#xowiki.back#</a></p>
+        | <hr><p><a class="[::template::CSS class action]" href="[ns_quotehtml $return_url]">#xowiki.back#</a></p>
       }]]
     }
 
