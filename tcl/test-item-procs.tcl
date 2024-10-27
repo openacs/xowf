@@ -3334,9 +3334,9 @@ namespace eval ::xowf::test_item {
           -script "window.print();"
 
       return [ns_trim -delimiter | [subst {
-        |<button class="btn [::template::CSS class btn-default]" id="print-button">
+        |<adp:button class="btn btn-default" id="print-button">
         |[::xowiki::bootstrap::icon -name print] print
-        |</button>
+        |</adp:button>
         |[template::collect_body_scripts]
       }]]
     }
@@ -7245,15 +7245,14 @@ namespace eval ::xowf::test_item {
       set fields [$obj create_form_fields_from_names -lookup -set_values \
                       -form_constraints $form_constraints \
                       $field_names]
-      set data_attribute [expr {[::template::CSS toolkit] eq "bootstrap5" ? "data-bs" : "data"}]
-      return [subst {
-        <p><button type="button" class="btn [::template::CSS class btn-default]"
-        $data_attribute-toggle="collapse" $data_attribute-target="#$id">
-        [::xowiki::bootstrap::icon -name chevron-down] $label</button>
-        <div id="$id" class="collapse">
-        [:exam_configuration_render_fields -modifiable $modifiable $fields]
-        </div>
-      }]
+      return [ns_trim -delimiter | [subst {
+        | <p><adp:button type="button" class="btn btn-default" data-toggle="collapse" data-target="#$id">
+        |      <adp:icon name='chevron-down'> $label
+        |    </adp:button>
+        | <div id="$id" class="collapse">
+        | [:exam_configuration_render_fields -modifiable $modifiable $fields]
+        |</div>
+      }]]
     }
 
     #----------------------------------------------------------------------
