@@ -189,6 +189,7 @@ div.short_text_interaction div.text {
     border-style: solid;
     border-color: #ddd;
     border-radius: 4px;
+    white-space: pre-wrap;
 }
 
 div.text_interaction div.correct,
