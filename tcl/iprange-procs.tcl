@@ -22,7 +22,7 @@ namespace eval ::xowf {
     :property {title ""}
 
     :method match {spec ip} {
-      if {[string first / $spec] > -1 && [ns_subnetmatch $spec $ip]} {
+      if {[string first / $spec] > -1 && [ns_ip match $spec $ip]} {
         return 1
       } elseif {[string first * $spec] > -1 && [string match $spec $ip]} {
         return 1
