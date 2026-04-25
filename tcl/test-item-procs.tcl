@@ -5926,9 +5926,12 @@ namespace eval ::xowf::test_item {
       {-field_name ""}
       -pool_question_obj
       -exam_question_names
+      {-proxy_replacements ""}
     } {
       #
       # @return an initialized replacement form obj if this is possible
+      # @proxy_replacements: items with these names have already been chosen, do not select the same
+      # name more than once in an answer workflow which would lead to shared attributes, see #DTS-13553
       #
       set field_name ""; ## rely on fallback
       set candidate_dict [:get_pool_questions  \
@@ -5959,7 +5962,8 @@ namespace eval ::xowf::test_item {
         set new_name [lindex $candidate_names $i]
         #ns_log notice "replace_pool_question position $position seed $seed random_index $i"
 
-        set contained [expr {$new_name in $exam_question_names}]
+        set contained [expr {$new_name in $exam_question_names || \
+                                 [lindex [split $new_name /] end] in $proxy_replacements}]
         #ns_log notice "replace_pool_question replace [$pool_question_obj name] by $new_name contained in" \
         #    "[lsort $exam_question_names] contained $contained"
         if {!$contained || [incr maxiter -1] < 0} {
@@ -6018,12 +6022,12 @@ namespace eval ::xowf::test_item {
                                      -position $position \
                                      -seed [lindex $seeds $position] \
                                      -pool_question_obj $form_obj \
-                                     -exam_question_names $exam_question_names]
+                                     -exam_question_names $exam_question_names \
+                                     -proxy_replacements $replaced_form_objs]
+          #ns_log notice "replace_pool_questions debug: [$replaced_form_obj name] ni $replaced_form_objs"
           set exam_question_names [lreplace $exam_question_names $position $position \
                                        [:qualified_question_names $replaced_form_obj]]
-          lappend replaced_form_objs $replaced_form_obj
-        } else {
-          lappend replaced_form_objs $form_obj
+          lappend replaced_form_objs [$replaced_form_obj name]
         }
         incr position
       }
