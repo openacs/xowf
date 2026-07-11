@@ -419,7 +419,8 @@ namespace eval ::xowiki::formfield {
       }]
       set text_config [subst {editor=xinha,height=100px,label=Text,plugins=OacsFs,inplace=$:{inplace},javascript=$javascript}]
     } else {
-      set text_config [subst {editor=wym,height=100px,label=Text}]
+      #set text_config [subst {editor=wym,height=100px,label=Text}]
+      set text_config [subst {height=100px,label=Text}]
     }
     if {[:feedback] eq "full"} {
       set feedback_fields {
