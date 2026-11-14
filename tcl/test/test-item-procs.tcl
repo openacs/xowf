@@ -42,7 +42,6 @@ namespace eval ::xowf::test {
         "::xowf::test_item::Answer_manager instproc get_IPs"
         "::xowf::test_item::Answer_manager instproc get_answer_attributes"
         "::xowf::test_item::Answer_manager instproc get_answer_wf"
-        "::xowf::test_item::Answer_manager instproc get_answers"
         "::xowf::test_item::Answer_manager instproc get_duration"
         "::xowf::test_item::Answer_manager instproc get_exam_results"
         "::xowf::test_item::Answer_manager instproc get_wf_instances"

@@ -812,7 +812,12 @@ namespace eval ::xowf {
   }
 
   # -debug
-  Context proc require {{-new:switch false} obj} {
+  Context ad_proc require {{-new:switch false} obj} {
+    Create the workflow context for an object if needed.
+    @param new Discard an existing context and create a fresh one.
+    @param obj Workflow object.
+    @return The initialized workflow context, or the existing context.
+  } {
     #
     # Make sure, the context object for workflow '$obj exists. The
     # flag "-new" can be used to make sure, a new and fresh context is
@@ -1228,7 +1233,11 @@ namespace eval ::xowf {
       return [list "" $values]
     }
   }
-  WorkflowConstruct instproc get_value {values} {
+  WorkflowConstruct ad_instproc get_value {values} {
+    Return the first value whose condition matches. An unconditional or
+    default entry also matches. Return an empty string if none match.
+    @param values Value specification parsed by get_cond_values.
+  } {
     foreach {cond value} [:get_cond_values $values] {
       if {$cond eq "" || $cond eq "default" || $cond eq "else" ||
           $cond == "true"} {
@@ -2705,7 +2714,12 @@ namespace eval ::xowf {
   #     :call_action -uri $uri -action work -attributes [list comment hello3 effort 4]
   #   }
 
-  proc include {wfName {vars ""}} {
+  ad_proc -public include {wfName {vars ""}} {
+    Evaluate a workflow definition from a package library in the caller.
+    @param wfName Path to the workflow definition under /packages/*/lib/.
+    @param vars Names of caller variables to substitute for @name@ placeholders.
+    @return The result of evaluating the included definition.
+  } {
     uplevel [::xowf::include_get -level 2 $wfName $vars]
   }
 
