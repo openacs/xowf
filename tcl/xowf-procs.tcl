@@ -954,7 +954,10 @@ namespace eval ::xowf {
     return "  state_$from_state -> state_$next_state \[label=\"$label\"$style\];\n"
   }
   Context instproc draw_transition {from action role} {
-    #:msg "[self args]"
+    if {![nsf::is object $action]} {
+      ns_log warning "XoWF graph for ${:object}: skipping missing action '$action' from state '[$from name]'"
+      return ""
+    }
 
     if {[$action state_safe]} {
       set arc_style {,style="dashed",penwidth=1,color=gray}

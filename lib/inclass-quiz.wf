@@ -287,6 +287,12 @@ Action instproc unpublish_link {obj} {
   #
   ########################################################################
 
+  # Clear question-navigation references from every state that can hold
+  # them before destroying the corresponding action objects.
+  foreach state {published results done} {
+    set stateObj ${container}::$state
+    $stateObj actions [lsearch -all -inline -not -regexp [$stateObj actions] {^[0-9]+$}]
+  }
   foreach action [${container}::Action info instances] {
     if {[string is integer [namespace tail $action]]} {
       $action destroy
